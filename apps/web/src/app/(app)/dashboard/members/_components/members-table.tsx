@@ -468,6 +468,13 @@ export function MembersTable() {
 									<SelectItem value={50}>50</SelectItem>
 								</SelectPopup>
 							</Select>
+							<p className="text-muted-foreground text-sm">
+								of{" "}
+								<strong className="font-medium text-foreground">
+									{table.getRowCount()}
+								</strong>{" "}
+								total
+							</p>
 						</div>
 
 						<div className="flex items-center gap-4">
