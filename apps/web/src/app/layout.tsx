@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "../index.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import Providers from "@/components/providers";
+import { shadcn } from "@clerk/themes";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -29,7 +30,17 @@ export default function RootLayout({
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
 			>
-				<ClerkProvider waitlistUrl="/waitlist">
+				<ClerkProvider
+					waitlistUrl="/waitlist"
+					signInUrl="/sign-in"
+					signUpUrl="/sign-up"
+					taskUrls={{
+						"choose-organization": "/organizations",
+					}}
+					appearance={{
+						theme: shadcn,
+					}}
+				>
 					<Providers>
 						<div className="grid grid-rows-[auto_1fr] h-svh">{children}</div>
 					</Providers>
