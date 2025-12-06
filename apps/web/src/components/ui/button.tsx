@@ -1,0 +1,59 @@
+import * as React from "react";
+import { Slot as SlotPrimitive } from "radix-ui";
+import { cva, type VariantProps } from "class-variance-authority";
+
+import { cn } from "@/lib/utils";
+
+const buttonVariants = cva(
+	"relative inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium cursor-pointer overflow-hidden transition-all disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/20 before:to-transparent before:pointer-events-none",
+	{
+		variants: {
+			variant: {
+				default:
+					"bg-primary text-primary-foreground shadow-md shadow-black/10 hover:bg-primary/90 border border-primary/80 [box-shadow:inset_0_1px_theme(colors.primary.DEFAULT/0.4),0_4px_6px_-1px_rgb(0_0_0/0.1),0_2px_4px_-2px_rgb(0_0_0/0.1)] active:bg-primary/80 active:shadow-none active:[box-shadow:inset_0_1px_theme(colors.primary.DEFAULT/0.6)]",
+				destructive:
+					"bg-destructive text-white shadow-md shadow-black/10 hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 border border-destructive/80 [box-shadow:inset_0_1px_theme(colors.destructive.DEFAULT/0.4),0_4px_6px_-1px_rgb(0_0_0/0.1),0_2px_4px_-2px_rgb(0_0_0/0.1)] active:bg-destructive/80 active:shadow-none active:[box-shadow:inset_0_1px_theme(colors.destructive.DEFAULT/0.6)]",
+				outline:
+					"bg-muted/50 text-foreground border border-border shadow-md shadow-black/10 hover:bg-muted hover:border-border/80 dark:bg-accent/40 dark:text-accent-foreground dark:border-accent/60 dark:hover:bg-accent/50 dark:hover:border-accent/70 [box-shadow:inset_0_1px_theme(colors.muted.foreground/0.1),0_4px_6px_-1px_rgb(0_0_0/0.1),0_2px_4px_-2px_rgb(0_0_0/0.1)] dark:[box-shadow:inset_0_1px_rgba(255,255,255,0.08),0_4px_6px_-1px_rgb(0_0_0/0.3),0_2px_4px_-2px_rgb(0_0_0/0.3)] active:bg-muted/80 dark:active:bg-accent/60 active:shadow-none active:[box-shadow:inset_0_1px_theme(colors.muted.foreground/0.2)]",
+				secondary:
+					"bg-secondary text-secondary-foreground shadow-md shadow-black/10 hover:bg-secondary/90 border border-secondary/80 dark:border-secondary/60 [box-shadow:inset_0_1px_theme(colors.secondary.DEFAULT/0.4),0_4px_6px_-1px_rgb(0_0_0/0.1),0_2px_4px_-2px_rgb(0_0_0/0.1)] active:bg-secondary/80 active:shadow-none active:[box-shadow:inset_0_1px_theme(colors.secondary.DEFAULT/0.6)] dark:before:from-white/10",
+				ghost:
+					"hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50 before:hidden",
+				link: "text-primary underline-offset-4 hover:underline before:hidden",
+			},
+			size: {
+				default: "h-9 px-4 py-2 has-[>svg]:px-3",
+				sm: "h-8 rounded-md gap-1.5 px-3 has-[>svg]:px-2.5",
+				lg: "h-10 rounded-md px-6 has-[>svg]:px-4",
+				icon: "size-9",
+			},
+		},
+		defaultVariants: {
+			variant: "default",
+			size: "default",
+		},
+	},
+);
+
+function Button({
+	className,
+	variant,
+	size,
+	asChild = false,
+	...props
+}: React.ComponentProps<"button"> &
+	VariantProps<typeof buttonVariants> & {
+		asChild?: boolean;
+	}) {
+	const Comp = asChild ? SlotPrimitive.Slot : "button";
+
+	return (
+		<Comp
+			data-slot="button"
+			className={cn(buttonVariants({ variant, size, className }))}
+			{...props}
+		/>
+	);
+}
+
+export { Button, buttonVariants };
