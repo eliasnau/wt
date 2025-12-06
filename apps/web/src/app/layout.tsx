@@ -1,18 +1,19 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Cal_Sans, Geist, Inter } from "next/font/google";
 import "../index.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import Providers from "@/components/providers";
 import { shadcn } from "@clerk/themes";
 
-const geistSans = Geist({
-	variable: "--font-geist-sans",
+const fontSans = Inter({
 	subsets: ["latin"],
+	variable: "--font-sans",
 });
 
-const geistMono = Geist_Mono({
-	variable: "--font-geist-mono",
+const fontHeading = Cal_Sans({
 	subsets: ["latin"],
+	variable: "--font-heading",
+	weight: "400",
 });
 
 export const metadata: Metadata = {
@@ -28,7 +29,7 @@ export default function RootLayout({
 	return (
 		<html lang="en" suppressHydrationWarning>
 			<body
-				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+				className={`${fontSans.variable} ${fontHeading.variable} antialiased`}
 			>
 				<ClerkProvider
 					waitlistUrl="/waitlist"
