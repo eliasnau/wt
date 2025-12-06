@@ -72,6 +72,11 @@ import {
 } from "@/components/ui/menu";
 import { Input } from "@/components/ui/input";
 import { Field, FieldLabel } from "@/components/ui/field";
+import {
+	InputGroup,
+	InputGroupAddon,
+	InputGroupInput,
+} from "@/components/ui/input-group";
 
 type Member = {
 	id: string;
@@ -235,7 +240,6 @@ export function MembersTable() {
 		setSheetOpen(true);
 	};
 
-	// Get unique groups for filter
 	const allGroups = Array.from(
 		new Set(members.flatMap((member) => member.groups)),
 	).sort();
@@ -273,24 +277,32 @@ export function MembersTable() {
 
 	return (
 		<>
-			{/* Search and Filter Bar */}
 			<div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center">
 				<div className="relative max-w-md">
-					<SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-					<Input
-						placeholder="Search members by name, email, or phone..."
-						value={globalFilter}
-						onChange={(e) => setGlobalFilter(e.target.value)}
-						className="pl-9 pr-9"
-					/>
-					{globalFilter && (
-						<button
-							onClick={() => setGlobalFilter("")}
-							className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-						>
-							<XIcon className="size-4" />
-						</button>
-					)}
+					<InputGroup>
+						<InputGroupInput
+							aria-label="Search"
+							placeholder="Search"
+							type="search"
+							value={globalFilter}
+							onChange={(e) => setGlobalFilter(e.target.value)}
+						/>
+						<InputGroupAddon>
+							<SearchIcon />
+						</InputGroupAddon>
+						{globalFilter && (
+							<InputGroupAddon align={"inline-end"}>
+								<button
+									onClick={() => setGlobalFilter("")}
+									className="text-muted-foreground hover:text-foreground"
+									aria-label="Clear search"
+									type="button"
+								>
+									<XIcon className="size-4" />
+								</button>
+							</InputGroupAddon>
+						)}
+					</InputGroup>
 				</div>
 				<Select
 					items={[
@@ -427,87 +439,79 @@ export function MembersTable() {
 				</Table>
 				<FrameFooter className="p-2">
 					<div className="flex items-center justify-between gap-2">
-						{/* Results range selector */}
+						{/* Results per page selector */}
 						<div className="flex items-center gap-2 whitespace-nowrap">
-							<p className="text-muted-foreground text-sm">Viewing</p>
+							<p className="text-muted-foreground text-sm">Results per page</p>
 							<Select
-								items={Array.from({ length: table.getPageCount() }, (_, i) => {
-									const start = i * table.getState().pagination.pageSize + 1;
-									const end = Math.min(
-										(i + 1) * table.getState().pagination.pageSize,
-										table.getRowCount(),
-									);
-									const pageNum = i + 1;
-									return { label: `${start}-${end}`, value: pageNum };
-								})}
+								items={[
+									{ label: "10", value: 10 },
+									{ label: "20", value: 20 },
+									{ label: "30", value: 30 },
+									{ label: "50", value: 50 },
+								]}
 								onValueChange={(value) => {
-									table.setPageIndex((value as number) - 1);
+									table.setPageSize(value as number);
 								}}
-								value={table.getState().pagination.pageIndex + 1}
+								value={table.getState().pagination.pageSize}
 							>
 								<SelectTrigger
-									aria-label="Select result range"
+									aria-label="Select results per page"
 									className="w-fit min-w-none"
 									size="sm"
 								>
 									<SelectValue />
 								</SelectTrigger>
 								<SelectPopup>
-									{Array.from({ length: table.getPageCount() }, (_, i) => {
-										const start = i * table.getState().pagination.pageSize + 1;
-										const end = Math.min(
-											(i + 1) * table.getState().pagination.pageSize,
-											table.getRowCount(),
-										);
-										const pageNum = i + 1;
-										return (
-											<SelectItem key={pageNum} value={pageNum}>
-												{`${start}-${end}`}
-											</SelectItem>
-										);
-									})}
+									<SelectItem value={10}>10</SelectItem>
+									<SelectItem value={20}>20</SelectItem>
+									<SelectItem value={30}>30</SelectItem>
+									<SelectItem value={50}>50</SelectItem>
 								</SelectPopup>
 							</Select>
-							<p className="text-muted-foreground text-sm">
-								of{" "}
-								<strong className="font-medium text-foreground">
-									{table.getRowCount()}
-								</strong>{" "}
-								members
-							</p>
 						</div>
 
-						{/* Pagination */}
-						<Pagination className="justify-end">
-							<PaginationContent>
-								<PaginationItem>
-									<PaginationPrevious
-										className="sm:*:[svg]:hidden"
-										render={
-											<Button
-												disabled={!table.getCanPreviousPage()}
-												onClick={() => table.previousPage()}
-												size="sm"
-												variant="outline"
-											/>
-										}
-									/>
-								</PaginationItem>
-								<PaginationItem>
-									<PaginationNext
-										className="sm:*:[svg]:hidden"
-										render={
-											<Button
-												disabled={!table.getCanNextPage()}
-												onClick={() => table.nextPage()}
-												size="sm"
-												variant="outline"
-											/>
-										}
-									/>
-								</PaginationItem>
-							</PaginationContent>
-						</Pagination>
+						<div className="flex items-center gap-4">
+							<p className="text-muted-foreground text-sm whitespace-nowrap">
+								Page{" "}
+								<strong className="font-medium text-foreground">
+									{table.getState().pagination.pageIndex + 1}
+								</strong>{" "}
+								of{" "}
+								<strong className="font-medium text-foreground">
+									{table.getPageCount()}
+								</strong>
+							</p>
+							<Pagination className="justify-end">
+								<PaginationContent>
+									<PaginationItem>
+										<PaginationPrevious
+											className="sm:*:[svg]:hidden"
+											render={
+												<Button
+													disabled={!table.getCanPreviousPage()}
+													onClick={() => table.previousPage()}
+													size="sm"
+													variant="outline"
+												/>
+											}
+										/>
+									</PaginationItem>
+									<PaginationItem>
+										<PaginationNext
+											className="sm:*:[svg]:hidden"
+											render={
+												<Button
+													disabled={!table.getCanNextPage()}
+													onClick={() => table.nextPage()}
+													size="sm"
+													variant="outline"
+												/>
+											}
+										/>
+									</PaginationItem>
+								</PaginationContent>
+							</Pagination>
+						</div>
 					</div>
 				</FrameFooter>
 			</Frame>
