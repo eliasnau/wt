@@ -1,4 +1,3 @@
-import NextTopLoader from "nextjs-toploader";
 import {
 	SidebarInset,
 	SidebarProvider,
@@ -6,6 +5,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Separator } from "@/components/ui/separator";
 import { DashboardSidebar } from "./_components/sidebar/app-sidebar";
+import { TopLoader } from "@/components/top-loader";
 
 export default function DashboardLayout({
 	children,
@@ -13,28 +13,25 @@ export default function DashboardLayout({
 	children: React.ReactNode;
 }) {
 	return (
-		<SidebarProvider>
-			<NextTopLoader
-				color="hsl(var(--primary))"
-				height={3}
-				showSpinner={false}
-				shadow="0 0 10px hsl(var(--primary)),0 0 5px hsl(var(--primary))"
-			/>
-			<div className="relative flex h-screen w-full">
-				<DashboardSidebar />
-				<SidebarInset className="flex flex-col">
-					<header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
-						<SidebarTrigger />
-						<Separator orientation="vertical" className="h-4" />
-					</header>
+		<>
+			<TopLoader />
+			<SidebarProvider>
+				<div className="relative flex h-screen w-full">
+					<DashboardSidebar />
+					<SidebarInset className="flex flex-col">
+						<header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
+							<SidebarTrigger />
+							<Separator orientation="vertical" className="h-4" />
+						</header>
 
-					<main className="flex-1 overflow-auto">
-						<div className="mx-auto w-full p-4 sm:p-6 lg:p-10 max-w-screen lg:max-w-7xl md:max-w-3xl md:max-w-[45rem]">
-							{children}
-						</div>
-					</main>
-				</SidebarInset>
-			</div>
-		</SidebarProvider>
+						<main className="flex-1 overflow-auto">
+							<div className="mx-auto w-full p-4 sm:p-6 lg:p-10 max-w-screen lg:max-w-7xl md:max-w-3xl md:max-w-[45rem]">
+								{children}
+							</div>
+						</main>
+					</SidebarInset>
+				</div>
+			</SidebarProvider>
+		</>
 	);
 }
