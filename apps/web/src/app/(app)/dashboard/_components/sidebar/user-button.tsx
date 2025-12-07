@@ -7,6 +7,10 @@ import {
 	DropdownMenuLabel,
 	DropdownMenuSeparator,
 	DropdownMenuTrigger,
+	DropdownMenuSub,
+	DropdownMenuSubContent,
+	DropdownMenuSubTrigger,
+	DropdownMenuPortal,
 } from "@/components/ui/dropdown-menu";
 import {
 	SidebarMenu,
@@ -22,13 +26,18 @@ import {
 	User,
 	Bell,
 	CreditCard,
+	Moon,
+	Sun,
+	Monitor,
 } from "lucide-react";
 import * as React from "react";
+import { useTheme } from "next-themes";
 
 export const UserButton = () => {
 	const { isMobile } = useSidebar();
 	const { user } = useUser();
 	const { signOut, openUserProfile } = useClerk();
+	const { theme, setTheme } = useTheme();
 
 	if (!user) return null;
 
@@ -81,6 +90,45 @@ export const UserButton = () => {
 							</div>
 							<div className="font-medium">Account</div>
 						</DropdownMenuItem>
+						<DropdownMenuSub>
+							<DropdownMenuSubTrigger className="gap-2 p-2">
+								<div className="flex size-6 items-center justify-center rounded-md border bg-background">
+									{theme === "light" ? (
+										<Sun className="size-4" />
+									) : theme === "dark" ? (
+										<Moon className="size-4" />
+									) : (
+										<Monitor className="size-4" />
+									)}
+								</div>
+								<div className="font-medium">Theme</div>
+							</DropdownMenuSubTrigger>
+							<DropdownMenuPortal>
+								<DropdownMenuSubContent>
+									<DropdownMenuItem
+										onClick={() => setTheme("light")}
+										className="gap-2"
+									>
+										<Sun className="size-4" />
+										<span>Light</span>
+									</DropdownMenuItem>
+									<DropdownMenuItem
+										onClick={() => setTheme("dark")}
+										className="gap-2"
+									>
+										<Moon className="size-4" />
+										<span>Dark</span>
+									</DropdownMenuItem>
+									<DropdownMenuItem
+										onClick={() => setTheme("system")}
+										className="gap-2"
+									>
+										<Monitor className="size-4" />
+										<span>System</span>
+									</DropdownMenuItem>
+								</DropdownMenuSubContent>
+							</DropdownMenuPortal>
+						</DropdownMenuSub>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem
 							onClick={() => signOut()}
