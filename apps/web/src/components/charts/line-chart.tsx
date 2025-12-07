@@ -4,8 +4,8 @@ import {
 	CartesianGrid,
 	XAxis,
 } from "recharts";
+import type { ChartConfig } from "@/components/ui/chart";
 import {
-	ChartConfig,
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,

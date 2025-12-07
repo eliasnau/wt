@@ -75,18 +75,21 @@ export default function RangeComparisonPage() {
 				</HeaderContent>
 				<HeaderActions>
 					<Popover>
-						<PopoverTrigger asChild>
-							<Button
-								variant="outline"
-								className={cn(
-									"w-[280px] justify-start text-left font-normal",
-									(!startDate || !endDate) && "text-muted-foreground",
-								)}
-							>
-								<Calendar className="mr-2 h-4 w-4" />
-								{getRangeText(startDate, endDate)}
-							</Button>
-						</PopoverTrigger>
+						<PopoverTrigger
+							render={(props) => (
+								<Button
+									{...props}
+									variant="outline"
+									className={cn(
+										"w-[280px] justify-start text-left font-normal",
+										(!startDate || !endDate) && "text-muted-foreground",
+									)}
+								>
+									<Calendar className="mr-2 h-4 w-4" />
+									{getRangeText(startDate, endDate)}
+								</Button>
+							)}
+						/>
 						<PopoverContent className="w-auto p-0" align="end">
 							<div className="flex flex-col gap-2 p-3">
 								<div className="space-y-2">
@@ -119,13 +122,15 @@ export default function RangeComparisonPage() {
 						<FrameHeader className="flex-row items-center justify-between px-4 py-3">
 							<CollapsibleTrigger
 								className="data-panel-open:[&_svg]:rotate-180"
-								render={<Button variant="ghost" />}
-							>
-								<ChevronDownIcon className="size-4 mr-2" />
-								<span className="font-semibold text-sm">
-									Membership Analytics
-								</span>
-							</CollapsibleTrigger>
+								render={(props) => (
+									<Button variant="ghost" {...props}>
+										<ChevronDownIcon className="size-4 mr-2" />
+										<span className="font-semibold text-sm">
+											Membership Analytics
+										</span>
+									</Button>
+								)}
+							/>
 						</FrameHeader>
 						<CollapsiblePanel>
 							<FramePanel className="space-y-6">
@@ -144,13 +149,15 @@ export default function RangeComparisonPage() {
 						<FrameHeader className="flex-row items-center justify-between px-4 py-3">
 							<CollapsibleTrigger
 								className="data-panel-open:[&_svg]:rotate-180"
-								render={<Button variant="ghost" />}
-							>
-								<ChevronDownIcon className="size-4 mr-2" />
-								<span className="font-semibold text-sm">
-									Financial Analytics
-								</span>
-							</CollapsibleTrigger>
+								render={(props) => (
+									<Button variant="ghost" {...props}>
+										<ChevronDownIcon className="size-4 mr-2" />
+										<span className="font-semibold text-sm">
+											Financial Analytics
+										</span>
+									</Button>
+								)}
+							/>
 						</FrameHeader>
 						<CollapsiblePanel>
 							<FramePanel className="space-y-6">

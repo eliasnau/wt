@@ -8,7 +8,7 @@ import {
 	FrameTitle,
 	FrameDescription,
 } from "@/components/ui/frame";
-import { ChartConfig } from "@/components/ui/chart";
+import type { ChartConfig } from "@/components/ui/chart";
 import { Badge } from "@/components/ui/badge";
 import {
 	TrendingUp,

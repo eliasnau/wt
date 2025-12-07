@@ -9,8 +9,8 @@ import {
 	FrameTitle,
 	FrameDescription,
 } from "@/components/ui/frame";
+import type { ChartConfig } from "@/components/ui/chart";
 import {
-	ChartConfig,
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,

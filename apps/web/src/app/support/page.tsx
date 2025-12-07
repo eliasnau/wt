@@ -19,6 +19,7 @@ import {
 	useClerk,
 } from "@clerk/nextjs";
 import { useState, useEffect, useRef } from "react";
+import type { Route } from "next";
 import Link from "next/link";
 import {
 	ChevronsUpDown,
@@ -75,7 +76,7 @@ export default function SupportPage() {
 				<div className="w-full max-w-2xl">
 					<div className="mb-4">
 						<Link
-							href="/"
+							href={"/" as Route}
 							className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
 						>
 							<ArrowLeft className="h-4 w-4" />
@@ -96,7 +97,7 @@ export default function SupportPage() {
 							<p className="text-sm text-muted-foreground">
 								Not a customer?{" "}
 								<Link
-									href="/contact"
+									href={"/contact" as Route}
 									className="text-foreground hover:underline"
 								>
 									Use contact form
@@ -114,7 +115,7 @@ export default function SupportPage() {
 			<div className="w-full max-w-2xl my-4 md:my-0">
 				<div className="mb-4 flex items-center justify-between">
 					<Link
-						href="/dashboard"
+						href={"/dashboard" as Route}
 						className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
 					>
 						<ArrowLeft className="h-4 w-4" />
@@ -348,7 +349,10 @@ export default function SupportPage() {
 					<FrameFooter className="flex-row items-center justify-between">
 						<p className="text-sm text-muted-foreground">
 							Not a customer?{" "}
-							<Link href="/contact" className="text-foreground hover:underline">
+							<Link
+								href={"/contact" as Route}
+								className="text-foreground hover:underline"
+							>
 								Contact us
 							</Link>
 						</p>

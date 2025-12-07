@@ -32,7 +32,7 @@ import {
 } from "lucide-react";
 import { Logo } from "@/app/(app)/dashboard/_components/sidebar/logo";
 import { UserButton } from "@/app/(app)/dashboard/_components/sidebar/user-button";
-import type { Route } from "./nav-main";
+import type { NavRoute } from "./nav-main";
 import DashboardNavigation from "@/app/(app)/dashboard/_components/sidebar/nav-main";
 import { NotificationsPopover } from "@/app/(app)/dashboard/_components/sidebar/nav-notifications";
 
@@ -60,7 +60,7 @@ const sampleNotifications = [
 	},
 ];
 
-const dashboardRoutes: Route[] = [
+const dashboardRoutes: NavRoute[] = [
 	{
 		id: "home",
 		title: "Home",
