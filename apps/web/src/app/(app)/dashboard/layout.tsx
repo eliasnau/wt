@@ -1,3 +1,4 @@
+import NextTopLoader from "nextjs-toploader";
 import {
 	SidebarInset,
 	SidebarProvider,
@@ -13,6 +14,12 @@ export default function DashboardLayout({
 }) {
 	return (
 		<SidebarProvider>
+			<NextTopLoader
+				color="hsl(var(--primary))"
+				height={3}
+				showSpinner={false}
+				shadow="0 0 10px hsl(var(--primary)),0 0 5px hsl(var(--primary))"
+			/>
 			<div className="relative flex h-screen w-full">
 				<DashboardSidebar />
 				<SidebarInset className="flex flex-col">
