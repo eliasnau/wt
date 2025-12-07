@@ -110,8 +110,8 @@ export default function SupportPage() {
 	}
 
 	return (
-		<div className="flex min-h-screen items-center justify-center p-4 bg-sidebar">
-			<div className="w-full max-w-2xl">
+		<div className="flex min-h-screen items-start md:items-center justify-center p-4 bg-sidebar">
+			<div className="w-full max-w-2xl my-4 md:my-0">
 				<div className="mb-4 flex items-center justify-between">
 					<Link
 						href="/dashboard"
