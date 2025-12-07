@@ -71,13 +71,13 @@ const dashboardRoutes: Route[] = [
 		id: "Members",
 		title: "Members",
 		icon: <Users className="size-4" />,
-		link: "dashboard/members",
+		link: "/dashboard/members",
 	},
 	{
 		id: "groups",
 		title: "Groups",
 		icon: <Layers className="size-4" />,
-		link: "dashboard/groups",
+		link: "/dashboard/groups",
 	},
 	{
 		id: "statistics",
@@ -107,7 +107,7 @@ const dashboardRoutes: Route[] = [
 		id: "events",
 		title: "Events",
 		icon: <Calendar className="size-4" />,
-		link: "dashboard/events",
+		link: "/dashboard/events",
 		subs: [
 			{
 				title: "Calendar",
