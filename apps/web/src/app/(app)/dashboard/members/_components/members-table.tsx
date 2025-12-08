@@ -3,8 +3,11 @@
 import {
 	flexRender,
 	getCoreRowModel,
+	getFacetedUniqueValues,
+	getFilteredRowModel,
 	getPaginationRowModel,
 	getSortedRowModel,
+	type ColumnFiltersState,
 	type PaginationState,
 	type SortingState,
 	useReactTable,
@@ -15,16 +18,35 @@ import {
 	FilterIcon,
 	SearchIcon,
 	XIcon,
+	MoreVerticalIcon,
+	CheckCircleIcon,
+	CalendarIcon,
+	DownloadIcon,
+	UploadIcon,
+	SettingsIcon,
+	UserCheckIcon,
+	UserXIcon,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Menu, MenuPopup, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import {
 	InputGroup,
 	InputGroupAddon,
 	InputGroupInput,
 } from "@/components/ui/input-group";
-import { Frame, FrameFooter, FrameHeader } from "@/components/ui/frame";
+import { DataTableFacetedFilter } from "@/components/ui/data-table-faceted-filter";
+import { Frame, FrameFooter, FrameHeader, FramePanel } from "@/components/ui/frame";
+import {
+	Popover,
+	PopoverPopup,
+	PopoverTitle,
+	PopoverDescription,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 import {
 	Pagination,
 	PaginationContent,
@@ -51,15 +73,18 @@ import {
 import { createColumns } from "./columns";
 import { members } from "./data";
 import { EditMemberSheet } from "./edit-member-sheet";
+import { EmptyMembers } from "./empty-members";
 import type { Member } from "./types";
 
-interface MembersTableProps {}
+interface MembersTableProps {
+	onGenerateQR?: () => void;
+}
 
-export function MembersTable({}: MembersTableProps) {
+export function MembersTable({ onGenerateQR }: MembersTableProps) {
 	const pageSize = 10;
 
 	const [globalFilter, setGlobalFilter] = useState("");
-	const [selectedGroup, setSelectedGroup] = useState<string>("all");
+	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
 	const [pagination, setPagination] = useState<PaginationState>({
 		pageIndex: 0,
 		pageSize: pageSize,
@@ -87,99 +112,158 @@ export function MembersTable({}: MembersTableProps) {
 
 	const handleClearFilters = () => {
 		setGlobalFilter("");
-		setSelectedGroup("all");
+		setColumnFilters([]);
 	};
-
-	const filteredMembers = useMemo(() => {
-		return members.filter((member) => {
-			const matchesSearch = [member.name, member.email, member.phone]
-				.filter(Boolean)
-				.map((value) => value.toLowerCase())
-				.some((value) => value.includes(globalFilter.toLowerCase()));
-
-			const matchesGroup =
-				selectedGroup === "all" || member.groups.includes(selectedGroup);
-
-			return matchesSearch && matchesGroup;
-		});
-	}, [globalFilter, selectedGroup]);
 
 	const table = useReactTable({
 		columns: createColumns(handleEdit),
-		data: filteredMembers,
+		data: members,
 		enableSortingRemoval: false,
 		getCoreRowModel: getCoreRowModel(),
+		getFacetedUniqueValues: getFacetedUniqueValues(),
+		getFilteredRowModel: getFilteredRowModel(),
 		getPaginationRowModel: getPaginationRowModel(),
 		getSortedRowModel: getSortedRowModel(),
+		onColumnFiltersChange: setColumnFilters,
+		onGlobalFilterChange: setGlobalFilter,
 		onPaginationChange: setPagination,
 		onSortingChange: setSorting,
 		state: {
+			columnFilters,
+			globalFilter,
 			pagination,
 			sorting,
 		},
 	});
 
+	// If there are no members at all, show empty state
+	if (members.length === 0) {
+		return (
+			<>
+				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+					<FramePanel className="py-12">
+						<EmptyMembers hasMembers={false} onGenerateQR={onGenerateQR || (() => {})} />
+					</FramePanel>
+				</Frame>
+				<EditMemberSheet
+					open={sheetOpen}
+					onOpenChange={setSheetOpen}
+					member={selectedMember}
+				/>
+			</>
+		);
+	}
+
 	return (
 		<>
 			<section className="">
-				<div className="flex flex-col gap-3 lg:flex-row lg:items-end">
-					<div className="flex-1 min-w-0">
-						<InputGroup>
-							<InputGroupInput
-								aria-label="Search"
-								placeholder="Search members..."
-								type="search"
-								value={globalFilter}
-								onChange={(e) => setGlobalFilter(e.target.value)}
-							/>
-							<InputGroupAddon>
-								<SearchIcon />
-							</InputGroupAddon>
-							{globalFilter && (
-								<InputGroupAddon align="inline-end">
-									<button
-										onClick={() => setGlobalFilter("")}
-										className="text-muted-foreground hover:text-foreground"
-										aria-label="Clear search"
-										type="button"
-									>
-										<XIcon className="size-4" />
-									</button>
-								</InputGroupAddon>
-							)}
-						</InputGroup>
-					</div>
+				<div className="flex flex-col gap-3">
 					<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-						<Select
-							items={[
-								{ label: "All Groups", value: "all" },
-								...allGroups.map((group) => ({ label: group, value: group })),
-							]}
-							value={selectedGroup}
-							onValueChange={(value) => setSelectedGroup(value as string)}
-						>
-							<SelectTrigger
-								className="w-full min-w-[180px] sm:w-[200px]"
-								size="sm"
-							>
-								<FilterIcon className="size-4" />
-								<SelectValue placeholder="Filter by group" />
-							</SelectTrigger>
-							<SelectPopup>
-								<SelectItem value="all">All Groups</SelectItem>
-								{allGroups.map((group) => (
-									<SelectItem key={group} value={group}>
-										{group}
-									</SelectItem>
-								))}
-							</SelectPopup>
-						</Select>
-						{(globalFilter || selectedGroup !== "all") && (
-							<Button size="sm" variant="ghost" onClick={handleClearFilters}>
-								<XIcon />
-								<span className="hidden sm:inline">Clear filters</span>
+						<div className="flex-1 min-w-0 max-w-xs">
+							<InputGroup>
+								<InputGroupInput
+									aria-label="Search"
+									placeholder="Search members..."
+									type="search"
+									value={globalFilter}
+									onChange={(e) => setGlobalFilter(e.target.value)}
+								/>
+								<InputGroupAddon>
+									<SearchIcon />
+								</InputGroupAddon>
+								{globalFilter && (
+									<InputGroupAddon align="inline-end">
+										<button
+											onClick={() => setGlobalFilter("")}
+											className="text-muted-foreground hover:text-foreground"
+											aria-label="Clear search"
+											type="button"
+										>
+											<XIcon className="size-4" />
+										</button>
+									</InputGroupAddon>
+								)}
+							</InputGroup>
+						</div>
+						
+						<div className="flex gap-2 flex-1">
+							{table.getColumn("groups") && (
+								<DataTableFacetedFilter
+									column={table.getColumn("groups")}
+									title="Groups"
+									options={allGroups.map((group) => ({
+										label: group,
+										value: group,
+									}))}
+								/>
+							)}
+							
+							<Button variant="outline">
+								<CheckCircleIcon />
+								Status
 							</Button>
-						)}
+							
+							<Button variant="outline">
+								<CalendarIcon />
+								Join Date
+							</Button>
+						</div>
+
+						<div className="flex gap-2 sm:ml-auto">
+							{(globalFilter || columnFilters.length > 0) && (
+								<Button variant="ghost" onClick={handleClearFilters}>
+									<XIcon />
+									Clear filters
+								</Button>
+							)}
+							
+							<Popover>
+								<PopoverTrigger
+									render={
+										<Button variant="outline">
+											<MoreVerticalIcon />
+										</Button>
+									}
+								/>
+								<PopoverPopup className="w-80" align="end">
+									<div className="mb-4">
+										<PopoverTitle className="text-base">View Options</PopoverTitle>
+										<PopoverDescription>
+											Customize what members are displayed in the table.
+										</PopoverDescription>
+									</div>
+									<div className="space-y-4">
+										<div className="space-y-3">
+											<div className="flex items-center gap-2">
+												<Checkbox id="show-active" defaultChecked />
+												<Label htmlFor="show-active" className="flex items-center gap-2 cursor-pointer">
+													<UserCheckIcon className="size-4 text-muted-foreground" />
+													<span>Show active members</span>
+												</Label>
+											</div>
+											<div className="flex items-center gap-2">
+												<Checkbox id="show-cancelled" />
+												<Label htmlFor="show-cancelled" className="flex items-center gap-2 cursor-pointer">
+													<UserXIcon className="size-4 text-muted-foreground" />
+													<span>Show cancelled members</span>
+												</Label>
+											</div>
+										</div>
+										<div className="pt-3 border-t">
+											<p className="text-sm text-muted-foreground">
+												Need to import or export members?{" "}
+												<a
+													href="/dashboard/settings/import-export"
+													className="text-foreground hover:underline"
+												>
+													Go to settings
+												</a>
+											</p>
+										</div>
+									</div>
+								</PopoverPopup>
+							</Popover>
+						</div>
 					</div>
 				</div>
 			</section>
@@ -266,8 +350,14 @@ export function MembersTable({}: MembersTableProps) {
 								))
 							) : (
 								<TableRow>
-									<TableCell className="h-24 text-center" colSpan={6}>
-										No members found.
+									<TableCell className="h-auto py-12" colSpan={6}>
+										<EmptyMembers hasMembers={true} />
+										<div className="flex justify-center mt-4">
+											<Button variant="outline" onClick={handleClearFilters}>
+												<XIcon />
+												Clear all filters
+											</Button>
+										</div>
 									</TableCell>
 								</TableRow>
 							)}
