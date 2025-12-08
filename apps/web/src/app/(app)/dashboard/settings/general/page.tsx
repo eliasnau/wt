@@ -54,14 +54,12 @@ export default function GeneralSettingsPage() {
 			</Header>
 
 			<div className="space-y-6">
-				<Frame>
-					<FrameHeader>
-						<FrameTitle>Organization Information</FrameTitle>
-						<FrameDescription>
-							Update your organization details and public information
-						</FrameDescription>
-					</FrameHeader>
+				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 					<FramePanel>
+						<h2 className="font-heading text-xl mb-2 text-foreground">Organization Information</h2>
+						<p className="text-sm text-muted-foreground mb-6">
+							Update your organization details and public information
+						</p>
 						<Form
 							id="org-info-form"
 							onSubmit={handleSubmit}
@@ -90,14 +88,12 @@ export default function GeneralSettingsPage() {
 					</FrameFooter>
 				</Frame>
 
-				<Frame>
-					<FrameHeader>
-						<FrameTitle>Contact Information</FrameTitle>
-						<FrameDescription>
-							Manage your primary contact details
-						</FrameDescription>
-					</FrameHeader>
+				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 					<FramePanel>
+						<h2 className="font-heading text-xl mb-2 text-foreground">Contact Information</h2>
+						<p className="text-sm text-muted-foreground mb-6">
+							Manage your primary contact details
+						</p>
 						<Form
 							id="contact-info-form"
 							onSubmit={handleSubmit}
@@ -127,14 +123,12 @@ export default function GeneralSettingsPage() {
 					</FrameFooter>
 				</Frame>
 
-				<Frame>
-					<FrameHeader>
-						<FrameTitle>Regional Settings</FrameTitle>
-						<FrameDescription>
-							Configure timezone and language preferences
-						</FrameDescription>
-					</FrameHeader>
+				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 					<FramePanel>
+						<h2 className="font-heading text-xl mb-2 text-foreground">Regional Settings</h2>
+						<p className="text-sm text-muted-foreground mb-6">
+							Configure timezone and language preferences
+						</p>
 						<Form
 							id="regional-settings-form"
 							onSubmit={handleSubmit}

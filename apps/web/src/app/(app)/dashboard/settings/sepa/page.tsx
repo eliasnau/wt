@@ -45,24 +45,12 @@ export default function SepaSettingsPage() {
 			</Header>
 
 			<div className="space-y-6">
-				<Frame>
-					<FrameHeader className="flex-row items-start justify-between">
-						<div>
-							<FrameTitle>Bank Account Details</FrameTitle>
-							<FrameDescription>
-								Enter your bank account information for SEPA direct debit
-							</FrameDescription>
-						</div>
-						<div className="flex gap-2">
-							<Button type="reset" form="sepa-bank-form" variant="ghost">
-								Reset
-							</Button>
-							<Button type="submit" form="sepa-bank-form">
-								Save Changes
-							</Button>
-						</div>
-					</FrameHeader>
+				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 					<FramePanel>
+						<h2 className="font-heading text-xl mb-2 text-foreground">Bank Account Details</h2>
+						<p className="text-sm text-muted-foreground mb-6">
+							Enter your bank account information for SEPA direct debit
+						</p>
 						<Form
 							id="sepa-bank-form"
 							onSubmit={handleSubmit}
@@ -86,26 +74,22 @@ export default function SepaSettingsPage() {
 							</Field>
 						</Form>
 					</FramePanel>
+					<FrameFooter className="flex-row justify-end gap-2">
+						<Button type="reset" form="sepa-bank-form" variant="ghost">
+							Reset
+						</Button>
+						<Button type="submit" form="sepa-bank-form">
+							Save Changes
+						</Button>
+					</FrameFooter>
 				</Frame>
 
-				<Frame>
-					<FrameHeader className="flex-row items-start justify-between">
-						<div>
-							<FrameTitle>Transaction Details</FrameTitle>
-							<FrameDescription>
-								Customize how transactions appear on bank statements
-							</FrameDescription>
-						</div>
-						<div className="flex gap-2">
-							<Button type="reset" form="sepa-transaction-form" variant="ghost">
-								Reset
-							</Button>
-							<Button type="submit" form="sepa-transaction-form">
-								Save Changes
-							</Button>
-						</div>
-					</FrameHeader>
+				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 					<FramePanel>
+						<h2 className="font-heading text-xl mb-2 text-foreground">Transaction Details</h2>
+						<p className="text-sm text-muted-foreground mb-6">
+							Customize how transactions appear on bank statements
+						</p>
 						<Form
 							id="sepa-transaction-form"
 							onSubmit={handleSubmit}
