@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import type { CheckAuthorizationFromSessionClaims } from "@clerk/backend";
+import type { CheckAuthorizationFromSessionClaims } from "@clerk/types";
 
 export interface Context {
 	userId: string | null;

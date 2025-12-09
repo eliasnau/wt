@@ -6,9 +6,6 @@ settings:
 
 catalogs:
   default:
-    '@arcjet/next':
-      specifier: 1.0.0-beta.15
-      version: 1.0.0-beta.15
     '@orpc/client':
       specifier: ^1.12.2
       version: 1.12.2
@@ -246,7 +243,7 @@ importers:
   packages/api:
     dependencies:
       '@arcjet/next':
-        specifier: 'catalog:'
+        specifier: ^1.0.0-beta.15
         version: 1.0.0-beta.15(next@16.0.7(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))
       '@clerk/backend':
         specifier: ^2.25.1
@@ -254,6 +251,9 @@ importers:
       '@clerk/nextjs':
         specifier: ^6.31.5
         version: 6.36.0(next@16.0.7(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
+      '@clerk/types':
+        specifier: ^4.38.0
+        version: 4.101.5(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@orpc/client':
         specifier: 'catalog:'
         version: 1.12.2

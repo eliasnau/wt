@@ -17,6 +17,8 @@ const aj = arcjet({
 
 /**
  * @param tokensToConsume - Number of tokens to consume from the bucket (default: 1)
+ * @example
+ * protectedProcedure.use(rateLimitMiddleware(5)).handler(...)
  */
 export function rateLimitMiddleware(tokensToConsume: number = 1) {
 	return os.$context<Context>().middleware(async ({ context, next }) => {

@@ -17,9 +17,10 @@
     "typescript": "^5"
   },
   "dependencies": {
-    "@arcjet/next": "catalog:",
+    "@arcjet/next": "^1.0.0-beta.15",
     "@clerk/backend": "^2.25.1",
     "@clerk/nextjs": "^6.31.5",
+    "@clerk/types": "^4.38.0",
     "@orpc/client": "catalog:",
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
