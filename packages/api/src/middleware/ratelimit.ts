@@ -1,6 +1,9 @@
 import arcjet, { tokenBucket } from "@arcjet/next";
 import { ORPCError, os } from "@orpc/server";
 import type { Context } from "../context";
+import { logger } from "../lib/logger";
+import { ipAddress, geolocation } from "@vercel/functions";
+import { after } from "next/server";
 
 const aj = arcjet({
 	key: process.env.ARCJET_KEY!,
@@ -34,6 +37,22 @@ export function rateLimitMiddleware(tokensToConsume: number = 1) {
 		});
 
 		if (decision.isDenied()) {
+			after(() => {
+				const geo = geolocation(context.req);
+				logger.warn("Rate limit exceeded", {
+					userId: context.userId,
+					path: context.req.nextUrl.pathname,
+					method: context.req.method,
+					tokensRequested: tokensToConsume,
+					ip: ipAddress(context.req),
+					geo: {
+						city: geo.city,
+						country: geo.country,
+						region: geo.region,
+					},
+				});
+			});
+			
 			throw new ORPCError("TOO_MANY_REQUESTS", {
 				message: "Rate limit exceeded. Please try again later.",
 				...(decision.reason.isRateLimit() && {
