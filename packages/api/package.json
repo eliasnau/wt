@@ -17,15 +17,16 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@arcjet/next": "catalog:",
     "@clerk/backend": "^2.25.1",
     "@clerk/nextjs": "^6.31.5",
-    "@orpc/server": "catalog:",
     "@orpc/client": "catalog:",
     "@orpc/openapi": "catalog:",
+    "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
-    "next": "catalog:",
+    "@repo/db": "workspace:*",
     "dotenv": "catalog:",
-    "zod": "catalog:",
-    "@repo/db": "workspace:*"
+    "next": "catalog:",
+    "zod": "catalog:"
   }
 }

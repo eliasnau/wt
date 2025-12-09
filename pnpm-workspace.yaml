@@ -1,12 +1,13 @@
 packages:
   - apps/*
   - packages/*
+
 catalog:
-  convex: ^1.29.3
-  '@orpc/server': ^1.12.2
   '@orpc/client': ^1.12.2
   '@orpc/openapi': ^1.12.2
+  '@orpc/server': ^1.12.2
   '@orpc/zod': ^1.12.2
-  next: ^16.0.7
+  convex: ^1.29.3
   dotenv: ^16.4.7
+  next: ^16.0.7
   zod: ^4.1.12
