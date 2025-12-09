@@ -76,11 +76,7 @@ import { EditMemberSheet } from "./edit-member-sheet";
 import { EmptyMembers } from "./empty-members";
 import type { Member } from "./types";
 
-interface MembersTableProps {
-	onGenerateQR?: () => void;
-}
-
-export function MembersTable({ onGenerateQR }: MembersTableProps) {
+export function MembersTable() {
 	const pageSize = 10;
 
 	const [globalFilter, setGlobalFilter] = useState("");
@@ -142,7 +138,7 @@ export function MembersTable({ onGenerateQR }: MembersTableProps) {
 			<>
 				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 					<FramePanel className="py-12">
-						<EmptyMembers hasMembers={false} onGenerateQR={onGenerateQR || (() => {})} />
+						<EmptyMembers hasMembers={false} />
 					</FramePanel>
 				</Frame>
 				<EditMemberSheet

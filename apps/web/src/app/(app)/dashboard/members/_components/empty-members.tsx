@@ -11,10 +11,9 @@ import { CreateMemberButton } from "./create-member-button";
 
 interface EmptyMembersProps {
 	hasMembers: boolean;
-	onGenerateQR: () => void;
 }
 
-export function EmptyMembers({ hasMembers, onGenerateQR }: EmptyMembersProps) {
+export function EmptyMembers({ hasMembers }: EmptyMembersProps) {
 	return (
 		<Empty>
 			<EmptyHeader>
@@ -32,7 +31,7 @@ export function EmptyMembers({ hasMembers, onGenerateQR }: EmptyMembersProps) {
 			</EmptyHeader>
 			{!hasMembers && (
 				<EmptyContent>
-					<CreateMemberButton onGenerateQR={onGenerateQR} />
+					<CreateMemberButton />
 				</EmptyContent>
 			)}
 		</Empty>

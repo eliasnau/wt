@@ -2,11 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Menu, MenuPopup, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { Plus, QrCodeIcon } from "lucide-react";
 
-interface CreateMemberButtonProps {
-	onGenerateQR: () => void;
-}
+export function CreateMemberButton() {
+	const handleGenerateQR = () => {
+		console.log("Generate QR Code");
+	};
 
-export function CreateMemberButton({ onGenerateQR }: CreateMemberButtonProps) {
 	return (
 		<Menu>
 			<MenuTrigger
@@ -24,7 +24,7 @@ export function CreateMemberButton({ onGenerateQR }: CreateMemberButtonProps) {
 					<Plus />
 					Add Manually
 				</MenuItem>
-				<MenuItem onClick={onGenerateQR}>
+				<MenuItem onClick={handleGenerateQR}>
 					<QrCodeIcon />
 					Generate QR Code
 				</MenuItem>

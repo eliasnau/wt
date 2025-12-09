@@ -15,10 +15,6 @@ import { CreateMemberButton } from "./_components/create-member-button";
 export default function MembersPage() {
 	const [qrSheetOpen, setQrSheetOpen] = useState(false);
 
-	const handleGenerateQR = () => {
-		setQrSheetOpen(true);
-	};
-
 	return (
 		<div className="flex flex-col gap-6">
 			<Header>
@@ -29,11 +25,11 @@ export default function MembersPage() {
 					</HeaderDescription>
 				</HeaderContent>
 				<HeaderActions>
-					<CreateMemberButton onGenerateQR={handleGenerateQR} />
+					<CreateMemberButton />
 				</HeaderActions>
 			</Header>
 
-			<MembersTable onGenerateQR={handleGenerateQR} />
+			<MembersTable />
 
 			<GenerateQRSheet open={qrSheetOpen} onOpenChange={setQrSheetOpen} />
 		</div>
