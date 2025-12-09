@@ -17,6 +17,8 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@clerk/backend": "^2.25.1",
+    "@clerk/nextjs": "^6.31.5",
     "@orpc/server": "catalog:",
     "@orpc/client": "catalog:",
     "@orpc/openapi": "catalog:",

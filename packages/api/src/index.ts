@@ -1,6 +1,9 @@
 import { ORPCError, os } from "@orpc/server";
 import type { Context } from "./context";
+import { authMiddleware } from "./middleware/auth";
 
 export const o = os.$context<Context>();
 
 export const publicProcedure = o;
+
+export const protectedProcedure = o.use(authMiddleware);
