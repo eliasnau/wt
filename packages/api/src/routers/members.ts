@@ -5,7 +5,7 @@ import { rateLimitMiddleware } from "../middleware/ratelimit";
 export const membersRouter = {
 	list: protectedProcedure
 		.use(rateLimitMiddleware(1))
-		.use(requirePermission("org:member_management:members_read"))
+		.use(requirePermission("org:member_read"))
 		.handler(() => {
 			return [
 				{
