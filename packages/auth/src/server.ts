@@ -17,6 +17,7 @@ export const auth = betterAuth({
 	secret: process.env.BETTER_AUTH_SECRET!,
 	plugins: [
 		passkey(),
+		organization(),
 		twoFactor({
 			issuer: "WT"
 		}),
