@@ -211,6 +211,9 @@ importers:
       react-dom:
         specifier: ^19.2.0
         version: 19.2.1(react@19.2.1)
+      react-qr-code:
+        specifier: ^2.0.18
+        version: 2.0.18(react@19.2.1)
       recharts:
         specifier: 2.15.4
         version: 2.15.4(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -3777,6 +3780,9 @@ packages:
     resolution: {integrity: sha512-KTqnxsgGiQ6ZAzZCVlJH5eOjSnvlyEgx1m8bkRJfOhmGRqfo5KLvmAlACQkrjEtOQ4B7wF9TdSLIs9O90MX9xA==}
     engines: {node: '>=16.0.0'}
 
+  qr.js@0.0.0:
+    resolution: {integrity: sha512-c4iYnWb+k2E+vYpRimHqSu575b1/wKl4XFeJGpFmrJQz5I88v9aY2czh7s0w36srfCM1sXgC/xpoJz5dJfq+OQ==}
+
   radash@12.1.1:
     resolution: {integrity: sha512-h36JMxKRqrAxVD8201FrCpyeNuUY9Y5zZwujr20fFO77tpUtGa6EZzfKw/3WaiBX95fq7+MpsuMLNdSnORAwSA==}
     engines: {node: '>=14.18.0'}
@@ -3816,6 +3822,11 @@ packages:
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
       react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  react-qr-code@2.0.18:
+    resolution: {integrity: sha512-v1Jqz7urLMhkO6jkgJuBYhnqvXagzceg3qJUWayuCK/c6LTIonpWbwxR1f1APGd4xrW/QcQEovNrAojbUz65Tg==}
+    peerDependencies:
+      react: '*'
 
   react-remove-scroll-bar@2.3.8:
     resolution: {integrity: sha512-9r+yi9+mgU33AKcj6IbT9oRCO78WriSj6t/cF8DWBZJ9aOGPOTEDvdUDz1FwKim7QXWwmHqtdHnRJfhAxEG46Q==}
@@ -7636,6 +7647,8 @@ snapshots:
 
   pvutils@1.1.5: {}
 
+  qr.js@0.0.0: {}
+
   radash@12.1.1: {}
 
   radix-ui@1.4.3(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1):
@@ -7721,6 +7734,12 @@ snapshots:
     dependencies:
       react: 19.2.1
       react-dom: 19.2.1(react@19.2.1)
+
+  react-qr-code@2.0.18(react@19.2.1):
+    dependencies:
+      prop-types: 15.8.1
+      qr.js: 0.0.0
+      react: 19.2.1
 
   react-remove-scroll-bar@2.3.8(@types/react@19.2.2)(react@19.2.1):
     dependencies:

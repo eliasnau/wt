@@ -161,7 +161,7 @@ export function PasskeyFrame() {
                 <EmptyMedia variant="icon">
                   <Fingerprint />
                 </EmptyMedia>
-                <EmptyTitle>No Passkeys</EmptyTitle>
+                <EmptyTitle>Passkeys</EmptyTitle>
                 <EmptyDescription>
                   Add a passkey for faster and more secure sign in
                 </EmptyDescription>
