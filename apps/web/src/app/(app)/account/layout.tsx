@@ -3,7 +3,7 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User, Shield } from "lucide-react";
+import { User, Shield, Building2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 const accountNavItems = [
@@ -18,6 +18,12 @@ const accountNavItems = [
 		description: "Password & authentication",
 		href: "/account/security",
 		icon: Shield,
+	},
+	{
+		title: "Organizations",
+		description: "Manage organizations",
+		href: "/account/organizations",
+		icon: Building2,
 	},
 ];
 
