@@ -13,6 +13,7 @@
 		"check-types": "tsc --noEmit"
 	},
 	"dependencies": {
+		"@better-auth/passkey": "^1.4.7",
 		"@repo/db": "workspace:*",
 		"better-auth": "^1.4.7",
 		"zod": "catalog:"
