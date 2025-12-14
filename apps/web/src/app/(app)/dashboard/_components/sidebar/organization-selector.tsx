@@ -14,22 +14,36 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from "@/components/ui/sidebar";
-import { useClerk, useOrganization, useOrganizationList, useUser } from "@clerk/nextjs";
 import { ChevronsUpDown, Plus, Settings } from "lucide-react";
 import * as React from "react";
 
-export const Logo = () => {
-	const { isMobile } = useSidebar();
-	const { organization } = useOrganization();
-	const { setActive, userMemberships } = useOrganizationList({
-		userMemberships: {
-			infinite: true,
-		},
-	});
-	const { openOrganizationProfile } = useClerk();
-	const { openCreateOrganization } = useClerk();
+type Organization = {
+	id: string;
+	name: string;
+	imageUrl?: string;
+	membersCount: number;
+};
 
-	if (!organization) return null;
+const mockOrganizations: Organization[] = [
+	{
+		id: "1",
+		name: "Acme",
+		imageUrl: undefined,
+		membersCount: 12,
+	},
+	{
+		id: "2",
+		name: "Acme 2",
+		imageUrl: undefined,
+		membersCount: 8,
+	},
+];
+
+export const OrganizationSelector = () => {
+	const { isMobile } = useSidebar();
+	const [activeOrg, setActiveOrg] = React.useState<Organization>(mockOrganizations[0]);
+
+	if (!activeOrg) return null;
 
 	return (
 		<SidebarMenu>
@@ -41,25 +55,25 @@ export const Logo = () => {
 							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
 						>
 							<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-								{organization.imageUrl ? (
+								{activeOrg.imageUrl ? (
 									<img
-										src={organization.imageUrl}
-										alt={organization.name}
+										src={activeOrg.imageUrl}
+										alt={activeOrg.name}
 										className="size-8 rounded-lg"
 									/>
 								) : (
 									<span className="text-lg font-semibold">
-										{organization.name.charAt(0).toUpperCase()}
+										{activeOrg.name.charAt(0).toUpperCase()}
 									</span>
 								)}
 							</div>
 							<div className="grid flex-1 text-left text-sm leading-tight">
 								<span className="truncate font-semibold">
-									{organization.name}
+									{activeOrg.name}
 								</span>
 								<span className="truncate text-xs">
-									{organization.membersCount}{" "}
-									{organization.membersCount === 1 ? "member" : "members"}
+									{activeOrg.membersCount}{" "}
+									{activeOrg.membersCount === 1 ? "member" : "members"}
 								</span>
 							</div>
 							<ChevronsUpDown className="ml-auto" />
@@ -74,32 +88,30 @@ export const Logo = () => {
 						<DropdownMenuLabel className="text-xs text-muted-foreground">
 							Organizations
 						</DropdownMenuLabel>
-						{userMemberships.data?.map((mem) => (
+						{mockOrganizations.map((org) => (
 							<DropdownMenuItem
-								key={mem.organization.id}
-								onClick={() =>
-									setActive?.({ organization: mem.organization.id })
-								}
+								key={org.id}
+								onClick={() => setActiveOrg(org)}
 								className="gap-2 p-2"
 							>
 								<div className="flex size-6 items-center justify-center rounded-sm border">
-									{mem.organization.imageUrl ? (
+									{org.imageUrl ? (
 										<img
-											src={mem.organization.imageUrl}
-											alt={mem.organization.name}
+											src={org.imageUrl}
+											alt={org.name}
 											className="size-6 rounded-sm"
 										/>
 									) : (
 										<span className="text-xs font-semibold">
-											{mem.organization.name.charAt(0).toUpperCase()}
+											{org.name.charAt(0).toUpperCase()}
 										</span>
 									)}
 								</div>
-								{mem.organization.name}
+								{org.name}
 							</DropdownMenuItem>
 						))}
 						<DropdownMenuSeparator />
-						<DropdownMenuItem className="gap-2 p-2" onClick={() => openCreateOrganization()}>
+						<DropdownMenuItem className="gap-2 p-2">
 							<div className="flex size-6 items-center justify-center rounded-md border bg-background">
 								<Plus className="size-4" />
 							</div>
@@ -107,7 +119,7 @@ export const Logo = () => {
 								Create organization
 							</div>
 						</DropdownMenuItem>
-						<DropdownMenuItem className="gap-2 p-2" onClick={() => openOrganizationProfile()}>
+						<DropdownMenuItem className="gap-2 p-2">
 							<div className="flex size-6 items-center justify-center rounded-md border bg-background">
 								<Settings className="size-4" />
 							</div>

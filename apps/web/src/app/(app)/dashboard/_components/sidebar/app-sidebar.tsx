@@ -30,7 +30,7 @@ import {
 	Users,
 	Users2,
 } from "lucide-react";
-import { Logo } from "@/app/(app)/dashboard/_components/sidebar/logo";
+import { OrganizationSelector } from "@/app/(app)/dashboard/_components/sidebar/organization-selector";
 import { UserButton } from "@/app/(app)/dashboard/_components/sidebar/user-button";
 import type { NavRoute } from "./nav-main";
 import DashboardNavigation from "@/app/(app)/dashboard/_components/sidebar/nav-main";
@@ -171,7 +171,7 @@ export function DashboardSidebar() {
 						: "flex-row items-center justify-between",
 				)}
 			>
-				<Logo />
+				<OrganizationSelector />
 
 				<motion.div
 					key={isCollapsed ? "header-collapsed" : "header-expanded"}
