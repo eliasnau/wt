@@ -94,12 +94,16 @@ export default function SignIn() {
 											onResponse: () => {
 												setLoading(false);
 											},
-											onError: (ctx) => {
-												toast.error(ctx.error.message);
-											},
-											onSuccess: () => {
+										onError: (ctx) => {
+											toast.error(ctx.error.message);
+										},
+										onSuccess: (ctx) => {
+											if (ctx.data.twoFactorRedirect) {
+												router.push("/verify-2fa" as Route);
+											} else {
 												router.push("/dashboard");
-											},
+											}
+										},
 										}
 									);
 								}}
