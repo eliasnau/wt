@@ -17,6 +17,7 @@ export const auth = betterAuth({
 		passkey(),
 		nextCookies(), //! has to be last plugin in array
 	],
+	experimental: { joins: true }
 });
 
 export type Session = typeof auth.$Infer.Session;
