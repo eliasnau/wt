@@ -14,36 +14,62 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from "@/components/ui/sidebar";
-import { ChevronsUpDown, Plus, Settings } from "lucide-react";
-import * as React from "react";
-
-type Organization = {
-	id: string;
-	name: string;
-	imageUrl?: string;
-	membersCount: number;
-};
-
-const mockOrganizations: Organization[] = [
-	{
-		id: "1",
-		name: "Acme",
-		imageUrl: undefined,
-		membersCount: 12,
-	},
-	{
-		id: "2",
-		name: "Acme 2",
-		imageUrl: undefined,
-		membersCount: 8,
-	},
-];
+import { Badge } from "@/components/ui/badge";
+import { ChevronsUpDown, Plus, Settings, Building2 } from "lucide-react";
+import { authClient } from "@repo/auth/client";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export const OrganizationSelector = () => {
 	const { isMobile } = useSidebar();
-	const [activeOrg, setActiveOrg] = React.useState<Organization>(mockOrganizations[0]);
+	const router = useRouter();
+	const { data: organizations } = authClient.useListOrganizations();
+	const { data: session } = authClient.useSession();
 
-	if (!activeOrg) return null;
+	const activeOrgId = session?.session?.activeOrganizationId;
+	const activeOrg = organizations?.find((org) => org.id === activeOrgId);
+
+	const handleSelectOrg = async (orgId: string) => {
+		try {
+			const { error } = await authClient.organization.setActive({
+				organizationId: orgId,
+			});
+
+			if (error) {
+				toast.error(error.message || "Failed to switch organization");
+				return;
+			}
+
+			toast.success("Organization switched");
+			router.push("/dashboard");
+		} catch (error) {
+			toast.error("Failed to switch organization");
+			console.error(error);
+		}
+	};
+
+	if (!activeOrg) {
+		return (
+			<SidebarMenu>
+				<SidebarMenuItem>
+					<SidebarMenuButton
+						size="lg"
+						onClick={() => router.push("/account/organizations")}
+					>
+						<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+							<Building2 className="size-4" />
+						</div>
+						<div className="grid flex-1 text-left text-sm leading-tight">
+							<span className="truncate font-semibold">No Organization</span>
+							<span className="truncate text-xs text-muted-foreground">
+								Select an organization
+							</span>
+						</div>
+					</SidebarMenuButton>
+				</SidebarMenuItem>
+			</SidebarMenu>
+		);
+	}
 
 	return (
 		<SidebarMenu>
@@ -55,11 +81,11 @@ export const OrganizationSelector = () => {
 							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
 						>
 							<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-								{activeOrg.imageUrl ? (
+								{activeOrg.logo ? (
 									<img
-										src={activeOrg.imageUrl}
+										src={activeOrg.logo}
 										alt={activeOrg.name}
-										className="size-8 rounded-lg"
+										className="size-8 rounded-lg object-cover"
 									/>
 								) : (
 									<span className="text-lg font-semibold">
@@ -72,8 +98,8 @@ export const OrganizationSelector = () => {
 									{activeOrg.name}
 								</span>
 								<span className="truncate text-xs">
-									{activeOrg.membersCount}{" "}
-									{activeOrg.membersCount === 1 ? "member" : "members"}
+									{activeOrg.members?.length || 0}{" "}
+									{activeOrg.members?.length === 1 ? "member" : "members"}
 								</span>
 							</div>
 							<ChevronsUpDown className="ml-auto" />
@@ -88,30 +114,41 @@ export const OrganizationSelector = () => {
 						<DropdownMenuLabel className="text-xs text-muted-foreground">
 							Organizations
 						</DropdownMenuLabel>
-						{mockOrganizations.map((org) => (
-							<DropdownMenuItem
-								key={org.id}
-								onClick={() => setActiveOrg(org)}
-								className="gap-2 p-2"
-							>
-								<div className="flex size-6 items-center justify-center rounded-sm border">
-									{org.imageUrl ? (
-										<img
-											src={org.imageUrl}
-											alt={org.name}
-											className="size-6 rounded-sm"
-										/>
-									) : (
-										<span className="text-xs font-semibold">
-											{org.name.charAt(0).toUpperCase()}
-										</span>
+						{organizations?.map((org) => {
+							const isActive = org.id === activeOrgId;
+							return (
+								<DropdownMenuItem
+									key={org.id}
+									onClick={() => handleSelectOrg(org.id)}
+									className="gap-2 p-2"
+								>
+									<div className="flex size-6 items-center justify-center rounded-sm border">
+										{org.logo ? (
+											<img
+												src={org.logo}
+												alt={org.name}
+												className="size-6 rounded-sm object-cover"
+											/>
+										) : (
+											<span className="text-xs font-semibold">
+												{org.name.charAt(0).toUpperCase()}
+											</span>
+										)}
+									</div>
+									<span className="flex-1">{org.name}</span>
+									{isActive && (
+										<Badge variant="secondary" className="text-xs">
+											Active
+										</Badge>
 									)}
-								</div>
-								{org.name}
-							</DropdownMenuItem>
-						))}
+								</DropdownMenuItem>
+							);
+						})}
 						<DropdownMenuSeparator />
-						<DropdownMenuItem className="gap-2 p-2">
+						<DropdownMenuItem
+							className="gap-2 p-2"
+							onClick={() => router.push("/account/organizations")}
+						>
 							<div className="flex size-6 items-center justify-center rounded-md border bg-background">
 								<Plus className="size-4" />
 							</div>
@@ -119,12 +156,15 @@ export const OrganizationSelector = () => {
 								Create organization
 							</div>
 						</DropdownMenuItem>
-						<DropdownMenuItem className="gap-2 p-2">
+						<DropdownMenuItem
+							className="gap-2 p-2"
+							onClick={() => router.push("/account/organizations")}
+						>
 							<div className="flex size-6 items-center justify-center rounded-md border bg-background">
 								<Settings className="size-4" />
 							</div>
 							<div className="font-medium text-muted-foreground">
-								Manage organization
+								Manage organizations
 							</div>
 						</DropdownMenuItem>
 					</DropdownMenuContent>
