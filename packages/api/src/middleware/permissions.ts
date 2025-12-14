@@ -14,7 +14,7 @@ export const requirePermission = (permission: string) => {
 	return os
 		.$context<Context & { user: { id: string } }>()
 		.middleware(async ({ context, next }) => {
-			const hasPermission = context.has({ feature: permission });
+			const hasPermission = false
 
 			if (!hasPermission) {
 				after(() => {
