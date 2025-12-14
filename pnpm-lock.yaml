@@ -21,15 +21,6 @@ catalogs:
     convex:
       specifier: ^1.29.3
       version: 1.30.0
-    dotenv:
-      specifier: ^16.4.7
-      version: 16.6.1
-    next:
-      specifier: ^16.0.7
-      version: 16.0.8
-    zod:
-      specifier: ^4.1.12
-      version: 4.1.13
 
 importers:
 
@@ -38,6 +29,9 @@ importers:
       dotenv:
         specifier: ^17.2.2
         version: 17.2.3
+      pg:
+        specifier: ^8.16.3
+        version: 8.16.3
       zod:
         specifier: ^4.1.13
         version: 4.1.13
@@ -158,7 +152,7 @@ importers:
         specifier: workspace:*
         version: link:../../packages/backend
       '@tanstack/react-form':
-        specifier: ^1.12.3
+        specifier: ^1.27.1
         version: 1.27.1(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@tanstack/react-query':
         specifier: ^5.85.5
