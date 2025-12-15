@@ -3,8 +3,13 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { db } from "@repo/db";
 import { passkey } from "@better-auth/passkey";
-import { organization, twoFactor } from "better-auth/plugins"
-
+import { organization, twoFactor } from "better-auth/plugins";
+import {
+	ac,
+	owner,
+	admin,
+	member,
+} from "./permissions";
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, {
@@ -17,13 +22,23 @@ export const auth = betterAuth({
 	secret: process.env.BETTER_AUTH_SECRET!,
 	plugins: [
 		passkey(),
-		organization(),
+		organization({
+			ac,
+			roles: {
+				owner,
+				admin,
+				member,
+			},
+			dynamicAccessControl: {
+				enabled: true,
+			},
+		}),
 		twoFactor({
-			issuer: "WT"
+			issuer: "WT",
 		}),
 		nextCookies(), //! has to be last plugin in array
 	],
-	experimental: { joins: true }
+	experimental: { joins: true },
 });
 
 export type Session = typeof auth.$Infer.Session;
