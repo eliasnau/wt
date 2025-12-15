@@ -1,37 +1,35 @@
 {
-  "name": "@repo/api",
-  "exports": {
-    ".": {
-      "default": "./src/index.ts"
-    },
-    "./*": {
-      "default": "./src/*.ts"
-    }
-  },
-  "type": "module",
-  "scripts": {},
-  "devDependencies": {
-    "@repo/config": "workspace:*"
-  },
-  "peerDependencies": {
-    "typescript": "^5"
-  },
-  "dependencies": {
-    "@arcjet/next": "^1.0.0-beta.15",
-    "@axiomhq/js": "^1.3.1",
-    "@axiomhq/logging": "^0.1.6",
-    "@axiomhq/nextjs": "^0.1.6",
-    "@clerk/backend": "^2.25.1",
-    "@clerk/nextjs": "^6.31.5",
-    "@clerk/types": "^4.38.0",
-    "@orpc/client": "catalog:",
-    "@orpc/openapi": "catalog:",
-    "@orpc/server": "catalog:",
-    "@orpc/zod": "catalog:",
-    "@repo/db": "workspace:*",
-    "@vercel/functions": "^3.3.4",
-    "dotenv": "catalog:",
-    "next": "catalog:",
-    "zod": "catalog:"
-  }
+	"name": "@repo/api",
+	"exports": {
+		".": {
+			"default": "./src/index.ts"
+		},
+		"./*": {
+			"default": "./src/*.ts"
+		}
+	},
+	"type": "module",
+	"scripts": {},
+	"devDependencies": {
+		"@repo/config": "workspace:*"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	},
+	"dependencies": {
+		"@arcjet/next": "^1.0.0-beta.15",
+		"@axiomhq/js": "^1.3.1",
+		"@axiomhq/logging": "^0.1.6",
+		"@axiomhq/nextjs": "^0.1.6",
+		"@orpc/client": "catalog:",
+		"@orpc/openapi": "catalog:",
+		"@orpc/server": "catalog:",
+		"@orpc/zod": "catalog:",
+		"@repo/auth": "workspace:*",
+		"@repo/db": "workspace:*",
+		"@vercel/functions": "^3.3.4",
+		"dotenv": "catalog:",
+		"next": "catalog:",
+		"zod": "catalog:"
+	}
 }

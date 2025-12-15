@@ -18,28 +18,42 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from "@/components/ui/sidebar";
-import { useClerk, useUser } from "@clerk/nextjs";
+import { authClient } from "@repo/auth/client";
 import {
 	ChevronsUpDown,
 	LogOut,
-	Settings,
 	User,
-	Bell,
-	CreditCard,
 	Moon,
 	Sun,
 	Monitor,
 } from "lucide-react";
 import * as React from "react";
 import { useTheme } from "next-themes";
+import { useRouter } from "next/navigation";
+import type { Route } from "next";
+import { toast } from "sonner";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export const UserButton = () => {
 	const { isMobile } = useSidebar();
-	const { user } = useUser();
-	const { signOut, openUserProfile } = useClerk();
+	const { data: session } = authClient.useSession();
+	const router = useRouter();
 	const { theme, setTheme } = useTheme();
 
-	if (!user) return null;
+	const handleSignOut = async () => {
+		await authClient.signOut({
+			fetchOptions: {
+			  onSuccess: () => {
+				router.push("/sign-in" as Route);
+			  },
+			  onError(context) {
+				toast.error(context.error.message,)
+			  },
+			},
+		  });
+	};
+
+	if (!session?.user) return null;
 
 	return (
 		<SidebarMenu>
@@ -50,23 +64,18 @@ export const UserButton = () => {
 							size="lg"
 							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
 						>
-							<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-								{user.imageUrl ? (
-									<img
-										src={user.imageUrl}
-										alt={user.fullName || user.username || "User"}
-										className="size-8 rounded-lg"
-									/>
-								) : (
+							<Avatar className="h-8 w-8 rounded-lg">
+								<AvatarImage src={session.user.image || undefined} alt={session.user.name || "User"} />
+								<AvatarFallback className="rounded-lg">
 									<User className="size-4" />
-								)}
-							</div>
+								</AvatarFallback>
+							</Avatar>
 							<div className="grid flex-1 text-left text-sm leading-tight">
 								<span className="truncate font-semibold">
-									{user.fullName || user.username || "User"}
+									{session.user.name || "User"}
 								</span>
 								<span className="truncate text-xs">
-									{user.primaryEmailAddress?.emailAddress}
+									{session.user.email}
 								</span>
 							</div>
 							<ChevronsUpDown className="ml-auto" />
@@ -82,7 +91,7 @@ export const UserButton = () => {
 							Account
 						</DropdownMenuLabel>
 						<DropdownMenuItem
-							onClick={() => openUserProfile()}
+							onClick={() => router.push("/account" as Route)}
 							className="gap-2 p-2"
 						>
 							<div className="flex size-6 items-center justify-center rounded-md border bg-background">
@@ -131,7 +140,7 @@ export const UserButton = () => {
 						</DropdownMenuSub>
 						<DropdownMenuSeparator />
 						<DropdownMenuItem
-							onClick={() => signOut()}
+							onClick={handleSignOut}
 							className="gap-2 p-2 text-red-600 focus:text-red-600"
 						>
 							<div className="flex size-6 items-center justify-center rounded-md border bg-background">

@@ -1,0 +1,29 @@
+{
+	"name": "@repo/auth",
+	"type": "module",
+	"exports": {
+		".": {
+			"default": "./src/index.ts"
+		},
+		"./*": {
+			"default": "./src/*.ts"
+		}
+	},
+	"scripts": {
+		"check-types": "tsc --noEmit",
+		"generate": "pnpx @better-auth/cli@latest generate --config \"./src/server.ts\" --output \"../db/src/schema/auth.ts\""
+	},
+	"dependencies": {
+		"@better-auth/passkey": "^1.4.7",
+		"@repo/db": "workspace:*",
+		"better-auth": "^1.4.7",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@repo/config": "workspace:*",
+		"typescript": "^5"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	}
+}

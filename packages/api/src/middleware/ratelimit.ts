@@ -19,20 +19,29 @@ const aj = arcjet({
 });
 
 /**
+ * Middleware that enforces rate limiting using Arcjet token bucket
  * @param tokensToConsume - Number of tokens to consume from the bucket (default: 1)
+ * @returns Middleware that checks rate limits before allowing request
+ * @throws {ORPCError} UNAUTHORIZED if authMiddleware was not used before this middleware
+ * @throws {ORPCError} TOO_MANY_REQUESTS if rate limit is exceeded
  * @example
  * protectedProcedure.use(rateLimitMiddleware(5)).handler(...)
  */
 export function rateLimitMiddleware(tokensToConsume: number = 1) {
 	return os.$context<Context>().middleware(async ({ context, next }) => {
-		if (!context.userId) {
+		const userId = (context as any).userId as string | undefined;
+
+		if (!userId) {
+			console.error(
+				"Rate limiting middleware used without authentication. Ensure authMiddleware is used before rateLimitMiddleware.",
+			);
 			throw new ORPCError("UNAUTHORIZED", {
-				message: "Authentication required for rate-limited endpoints",
+				message: "Authentication required",
 			});
 		}
 
 		const decision = await aj.protect(context.req, {
-			userId: context.userId,
+			userId: userId,
 			requested: tokensToConsume,
 		});
 
@@ -40,7 +49,7 @@ export function rateLimitMiddleware(tokensToConsume: number = 1) {
 			after(() => {
 				const geo = geolocation(context.req);
 				logger.warn("Rate limit exceeded", {
-					userId: context.userId,
+					userId: userId,
 					path: context.req.nextUrl.pathname,
 					method: context.req.method,
 					tokensRequested: tokensToConsume,
@@ -52,7 +61,7 @@ export function rateLimitMiddleware(tokensToConsume: number = 1) {
 					},
 				});
 			});
-			
+
 			throw new ORPCError("TOO_MANY_REQUESTS", {
 				message: "Rate limit exceeded. Please try again later.",
 				...(decision.reason.isRateLimit() && {
