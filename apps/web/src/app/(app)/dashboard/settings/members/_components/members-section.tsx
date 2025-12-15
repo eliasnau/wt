@@ -180,7 +180,7 @@ export function MembersSection() {
 									<Select
 										value={member.role}
 										onValueChange={(value) =>
-											openRoleConfirmDialog(member, value)
+											value && openRoleConfirmDialog(member, value)
 										}
 									>
 										<SelectTrigger className="w-[140px]">

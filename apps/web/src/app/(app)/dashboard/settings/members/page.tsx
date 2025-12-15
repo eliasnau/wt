@@ -1,5 +1,9 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { UserPlus } from "lucide-react";
+import { useState } from "react";
+import { authClient } from "@repo/auth/client";
 import {
 	Header,
 	HeaderContent,
@@ -7,45 +11,12 @@ import {
 	HeaderDescription,
 	HeaderActions,
 } from "../../_components/page-header";
-import { Button } from "@/components/ui/button";
-import { UserPlus, Loader2 } from "lucide-react";
-import { authClient } from "@repo/auth/client";
-import { useState } from "react";
-import { toast } from "sonner";
 import { MembersContent } from "./_components/members-content";
 import { InviteMemberDialog } from "./_components/invite-member-dialog";
 
 export default function MembersSettingsPage() {
 	const { data: activeOrg } = authClient.useActiveOrganization();
 	const [inviteOpen, setInviteOpen] = useState(false);
-	const [inviteEmail, setInviteEmail] = useState("");
-	const [inviteRole, setInviteRole] = useState("member");
-	const [loading, setLoading] = useState(false);
-
-	const inviteMember = async () => {
-		if (!inviteEmail.trim()) {
-			toast.error("Email is required");
-			return;
-		}
-
-		setLoading(true);
-		const result = await authClient.organization.inviteMember({
-			email: inviteEmail,
-			role: inviteRole,
-		});
-		setLoading(false);
-
-		if (result.error) {
-			toast.error(result.error.message || "Failed to send invitation");
-			return;
-		}
-
-		toast.success("Invitation sent");
-		setInviteOpen(false);
-		setInviteEmail("");
-		setInviteRole("member");
-		window.location.reload();
-	};
 
 	return (
 		<>
@@ -70,16 +41,7 @@ export default function MembersSettingsPage() {
 				<MembersContent />
 			</div>
 
-			<InviteMemberDialog
-				open={inviteOpen}
-				onOpenChange={setInviteOpen}
-				email={inviteEmail}
-				onEmailChange={setInviteEmail}
-				role={inviteRole}
-				onRoleChange={setInviteRole}
-				onSubmit={inviteMember}
-				loading={loading}
-			/>
+			<InviteMemberDialog open={inviteOpen} onOpenChange={setInviteOpen} />
 		</>
 	);
 }

@@ -20,10 +20,20 @@ import { authClient } from "@repo/auth/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
+type Organization = {
+	id: string;
+	name: string;
+	slug: string;
+	logo?: string | null;
+	createdAt: Date | string;
+	members?: any[];
+};
+
 export const OrganizationSelector = () => {
 	const { isMobile } = useSidebar();
 	const router = useRouter();
-	const { data: organizations } = authClient.useListOrganizations();
+	const { data: organizationsData } = authClient.useListOrganizations();
+	const organizations = organizationsData as Organization[] | undefined;
 	const { data: session } = authClient.useSession();
 
 	const activeOrgId = session?.session?.activeOrganizationId;
@@ -94,9 +104,7 @@ export const OrganizationSelector = () => {
 								)}
 							</div>
 							<div className="grid flex-1 text-left text-sm leading-tight">
-								<span className="truncate font-semibold">
-									{activeOrg.name}
-								</span>
+								<span className="truncate font-semibold">{activeOrg.name}</span>
 								<span className="truncate text-xs">
 									{activeOrg.members?.length || 0}{" "}
 									{activeOrg.members?.length === 1 ? "member" : "members"}

@@ -21,14 +21,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { CircleUser, Plus } from "lucide-react";
-import { useClerk } from "@clerk/nextjs";
+// import { useClerk } from "@clerk/nextjs";
 
 export default function GeneralSettingsPage() {
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
 	};
 
-	const {openUserProfile} = useClerk()
+	// const {openUserProfile} = useClerk()
 
 	return (
 		<div className="flex flex-col gap-8">
@@ -40,10 +40,12 @@ export default function GeneralSettingsPage() {
 					</HeaderDescription>
 				</HeaderContent>
 				<HeaderActions>
-
 					<Button
 						variant={"outline"}
-						onClick={() => openUserProfile()}
+						onClick={() => {
+							// Navigate to account settings page instead
+							window.location.href = "/account";
+						}}
 					>
 						<span className="flex items-center gap-2">
 							<CircleUser className="size-4" />
@@ -56,7 +58,9 @@ export default function GeneralSettingsPage() {
 			<div className="space-y-6">
 				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 					<FramePanel>
-						<h2 className="font-heading text-xl mb-2 text-foreground">Organization Information</h2>
+						<h2 className="font-heading text-xl mb-2 text-foreground">
+							Organization Information
+						</h2>
 						<p className="text-sm text-muted-foreground mb-6">
 							Update your organization details and public information
 						</p>
@@ -90,7 +94,9 @@ export default function GeneralSettingsPage() {
 
 				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 					<FramePanel>
-						<h2 className="font-heading text-xl mb-2 text-foreground">Contact Information</h2>
+						<h2 className="font-heading text-xl mb-2 text-foreground">
+							Contact Information
+						</h2>
 						<p className="text-sm text-muted-foreground mb-6">
 							Manage your primary contact details
 						</p>
@@ -125,7 +131,9 @@ export default function GeneralSettingsPage() {
 
 				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 					<FramePanel>
-						<h2 className="font-heading text-xl mb-2 text-foreground">Regional Settings</h2>
+						<h2 className="font-heading text-xl mb-2 text-foreground">
+							Regional Settings
+						</h2>
 						<p className="text-sm text-muted-foreground mb-6">
 							Configure timezone and language preferences
 						</p>

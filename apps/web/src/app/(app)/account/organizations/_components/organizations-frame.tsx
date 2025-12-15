@@ -3,11 +3,7 @@
 import { useState } from "react";
 import { authClient } from "@repo/auth/client";
 import { Button } from "@/components/ui/button";
-import {
-	Frame,
-	FramePanel,
-	FrameFooter,
-} from "@/components/ui/frame";
+import { Frame, FramePanel, FrameFooter } from "@/components/ui/frame";
 import {
 	Dialog,
 	DialogClose,
@@ -19,10 +15,24 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import {
+	Empty,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@/components/ui/empty";
 import { OrganizationSettingsSheet } from "./organization-settings-sheet";
 import { toast } from "sonner";
-import { Loader2, Plus, Building2, Users, Trash2, Settings, Check } from "lucide-react";
+import {
+	Loader2,
+	Plus,
+	Building2,
+	Users,
+	Trash2,
+	Settings,
+	Check,
+} from "lucide-react";
 
 type Organization = {
 	id: string;
@@ -34,7 +44,12 @@ type Organization = {
 };
 
 export function OrganizationsFrame() {
-	const { data: organizations, isPending, refetch } = authClient.useListOrganizations();
+	const {
+		data: organizationsData,
+		isPending,
+		refetch,
+	} = authClient.useListOrganizations();
+	const organizations = organizationsData as Organization[] | undefined;
 	const { data: session } = authClient.useSession();
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 	const [isCreating, setIsCreating] = useState(false);
@@ -52,7 +67,9 @@ export function OrganizationsFrame() {
 
 		const slugRegex = /^[a-z0-9-]+$/;
 		if (!slugRegex.test(orgSlug)) {
-			toast.error("Slug must contain only lowercase letters, numbers, and hyphens");
+			toast.error(
+				"Slug must contain only lowercase letters, numbers, and hyphens",
+			);
 			return;
 		}
 
@@ -127,7 +144,12 @@ export function OrganizationsFrame() {
 	const handleNameChange = (value: string) => {
 		setOrgName(value);
 		if (!orgSlug || orgSlug === orgName.toLowerCase().replace(/\s+/g, "-")) {
-			setOrgSlug(value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""));
+			setOrgSlug(
+				value
+					.toLowerCase()
+					.replace(/\s+/g, "-")
+					.replace(/[^a-z0-9-]/g, ""),
+			);
 		}
 	};
 
@@ -140,7 +162,9 @@ export function OrganizationsFrame() {
 		return (
 			<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 				<FramePanel>
-					<h2 className="font-heading text-xl mb-2 text-foreground">Organizations</h2>
+					<h2 className="font-heading text-xl mb-2 text-foreground">
+						Organizations
+					</h2>
 					<p className="text-sm text-muted-foreground mb-6">
 						Manage your organizations and collaborate with your team
 					</p>
@@ -197,16 +221,27 @@ export function OrganizationsFrame() {
 								<FieldLabel>Organization Slug</FieldLabel>
 								<Input
 									value={orgSlug}
-									onChange={(e) => setOrgSlug(e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""))}
+									onChange={(e) =>
+										setOrgSlug(
+											e.target.value
+												.toLowerCase()
+												.replace(/\s+/g, "-")
+												.replace(/[^a-z0-9-]/g, ""),
+										)
+									}
 									placeholder="acme-inc"
 								/>
 								<p className="text-xs text-muted-foreground mt-2">
-									Used in URLs. Only lowercase letters, numbers, and hyphens allowed.
+									Used in URLs. Only lowercase letters, numbers, and hyphens
+									allowed.
 								</p>
 							</Field>
 						</DialogPanel>
 						<DialogFooter>
-							<DialogClose render={<Button variant="ghost" />} disabled={isCreating}>
+							<DialogClose
+								render={<Button variant="ghost" />}
+								disabled={isCreating}
+							>
 								Cancel
 							</DialogClose>
 							<Button
@@ -233,16 +268,19 @@ export function OrganizationsFrame() {
 		<>
 			<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 				<FramePanel>
-					<h2 className="font-heading text-xl mb-2 text-foreground">Organizations</h2>
+					<h2 className="font-heading text-xl mb-2 text-foreground">
+						Organizations
+					</h2>
 					<p className="text-sm text-muted-foreground mb-6">
 						Manage your organizations and collaborate with your team
 					</p>
 
 					<div className="space-y-3">
 						{organizations?.map((org) => {
-							const isActive = session?.session?.activeOrganizationId === org.id;
+							const isActive =
+								session?.session?.activeOrganizationId === org.id;
 							const isDeleting = deletingOrgId === org.id;
-							
+
 							return (
 								<div
 									key={org.id}
@@ -281,11 +319,7 @@ export function OrganizationsFrame() {
 
 									<div className="flex items-center gap-2 flex-shrink-0">
 										{isActive ? (
-											<Button
-												variant="outline"
-												size="sm"
-												disabled
-											>
+											<Button variant="outline" size="sm" disabled>
 												<Check className="mr-2 size-4" />
 												Selected
 											</Button>
@@ -351,16 +385,27 @@ export function OrganizationsFrame() {
 							<FieldLabel>Organization Slug</FieldLabel>
 							<Input
 								value={orgSlug}
-								onChange={(e) => setOrgSlug(e.target.value.toLowerCase().replace(/\s+/g, "-").replace(/[^a-z0-9-]/g, ""))}
+								onChange={(e) =>
+									setOrgSlug(
+										e.target.value
+											.toLowerCase()
+											.replace(/\s+/g, "-")
+											.replace(/[^a-z0-9-]/g, ""),
+									)
+								}
 								placeholder="acme-inc"
 							/>
 							<p className="text-xs text-muted-foreground mt-2">
-								Used in URLs. Only lowercase letters, numbers, and hyphens allowed.
+								Used in URLs. Only lowercase letters, numbers, and hyphens
+								allowed.
 							</p>
 						</Field>
 					</DialogPanel>
 					<DialogFooter>
-						<DialogClose render={<Button variant="ghost" />} disabled={isCreating}>
+						<DialogClose
+							render={<Button variant="ghost" />}
+							disabled={isCreating}
+						>
 							Cancel
 						</DialogClose>
 						<Button
