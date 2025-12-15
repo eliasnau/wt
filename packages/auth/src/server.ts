@@ -1,4 +1,4 @@
-import { betterAuth } from "better-auth";
+import { betterAuth } from "better-auth/minimal"; 
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { nextCookies } from "better-auth/next-js";
 import { db } from "@repo/db";
@@ -18,6 +18,12 @@ export const auth = betterAuth({
 	emailAndPassword: {
 		enabled: true,
 	},
+	session: {
+		cookieCache: {
+		  enabled: true,
+		  maxAge: 5 * 60,
+		},
+	  },
 	baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3001",
 	secret: process.env.BETTER_AUTH_SECRET!,
 	plugins: [
