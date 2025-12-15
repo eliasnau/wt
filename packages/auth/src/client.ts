@@ -4,15 +4,7 @@ import {
 	organizationClient,
 	twoFactorClient,
 } from "better-auth/client/plugins";
-import {
-	ac,
-	owner,
-	admin,
-	member,
-	projectManager,
-	analyst,
-	viewer,
-} from "./permissions";
+import { ac, owner, admin, member } from "./permissions";
 
 export const authClient = createAuthClient({
 	baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3001",
@@ -25,9 +17,6 @@ export const authClient = createAuthClient({
 				owner,
 				admin,
 				member,
-				projectManager,
-				analyst,
-				viewer,
 			},
 			dynamicAccessControl: {
 				enabled: true,

@@ -3,25 +3,33 @@ import type { Context } from "../context";
 import { logger } from "../lib/logger";
 import { ipAddress, geolocation } from "@vercel/functions";
 import { after } from "next/server";
+import { auth, type PermissionCheck } from "@repo/auth";
 
 /**
- * @param permission - Clerk permission string to check
- * @returns Middleware that verifies user has the required permission
+ * @param permissions - Better Auth permission object to check
+ * @returns Middleware that verifies user has the required permissions
  * @example
- * protectedProcedure.use(requirePermission("members:read")).handler(...)
+ * protectedProcedure.use(requirePermission({ member: ["view"] })).handler(...)
+ * protectedProcedure.use(requirePermission({ finance: ["view", "export"] })).handler(...)
  */
-export const requirePermission = (permission: string) => {
+export const requirePermission = (permissions: PermissionCheck) => {
 	return os
 		.$context<Context & { user: { id: string } }>()
 		.middleware(async ({ context, next }) => {
-			const hasPermission = false
+			const result = await auth.api.hasPermission({
+				headers: context.headers,
+				body: { permissions },
+			});
+
+			const hasPermission =
+				typeof result === "boolean" ? result : result?.success === true;
 
 			if (!hasPermission) {
 				after(() => {
 					const geo = geolocation(context.req);
 					logger.warn("Permission denied", {
 						userId: context.user.id,
-						permission,
+						permissions,
 						path: context.req.nextUrl.pathname,
 						method: context.req.method,
 						ip: ipAddress(context.req),

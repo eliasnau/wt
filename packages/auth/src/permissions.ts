@@ -64,8 +64,7 @@ export const member = ac.newRole({
 	...memberAc.statements,
 	member: ["view"],
 	groups: ["view"],
-} );
-
+});
 
 export const roles = {
 	owner,
@@ -74,3 +73,11 @@ export const roles = {
 } as const;
 
 export type RoleName = keyof typeof roles;
+
+export type PermissionResource = keyof typeof statement;
+export type PermissionAction<T extends PermissionResource> =
+	(typeof statement)[T][number];
+
+export type PermissionCheck = {
+	[K in PermissionResource]?: PermissionAction<K>[];
+};
