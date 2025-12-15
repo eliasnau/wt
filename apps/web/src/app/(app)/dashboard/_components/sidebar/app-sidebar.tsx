@@ -151,6 +151,7 @@ const dashboardRoutes: NavRoute[] = [
 		link: "/dashboard/settings",
 		subs: [
 			{ title: "General", link: "/dashboard/settings/general" },
+			{ title: "Members", link: "/dashboard/settings/members" },
 			{ title: "SEPA", link: "/dashboard/settings/sepa" },
 			{ title: "Billing", link: "#" },
 		],
