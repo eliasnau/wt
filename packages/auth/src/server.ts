@@ -21,7 +21,7 @@ export const auth = betterAuth({
 	session: {
 		cookieCache: {
 		  enabled: true,
-		  maxAge: 5 * 60,
+		  maxAge: 3 * 60,
 		},
 	  },
 	baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3001",
