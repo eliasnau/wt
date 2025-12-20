@@ -50,8 +50,7 @@ export const OrganizationSelector = () => {
 				return;
 			}
 
-			toast.success("Organization switched");
-			router.push("/dashboard");
+			window.location.reload();
 		} catch (error) {
 			toast.error("Failed to switch organization");
 			console.error(error);
