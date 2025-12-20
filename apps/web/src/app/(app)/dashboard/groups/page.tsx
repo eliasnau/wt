@@ -1,4 +1,4 @@
-"use client"
+"use client";
 import {
 	Header,
 	HeaderContent,
@@ -11,6 +11,16 @@ import { NewGroupSheet } from "./_components/new-group-sheet";
 import { orpc } from "@/utils/orpc";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle } from "lucide-react";
+import {
+	Empty,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+	EmptyDescription,
+	EmptyContent,
+} from "@/components/ui/empty";
+import { Button } from "@/components/ui/button";
+import { Frame, FramePanel } from "@/components/ui/frame";
 
 export default function GroupsPage() {
 	const {
@@ -21,7 +31,7 @@ export default function GroupsPage() {
 	} = useQuery(orpc.groups.list.queryOptions());
 
 	return (
-		<div className="flex flex-col gap-8">							
+		<div className="flex flex-col gap-8">
 			<Header>
 				<HeaderContent>
 					<HeaderTitle>Groups</HeaderTitle>
@@ -29,21 +39,32 @@ export default function GroupsPage() {
 						Manage member groups and permissions
 					</HeaderDescription>
 				</HeaderContent>
-			<HeaderActions>
-				<NewGroupSheet onGroupCreated={() => refetch()} />
-			</HeaderActions>
+				<HeaderActions>
+					<NewGroupSheet onGroupCreated={() => refetch()} />
+				</HeaderActions>
 			</Header>
-			
+
 			{error ? (
-				<div className="rounded-md border border-red-500 bg-red-50 p-4 text-sm text-red-700 flex items-start gap-2">
-					<AlertCircle className="h-4 w-4 mt-0.5 flex-shrink-0" />
-					<div>
-						<div className="font-semibold mb-1">Error</div>
-						<div>
-							Failed to load groups. {error instanceof Error ? error.message : "Please try again later."}
-						</div>
-					</div>
-				</div>
+				<Frame>
+					<FramePanel>
+						<Empty>
+							<EmptyHeader>
+								<EmptyMedia variant="icon">
+									<AlertCircle />
+								</EmptyMedia>
+								<EmptyTitle>Failed to load groups</EmptyTitle>
+								<EmptyDescription>
+									{error instanceof Error
+										? error.message
+										: "Something went wrong. Please try again."}
+								</EmptyDescription>
+							</EmptyHeader>
+							<EmptyContent>
+								<Button onClick={() => refetch()}>Try Again</Button>
+							</EmptyContent>
+						</Empty>
+					</FramePanel>
+				</Frame>
 			) : (
 				<GroupTable data={groups} loading={isPending} />
 			)}
