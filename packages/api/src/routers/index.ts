@@ -10,7 +10,9 @@ export const appRouter = {
 		})
 		.route({ method: "GET", successStatus: 200 }),
 	...membersRouter,
-	...groupsRouter,
+	groups: {
+		...groupsRouter
+	},
 };
 
 export type AppRouter = typeof appRouter;

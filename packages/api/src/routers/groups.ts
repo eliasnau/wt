@@ -112,4 +112,24 @@ export const groupsRouter = {
 			return updatedGroup[0];
 		})
 		.route({ method: "PATCH", path: "/groups/:id" }),
+
+		delete: protectedProcedure
+		.use(rateLimitMiddleware(10))
+		.use(requirePermission({ groups: ["delete"] }))
+		.input(z.object({ id: z.string() }))
+		.handler(async ({ input }) => {
+			const deletedGroup = await db
+				.delete(group)
+				.where(eq(group.id, input.id))
+				.returning();
+
+			if (!deletedGroup[0]) {
+				throw new ORPCError("NOT_FOUND", {
+					message: "Group not found",
+				});
+			}
+
+			return deletedGroup[0];
+		})
+		.route({ method: "DELETE", path: "/groups/:id" }),
 };
