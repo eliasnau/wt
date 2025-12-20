@@ -29,8 +29,13 @@ export const groupsRouter = {
 	list: protectedProcedure
 		.use(rateLimitMiddleware(1))
 		.use(requirePermission({ groups: ["view"] }))
-		.handler(async () => {
-			const groups = await db.select().from(group);
+		.handler(async ({ context }) => {
+			const organizationId = context.session.activeOrganizationId!;
+
+			const groups = await db
+				.select()
+				.from(group)
+				.where(eq(group.organizationId, organizationId));
 			return groups;
 		})
 		.route({ method: "GET", path: "/groups" }),
@@ -39,14 +44,16 @@ export const groupsRouter = {
 		.use(rateLimitMiddleware(1))
 		.use(requirePermission({ groups: ["view"] }))
 		.input(z.object({ id: z.string() }))
-		.handler(async ({ input }) => {
+		.handler(async ({ input, context }) => {
+			const organizationId = context.session.activeOrganizationId!;
+
 			const result = await db
 				.select()
 				.from(group)
 				.where(eq(group.id, input.id))
 				.limit(1);
 
-			if (!result[0]) {
+			if (!result[0] || result[0].organizationId !== organizationId) {
 				throw new ORPCError("NOT_FOUND", {
 					message: "Group not found",
 				});
@@ -59,7 +66,9 @@ export const groupsRouter = {
 		.use(rateLimitMiddleware(10))
 		.use(requirePermission({ groups: ["create"] }))
 		.input(createGroupSchema)
-		.handler(async ({ input }) => {
+		.handler(async ({ input, context }) => {
+			const organizationId = context.session.activeOrganizationId!;
+
 			const newGroup = await db
 				.insert(group)
 				.values({
@@ -67,6 +76,7 @@ export const groupsRouter = {
 					name: input.name,
 					description: input.description,
 					defaultMembershipPrice: input.defaultMembershipPrice,
+					organizationId,
 				})
 				.returning();
 
@@ -84,7 +94,8 @@ export const groupsRouter = {
 		.use(rateLimitMiddleware(10))
 		.use(requirePermission({ groups: ["update"] }))
 		.input(updateGroupSchema)
-		.handler(async ({ input }) => {
+		.handler(async ({ input, context }) => {
+			const organizationId = context.session.activeOrganizationId!;
 			const { id, ...updates } = input;
 
 			const cleanUpdates = Object.fromEntries(
@@ -97,39 +108,59 @@ export const groupsRouter = {
 				});
 			}
 
+			const existingGroup = await db
+				.select()
+				.from(group)
+				.where(eq(group.id, id))
+				.limit(1);
+
+			if (
+				!existingGroup[0] ||
+				existingGroup[0].organizationId !== organizationId
+			) {
+				throw new ORPCError("NOT_FOUND", {
+					message: "Group not found",
+				});
+			}
+
 			const updatedGroup = await db
 				.update(group)
 				.set(cleanUpdates)
 				.where(eq(group.id, id))
 				.returning();
 
-			if (!updatedGroup[0]) {
+			return updatedGroup[0]!;
+		})
+		.route({ method: "PATCH", path: "/groups/:id" }),
+
+	delete: protectedProcedure
+		.use(rateLimitMiddleware(10))
+		.use(requirePermission({ groups: ["delete"] }))
+		.input(z.object({ id: z.string() }))
+		.handler(async ({ input, context }) => {
+			const organizationId = context.session.activeOrganizationId!;
+
+			const existingGroup = await db
+				.select()
+				.from(group)
+				.where(eq(group.id, input.id))
+				.limit(1);
+
+			if (
+				!existingGroup[0] ||
+				existingGroup[0].organizationId !== organizationId
+			) {
 				throw new ORPCError("NOT_FOUND", {
 					message: "Group not found",
 				});
 			}
 
-			return updatedGroup[0];
-		})
-		.route({ method: "PATCH", path: "/groups/:id" }),
-
-		delete: protectedProcedure
-		.use(rateLimitMiddleware(10))
-		.use(requirePermission({ groups: ["delete"] }))
-		.input(z.object({ id: z.string() }))
-		.handler(async ({ input }) => {
 			const deletedGroup = await db
 				.delete(group)
 				.where(eq(group.id, input.id))
 				.returning();
 
-			if (!deletedGroup[0]) {
-				throw new ORPCError("NOT_FOUND", {
-					message: "Group not found",
-				});
-			}
-
-			return deletedGroup[0];
+			return deletedGroup[0]!;
 		})
 		.route({ method: "DELETE", path: "/groups/:id" }),
 };
