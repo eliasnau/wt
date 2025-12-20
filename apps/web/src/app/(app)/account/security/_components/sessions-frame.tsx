@@ -20,9 +20,17 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { toast } from "sonner";
-import { Loader2, Trash2, Chrome, Laptop } from "lucide-react";
+import { Loader2, Trash2, Laptop } from "lucide-react";
+import { Chrome } from "@/components/ui/icons/browser/chrome";
+import { Edge } from "@/components/ui/icons/browser/edge";
+import { Firefox } from "@/components/ui/icons/browser/firefox";
+import { Safari } from "@/components/ui/icons/browser/safari";
 import { cn } from "@/lib/utils";
 import type { Route } from "next";
+import { Arc } from "@/components/ui/icons/browser/arc";
+import { ZenBrowser } from "@/components/ui/icons/browser/zen";
+import { Opera } from "@/components/ui/icons/browser/opera";
+import { BraveBrowser } from "@/components/ui/icons/browser/brave";
 
 type RawSession = {
   id: string;
@@ -159,34 +167,35 @@ export function SessionsFrame() {
   }, [includeCurrentDevice, loadSessions, router]);
 
   const getBrowserIcon = (userAgent: string | null) => {
-    if (!userAgent) return <Laptop className="size-4" />;
+    if (!userAgent) return <Laptop className="size-6" />;
     const parser = new UAParser(userAgent);
     const browser = parser.getBrowser().name?.toLowerCase() || "";
-    if (browser.includes("edge")) {
-      return (
-        <svg className="size-4" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M21.86 7.35c-.77-2.28-2.49-4.03-4.74-4.79A9.42 9.42 0 0 0 12 2a10 10 0 0 0-9.65 7.49 8.28 8.28 0 0 0 .26 5.03 8.64 8.64 0 0 0 3.77 4.32 11.16 11.16 0 0 0 5.1 1.46 13.86 13.86 0 0 0 2.49-.23 12.27 12.27 0 0 0 5.14-2.23 10.36 10.36 0 0 0 3.48-4.58c.41-1.02.63-2.11.63-3.26v-.16c-.02-.14-.03-.28-.05-.42a8.8 8.8 0 0 0-.31-2.07zM4.12 14.56a6.52 6.52 0 0 1-.35-3.67A7.75 7.75 0 0 1 11.3 4.5a6.93 6.93 0 0 1 5.76 2.31 6.24 6.24 0 0 1 1.57 4.39c0 .12-.01 .24-.02 .36H7.5a4.5 4.5 0 0 0 4.5 4.5c1.76 0 3.28-1.01 4.02-2.48a7.5 7.5 0 0 0 3.98-.87c-1.14 3.98-4.88 6.79-9.5 6.79a9.99 9.99 0 0 1-6.38-2.94z" />
-        </svg>
-      );
+    
+    if (browser.includes("edg")) {
+      return <Edge className="size-6" />;
     }
     if (browser.includes("firefox")) {
-      return (
-        <svg className="size-4" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 15.894c-.394.394-.788.631-1.182.631-.394 0-.788-.237-1.182-.631l-3.53-3.53-3.53 3.53c-.394.394-.788.631-1.182.631-.394 0-.788-.237-1.182-.631-.394-.394-.631-.788-.631-1.182 0-.394.237-.788.631-1.182l3.53-3.53-3.53-3.53c-.394-.394-.631-.788-.631-1.182 0-.394.237-.788.631-1.182.394-.394.788-.631 1.182-.631.394 0 .788.237 1.182.631l3.53 3.53 3.53-3.53c.394-.394.788-.631 1.182-.631.394 0 .788.237 1.182.631.394.394.631.788.631 1.182 0 .394-.237.788-.631 1.182l-3.53 3.53 3.53 3.53c.394.394.631.788.631 1.182 0 .394-.237.788-.631 1.182z" />
-        </svg>
-      );
+      return <Firefox className="size-6" />;
     }
     if (browser.includes("chrome") || browser.includes("chromium")) {
-      return <Chrome className="size-4" />;
+      return <Chrome className="size-6" />;
     }
     if (browser.includes("safari")) {
-      return (
-        <svg className="size-4" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.31-8.86c-.44-.68-1.11-1.16-1.89-1.34L15.4 5.82 8.58 15.18l4.98-3.98c.56 .34 .98 .88 1.15 1.53l-4.98 3.98 6.82-9.36-4.24 3.79z" />
-        </svg>
-      );
+      return <Safari className="size-6" />;
     }
-    return <Laptop className="size-4" />;
+    if (browser.includes("opera")) {
+      return <Opera className="size-6" />;
+    }
+    if (browser.includes("arc")) {
+      return <Arc className="size-6" />;
+    }
+    if (browser.includes("brave")) {
+      return <BraveBrowser className="size-6" />;
+    }
+    if (browser.includes("zen")) {
+      return <ZenBrowser className="size-6" />;
+    }
+    return <Laptop className="size-6" />;
   };
 
   if (isLoadingSessions) {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useTheme } from "next-themes";
 import { authClient } from "@repo/auth/client";
 import { Button } from "@/components/ui/button";
 import { Frame, FramePanel, FrameFooter } from "@/components/ui/frame";
@@ -40,7 +41,6 @@ import {
 } from "@/components/ui/empty";
 import { toast } from "sonner";
 import { Edit, Fingerprint, Info, Loader2, Plus, Trash2 } from "lucide-react";
-import Image from "next/image";
 import { getAAGUIDInfo } from "@/lib/aaguid-data";
 
 type Passkey = {
@@ -393,34 +393,21 @@ export function PasskeyFrame() {
 }
 
 function PasskeyIcon({ aaguid }: { aaguid?: string | null }) {
-	if (!aaguid) {
-		return (
-			<Tooltip>
-				<TooltipTrigger asChild>
-					<div className="p-3 rounded-lg bg-primary/10 cursor-help">
-						<Fingerprint className="size-6 text-primary" />
-					</div>
-				</TooltipTrigger>
-				<TooltipContent>
-					<p className="text-xs">Unknown Authenticator</p>
-				</TooltipContent>
-			</Tooltip>
-		);
-	}
-
-	const { iconUrl, name } = getAAGUIDInfo(aaguid);
+	const { resolvedTheme } = useTheme();
+	const { iconComponent: IconComponent, name } = getAAGUIDInfo(aaguid);
 
 	return (
 		<Tooltip>
 			<TooltipTrigger asChild>
 				<div className="p-3 rounded-lg bg-primary/10 cursor-help">
-					<Image
-						src={iconUrl}
-						alt={`${name} icon`}
-						width={24}
-						height={24}
-						className="size-6"
-					/>
+					{IconComponent ? (
+						<IconComponent 
+							className="size-8" 
+							theme={resolvedTheme === "dark" ? "dark" : "light"}
+						/>
+					) : (
+						<Fingerprint className="size-8 text-primary" />
+					)}
 				</div>
 			</TooltipTrigger>
 			<TooltipContent>
