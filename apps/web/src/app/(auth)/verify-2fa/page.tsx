@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { Route } from "next";
+import { useQueryState } from "nuqs";
 
 type VerificationMethod = "totp" | "backup";
 
@@ -21,6 +22,9 @@ export default function Verify2FA() {
 	const [trustDevice, setTrustDevice] = useState(false);
 	const [method, setMethod] = useState<VerificationMethod>("totp");
 	const router = useRouter();
+	const [redirectUrl] = useQueryState("redirectUrl", {
+		defaultValue: "/dashboard",
+	});
 
 	const handleVerifyTOTP = async () => {
 		setLoading(true);
@@ -37,7 +41,7 @@ export default function Verify2FA() {
 		}
 
 		if (data) {
-			router.push("/dashboard");
+			router.push(redirectUrl as Route);
 		}
 	};
 
@@ -56,7 +60,7 @@ export default function Verify2FA() {
 		}
 
 		if (data) {
-			router.push("/dashboard");
+			router.push(redirectUrl as Route);
 		}
 	};
 
@@ -108,7 +112,9 @@ export default function Verify2FA() {
 					<FramePanel>
 						<div className="flex items-center gap-2 mb-4">
 							<Shield className="h-6 w-6 text-primary" />
-							<h1 className="font-heading text-2xl">Two-Factor Authentication</h1>
+							<h1 className="font-heading text-2xl">
+								Two-Factor Authentication
+							</h1>
 						</div>
 
 						<p className="text-sm text-muted-foreground mb-6">
