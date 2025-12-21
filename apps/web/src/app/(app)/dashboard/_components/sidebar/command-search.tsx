@@ -23,6 +23,7 @@ import {
 	CommandShortcut,
 } from "@/components/ui/command";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
+import type { Route } from "next";
 
 export interface Item {
 	value: string;
@@ -110,7 +111,7 @@ export function CommandSearch() {
 
 		// Handle href navigation
 		if (item.href) {
-			router.push(item.href);
+			router.push(item.href as Route);
 			return;
 		}
 
