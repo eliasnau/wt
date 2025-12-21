@@ -9,7 +9,7 @@ export const appRouter = {
 			return "OK";
 		})
 		.route({ method: "GET", successStatus: 200 }),
-	...membersRouter,
+	members: {...membersRouter},
 	groups: {
 		...groupsRouter
 	},
