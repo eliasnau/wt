@@ -5,8 +5,8 @@
 		".": {
 			"default": "./src/index.ts"
 		},
-		"./*": {
-			"default": "./src/*.ts"
+		"./schema": {
+			"default": "./src/schema/index.ts"
 		}
 	},
 	"scripts": {

@@ -4,7 +4,6 @@ import { rateLimitMiddleware } from "../middleware/ratelimit";
 import { db, eq } from "@repo/db";
 import { z } from "zod";
 import { ORPCError } from "@orpc/server";
-import { randomBytes } from "crypto";
 import { group } from "@repo/db/schema";
 
 const createGroupSchema = z.object({
