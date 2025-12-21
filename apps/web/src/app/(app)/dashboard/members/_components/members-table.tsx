@@ -13,10 +13,12 @@ import {
 	ChevronUpIcon,
 	EditIcon,
 	MoreVerticalIcon,
+	SearchIcon,
 	TrashIcon,
 	UserIcon,
+	XIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	Empty,
@@ -26,6 +28,11 @@ import {
 	EmptyTitle,
 } from "@/components/ui/empty";
 import { Frame, FramePanel } from "@/components/ui/frame";
+import {
+	InputGroup,
+	InputGroupAddon,
+	InputGroupInput,
+} from "@/components/ui/input-group";
 import {
 	Menu,
 	MenuItem,
@@ -72,6 +79,8 @@ interface MembersTableProps {
 		hasNextPage: boolean;
 		hasPreviousPage: boolean;
 	};
+	search: string;
+	onSearchChange: (search: string) => void;
 	onPageChange: (page: number) => void;
 	onLimitChange: (limit: number) => void;
 	loading?: boolean;
@@ -135,11 +144,28 @@ export const columns: ColumnDef<MemberRow>[] = [
 export default function MembersTable({
 	data,
 	pagination,
+	search,
+	onSearchChange,
 	onPageChange,
 	onLimitChange,
 	loading = false,
 }: MembersTableProps) {
 	const [sorting, setSorting] = useState<SortingState>([]);
+	const [localSearch, setLocalSearch] = useState(search);
+
+	useEffect(() => {
+		setLocalSearch(search);
+	}, [search]);
+
+	useEffect(() => {
+		const timer = setTimeout(() => {
+			if (localSearch !== search) {
+				onSearchChange(localSearch);
+			}
+		}, 300);
+
+		return () => clearTimeout(timer);
+	}, [localSearch, search, onSearchChange]);
 
 	const table = useReactTable({
 		data: data || [],
@@ -155,7 +181,10 @@ export default function MembersTable({
 		onSortingChange: setSorting,
 	});
 
-	if (!loading && !data?.length) {
+	const hasNoMembers =
+		!loading && !data?.length && !search && pagination.totalCount === 0;
+
+	if (hasNoMembers) {
 		return (
 			<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 				<FramePanel className="py-12">
@@ -177,6 +206,31 @@ export default function MembersTable({
 
 	return (
 		<div className="">
+			<div className="mb-4">
+				<InputGroup className="max-w-sm">
+					<InputGroupAddon>
+						<SearchIcon className="size-4" />
+					</InputGroupAddon>
+					<InputGroupInput
+						type="text"
+						placeholder="Search by name or email..."
+						value={localSearch}
+						onChange={(event) => setLocalSearch(event.target.value)}
+					/>
+					{localSearch !== "" && (
+						<InputGroupAddon
+							align="inline-end"
+							className="cursor-pointer"
+							onClick={() => {
+								setLocalSearch("");
+								onSearchChange("");
+							}}
+						>
+							<XIcon className="size-4" />
+						</InputGroupAddon>
+					)}
+				</InputGroup>
+			</div>
 			<Table>
 				<TableHeader>
 					{table.getHeaderGroups().map((headerGroup) => (
@@ -245,8 +299,26 @@ export default function MembersTable({
 						))
 					) : !table.getRowModel().rows?.length ? (
 						<TableRow>
-							<TableCell colSpan={columns.length} className="h-24 text-center">
-								No results found.
+							<TableCell colSpan={columns.length} className="h-32 text-center">
+								<div className="flex flex-col items-center justify-center gap-2">
+									<p className="text-muted-foreground">
+										{search
+											? "No members found matching your filters."
+											: "No results found."}
+									</p>
+									{search && (
+										<Button
+											size="sm"
+											variant="outline"
+											onClick={() => {
+												setLocalSearch("");
+												onSearchChange("");
+											}}
+										>
+											Clear filters
+										</Button>
+									)}
+								</div>
 							</TableCell>
 						</TableRow>
 					) : (

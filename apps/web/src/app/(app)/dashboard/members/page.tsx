@@ -1,7 +1,7 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle } from "lucide-react";
-import { parseAsInteger, useQueryStates } from "nuqs";
+import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
 import { Button } from "@/components/ui/button";
 import {
 	Empty,
@@ -24,13 +24,20 @@ import { CreateMemberButton } from "./_components/create-member-button";
 import MembersTable from "./_components/members-table";
 
 export default function MembersPage() {
-	const [{ page, limit }, setPagination] = useQueryStates({
+	const [{ page, limit, search }, setPagination] = useQueryStates({
 		page: parseAsInteger.withDefault(1),
 		limit: parseAsInteger.withDefault(20),
+		search: parseAsString.withDefault(""),
 	});
 
 	const { data, isPending, error, refetch } = useQuery(
-		orpc.members.list.queryOptions({ input: { page, limit } }),
+		orpc.members.list.queryOptions({
+			input: {
+				page,
+				limit,
+				search: search || undefined,
+			},
+		}),
 	);
 
 	const handlePageChange = (newPage: number) => {
@@ -39,6 +46,10 @@ export default function MembersPage() {
 
 	const handleLimitChange = (newLimit: number) => {
 		setPagination({ page: 1, limit: newLimit });
+	};
+
+	const handleSearchChange = (newSearch: string) => {
+		setPagination({ page: 1, search: newSearch });
 	};
 
 	return (
@@ -81,14 +92,16 @@ export default function MembersPage() {
 					data={data?.data ?? []}
 					pagination={
 						data?.pagination ?? {
-							page: 1,
-							limit: 20,
+							page,
+							limit,
 							totalCount: 0,
 							totalPages: 0,
 							hasNextPage: false,
 							hasPreviousPage: false,
 						}
 					}
+					search={search}
+					onSearchChange={handleSearchChange}
 					onPageChange={handlePageChange}
 					onLimitChange={handleLimitChange}
 					loading={isPending}
