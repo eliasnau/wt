@@ -1,4 +1,13 @@
-import { decimal, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
+import {
+	decimal,
+	index,
+	pgTable,
+	primaryKey,
+	text,
+	timestamp,
+	uuid,
+} from "drizzle-orm/pg-core";
 import { organization } from "./auth";
 
 export const group = pgTable("group", {
@@ -40,3 +49,49 @@ export const clubMember = pgTable("club_member", {
 		.$onUpdate(() => new Date())
 		.notNull(),
 });
+
+export const groupMember = pgTable(
+	"group_member",
+	{
+		groupId: uuid("group_id")
+			.notNull()
+			.references(() => group.id, { onDelete: "cascade" }),
+		memberId: uuid("member_id")
+			.notNull()
+			.references(() => clubMember.id, { onDelete: "cascade" }),
+		membershipPrice: decimal("membership_price", {
+			precision: 10,
+			scale: 2,
+		}),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		primaryKey({ columns: [table.groupId, table.memberId] }),
+		index("group_member_group_id_idx").on(table.groupId),
+		index("group_member_member_id_idx").on(table.memberId),
+		index("group_member_composite_idx").on(table.groupId, table.memberId),
+	],
+);
+
+export const clubMemberRelations = relations(clubMember, ({ many }) => ({
+	groupMembers: many(groupMember),
+}));
+
+export const groupRelations = relations(group, ({ many }) => ({
+	groupMembers: many(groupMember),
+}));
+
+export const groupMemberRelations = relations(groupMember, ({ one }) => ({
+	group: one(group, {
+		fields: [groupMember.groupId],
+		references: [group.id],
+	}),
+	member: one(clubMember, {
+		fields: [groupMember.memberId],
+		references: [clubMember.id],
+	}),
+}));
