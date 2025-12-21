@@ -12,10 +12,11 @@ import {
 	ChevronDownIcon,
 	ChevronUpIcon,
 	EditIcon,
+	EyeIcon,
 	MoreVerticalIcon,
 	SearchIcon,
-	TrashIcon,
 	UserIcon,
+	UserXIcon,
 	XIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -112,6 +113,14 @@ export const columns: ColumnDef<MemberRow>[] = [
 
 			return (
 				<div className="flex items-center justify-end gap-2">
+					<Button
+						size="sm"
+						variant="outline"
+						onClick={() => console.log("View member:", member)}
+					>
+						<EyeIcon />
+						View
+					</Button>
 					<Menu>
 						<MenuTrigger
 							render={
@@ -121,17 +130,17 @@ export const columns: ColumnDef<MemberRow>[] = [
 							}
 						/>
 						<MenuPopup align="end">
-							<MenuItem>
+							<MenuItem onClick={() => console.log("Edit member:", member)}>
 								<EditIcon />
 								Edit
 							</MenuItem>
 							<MenuSeparator />
 							<MenuItem
 								variant="destructive"
-								onClick={() => console.log(member)}
+								onClick={() => console.log("Cancel membership:", member)}
 							>
-								<TrashIcon />
-								Delete Member
+								<UserXIcon />
+								Cancel Membership
 							</MenuItem>
 						</MenuPopup>
 					</Menu>
