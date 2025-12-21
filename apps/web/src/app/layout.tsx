@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cal_Sans, Geist, Inter } from "next/font/google";
 import "../index.css";
 import Providers from "@/components/providers";
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 
 const fontSans = Inter({
 	subsets: ["latin"],
@@ -30,6 +31,7 @@ export default function RootLayout({
 				className={`${fontSans.variable} ${fontHeading.variable} antialiased`}
 			>
 				<Providers>
+					<ReactQueryDevtools initialIsOpen={false} />
 					<div className="grid grid-rows-[auto_1fr] h-svh">{children}</div>
 				</Providers>
 			</body>
