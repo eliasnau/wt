@@ -11,6 +11,7 @@ import Link from "next/link";
 import type { Route } from "next";
 import { useState } from "react";
 import { authClient } from "@repo/auth/client";
+import { useQueryState } from "nuqs";
 
 export default function SignUp() {
 	const [firstName, setFirstName] = useState("");
@@ -19,6 +20,9 @@ export default function SignUp() {
 	const [password, setPassword] = useState("");
 	const router = useRouter();
 	const [loading, setLoading] = useState(false);
+	const [redirectUrl] = useQueryState("redirectUrl", {
+		defaultValue: "/dashboard",
+	});
 
 	return (
 		<div className="flex min-h-screen items-start md:items-center justify-center p-4">
@@ -103,9 +107,9 @@ export default function SignUp() {
 												toast.error(ctx.error.message);
 											},
 											onSuccess: () => {
-												router.push("/dashboard");
+												router.push(redirectUrl as Route);
 											},
-										}
+										},
 									);
 								}}
 							>

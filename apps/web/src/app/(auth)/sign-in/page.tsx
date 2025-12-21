@@ -12,6 +12,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { Route } from "next";
+import { useQueryState } from "nuqs";
 
 export default function SignIn() {
 	const [email, setEmail] = useState("");
@@ -19,6 +20,9 @@ export default function SignIn() {
 	const [loading, setLoading] = useState(false);
 	const [rememberMe, setRememberMe] = useState(false);
 	const router = useRouter();
+	const [redirectUrl] = useQueryState("redirectUrl", {
+		defaultValue: "/dashboard",
+	});
 
 	return (
 		<div className="flex min-h-screen items-center justify-center p-4">
@@ -52,7 +56,7 @@ export default function SignIn() {
 								<div className="flex items-center">
 									<Label htmlFor="password">Password</Label>
 									<Link
-										href="#"
+										href={`/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ""}` as Route}
 										className="ml-auto inline-block text-sm underline"
 									>
 										Forgot your password?
@@ -94,17 +98,19 @@ export default function SignIn() {
 											onResponse: () => {
 												setLoading(false);
 											},
-										onError: (ctx) => {
-											toast.error(ctx.error.message);
+											onError: (ctx) => {
+												toast.error(ctx.error.message);
+											},
+											onSuccess: (ctx) => {
+												if (ctx.data.twoFactorRedirect) {
+													router.push(
+														`/verify-2fa?redirectUrl=${encodeURIComponent(redirectUrl)}` as Route,
+													);
+												} else {
+													router.push(redirectUrl as Route);
+												}
+											},
 										},
-										onSuccess: (ctx) => {
-											if (ctx.data.twoFactorRedirect) {
-												router.push("/verify-2fa" as Route);
-											} else {
-												router.push("/dashboard");
-											}
-										},
-										}
 									);
 								}}
 							>
@@ -126,13 +132,12 @@ export default function SignIn() {
 								</div>
 							</div>
 
-						<Button
-							variant="outline"
-							className="w-full gap-2"
-							disabled={loading}
-							onClick={async () => {
-								await authClient.signIn.passkey(
-									{
+							<Button
+								variant="outline"
+								className="w-full gap-2"
+								disabled={loading}
+								onClick={async () => {
+									await authClient.signIn.passkey({
 										fetchOptions: {
 											onRequest: () => {
 												setLoading(true);
@@ -141,19 +146,20 @@ export default function SignIn() {
 												setLoading(false);
 											},
 											onError: (ctx) => {
-												toast.error(ctx.error.message || "Passkey authentication failed");
+												toast.error(
+													ctx.error.message || "Passkey authentication failed",
+												);
 											},
 											onSuccess: () => {
-												router.push("/dashboard");
+												router.push(redirectUrl as Route);
 											},
 										},
-									}
-								);
-							}}
-						>
-							<Key size={16} />
-							Passkey
-						</Button>
+									});
+								}}
+							>
+								<Key size={16} />
+								Passkey
+							</Button>
 						</form>
 					</FramePanel>
 
