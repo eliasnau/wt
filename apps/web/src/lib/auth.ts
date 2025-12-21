@@ -1,7 +1,7 @@
-import type { PermissionCheck } from "@repo/auth/server";
+import type { PermissionCheck } from "@repo/auth";
 import { auth } from "@repo/auth/server";
 import { headers } from "next/headers";
-import { forbidden, unauthorized } from "next/navigation";
+import { forbidden, redirect, unauthorized } from "next/navigation";
 import { cache } from "react";
 
 export const getServerSession = cache(async () => {
@@ -17,6 +17,16 @@ export const hasPermission = cache(async (permissions: PermissionCheck) => {
 	return result;
 });
 
+export const getOrganization = cache(async () => {
+	const data = await auth.api.getFullOrganization({
+		query: {
+			membersLimit: 100,
+		},
+		headers: await headers(),
+	});
+	return data;
+});
+
 export const protectPage = async () => {
 	const session = await getServerSession();
 	if (session && session.user) {
@@ -25,7 +35,23 @@ export const protectPage = async () => {
 	return unauthorized();
 };
 
-export const requirePermission = cache(async (permissions: PermissionCheck) => {
+export const requirePermission = async (permissions: PermissionCheck) => {
 	const result = await hasPermission(permissions);
 	if (!result.success) return forbidden();
-});
+};
+
+
+export const requireActiveOrg = async () => {
+	const session = await getServerSession()
+
+	if (!session?.user) return unauthorized()
+	if(!session.session.activeOrganizationId) return redirect("/organizations")
+	
+		const data = await getOrganization();
+
+	if (!data) {
+		redirect("/account/organizations");
+	}
+
+	return { session, organization: data };
+};
