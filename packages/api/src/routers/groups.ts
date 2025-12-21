@@ -1,10 +1,11 @@
 import { protectedProcedure } from "../index";
 import { requirePermission } from "../middleware/permissions";
 import { rateLimitMiddleware } from "../middleware/ratelimit";
-import { db, group, eq } from "@repo/db";
+import { db, eq } from "@repo/db";
 import { z } from "zod";
 import { ORPCError } from "@orpc/server";
 import { randomBytes } from "crypto";
+import { group } from "@repo/db/schema";
 
 const createGroupSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255),
