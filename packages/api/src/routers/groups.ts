@@ -73,7 +73,6 @@ export const groupsRouter = {
 			const newGroup = await db
 				.insert(group)
 				.values({
-					id: randomBytes(16).toString("hex"),
 					name: input.name,
 					description: input.description,
 					defaultMembershipPrice: input.defaultMembershipPrice,
