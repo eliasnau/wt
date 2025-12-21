@@ -307,7 +307,7 @@ export default function MembersTable({
 						Array.from({ length: pagination.limit }).map((_, idx) => (
 							<TableRow key={`skeleton-${idx}`}>
 								{columns.map((_column, colIdx) => (
-									<TableCell key={`skeleton-${idx}-${colIdx}`}>
+									<TableCell key={`skeleton-${idx}-${colIdx}`} className="py-3">
 										<Skeleton className="h-5 w-full" />
 									</TableCell>
 								))}
