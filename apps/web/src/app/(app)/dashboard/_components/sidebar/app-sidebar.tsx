@@ -1,5 +1,23 @@
 "use client";
 
+import { motion } from "framer-motion";
+import {
+	Calendar,
+	DollarSign,
+	Home,
+	Infinity as InfinityIcon,
+	Layers,
+	PieChart,
+	Settings,
+	ShoppingBag,
+	Store,
+	Users,
+} from "lucide-react";
+import { CommandSearch } from "@/app/(app)/dashboard/_components/sidebar/command-search";
+import DashboardNavigation from "@/app/(app)/dashboard/_components/sidebar/nav-main";
+import { NotificationsPopover } from "@/app/(app)/dashboard/_components/sidebar/nav-notifications";
+import { OrganizationSelector } from "@/app/(app)/dashboard/_components/sidebar/organization-selector";
+import { UserButton } from "@/app/(app)/dashboard/_components/sidebar/user-button";
 import {
 	Sidebar,
 	SidebarContent,
@@ -9,32 +27,7 @@ import {
 	useSidebar,
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
-import { motion } from "framer-motion";
-import {
-	Activity,
-	DollarSign,
-	Home,
-	Infinity,
-	Layers,
-	LinkIcon,
-	Package2,
-	Percent,
-	PieChart,
-	Calendar,
-	Settings,
-	ShoppingBag,
-	Sparkles,
-	Store,
-	TrendingUp,
-	User2,
-	Users,
-	Users2,
-} from "lucide-react";
-import { OrganizationSelector } from "@/app/(app)/dashboard/_components/sidebar/organization-selector";
-import { UserButton } from "@/app/(app)/dashboard/_components/sidebar/user-button";
 import type { NavRoute } from "./nav-main";
-import DashboardNavigation from "@/app/(app)/dashboard/_components/sidebar/nav-main";
-import { NotificationsPopover } from "@/app/(app)/dashboard/_components/sidebar/nav-notifications";
 
 const sampleNotifications = [
 	{
@@ -98,12 +91,6 @@ const dashboardRoutes: NavRoute[] = [
 		],
 	},
 	{
-		id: "employees",
-		title: "Employees",
-		icon: <Users className="size-4" />,
-		link: "/dashboard/employees",
-	},
-	{
 		id: "events",
 		title: "Events",
 		icon: <Calendar className="size-4" />,
@@ -117,7 +104,7 @@ const dashboardRoutes: NavRoute[] = [
 			{
 				title: "Events",
 				link: "#",
-				icon: <Infinity className="size-4" />,
+				icon: <InfinityIcon className="size-4" />,
 			},
 		],
 	},
@@ -125,12 +112,6 @@ const dashboardRoutes: NavRoute[] = [
 		id: "storefront",
 		title: "Storefront",
 		icon: <Store className="size-4" />,
-		link: "#",
-	},
-	{
-		id: "analytics",
-		title: "Analytics",
-		icon: <TrendingUp className="size-4" />,
 		link: "#",
 	},
 	{
@@ -151,7 +132,7 @@ const dashboardRoutes: NavRoute[] = [
 		link: "/dashboard/settings",
 		subs: [
 			{ title: "General", link: "/dashboard/settings/general" },
-			{ title: "Members", link: "/dashboard/settings/members" },
+			{ title: "Users", link: "/dashboard/settings/members" },
 			{ title: "SEPA", link: "/dashboard/settings/sepa" },
 			{ title: "Billing", link: "#" },
 		],
@@ -188,6 +169,9 @@ export function DashboardSidebar() {
 					<SidebarTrigger />
 				</motion.div>
 			</SidebarHeader>
+			<div className="px-2 pt-4">
+				<CommandSearch />
+			</div>
 			<SidebarContent className="gap-4 px-2 py-4">
 				<DashboardNavigation routes={dashboardRoutes} />
 			</SidebarContent>
