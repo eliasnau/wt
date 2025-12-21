@@ -1,18 +1,18 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { authClient } from "@repo/auth/client";
 import { UserPlus } from "lucide-react";
 import { useState } from "react";
-import { authClient } from "@repo/auth/client";
+import { Button } from "@/components/ui/button";
 import {
 	Header,
-	HeaderContent,
-	HeaderTitle,
-	HeaderDescription,
 	HeaderActions,
+	HeaderContent,
+	HeaderDescription,
+	HeaderTitle,
 } from "../../_components/page-header";
-import { MembersContent } from "./_components/members-content";
 import { InviteMemberDialog } from "./_components/invite-member-dialog";
+import { MembersContent } from "./_components/members-content";
 
 export default function MembersSettingsPage() {
 	const { data: activeOrg } = authClient.useActiveOrganization();
@@ -23,7 +23,7 @@ export default function MembersSettingsPage() {
 			<div className="flex flex-col gap-8">
 				<Header>
 					<HeaderContent>
-						<HeaderTitle>Members</HeaderTitle>
+						<HeaderTitle>User Management</HeaderTitle>
 						<HeaderDescription>
 							Manage organization members and their roles
 						</HeaderDescription>
