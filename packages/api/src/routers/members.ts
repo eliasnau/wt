@@ -1,6 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { ORPCError } from "@orpc/server";
-import { count, db, eq } from "@repo/db";
+import { and, count, db, eq, ilike, or, sql } from "@repo/db";
 import { clubMember } from "@repo/db/schema";
 import { z } from "zod";
 import { protectedProcedure } from "../index";
@@ -22,6 +22,7 @@ const createMemberSchema = z.object({
 const listMembersSchema = z.object({
 	page: z.coerce.number().int().min(1).default(1),
 	limit: z.coerce.number().int().min(1).max(100).default(20),
+	search: z.string().optional(),
 });
 
 export const membersRouter = {
@@ -31,8 +32,27 @@ export const membersRouter = {
 		.input(listMembersSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
-			const { page, limit } = input;
+			const { page, limit, search } = input;
 			const offset = (page - 1) * limit;
+
+			const conditions = [eq(clubMember.organizationId, organizationId)];
+
+			if (search && search.trim().length > 0) {
+				const searchTerm = `%${search.trim()}%`;
+				conditions.push(
+					or(
+						ilike(clubMember.firstName, searchTerm),
+						ilike(clubMember.lastName, searchTerm),
+						ilike(clubMember.email, searchTerm),
+						ilike(
+							sql`${clubMember.firstName} || ' ' || ${clubMember.lastName}`,
+							searchTerm,
+						),
+					)!,
+				);
+			}
+
+			const whereClause = and(...conditions);
 
 			const [members, totalCountResult] = await Promise.all([
 				db
@@ -47,13 +67,10 @@ export const membersRouter = {
 						updatedAt: clubMember.updatedAt,
 					})
 					.from(clubMember)
-					.where(eq(clubMember.organizationId, organizationId))
+					.where(whereClause)
 					.limit(limit)
 					.offset(offset),
-				db
-					.select({ count: count() })
-					.from(clubMember)
-					.where(eq(clubMember.organizationId, organizationId)),
+				db.select({ count: count() }).from(clubMember).where(whereClause),
 			]);
 
 			const totalCount = totalCountResult[0]?.count ?? 0;
