@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CopyableTableCell } from "@/components/table/copyable-table-cell";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	Empty,
@@ -109,6 +110,26 @@ export const columns: ColumnDef<MemberRow>[] = [
 		header: "Phone",
 		cell: ({ row }) => {
 			return <CopyableTableCell value={row.original.phone} />;
+		},
+	},
+	{
+		accessorKey: "groups",
+		header: "Groups",
+		cell: ({ row }) => {
+			const memberRow = row.original;
+			const groupMembers: NonNullable<typeof memberRow.groupMembers> = memberRow.groupMembers ?? [];
+			if (groupMembers.length === 0) {
+				return <span className="text-muted-foreground text-sm">—</span>;
+			}
+			return (
+				<div className="flex flex-wrap gap-1">
+					{groupMembers.map((gm: (typeof groupMembers)[number]) => (
+						<Badge variant="outline" key={gm.groupId}>
+							{gm.group.name}
+						</Badge>
+					))}
+				</div>
+			);
 		},
 	},
 	{
@@ -394,6 +415,11 @@ export default function MembersTable({
 								</div>
 								<Pagination className="justify-end">
 									<PaginationContent>
+										<PaginationItem>
+											<span className="text-muted-foreground text-sm">
+												Page {pagination.page} of {pagination.totalPages}
+											</span>
+										</PaginationItem>
 										<PaginationItem>
 											<PaginationPrevious
 												className="sm:*:[svg]:hidden"
