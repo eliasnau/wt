@@ -3,4 +3,4 @@ import * as schema from "./schema";
 
 export const db = drizzle(process.env.DATABASE_URL!, { schema });
 
-export { and, count, eq, ilike, or, sql } from "drizzle-orm";
+export { and, count, eq, ilike, or, sql, inArray } from "drizzle-orm";

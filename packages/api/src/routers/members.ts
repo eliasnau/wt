@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { ORPCError } from "@orpc/server";
-import { and, count, db, eq, ilike, or, sql } from "@repo/db";
-import { clubMember } from "@repo/db/schema";
+import { and, count, db, eq, ilike, inArray, or, sql } from "@repo/db";
+import { clubMember, groupMember, group } from "@repo/db/schema";
 import { z } from "zod";
 import { protectedProcedure } from "../index";
 import { requirePermission } from "../middleware/permissions";
@@ -22,7 +22,15 @@ const createMemberSchema = z.object({
 const listMembersSchema = z.object({
 	page: z.coerce.number().int().min(1).default(1),
 	limit: z.coerce.number().int().min(1).max(100).default(20),
-	search: z.string().optional(),
+	search: z.string().max(255).optional(),
+	groupIds: z
+		.array(
+			z
+				.string()
+				.min(36, "Must be a valid UUID")
+				.max(36, "Must be a valid UUID"),
+		)
+		.optional(),
 });
 
 export const membersRouter = {
@@ -32,67 +40,117 @@ export const membersRouter = {
 		.input(listMembersSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
-			const { page, limit, search } = input;
-			const offset = (page - 1) * limit;
+			const { page, limit } = input;
 
-			const conditions = [eq(clubMember.organizationId, organizationId)];
+			const rawSearch = input.search?.trim();
+			const search = rawSearch && rawSearch.length > 0 ? rawSearch : undefined;
 
-			if (search && search.trim().length > 0) {
-				const searchTerm = `%${search.trim()}%`;
-				conditions.push(
-					or(
-						ilike(clubMember.firstName, searchTerm),
-						ilike(clubMember.lastName, searchTerm),
-						ilike(clubMember.email, searchTerm),
-						ilike(
-							sql`${clubMember.firstName} || ' ' || ${clubMember.lastName}`,
-							searchTerm,
-						),
-					)!,
-				);
+			const groupIds =
+				input.groupIds
+					?.map((g) => g.trim())
+					.filter(Boolean)
+					.filter((v, i, a) => a.indexOf(v) === i) ?? undefined;
+
+			if (input.groupIds && (!groupIds || groupIds.length === 0)) {
+				return {
+					data: [],
+					pagination: {
+						page,
+						limit,
+						totalCount: 0,
+						totalPages: 0,
+						hasNextPage: false,
+						hasPreviousPage: page > 1,
+					},
+				};
 			}
 
-			const whereClause = and(...conditions);
+			const offset = (page - 1) * limit;
 
-			const [members, totalCountResult] = await Promise.all([
-				db.query.clubMember.findMany({
-					where: whereClause,
-					limit,
-					offset,
-					columns: {
-						id: true,
-						firstName: true,
-						lastName: true,
-						email: true,
-						phone: true,
-						organizationId: true,
-						createdAt: true,
-						updatedAt: true,
-					},
-					with: {
-						groupMembers: {
-							columns: {
-								groupId: true,
-							},
-							with: {
-								group: {
-									columns: {
-										id: true,
-										name: true,
-									},
-								},
-							},
-						},
-					},
-				}),
-				db.select({ count: count() }).from(clubMember).where(whereClause),
-			]);
+			const memberWhere = and(
+				eq(clubMember.organizationId, organizationId),
+				search
+					? or(
+							ilike(clubMember.firstName, `%${search}%`),
+							ilike(clubMember.lastName, `%${search}%`),
+							ilike(clubMember.email, `%${search}%`),
+							ilike(
+								sql`${clubMember.firstName} || ' ' || ${clubMember.lastName}`,
+								`%${search}%`,
+							),
+						)
+					: undefined,
+				groupIds?.length
+					? sql`${clubMember.id} in (
+              select ${groupMember.memberId}
+              from ${groupMember}
+              where ${inArray(groupMember.groupId, groupIds)}
+            )`
+					: undefined,
+			);
 
-			const totalCount = totalCountResult[0]?.count ?? 0;
+			const members = await db
+				.select({
+					id: clubMember.id,
+					firstName: clubMember.firstName,
+					lastName: clubMember.lastName,
+					email: clubMember.email,
+					phone: clubMember.phone,
+					organizationId: clubMember.organizationId,
+					createdAt: clubMember.createdAt,
+					updatedAt: clubMember.updatedAt,
+				})
+				.from(clubMember)
+				.where(memberWhere)
+				.limit(limit)
+				.offset(offset);
+
+			const [{ count: totalCount = 0 } = { count: 0 }] = await db
+				.select({ count: count() })
+				.from(clubMember)
+				.where(memberWhere);
+
 			const totalPages = Math.ceil(totalCount / limit);
 
+			// Fetch group info for the listed members in one shot
+			const memberIds = members.map((m) => m.id);
+			let groupMap = new Map<
+				string,
+				{ groupId: string; group: { id: string; name: string } }[]
+			>();
+			if (memberIds.length > 0) {
+				const gmRows = await db
+					.select({
+						memberId: groupMember.memberId,
+						groupId: groupMember.groupId,
+						gId: group.id,
+						gName: group.name,
+					})
+					.from(groupMember)
+					.innerJoin(group, eq(group.id, groupMember.groupId))
+					.where(inArray(groupMember.memberId, memberIds));
+
+				groupMap = gmRows.reduce((acc, r) => {
+					const list = acc.get(r.memberId) ?? [];
+					list.push({
+						groupId: r.groupId,
+						group: { id: r.gId, name: r.gName },
+					});
+					acc.set(r.memberId, list);
+					return acc;
+				}, new Map<
+					string,
+					{ groupId: string; group: { id: string; name: string } }[]
+				>());
+			}
+
+			const data = members.map((m) => ({
+				...m,
+				groupMembers: groupMap.get(m.id) ?? [],
+			}));
+
 			return {
-				data: members,
+				data,
 				pagination: {
 					page,
 					limit,
