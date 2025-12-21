@@ -20,8 +20,8 @@ const createMemberSchema = z.object({
 });
 
 const listMembersSchema = z.object({
-	page: z.number().int().min(1).default(1),
-	limit: z.number().int().min(1).max(100).default(10),
+	page: z.coerce.number().int().min(1).default(1),
+	limit: z.coerce.number().int().min(1).max(100).default(20),
 });
 
 export const membersRouter = {
@@ -36,7 +36,16 @@ export const membersRouter = {
 
 			const [members, totalCountResult] = await Promise.all([
 				db
-					.select()
+					.select({
+						id: clubMember.id,
+						firstName: clubMember.firstName,
+						lastName: clubMember.lastName,
+						email: clubMember.email,
+						phone: clubMember.phone,
+						organizationId: clubMember.organizationId,
+						createdAt: clubMember.createdAt,
+						updatedAt: clubMember.updatedAt,
+					})
 					.from(clubMember)
 					.where(eq(clubMember.organizationId, organizationId))
 					.limit(limit)
