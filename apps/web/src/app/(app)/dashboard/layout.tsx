@@ -1,3 +1,5 @@
+"use client";
+
 import {
 	SidebarInset,
 	SidebarProvider,
@@ -6,12 +8,30 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { DashboardSidebar } from "./_components/sidebar/app-sidebar";
 import { TopLoader } from "@/components/top-loader";
+import { authClient } from "@repo/auth/client";
+import { useRouter, usePathname } from "next/navigation";
+import { useEffect } from "react";
 
 export default function DashboardLayout({
 	children,
 }: {
 	children: React.ReactNode;
 }) {
+	const { data: activeOrg, isPending } = authClient.useActiveOrganization();
+	const router = useRouter();
+	const pathname = usePathname();
+
+	useEffect(() => {
+		if (!isPending && !activeOrg) {
+			const redirectUrl = encodeURIComponent(pathname);
+			router.push(`/organizations?redirect=${redirectUrl}`);
+		}
+	}, [activeOrg, isPending, pathname, router]);
+
+	if (!isPending && !activeOrg) {
+		return null;
+	}
+
 	return (
 		<>
 			<TopLoader />
@@ -32,6 +52,11 @@ export default function DashboardLayout({
 					</SidebarInset>
 				</div>
 			</SidebarProvider>
+			<style jsx global>{`
+				html, body {
+					overscroll-behavior: none;
+				}
+			`}</style>
 		</>
 	);
 }
