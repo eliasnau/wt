@@ -20,6 +20,7 @@ import {
 	XIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { CopyableTableCell } from "@/components/table/copyable-table-cell";
 import { Button } from "@/components/ui/button";
 import {
 	Empty,
@@ -99,10 +100,16 @@ export const columns: ColumnDef<MemberRow>[] = [
 	{
 		accessorKey: "email",
 		header: "Email",
+		cell: ({ row }) => {
+			return <CopyableTableCell value={row.original.email} />;
+		},
 	},
 	{
 		accessorKey: "phone",
 		header: "Phone",
+		cell: ({ row }) => {
+			return <CopyableTableCell value={row.original.phone} />;
+		},
 	},
 	{
 		id: "actions",
