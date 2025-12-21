@@ -5,6 +5,7 @@ import {
 	twoFactorClient,
 } from "better-auth/client/plugins";
 import { ac, owner, admin, member } from "./permissions";
+import { manageSessionsClient } from "./plugins/manageSessions/client";
 
 export const authClient = createAuthClient({
 	baseURL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL || "http://localhost:3001",
@@ -22,6 +23,7 @@ export const authClient = createAuthClient({
 				enabled: true,
 			},
 		}),
+		manageSessionsClient(),
 	],
 });
 
