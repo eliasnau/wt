@@ -55,21 +55,36 @@ export const membersRouter = {
 			const whereClause = and(...conditions);
 
 			const [members, totalCountResult] = await Promise.all([
-				db
-					.select({
-						id: clubMember.id,
-						firstName: clubMember.firstName,
-						lastName: clubMember.lastName,
-						email: clubMember.email,
-						phone: clubMember.phone,
-						organizationId: clubMember.organizationId,
-						createdAt: clubMember.createdAt,
-						updatedAt: clubMember.updatedAt,
-					})
-					.from(clubMember)
-					.where(whereClause)
-					.limit(limit)
-					.offset(offset),
+				db.query.clubMember.findMany({
+					where: whereClause,
+					limit,
+					offset,
+					columns: {
+						id: true,
+						firstName: true,
+						lastName: true,
+						email: true,
+						phone: true,
+						organizationId: true,
+						createdAt: true,
+						updatedAt: true,
+					},
+					with: {
+						groupMembers: {
+							columns: {
+								groupId: true,
+							},
+							with: {
+								group: {
+									columns: {
+										id: true,
+										name: true,
+									},
+								},
+							},
+						},
+					},
+				}),
 				db.select({ count: count() }).from(clubMember).where(whereClause),
 			]);
 
