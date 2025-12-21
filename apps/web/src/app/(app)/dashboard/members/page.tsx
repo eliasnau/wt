@@ -1,7 +1,12 @@
 "use client";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle } from "lucide-react";
-import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
+import {
+	parseAsArrayOf,
+	parseAsInteger,
+	parseAsString,
+	useQueryStates,
+} from "nuqs";
 import { Button } from "@/components/ui/button";
 import {
 	Empty,
@@ -24,11 +29,22 @@ import { CreateMemberButton } from "./_components/create-member-button";
 import MembersTable from "./_components/members-table";
 
 export default function MembersPage() {
-	const [{ page, limit, search }, setPagination] = useQueryStates({
+	const [{ page, limit, search, groupIds }, setPagination] = useQueryStates({
 		page: parseAsInteger.withDefault(1),
 		limit: parseAsInteger.withDefault(20),
 		search: parseAsString.withDefault(""),
+		groupIds: parseAsArrayOf(parseAsString).withDefault([]),
 	});
+
+	const UUID_REGEX =
+		/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+	const validGroupIds =
+		groupIds.length > 0
+			? groupIds.filter(
+					(id) => id && id.trim().length > 0 && UUID_REGEX.test(id),
+				)
+			: [];
 
 	const { data, isPending, error, refetch } = useQuery(
 		orpc.members.list.queryOptions({
@@ -36,7 +52,14 @@ export default function MembersPage() {
 				page,
 				limit,
 				search: search || undefined,
+				groupIds: validGroupIds.length > 0 ? validGroupIds : undefined,
 			},
+		}),
+	);
+
+	const { data: groupsData } = useQuery(
+		orpc.groups.list.queryOptions({
+			input: {},
 		}),
 	);
 
@@ -50,6 +73,14 @@ export default function MembersPage() {
 
 	const handleSearchChange = (newSearch: string) => {
 		setPagination({ page: 1, search: newSearch });
+	};
+
+	const handleGroupFilterChange = (newGroupIds: string[]) => {
+		// Filter out invalid UUIDs before setting state
+		const validGroupIds = newGroupIds.filter(
+			(id) => id && id.trim().length > 0 && UUID_REGEX.test(id),
+		);
+		setPagination({ page: 1, groupIds: validGroupIds });
 	};
 
 	return (
@@ -101,9 +132,12 @@ export default function MembersPage() {
 						}
 					}
 					search={search}
+					groupIds={groupIds}
+					groups={groupsData ?? []}
 					onSearchChange={handleSearchChange}
 					onPageChange={handlePageChange}
 					onLimitChange={handleLimitChange}
+					onGroupFilterChange={handleGroupFilterChange}
 					loading={isPending}
 				/>
 			)}

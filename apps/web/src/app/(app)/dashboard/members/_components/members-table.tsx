@@ -21,8 +21,10 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CopyableTableCell } from "@/components/table/copyable-table-cell";
+import { DataTableFacetedFilter } from "@/components/table/data-table-faceted-filter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Empty,
 	EmptyDescription,
@@ -50,6 +52,7 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import {
 	Select,
 	SelectItem,
@@ -57,6 +60,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
 	Table,
@@ -67,10 +71,13 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { useDebounce } from "@/hooks/use-debounce";
 import type { orpc } from "@/utils/orpc";
 
 type MembersListResponse = inferProcedureOutput<typeof orpc.members.list>;
 type MemberRow = MembersListResponse["data"][number];
+type GroupsListResponse = inferProcedureOutput<typeof orpc.groups.list>;
+type Group = GroupsListResponse[number];
 
 interface MembersTableProps {
 	data: MemberRow[];
@@ -83,9 +90,12 @@ interface MembersTableProps {
 		hasPreviousPage: boolean;
 	};
 	search: string;
+	groupIds: string[];
+	groups: Group[];
 	onSearchChange: (search: string) => void;
 	onPageChange: (page: number) => void;
 	onLimitChange: (limit: number) => void;
+	onGroupFilterChange: (groupIds: string[]) => void;
 	loading?: boolean;
 }
 
@@ -117,7 +127,8 @@ export const columns: ColumnDef<MemberRow>[] = [
 		header: "Groups",
 		cell: ({ row }) => {
 			const memberRow = row.original;
-			const groupMembers: NonNullable<typeof memberRow.groupMembers> = memberRow.groupMembers ?? [];
+			const groupMembers: NonNullable<typeof memberRow.groupMembers> =
+				memberRow.groupMembers ?? [];
 			if (groupMembers.length === 0) {
 				return <span className="text-muted-foreground text-sm">—</span>;
 			}
@@ -182,27 +193,26 @@ export default function MembersTable({
 	data,
 	pagination,
 	search,
+	groupIds,
+	groups,
 	onSearchChange,
 	onPageChange,
 	onLimitChange,
+	onGroupFilterChange,
 	loading = false,
 }: MembersTableProps) {
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [localSearch, setLocalSearch] = useState(search);
+	const [includeCancelled, setIncludeCancelled] = useState(false);
+	const [showArchived, setShowArchived] = useState(false);
 
+	// Debounce the search change handler
+	const debouncedOnSearchChange = useDebounce(onSearchChange, 300);
+
+	// Sync localSearch with prop changes (e.g., from URL)
 	useEffect(() => {
 		setLocalSearch(search);
 	}, [search]);
-
-	useEffect(() => {
-		const timer = setTimeout(() => {
-			if (localSearch !== search) {
-				onSearchChange(localSearch);
-			}
-		}, 300);
-
-		return () => clearTimeout(timer);
-	}, [localSearch, search, onSearchChange]);
 
 	const table = useReactTable({
 		data: data || [],
@@ -219,7 +229,11 @@ export default function MembersTable({
 	});
 
 	const hasNoMembers =
-		!loading && !data?.length && !search && pagination.totalCount === 0;
+		!loading &&
+		!data?.length &&
+		!search &&
+		groupIds.length === 0 &&
+		pagination.totalCount === 0;
 
 	if (hasNoMembers) {
 		return (
@@ -243,30 +257,108 @@ export default function MembersTable({
 
 	return (
 		<div className="">
-			<div className="mb-4">
-				<InputGroup className="max-w-sm">
-					<InputGroupAddon>
-						<SearchIcon className="size-4" />
-					</InputGroupAddon>
-					<InputGroupInput
-						type="text"
-						placeholder="Search by name or email..."
-						value={localSearch}
-						onChange={(event) => setLocalSearch(event.target.value)}
+			<div className="mb-4 flex items-center justify-between gap-2">
+				<div className="flex gap-2">
+					<InputGroup className="max-w-md">
+						<InputGroupAddon>
+							<SearchIcon className="size-4" />
+						</InputGroupAddon>
+						<InputGroupInput
+							type="text"
+							placeholder="Search by name or email..."
+							value={localSearch}
+							onChange={(event) => {
+								const newValue = event.target.value;
+								setLocalSearch(newValue);
+								debouncedOnSearchChange(newValue);
+							}}
+						/>
+						{localSearch !== "" && (
+							<InputGroupAddon
+								align="inline-end"
+								className="cursor-pointer"
+								onClick={() => {
+									setLocalSearch("");
+									onSearchChange("");
+								}}
+							>
+								<XIcon className="size-4" />
+							</InputGroupAddon>
+						)}
+					</InputGroup>
+
+					{/* Group Filter */}
+					<DataTableFacetedFilter
+						title="Groups"
+						options={groups.map((g) => ({ label: g.name, value: g.id }))}
+						selectedValues={groupIds}
+						onValueChange={onGroupFilterChange}
 					/>
-					{localSearch !== "" && (
-						<InputGroupAddon
-							align="inline-end"
-							className="cursor-pointer"
+				</div>
+
+				<div className="flex items-center gap-2">
+					{/* Clear All Filters */}
+					{(search || groupIds.length > 0) && (
+						<Button
+							variant="ghost"
+							size="sm"
 							onClick={() => {
 								setLocalSearch("");
 								onSearchChange("");
+								onGroupFilterChange([]);
 							}}
 						>
-							<XIcon className="size-4" />
-						</InputGroupAddon>
+							Clear filters
+						</Button>
 					)}
-				</InputGroup>
+
+					{/* View Options Popover */}
+					<Popover>
+						<PopoverTrigger
+							render={
+								<Button variant="outline" size="sm">
+									<MoreVerticalIcon />
+								</Button>
+							}
+						/>
+						<PopoverPopup align="end" className="w-[280px]">
+							<div className="flex flex-col gap-1 p-2">
+								<label className="flex cursor-pointer items-center justify-between gap-3 rounded-sm px-3 py-2.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground">
+									<span className="flex items-center gap-2">
+										<UserXIcon className="size-4" />
+										Include Cancelled Members
+									</span>
+									<Checkbox
+										checked={includeCancelled}
+										onCheckedChange={(checked) =>
+											setIncludeCancelled(checked as boolean)
+										}
+									/>
+								</label>
+								<label className="flex cursor-pointer items-center justify-between gap-3 rounded-sm px-3 py-2.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground">
+									<span className="flex items-center gap-2">
+										<UserIcon className="size-4" />
+										Show Archived Members
+									</span>
+									<Checkbox
+										checked={showArchived}
+										onCheckedChange={(checked) =>
+											setShowArchived(checked as boolean)
+										}
+									/>
+								</label>
+								<Separator className="my-1" />
+								<button
+									type="button"
+									onClick={() => console.log("Export")}
+									className="flex items-center gap-2 rounded-sm px-3 py-2.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
+								>
+									Export to CSV
+								</button>
+							</div>
+						</PopoverPopup>
+					</Popover>
+				</div>
 			</div>
 			<Table>
 				<TableHeader>
@@ -339,17 +431,18 @@ export default function MembersTable({
 							<TableCell colSpan={columns.length} className="h-32 text-center">
 								<div className="flex flex-col items-center justify-center gap-2">
 									<p className="text-muted-foreground">
-										{search
+										{search || groupIds.length > 0
 											? "No members found matching your filters."
 											: "No results found."}
 									</p>
-									{search && (
+									{(search || groupIds.length > 0) && (
 										<Button
 											size="sm"
 											variant="outline"
 											onClick={() => {
 												setLocalSearch("");
 												onSearchChange("");
+												onGroupFilterChange([]);
 											}}
 										>
 											Clear filters
