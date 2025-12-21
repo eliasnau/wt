@@ -1,52 +1,38 @@
 "use client";
-
+import type { inferProcedureOutput } from "@orpc/client";
 import {
+	type ColumnDef,
 	flexRender,
 	getCoreRowModel,
-	getFacetedUniqueValues,
-	getFilteredRowModel,
-	getPaginationRowModel,
 	getSortedRowModel,
-	type ColumnFiltersState,
-	type PaginationState,
 	type SortingState,
 	useReactTable,
 } from "@tanstack/react-table";
 import {
 	ChevronDownIcon,
 	ChevronUpIcon,
-	FilterIcon,
-	SearchIcon,
-	XIcon,
+	EditIcon,
 	MoreVerticalIcon,
-	CheckCircleIcon,
-	CalendarIcon,
-	DownloadIcon,
-	UploadIcon,
-	SettingsIcon,
-	UserCheckIcon,
-	UserXIcon,
+	TrashIcon,
+	UserIcon,
 } from "lucide-react";
-import { useMemo, useState } from "react";
-
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Menu, MenuPopup, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import {
-	InputGroup,
-	InputGroupAddon,
-	InputGroupInput,
-} from "@/components/ui/input-group";
-import { DataTableFacetedFilter } from "@/components/ui/data-table-faceted-filter";
-import { Frame, FrameFooter, FrameHeader, FramePanel } from "@/components/ui/frame";
+	Empty,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@/components/ui/empty";
+import { Frame, FramePanel } from "@/components/ui/frame";
 import {
-	Popover,
-	PopoverPopup,
-	PopoverTitle,
-	PopoverDescription,
-	PopoverTrigger,
-} from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
+	Menu,
+	MenuItem,
+	MenuPopup,
+	MenuSeparator,
+	MenuTrigger,
+} from "@/components/ui/menu";
 import {
 	Pagination,
 	PaginationContent,
@@ -61,396 +47,302 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
 	Table,
 	TableBody,
 	TableCell,
+	TableFooter,
 	TableHead,
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { createColumns } from "./columns";
-import { members } from "./data";
-import { EditMemberSheet } from "./edit-member-sheet";
-import { EmptyMembers } from "./empty-members";
-import type { Member } from "./types";
+import type { orpc } from "@/utils/orpc";
 
-export function MembersTable() {
-	const pageSize = 10;
+type MembersListResponse = inferProcedureOutput<typeof orpc.members.list>;
+type MemberRow = MembersListResponse["data"][number];
 
-	const [globalFilter, setGlobalFilter] = useState("");
-	const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-	const [pagination, setPagination] = useState<PaginationState>({
-		pageIndex: 0,
-		pageSize: pageSize,
-	});
+interface MembersTableProps {
+	data: MemberRow[];
+	pagination: {
+		page: number;
+		limit: number;
+		totalCount: number;
+		totalPages: number;
+		hasNextPage: boolean;
+		hasPreviousPage: boolean;
+	};
+	onPageChange: (page: number) => void;
+	onLimitChange: (limit: number) => void;
+	loading?: boolean;
+}
 
-	const [sorting, setSorting] = useState<SortingState>([
-		{
-			desc: false,
-			id: "name",
+export const columns: ColumnDef<MemberRow>[] = [
+	{
+		accessorKey: "firstName",
+		header: "First Name",
+	},
+	{
+		accessorKey: "lastName",
+		header: "Last Name",
+	},
+	{
+		accessorKey: "email",
+		header: "Email",
+	},
+	{
+		accessorKey: "phone",
+		header: "Phone",
+	},
+	{
+		id: "actions",
+		header: "Actions",
+		enableSorting: false,
+		cell: ({ row }) => {
+			const member = row.original;
+
+			return (
+				<div className="flex items-center justify-end gap-2">
+					<Menu>
+						<MenuTrigger
+							render={
+								<Button size="sm" variant="outline">
+									<MoreVerticalIcon />
+								</Button>
+							}
+						/>
+						<MenuPopup align="end">
+							<MenuItem>
+								<EditIcon />
+								Edit
+							</MenuItem>
+							<MenuSeparator />
+							<MenuItem
+								variant="destructive"
+								onClick={() => console.log(member)}
+							>
+								<TrashIcon />
+								Delete Member
+							</MenuItem>
+						</MenuPopup>
+					</Menu>
+				</div>
+			);
 		},
-	]);
+	},
+];
 
-	const [sheetOpen, setSheetOpen] = useState(false);
-	const [selectedMember, setSelectedMember] = useState<Member | null>(null);
-
-	const handleEdit = (member: Member) => {
-		setSelectedMember(member);
-		setSheetOpen(true);
-	};
-
-	const allGroups = useMemo(
-		() => Array.from(new Set(members.flatMap(({ groups }) => groups))).sort(),
-		[],
-	);
-
-	const handleClearFilters = () => {
-		setGlobalFilter("");
-		setColumnFilters([]);
-	};
+export default function MembersTable({
+	data,
+	pagination,
+	onPageChange,
+	onLimitChange,
+	loading = false,
+}: MembersTableProps) {
+	const [sorting, setSorting] = useState<SortingState>([]);
 
 	const table = useReactTable({
-		columns: createColumns(handleEdit),
-		data: members,
-		enableSortingRemoval: false,
-		getCoreRowModel: getCoreRowModel(),
-		getFacetedUniqueValues: getFacetedUniqueValues(),
-		getFilteredRowModel: getFilteredRowModel(),
-		getPaginationRowModel: getPaginationRowModel(),
-		getSortedRowModel: getSortedRowModel(),
-		onColumnFiltersChange: setColumnFilters,
-		onGlobalFilterChange: setGlobalFilter,
-		onPaginationChange: setPagination,
-		onSortingChange: setSorting,
+		data: data || [],
+		columns,
+		pageCount: pagination.totalPages,
 		state: {
-			columnFilters,
-			globalFilter,
-			pagination,
 			sorting,
 		},
+		enableSortingRemoval: false,
+		manualPagination: true,
+		getCoreRowModel: getCoreRowModel(),
+		getSortedRowModel: getSortedRowModel(),
+		onSortingChange: setSorting,
 	});
 
-	// If there are no members at all, show empty state
-	if (members.length === 0) {
+	if (!loading && !data?.length) {
 		return (
-			<>
-				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
-					<FramePanel className="py-12">
-						<EmptyMembers hasMembers={false} />
-					</FramePanel>
-				</Frame>
-				<EditMemberSheet
-					open={sheetOpen}
-					onOpenChange={setSheetOpen}
-					member={selectedMember}
-				/>
-			</>
+			<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+				<FramePanel className="py-12">
+					<Empty>
+						<EmptyHeader>
+							<EmptyMedia variant="icon">
+								<UserIcon />
+							</EmptyMedia>
+							<EmptyTitle>No Members yet</EmptyTitle>
+							<EmptyDescription>
+								Get started by creating your first member.
+							</EmptyDescription>
+						</EmptyHeader>
+					</Empty>
+				</FramePanel>
+			</Frame>
 		);
 	}
 
 	return (
-		<>
-			<section className="">
-				<div className="flex flex-col gap-3">
-					<div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-						<div className="flex-1 min-w-0 max-w-xs">
-							<InputGroup>
-								<InputGroupInput
-									aria-label="Search"
-									placeholder="Search members..."
-									type="search"
-									value={globalFilter}
-									onChange={(e) => setGlobalFilter(e.target.value)}
-								/>
-								<InputGroupAddon>
-									<SearchIcon />
-								</InputGroupAddon>
-								{globalFilter && (
-									<InputGroupAddon align="inline-end">
-										<button
-											onClick={() => setGlobalFilter("")}
-											className="text-muted-foreground hover:text-foreground"
-											aria-label="Clear search"
-											type="button"
-										>
-											<XIcon className="size-4" />
-										</button>
-									</InputGroupAddon>
-								)}
-							</InputGroup>
-						</div>
-						
-						<div className="flex gap-2 flex-1">
-							{table.getColumn("groups") && (
-								<DataTableFacetedFilter
-									column={table.getColumn("groups")}
-									title="Groups"
-									options={allGroups.map((group) => ({
-										label: group,
-										value: group,
-									}))}
-								/>
-							)}
-							
-							<Button variant="outline">
-								<CheckCircleIcon />
-								Status
-							</Button>
-							
-							<Button variant="outline">
-								<CalendarIcon />
-								Join Date
-							</Button>
-						</div>
-
-						<div className="flex gap-2 sm:ml-auto">
-							{(globalFilter || columnFilters.length > 0) && (
-								<Button variant="ghost" onClick={handleClearFilters}>
-									<XIcon />
-									Clear filters
-								</Button>
-							)}
-							
-							<Popover>
-								<PopoverTrigger
-									render={
-										<Button variant="outline">
-											<MoreVerticalIcon />
-										</Button>
-									}
-								/>
-								<PopoverPopup className="w-80" align="end">
-									<div className="mb-4">
-										<PopoverTitle className="text-base">View Options</PopoverTitle>
-										<PopoverDescription>
-											Customize what members are displayed in the table.
-										</PopoverDescription>
-									</div>
-									<div className="space-y-4">
-										<div className="space-y-3">
-											<div className="flex items-center gap-2">
-												<Checkbox id="show-active" defaultChecked />
-												<Label htmlFor="show-active" className="flex items-center gap-2 cursor-pointer">
-													<UserCheckIcon className="size-4 text-muted-foreground" />
-													<span>Show active members</span>
-												</Label>
-											</div>
-											<div className="flex items-center gap-2">
-												<Checkbox id="show-cancelled" />
-												<Label htmlFor="show-cancelled" className="flex items-center gap-2 cursor-pointer">
-													<UserXIcon className="size-4 text-muted-foreground" />
-													<span>Show cancelled members</span>
-												</Label>
-											</div>
-										</div>
-										<div className="pt-3 border-t">
-											<p className="text-sm text-muted-foreground">
-												Need to import or export members?{" "}
-												<a
-													href="/dashboard/settings/import-export"
-													className="text-foreground hover:underline"
-												>
-													Go to settings
-												</a>
-											</p>
-										</div>
-									</div>
-								</PopoverPopup>
-							</Popover>
-						</div>
-					</div>
-				</div>
-			</section>
-
-			<Frame className="w-full flex flex-col">
-				<ScrollArea
-					orientation="horizontal"
-					className="w-full"
-					viewportClassName="w-full"
-				>
-					<Table className="table-fixed min-w-[800px]">
-						<TableHeader>
-							{table.getHeaderGroups().map((headerGroup) => (
-								<TableRow className="hover:bg-transparent" key={headerGroup.id}>
-									{headerGroup.headers.map((header) => {
-										const columnSize = header.column.getSize();
-										return (
-											<TableHead
-												key={header.id}
-												style={
-													columnSize ? { width: `${columnSize}px` } : undefined
-												}
-											>
-												{header.isPlaceholder ? null : header.column.getCanSort() ? (
-													<div
-														className="flex h-full cursor-pointer select-none items-center justify-between gap-2"
-														onClick={header.column.getToggleSortingHandler()}
-														onKeyDown={(e) => {
-															if (e.key === "Enter" || e.key === " ") {
-																e.preventDefault();
-																header.column.getToggleSortingHandler()?.(e);
-															}
-														}}
-														role="button"
-														tabIndex={0}
-													>
-														{flexRender(
-															header.column.columnDef.header,
-															header.getContext(),
-														)}
-														{{
-															asc: (
-																<ChevronUpIcon
-																	aria-hidden="true"
-																	className="size-4 shrink-0 opacity-72"
-																/>
-															),
-															desc: (
-																<ChevronDownIcon
-																	aria-hidden="true"
-																	className="size-4 shrink-0 opacity-72"
-																/>
-															),
-														}[header.column.getIsSorted() as string] ?? null}
-													</div>
-												) : (
-													flexRender(
-														header.column.columnDef.header,
-														header.getContext(),
-													)
-												)}
-											</TableHead>
-										);
-									})}
-								</TableRow>
-							))}
-						</TableHeader>
-						<TableBody>
-							{table.getRowModel().rows.length ? (
-								table.getRowModel().rows.map((row) => (
-									<TableRow
-										data-state={row.getIsSelected() ? "selected" : undefined}
-										key={row.id}
+		<div className="">
+			<Table>
+				<TableHeader>
+					{table.getHeaderGroups().map((headerGroup) => (
+						<TableRow className="hover:bg-transparent" key={headerGroup.id}>
+							{headerGroup.headers.map((header, idx) => {
+								const isLast = idx === headerGroup.headers.length - 1;
+								return (
+									<TableHead
+										key={header.id}
+										className={isLast ? "text-right" : undefined}
 									>
-										{row.getVisibleCells().map((cell) => (
-											<TableCell key={cell.id}>
+										{header.isPlaceholder ? null : header.column.getCanSort() ? (
+											<div
+												className="flex h-full cursor-pointer select-none items-center justify-between gap-2"
+												onClick={header.column.getToggleSortingHandler()}
+												onKeyDown={(e) => {
+													if (e.key === "Enter" || e.key === " ") {
+														e.preventDefault();
+														header.column.getToggleSortingHandler()?.(e);
+													}
+												}}
+												role="button"
+												tabIndex={0}
+											>
 												{flexRender(
-													cell.column.columnDef.cell,
-													cell.getContext(),
+													header.column.columnDef.header,
+													header.getContext(),
 												)}
-											</TableCell>
-										))}
-									</TableRow>
-								))
-							) : (
-								<TableRow>
-									<TableCell className="h-auto py-12" colSpan={6}>
-										<EmptyMembers hasMembers={true} />
-										<div className="flex justify-center mt-4">
-											<Button variant="outline" onClick={handleClearFilters}>
-												<XIcon />
-												Clear all filters
-											</Button>
-										</div>
+												{{
+													asc: (
+														<ChevronUpIcon
+															aria-hidden="true"
+															className="size-4 shrink-0 opacity-80"
+														/>
+													),
+													desc: (
+														<ChevronDownIcon
+															aria-hidden="true"
+															className="size-4 shrink-0 opacity-80"
+														/>
+													),
+												}[header.column.getIsSorted() as string] ?? null}
+											</div>
+										) : (
+											flexRender(
+												header.column.columnDef.header,
+												header.getContext(),
+											)
+										)}
+									</TableHead>
+								);
+							})}
+						</TableRow>
+					))}
+				</TableHeader>
+				<TableBody>
+					{loading ? (
+						Array.from({ length: pagination.limit }).map((_, idx) => (
+							<TableRow key={`skeleton-${idx}`}>
+								{columns.map((_column, colIdx) => (
+									<TableCell key={`skeleton-${idx}-${colIdx}`}>
+										<Skeleton className="h-5 w-full" />
 									</TableCell>
-								</TableRow>
-							)}
-						</TableBody>
-					</Table>
-				</ScrollArea>
-
-				<FrameFooter className="p-2">
-					<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-2">
-						<div className="flex items-center gap-2 whitespace-nowrap text-sm">
-							<p className="text-muted-foreground">Results per page</p>
-							<Select
-								items={[
-									{ label: "10", value: 10 },
-									{ label: "20", value: 20 },
-									{ label: "30", value: 30 },
-									{ label: "50", value: 50 },
-								]}
-								onValueChange={(value) => {
-									table.setPageSize(value as number);
-								}}
-								value={table.getState().pagination.pageSize}
+								))}
+							</TableRow>
+						))
+					) : !table.getRowModel().rows?.length ? (
+						<TableRow>
+							<TableCell colSpan={columns.length} className="h-24 text-center">
+								No results found.
+							</TableCell>
+						</TableRow>
+					) : (
+						table.getRowModel().rows.map((row) => (
+							<TableRow
+								key={row.id}
+								data-state={row.getIsSelected() ? "selected" : undefined}
 							>
-								<SelectTrigger
-									aria-label="Select results per page"
-									className="w-fit min-w-none"
-									size="sm"
-								>
-									<SelectValue />
-								</SelectTrigger>
-								<SelectPopup>
-									<SelectItem value={10}>10</SelectItem>
-									<SelectItem value={20}>20</SelectItem>
-									<SelectItem value={30}>30</SelectItem>
-									<SelectItem value={50}>50</SelectItem>
-								</SelectPopup>
-							</Select>
-							<p className="text-muted-foreground">
-								of{" "}
-								<strong className="font-medium text-foreground">
-									{table.getRowCount()}
-								</strong>{" "}
-								total
-							</p>
-						</div>
-
-						<div className="flex items-center justify-between gap-4 sm:justify-end">
-							<p className="text-muted-foreground text-sm whitespace-nowrap">
-								Page{" "}
-								<strong className="font-medium text-foreground">
-									{table.getState().pagination.pageIndex + 1}
-								</strong>{" "}
-								of{" "}
-								<strong className="font-medium text-foreground">
-									{table.getPageCount()}
-								</strong>
-							</p>
-							<Pagination className="justify-end">
-								<PaginationContent>
-									<PaginationItem>
-										<PaginationPrevious
-											className="sm:*:[svg]:hidden"
-											render={
-												<Button
-													disabled={!table.getCanPreviousPage()}
-													onClick={() => table.previousPage()}
-													size="sm"
-													variant="outline"
-												/>
-											}
-										/>
-									</PaginationItem>
-									<PaginationItem>
-										<PaginationNext
-											className="sm:*:[svg]:hidden"
-											render={
-												<Button
-													disabled={!table.getCanNextPage()}
-													onClick={() => table.nextPage()}
-													size="sm"
-													variant="outline"
-												/>
-											}
-										/>
-									</PaginationItem>
-								</PaginationContent>
-							</Pagination>
-						</div>
-					</div>
-				</FrameFooter>
-			</Frame>
-
-			<EditMemberSheet
-				open={sheetOpen}
-				onOpenChange={setSheetOpen}
-				member={selectedMember}
-			/>
-		</>
+								{row.getVisibleCells().map((cell) => (
+									<TableCell key={cell.id}>
+										{flexRender(cell.column.columnDef.cell, cell.getContext())}
+									</TableCell>
+								))}
+							</TableRow>
+						))
+					)}
+				</TableBody>
+				<TableFooter>
+					<TableRow>
+						<TableCell colSpan={columns.length} className="p-2">
+							<div className="flex items-center justify-between gap-2">
+								<div className="flex items-center gap-2 whitespace-nowrap">
+									<p className="text-muted-foreground text-sm">Showing</p>
+									<Select
+										items={[
+											{ label: "10", value: 10 },
+											{ label: "20", value: 20 },
+											{ label: "30", value: 30 },
+											{ label: "50", value: 50 },
+										]}
+										onValueChange={(value) => {
+											onLimitChange(value as number);
+										}}
+										value={pagination.limit}
+									>
+										<SelectTrigger
+											aria-label="Rows per page"
+											className="w-fit min-w-none"
+											size="sm"
+										>
+											<SelectValue />
+										</SelectTrigger>
+										<SelectPopup>
+											<SelectItem value={10}>10</SelectItem>
+											<SelectItem value={20}>20</SelectItem>
+											<SelectItem value={30}>30</SelectItem>
+											<SelectItem value={50}>50</SelectItem>
+										</SelectPopup>
+									</Select>
+									<span className="text-muted-foreground text-sm">
+										of{" "}
+										<strong className="font-medium text-foreground">
+											{pagination.totalCount}
+										</strong>{" "}
+										{pagination.totalCount === 1 ? "member" : "members"}
+									</span>
+								</div>
+								<Pagination className="justify-end">
+									<PaginationContent>
+										<PaginationItem>
+											<PaginationPrevious
+												className="sm:*:[svg]:hidden"
+												render={
+													<Button
+														disabled={!pagination.hasPreviousPage}
+														onClick={() => onPageChange(pagination.page - 1)}
+														size="sm"
+														variant="outline"
+													>
+														Previous
+													</Button>
+												}
+											/>
+										</PaginationItem>
+										<PaginationItem>
+											<PaginationNext
+												className="sm:*:[svg]:hidden"
+												render={
+													<Button
+														disabled={!pagination.hasNextPage}
+														onClick={() => onPageChange(pagination.page + 1)}
+														size="sm"
+														variant="outline"
+													>
+														Next
+													</Button>
+												}
+											/>
+										</PaginationItem>
+									</PaginationContent>
+								</Pagination>
+							</div>
+						</TableCell>
+					</TableRow>
+				</TableFooter>
+			</Table>
+		</div>
 	);
 }
