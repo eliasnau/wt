@@ -3,6 +3,7 @@
 import { ArrowDownIcon, ArrowUpIcon, CornerDownLeftIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
+import { OrganizationSwitcher } from "@/components/organization-switcher";
 import { Button } from "@/components/ui/button";
 import {
 	Command,
@@ -84,26 +85,25 @@ export const settings: Item[] = [
 	},
 ];
 
-export const commands: Item[] = [
-	{
-		value: "switch-org",
-		label: "Switch Organization",
-		shortcut: "⌘⇧O",
-		action: () => {
-			alert("Org switcher");
-		},
-	},
-];
-
-export const groupedItems: Group[] = [
-	{ items: pages, value: "Pages" },
-	{ items: commands, value: "Commands" },
-	{ items: settings, value: "Settings" },
-];
-
 export function CommandSearch() {
 	const [open, setOpen] = React.useState(false);
+	const [orgSwitcherOpen, setOrgSwitcherOpen] = React.useState(false);
 	const router = useRouter();
+
+	const commands: Item[] = [
+		{
+			value: "switch-org",
+			label: "Switch Organization",
+			shortcut: "⌘⇧O",
+			action: () => setOrgSwitcherOpen(true),
+		},
+	];
+
+	const groupedItems: Group[] = [
+		{ items: pages, value: "Pages" },
+		{ items: commands, value: "Commands" },
+		{ items: settings, value: "Settings" },
+	];
 
 	function handleItemClick(item: Item) {
 		setOpen(false);
@@ -135,71 +135,78 @@ export function CommandSearch() {
 	}, []);
 
 	return (
-		<CommandDialog onOpenChange={setOpen} open={open}>
-			<CommandDialogTrigger render={<Button variant="outline" />}>
-				Open Command Palette
-				<Kbd>⌘K</Kbd>
-			</CommandDialogTrigger>
-			<CommandDialogPopup>
-				<Command items={groupedItems}>
-					<CommandInput placeholder="Search for apps and commands..." />
-					<CommandPanel>
-						<CommandEmpty>No results found.</CommandEmpty>
-						<CommandList>
-							{(group: Group, _index: number) => (
-								<React.Fragment key={group.value}>
-									<CommandGroup items={group.items}>
-										<CommandGroupLabel>{group.value}</CommandGroupLabel>
-										<CommandCollection>
-											{(item: Item) => (
-												<CommandItem
-													key={item.value}
-													onClick={() => handleItemClick(item)}
-													value={item.value}
-												>
-													<span className="flex-1">{item.label}</span>
-													{item.shortcut && (
-														<CommandShortcut>{item.shortcut}</CommandShortcut>
-													)}
-												</CommandItem>
-											)}
-										</CommandCollection>
-									</CommandGroup>
-									<CommandSeparator />
-								</React.Fragment>
-							)}
-						</CommandList>
-					</CommandPanel>
-					<CommandFooter>
-						<div className="flex items-center gap-4">
+		<>
+			<CommandDialog onOpenChange={setOpen} open={open}>
+				<CommandDialogTrigger render={<Button variant="outline" />}>
+					Open Command Palette
+					<Kbd>⌘K</Kbd>
+				</CommandDialogTrigger>
+				<CommandDialogPopup>
+					<Command items={groupedItems}>
+						<CommandInput placeholder="Search for pages and commands..." />
+						<CommandPanel>
+							<CommandEmpty>No results found.</CommandEmpty>
+							<CommandList>
+								{(group: Group, _index: number) => (
+									<React.Fragment key={group.value}>
+										<CommandGroup items={group.items}>
+											<CommandGroupLabel>{group.value}</CommandGroupLabel>
+											<CommandCollection>
+												{(item: Item) => (
+													<CommandItem
+														key={item.value}
+														onClick={() => handleItemClick(item)}
+														value={item.value}
+													>
+														<span className="flex-1">{item.label}</span>
+														{item.shortcut && (
+															<CommandShortcut>{item.shortcut}</CommandShortcut>
+														)}
+													</CommandItem>
+												)}
+											</CommandCollection>
+										</CommandGroup>
+										<CommandSeparator />
+									</React.Fragment>
+								)}
+							</CommandList>
+						</CommandPanel>
+						<CommandFooter>
+							<div className="flex items-center gap-4">
+								<div className="flex items-center gap-2">
+									<KbdGroup>
+										<Kbd>
+											<ArrowUpIcon />
+										</Kbd>
+										<Kbd>
+											<ArrowDownIcon />
+										</Kbd>
+									</KbdGroup>
+									<span>Navigate</span>
+								</div>
+								<div className="flex items-center gap-2">
+									<Kbd>
+										<CornerDownLeftIcon />
+									</Kbd>
+									<span>Open</span>
+								</div>
+							</div>
 							<div className="flex items-center gap-2">
 								<KbdGroup>
-									<Kbd>
-										<ArrowUpIcon />
-									</Kbd>
-									<Kbd>
-										<ArrowDownIcon />
-									</Kbd>
+									<Kbd>⌘</Kbd>
+									<Kbd>K</Kbd>
 								</KbdGroup>
-								<span>Navigate</span>
+								<span>Close</span>
 							</div>
-							<div className="flex items-center gap-2">
-								<Kbd>
-									<CornerDownLeftIcon />
-								</Kbd>
-								<span>Open</span>
-							</div>
-						</div>
-						<div className="flex items-center gap-2">
-							<KbdGroup>
-								<Kbd>⌘</Kbd>
-								<Kbd>K</Kbd>
-							</KbdGroup>
-							<span>Close</span>
-						</div>
-					</CommandFooter>
-				</Command>
-			</CommandDialogPopup>
-		</CommandDialog>
+						</CommandFooter>
+					</Command>
+				</CommandDialogPopup>
+			</CommandDialog>
+
+			<OrganizationSwitcher
+				open={orgSwitcherOpen}
+				onOpenChange={setOrgSwitcherOpen}
+			/>
+		</>
 	);
 }
