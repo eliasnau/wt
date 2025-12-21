@@ -1,10 +1,11 @@
-import { createAuthClient } from "better-auth/react";
 import { passkeyClient } from "@better-auth/passkey/client";
+import { APIError } from "better-auth";
 import {
 	organizationClient,
 	twoFactorClient,
 } from "better-auth/client/plugins";
-import { ac, owner, admin, member } from "./permissions";
+import { createAuthClient } from "better-auth/react";
+import { ac, admin, member, owner } from "./permissions";
 import { manageSessionsClient } from "./plugins/manageSessions/client";
 
 export const authClient = createAuthClient({
@@ -28,3 +29,5 @@ export const authClient = createAuthClient({
 });
 
 export type Session = typeof authClient.$Infer.Session;
+
+export { APIError };

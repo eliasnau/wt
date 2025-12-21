@@ -40,8 +40,17 @@ import {
 	EmptyTitle,
 } from "@/components/ui/empty";
 import { toast } from "sonner";
-import { Edit, Fingerprint, Info, Loader2, Plus, Trash2 } from "lucide-react";
+import {
+	Edit,
+	Fingerprint,
+	Info,
+	Loader2,
+	Plus,
+	Trash2,
+	AlertCircle,
+} from "lucide-react";
 import { getAAGUIDInfo } from "@/lib/aaguid-data";
+import { useQuery } from "@tanstack/react-query";
 
 type Passkey = {
 	id: string;
@@ -51,35 +60,32 @@ type Passkey = {
 	aaguid?: string | null;
 };
 
-export function PasskeyFrame() {
-	const [passkeys, setPasskeys] = useState<Passkey[]>([]);
-	const [isLoadingPasskeys, setIsLoadingPasskeys] = useState(true);
+export function PasskeyFrame({
+	currentSessionId,
+}: {
+	currentSessionId: string;
+}) {
 	const [isAddingPasskey, setIsAddingPasskey] = useState(false);
 	const [editingPasskey, setEditingPasskey] = useState<Passkey | null>(null);
 	const [newPasskeyName, setNewPasskeyName] = useState("");
 	const [isUpdatingName, setIsUpdatingName] = useState(false);
 
-	useEffect(() => {
-		loadPasskeys();
-	}, []);
-
-	const loadPasskeys = useCallback(async () => {
-		setIsLoadingPasskeys(true);
-		try {
+	const {
+		data: passkeys,
+		refetch,
+		isPending,
+		error,
+	} = useQuery({
+		queryKey: ["passkeys", currentSessionId],
+		retry: 1,
+		queryFn: async () => {
 			const { data, error } = await authClient.passkey.listUserPasskeys();
 			if (error) {
-				toast.error("Failed to load passkeys");
-				setPasskeys([]);
-			} else {
-				setPasskeys((data as Passkey[]) ?? []);
+				throw new Error(error.message || "Failed to load passkeys");
 			}
-		} catch {
-			toast.error("Failed to load passkeys");
-			setPasskeys([]);
-		} finally {
-			setIsLoadingPasskeys(false);
-		}
-	}, []);
+			return data;
+		},
+	});
 
 	const handleAddPasskey = useCallback(async () => {
 		setIsAddingPasskey(true);
@@ -89,30 +95,33 @@ export function PasskeyFrame() {
 				toast.error("Failed to add passkey");
 			} else {
 				toast.success("Passkey added successfully");
-				await loadPasskeys();
+				await refetch();
 			}
 		} catch {
 			toast.error("Failed to add passkey");
 		} finally {
 			setIsAddingPasskey(false);
 		}
-	}, [loadPasskeys]);
+	}, [refetch]);
 
-	const handleDeletePasskey = useCallback(async (passkeyId: string) => {
-		try {
-			const { error } = await authClient.passkey.deletePasskey({
-				id: passkeyId,
-			});
-			if (error) {
+	const handleDeletePasskey = useCallback(
+		async (passkeyId: string) => {
+			try {
+				const { error } = await authClient.passkey.deletePasskey({
+					id: passkeyId,
+				});
+				if (error) {
+					toast.error("Failed to delete passkey");
+				} else {
+					toast.success("Passkey deleted successfully");
+					refetch();
+				}
+			} catch {
 				toast.error("Failed to delete passkey");
-			} else {
-				toast.success("Passkey deleted successfully");
-				setPasskeys((prev) => prev.filter((p) => p.id !== passkeyId));
 			}
-		} catch {
-			toast.error("Failed to delete passkey");
-		}
-	}, []);
+		},
+		[refetch],
+	);
 
 	const handleUpdatePasskeyName = useCallback(async () => {
 		if (!editingPasskey || !newPasskeyName.trim()) {
@@ -129,7 +138,7 @@ export function PasskeyFrame() {
 				toast.error("Failed to update passkey name");
 			} else {
 				toast.success("Passkey name updated successfully");
-				await loadPasskeys();
+				await refetch();
 				setEditingPasskey(null);
 				setNewPasskeyName("");
 			}
@@ -138,14 +147,14 @@ export function PasskeyFrame() {
 		} finally {
 			setIsUpdatingName(false);
 		}
-	}, [editingPasskey, newPasskeyName, loadPasskeys]);
+	}, [editingPasskey, newPasskeyName, refetch]);
 
 	const openEditDialog = useCallback((passkey: Passkey) => {
 		setEditingPasskey(passkey);
 		setNewPasskeyName(passkey.name || "");
 	}, []);
 
-	if (isLoadingPasskeys) {
+	if (isPending) {
 		return (
 			<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 				<FramePanel>
@@ -164,7 +173,32 @@ export function PasskeyFrame() {
 		);
 	}
 
-	if (passkeys.length === 0) {
+	if (error) {
+		return (
+			<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+				<FramePanel>
+					<Empty>
+						<EmptyHeader>
+							<EmptyMedia variant="icon">
+								<Fingerprint />
+							</EmptyMedia>
+							<EmptyTitle>Failed to load passkeys</EmptyTitle>
+							<EmptyDescription>
+								{error instanceof Error
+									? error.message
+									: "Something went wrong. Please try again."}
+							</EmptyDescription>
+						</EmptyHeader>
+						<EmptyContent>
+							<Button onClick={() => refetch()}>Try Again</Button>
+						</EmptyContent>
+					</Empty>
+				</FramePanel>
+			</Frame>
+		);
+	}
+
+	if (!passkeys || passkeys.length === 0) {
 		return (
 			<>
 				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
@@ -185,7 +219,10 @@ export function PasskeyFrame() {
 					<FrameFooter className="flex-row justify-between items-center">
 						<Tooltip>
 							<TooltipTrigger asChild>
-								<button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
+								<button
+									type="button"
+									className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+								>
 									<Info className="size-3.5" />
 									<span>What are passkeys?</span>
 								</button>
@@ -312,7 +349,10 @@ export function PasskeyFrame() {
 				<FrameFooter className="flex-row justify-between items-center">
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
+							<button
+								type="button"
+								className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+							>
 								<Info className="size-3.5" />
 								<span>What are passkeys?</span>
 							</button>
@@ -401,8 +441,8 @@ function PasskeyIcon({ aaguid }: { aaguid?: string | null }) {
 			<TooltipTrigger asChild>
 				<div className="p-3 rounded-lg bg-primary/10 cursor-help">
 					{IconComponent ? (
-						<IconComponent 
-							className="size-8" 
+						<IconComponent
+							className="size-8"
 							theme={resolvedTheme === "dark" ? "dark" : "light"}
 						/>
 					) : (

@@ -3,11 +3,7 @@
 import { useState } from "react";
 import { authClient } from "@repo/auth/client";
 import { Button } from "@/components/ui/button";
-import {
-	Frame,
-	FramePanel,
-	FrameFooter,
-} from "@/components/ui/frame";
+import { Frame, FramePanel, FrameFooter } from "@/components/ui/frame";
 import {
 	Dialog,
 	DialogClose,
@@ -36,7 +32,14 @@ import {
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import {
+	Empty,
+	EmptyContent,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@/components/ui/empty";
 import { toast } from "sonner";
 import { Loader2, Shield, Info, Copy, Check, Download } from "lucide-react";
 import QRCode from "react-qr-code";
@@ -45,13 +48,15 @@ interface TwoFactorFrameProps {
 	twoFactorEnabled: boolean;
 }
 
-export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFrameProps) {
+export function TwoFactorFrame({
+	twoFactorEnabled: initialEnabled,
+}: TwoFactorFrameProps) {
 	const [twoFactorEnabled, setTwoFactorEnabled] = useState(initialEnabled);
 	const [enableDialogOpen, setEnableDialogOpen] = useState(false);
 	const [disableDialogOpen, setDisableDialogOpen] = useState(false);
 	const [backupCodesDialogOpen, setBackupCodesDialogOpen] = useState(false);
 	const [qrCodeDialogOpen, setQrCodeDialogOpen] = useState(false);
-	
+
 	const [password, setPassword] = useState("");
 	const [verificationCode, setVerificationCode] = useState("");
 	const [totpUri, setTotpUri] = useState<string | null>(null);
@@ -59,7 +64,7 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 	const [backupCodes, setBackupCodes] = useState<string[]>([]);
 	const [copiedCodes, setCopiedCodes] = useState(false);
 	const [copiedSecret, setCopiedSecret] = useState(false);
-	
+
 	const [isEnabling, setIsEnabling] = useState(false);
 	const [isVerifying, setIsVerifying] = useState(false);
 	const [isDisabling, setIsDisabling] = useState(false);
@@ -275,7 +280,9 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 				{twoFactorEnabled ? (
 					<>
 						<FramePanel>
-							<h2 className="font-heading text-xl mb-2 text-foreground">Two-Factor Authentication</h2>
+							<h2 className="font-heading text-xl mb-2 text-foreground">
+								Two-Factor Authentication
+							</h2>
 							<p className="text-sm text-muted-foreground mb-6">
 								Manage your two-factor authentication settings.
 							</p>
@@ -319,15 +326,23 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 						</FramePanel>
 
 						<FrameFooter className="flex-row justify-end items-center">
-							<AlertDialog open={disableDialogOpen} onOpenChange={setDisableDialogOpen}>
-								<AlertDialogTrigger render={<Button variant="destructive" size="sm" />}>
+							<AlertDialog
+								open={disableDialogOpen}
+								onOpenChange={setDisableDialogOpen}
+							>
+								<AlertDialogTrigger
+									render={<Button variant="destructive" size="sm" />}
+								>
 									Disable 2FA
 								</AlertDialogTrigger>
 								<AlertDialogPopup>
 									<AlertDialogHeader>
-										<AlertDialogTitle>Disable Two-Factor Authentication</AlertDialogTitle>
+										<AlertDialogTitle>
+											Disable Two-Factor Authentication
+										</AlertDialogTitle>
 										<AlertDialogDescription>
-											This will remove the extra layer of security from your account. Enter your password to confirm.
+											This will remove the extra layer of security from your
+											account. Enter your password to confirm.
 										</AlertDialogDescription>
 									</AlertDialogHeader>
 									<div className="px-6 py-4">
@@ -342,10 +357,17 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 										</Field>
 									</div>
 									<AlertDialogFooter>
-										<AlertDialogClose render={<Button variant="ghost" />} disabled={isDisabling}>
+										<AlertDialogClose
+											render={<Button variant="ghost" />}
+											disabled={isDisabling}
+										>
 											Cancel
 										</AlertDialogClose>
-										<Button variant="destructive" onClick={handleDisableTwoFactor} disabled={isDisabling}>
+										<Button
+											variant="destructive"
+											onClick={handleDisableTwoFactor}
+											disabled={isDisabling}
+										>
 											{isDisabling ? (
 												<>
 													<Loader2 className="mr-2 size-4 animate-spin" />
@@ -360,7 +382,10 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 							</AlertDialog>
 						</FrameFooter>
 
-						<Dialog open={backupCodesDialogOpen} onOpenChange={setBackupCodesDialogOpen}>
+						<Dialog
+							open={backupCodesDialogOpen}
+							onOpenChange={setBackupCodesDialogOpen}
+						>
 							<DialogPopup>
 								<DialogHeader>
 									<DialogTitle>Regenerate Backup Codes</DialogTitle>
@@ -369,7 +394,9 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 									{backupCodes.length === 0 ? (
 										<>
 											<p className="text-sm text-muted-foreground">
-												Backup codes can be used to access your account if you lose access to your authenticator app. Regenerating will replace any existing codes.
+												Backup codes can be used to access your account if you
+												lose access to your authenticator app. Regenerating will
+												replace any existing codes.
 											</p>
 											<Field>
 												<FieldLabel>Password</FieldLabel>
@@ -384,14 +411,17 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 									) : (
 										<>
 											<div className="space-y-2">
-												<p className="text-sm font-medium">Save these backup codes in a safe place:</p>
+												<p className="text-sm font-medium">
+													Save these backup codes in a safe place:
+												</p>
 												<div className="p-4 rounded-lg bg-muted font-mono text-sm space-y-1">
 													{backupCodes.map((code, index) => (
 														<div key={index}>{code}</div>
 													))}
 												</div>
 												<p className="text-xs text-muted-foreground">
-													Each code can only be used once. Keep them safe and secure.
+													Each code can only be used once. Keep them safe and
+													secure.
 												</p>
 											</div>
 										</>
@@ -400,10 +430,16 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 								<DialogFooter>
 									{backupCodes.length === 0 ? (
 										<>
-											<DialogClose render={<Button variant="ghost" />} disabled={isGeneratingCodes}>
+											<DialogClose
+												render={<Button variant="ghost" />}
+												disabled={isGeneratingCodes}
+											>
 												Cancel
 											</DialogClose>
-											<Button onClick={handleGenerateBackupCodes} disabled={isGeneratingCodes}>
+											<Button
+												onClick={handleGenerateBackupCodes}
+												disabled={isGeneratingCodes}
+											>
 												{isGeneratingCodes ? (
 													<>
 														<Loader2 className="mr-2 size-4 animate-spin" />
@@ -429,14 +465,20 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 													</>
 												)}
 											</Button>
-											<Button variant="outline" onClick={handleDownloadBackupCodes}>
+											<Button
+												variant="outline"
+												onClick={handleDownloadBackupCodes}
+											>
 												<Download className="mr-2 size-4" />
 												Download
 											</Button>
-											<DialogClose render={<Button />} onClick={() => {
-												setBackupCodes([]);
-												setPassword("");
-											}}>
+											<DialogClose
+												render={<Button />}
+												onClick={() => {
+													setBackupCodes([]);
+													setPassword("");
+												}}
+											>
 												Done
 											</DialogClose>
 										</>
@@ -445,15 +487,18 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 							</DialogPopup>
 						</Dialog>
 
-						<Dialog open={qrCodeDialogOpen} onOpenChange={(open) => {
-							setQrCodeDialogOpen(open);
-							if (!open) {
-								setTotpUri(null);
-								setTotpSecret(null);
-								setPassword("");
-								setCopiedSecret(false);
-							}
-						}}>
+						<Dialog
+							open={qrCodeDialogOpen}
+							onOpenChange={(open) => {
+								setQrCodeDialogOpen(open);
+								if (!open) {
+									setTotpUri(null);
+									setTotpSecret(null);
+									setPassword("");
+									setCopiedSecret(false);
+								}
+							}}
+						>
 							<DialogPopup>
 								<DialogHeader>
 									<DialogTitle>Authenticator QR Code</DialogTitle>
@@ -462,7 +507,8 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 									{!totpUri ? (
 										<>
 											<p className="text-sm text-muted-foreground">
-												Enter your password to view the QR code for your authenticator app.
+												Enter your password to view the QR code for your
+												authenticator app.
 											</p>
 											<Field>
 												<FieldLabel>Password</FieldLabel>
@@ -478,7 +524,9 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 										<>
 											<div className="space-y-4">
 												<div>
-													<p className="text-sm font-medium mb-2">Scan QR Code</p>
+													<p className="text-sm font-medium mb-2">
+														Scan QR Code
+													</p>
 													<p className="text-xs text-muted-foreground mb-4">
 														Scan this QR code with your authenticator app.
 													</p>
@@ -489,15 +537,22 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 
 												{totpSecret && (
 													<div>
-														<p className="text-sm font-medium mb-2">Or enter manually</p>
+														<p className="text-sm font-medium mb-2">
+															Or enter manually
+														</p>
 														<p className="text-xs text-muted-foreground mb-2">
-															If you can't scan the QR code, enter this secret key manually in your authenticator app:
+															If you can't scan the QR code, enter this secret
+															key manually in your authenticator app:
 														</p>
 														<div className="flex items-center gap-2">
 															<div className="flex-1 p-3 rounded-lg bg-muted font-mono text-sm overflow-x-auto whitespace-nowrap">
 																{totpSecret}
 															</div>
-															<Button variant="outline" size="sm" onClick={handleCopySecret}>
+															<Button
+																variant="outline"
+																size="sm"
+																onClick={handleCopySecret}
+															>
 																{copiedSecret ? (
 																	<>
 																		<Check className="size-4" />
@@ -518,7 +573,10 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 								<DialogFooter>
 									{!totpUri ? (
 										<>
-											<DialogClose render={<Button variant="ghost" />} disabled={isLoadingQr}>
+											<DialogClose
+												render={<Button variant="ghost" />}
+												disabled={isLoadingQr}
+											>
 												Cancel
 											</DialogClose>
 											<Button onClick={handleGetQrCode} disabled={isLoadingQr}>
@@ -533,9 +591,7 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 											</Button>
 										</>
 									) : (
-										<DialogClose render={<Button />}>
-											Done
-										</DialogClose>
+										<DialogClose render={<Button />}>Done</DialogClose>
 									)}
 								</DialogFooter>
 							</DialogPopup>
@@ -560,22 +616,30 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 						<FrameFooter className="flex-row justify-between items-center">
 							<Tooltip>
 								<TooltipTrigger asChild>
-									<button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
+									<button
+										type="button"
+										className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+									>
 										<Info className="size-3.5" />
 										<span>What is 2FA?</span>
 									</button>
 								</TooltipTrigger>
 								<TooltipContent className="max-w-xs">
 									<p className="text-xs">
-										Two-factor authentication adds an extra security step when signing in. You'll need to provide a code from your authenticator app in addition to your password.
+										Two-factor authentication adds an extra security step when
+										signing in. You'll need to provide a code from your
+										authenticator app in addition to your password.
 									</p>
 								</TooltipContent>
 							</Tooltip>
 
-							<Dialog open={enableDialogOpen} onOpenChange={(open) => {
-								setEnableDialogOpen(open);
-								if (!open) resetEnableForm();
-							}}>
+							<Dialog
+								open={enableDialogOpen}
+								onOpenChange={(open) => {
+									setEnableDialogOpen(open);
+									if (!open) resetEnableForm();
+								}}
+							>
 								<DialogTrigger render={<Button variant="outline" size="sm" />}>
 									<Shield className="mr-2 size-4" />
 									Enable 2FA
@@ -588,7 +652,8 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 										{!totpUri ? (
 											<>
 												<p className="text-sm text-muted-foreground">
-													Enter your password to generate a QR code for your authenticator app.
+													Enter your password to generate a QR code for your
+													authenticator app.
 												</p>
 												<Field>
 													<FieldLabel>Password</FieldLabel>
@@ -604,26 +669,36 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 											<>
 												<div className="space-y-4">
 													<div>
-														<p className="text-sm font-medium mb-2">Step 1: Scan QR Code</p>
+														<p className="text-sm font-medium mb-2">
+															Step 1: Scan QR Code
+														</p>
 														<div className="flex justify-center p-4 bg-white rounded-lg">
 															<QRCode value={totpUri} size={200} />
 														</div>
 														<p className="text-xs text-muted-foreground mt-2">
-															Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.)
+															Scan this QR code with your authenticator app
+															(Google Authenticator, Authy, etc.)
 														</p>
 													</div>
 
 													{totpSecret && (
 														<div>
-															<p className="text-sm font-medium mb-2">Or enter manually</p>
+															<p className="text-sm font-medium mb-2">
+																Or enter manually
+															</p>
 															<p className="text-xs text-muted-foreground mb-2">
-																If you can't scan the QR code, enter this secret key manually:
+																If you can't scan the QR code, enter this secret
+																key manually:
 															</p>
 															<div className="flex items-center gap-2">
 																<div className="flex-1 p-3 rounded-lg bg-muted font-mono text-xs overflow-x-auto whitespace-nowrap">
 																	{totpSecret}
 																</div>
-																<Button variant="outline" size="sm" onClick={handleCopySecret}>
+																<Button
+																	variant="outline"
+																	size="sm"
+																	onClick={handleCopySecret}
+																>
 																	{copiedSecret ? (
 																		<>
 																			<Check className="size-4" />
@@ -641,9 +716,15 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 													{backupCodes.length > 0 && (
 														<div className="rounded-lg border p-4 bg-muted/50">
 															<div className="flex items-center justify-between mb-3">
-																<p className="text-sm font-medium">Backup Codes</p>
+																<p className="text-sm font-medium">
+																	Backup Codes
+																</p>
 																<div className="flex gap-2">
-																	<Button variant="ghost" size="sm" onClick={handleCopyBackupCodes}>
+																	<Button
+																		variant="ghost"
+																		size="sm"
+																		onClick={handleCopyBackupCodes}
+																	>
 																		{copiedCodes ? (
 																			<>
 																				<Check className="mr-2 size-3" />
@@ -656,7 +737,11 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 																			</>
 																		)}
 																	</Button>
-																	<Button variant="ghost" size="sm" onClick={handleDownloadBackupCodes}>
+																	<Button
+																		variant="ghost"
+																		size="sm"
+																		onClick={handleDownloadBackupCodes}
+																	>
 																		<Download className="mr-2 size-3" />
 																		Download
 																	</Button>
@@ -670,19 +755,28 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 																))}
 															</div>
 															<p className="text-xs text-muted-foreground mt-3">
-																Save these backup codes securely. Each code can only be used once for account recovery.
+																Save these backup codes securely. Each code can
+																only be used once for account recovery.
 															</p>
 														</div>
 													)}
 
 													<div>
-														<p className="text-sm font-medium mb-2">Step 2: Enter Verification Code</p>
+														<p className="text-sm font-medium mb-2">
+															Step 2: Enter Verification Code
+														</p>
 														<Field>
 															<FieldLabel>6-digit code</FieldLabel>
 															<Input
 																type="text"
 																value={verificationCode}
-																onChange={(e) => setVerificationCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+																onChange={(e) =>
+																	setVerificationCode(
+																		e.target.value
+																			.replace(/\D/g, "")
+																			.slice(0, 6),
+																	)
+																}
 																placeholder="000000"
 																maxLength={6}
 															/>
@@ -695,10 +789,16 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 									<DialogFooter>
 										{!totpUri ? (
 											<>
-												<DialogClose render={<Button variant="ghost" />} disabled={isEnabling}>
+												<DialogClose
+													render={<Button variant="ghost" />}
+													disabled={isEnabling}
+												>
 													Cancel
 												</DialogClose>
-												<Button onClick={handleEnableTwoFactor} disabled={isEnabling}>
+												<Button
+													onClick={handleEnableTwoFactor}
+													disabled={isEnabling}
+												>
 													{isEnabling ? (
 														<>
 															<Loader2 className="mr-2 size-4 animate-spin" />
@@ -711,10 +811,18 @@ export function TwoFactorFrame({ twoFactorEnabled: initialEnabled }: TwoFactorFr
 											</>
 										) : (
 											<>
-												<DialogClose render={<Button variant="ghost" />} disabled={isVerifying}>
+												<DialogClose
+													render={<Button variant="ghost" />}
+													disabled={isVerifying}
+												>
 													Cancel
 												</DialogClose>
-												<Button onClick={handleVerifyTotp} disabled={isVerifying || verificationCode.length !== 6}>
+												<Button
+													onClick={handleVerifyTotp}
+													disabled={
+														isVerifying || verificationCode.length !== 6
+													}
+												>
 													{isVerifying ? (
 														<>
 															<Loader2 className="mr-2 size-4 animate-spin" />

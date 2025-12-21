@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@repo/auth/client";
 import { Button } from "@/components/ui/button";
@@ -18,9 +18,21 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { toast } from "sonner";
-import { Loader2, Trash2, Laptop } from "lucide-react";
+import { Loader2, Trash2, Laptop, AlertCircle } from "lucide-react";
 import { Chrome } from "@/components/ui/icons/browser/chrome";
 import { Edge } from "@/components/ui/icons/browser/edge";
 import { Firefox } from "@/components/ui/icons/browser/firefox";
@@ -31,6 +43,8 @@ import { Arc } from "@/components/ui/icons/browser/arc";
 import { ZenBrowser } from "@/components/ui/icons/browser/zen";
 import { Opera } from "@/components/ui/icons/browser/opera";
 import { BraveBrowser } from "@/components/ui/icons/browser/brave";
+import { useQuery } from "@tanstack/react-query";
+import { APIError } from "@repo/auth/client";
 
 type RawSession = {
   id: string;
@@ -50,17 +64,34 @@ type Session = {
   token: string | null;
 };
 
-export function SessionsFrame() {
+export function SessionsFrame({
+  currentSessionId: initialSessionId,
+}: {
+  currentSessionId: string;
+}) {
   const router = useRouter();
-  const [sessions, setSessions] = useState<Session[]>([]);
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
-  const [isLoadingSessions, setIsLoadingSessions] = useState(true);
+  const [currentSessionId, setCurrentSessionId] =
+    useState<string>(initialSessionId);
   const [isRevokingAll, setIsRevokingAll] = useState(false);
   const [includeCurrentDevice, setIncludeCurrentDevice] = useState(false);
 
-  useEffect(() => {
-    loadSessions();
-  }, []);
+  const {
+    data: sessions = [],
+    isPending,
+    error,
+    refetch,
+  } = useQuery({
+    queryKey: ["sessions", currentSessionId],
+    retry: 1,
+    queryFn: async () => {
+      const listRes = await authClient.listSessions();
+      if (listRes?.error) {
+        throw new Error(listRes.error.message || "Failed to load sessions");
+      }
+      const raw = (listRes?.data ?? []) as RawSession[];
+      return raw.map(normalizeSession);
+    },
+  });
 
   const toDate = (v: string | Date | undefined | null): Date | null => {
     if (!v) return null;
@@ -77,28 +108,6 @@ export function SessionsFrame() {
     token: s.token ?? null,
   });
 
-  const loadSessions = useCallback(async () => {
-    setIsLoadingSessions(true);
-    try {
-      const currentRes = await authClient.getSession();
-      const currentId = currentRes?.data?.session?.id ?? null;
-      if (currentId) setCurrentSessionId(currentId);
-      const listRes = await authClient.listSessions();
-      if (listRes?.error) {
-        toast.error("Failed to load sessions");
-        setSessions([]);
-      } else {
-        const raw = (listRes?.data ?? []) as RawSession[];
-        setSessions(raw.map(normalizeSession));
-      }
-    } catch {
-      toast.error("Failed to load sessions");
-      setSessions([]);
-    } finally {
-      setIsLoadingSessions(false);
-    }
-  }, []);
-
   const sortedSessions = useMemo(() => {
     return [...sessions].sort((a, b) => {
       const aIsCurrent = currentSessionId === a.id;
@@ -111,23 +120,25 @@ export function SessionsFrame() {
 
   const handleRevokeSession = useCallback(
     async (session: Session) => {
-      if (!session.token || session.token.trim().length === 0) {
-        toast.error("Missing session token for this device");
-        return;
-      }
       try {
-        const { error } = await authClient.revokeSession({ token: session.token });
+        const { error } = await authClient.revokeSessionById({
+          sessionId: session.id
+        });
         if (error) {
-          toast.error("Failed to revoke session");
+          if (error instanceof APIError) {
+            toast.error(error.message)
+          } else {
+            toast.error("Something went wrong");
+          }
           return;
         }
-        toast.success("Session revoked successfully");
-        await loadSessions();
+        toast.success("Session revoked!");
+        await refetch();
       } catch {
-        toast.error("Failed to revoke session");
+        toast.error("Something went wrong");
       }
     },
-    [loadSessions]
+    [refetch],
   );
 
   const handleRevokeAllSessions = useCallback(async () => {
@@ -150,7 +161,7 @@ export function SessionsFrame() {
           fetchOptions: {
             onSuccess: () => {
               toast.success("All other sessions revoked successfully");
-              loadSessions();
+              refetch();
             },
             onError: () => {
               toast.error("Failed to revoke sessions");
@@ -164,13 +175,13 @@ export function SessionsFrame() {
       if (!includeCurrentDevice) setIsRevokingAll(false);
       setIncludeCurrentDevice(false);
     }
-  }, [includeCurrentDevice, loadSessions, router]);
+  }, [includeCurrentDevice, refetch, router]);
 
   const getBrowserIcon = (userAgent: string | null) => {
     if (!userAgent) return <Laptop className="size-6" />;
     const parser = new UAParser(userAgent);
     const browser = parser.getBrowser().name?.toLowerCase() || "";
-    
+
     if (browser.includes("edg")) {
       return <Edge className="size-6" />;
     }
@@ -198,13 +209,16 @@ export function SessionsFrame() {
     return <Laptop className="size-6" />;
   };
 
-  if (isLoadingSessions) {
+  if (isPending) {
     return (
       <Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
         <FramePanel>
-          <h2 className="font-heading text-xl mb-2 text-foreground">Active Sessions</h2>
+          <h2 className="font-heading text-xl mb-2 text-foreground">
+            Active Sessions
+          </h2>
           <p className="text-sm text-muted-foreground mb-6">
-            Manage your active sessions across different devices. Revoke access from any device.
+            Manage your active sessions across different devices. Revoke access
+            from any device.
           </p>
           <div className="flex items-center justify-center py-12">
             <Loader2 className="size-6 animate-spin text-muted-foreground" />
@@ -214,12 +228,40 @@ export function SessionsFrame() {
     );
   }
 
+  if (error) {
+    return (
+      <Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+        <FramePanel>
+          <Empty>
+            <EmptyHeader>
+              <EmptyMedia variant="icon">
+                <AlertCircle />
+              </EmptyMedia>
+              <EmptyTitle>Failed to load sessions</EmptyTitle>
+              <EmptyDescription>
+                {error instanceof Error
+                  ? error.message
+                  : "Something went wrong. Please try again."}
+              </EmptyDescription>
+            </EmptyHeader>
+            <EmptyContent>
+              <Button onClick={() => refetch()}>Try Again</Button>
+            </EmptyContent>
+          </Empty>
+        </FramePanel>
+      </Frame>
+    );
+  }
+
   return (
     <Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
       <FramePanel>
-        <h2 className="font-heading text-xl mb-2 text-foreground">Active Sessions</h2>
+        <h2 className="font-heading text-xl mb-2 text-foreground">
+          Active Sessions
+        </h2>
         <p className="text-sm text-muted-foreground mb-6">
-          Manage your active sessions across different devices. Revoke access from any device.
+          Manage your active sessions across different devices. Revoke access
+          from any device.
         </p>
 
         <div className="space-y-2">
@@ -229,19 +271,21 @@ export function SessionsFrame() {
             const browserInfo = parser.getBrowser();
             const osInfo = parser.getOS();
             const browser = browserInfo.name || "Unknown Browser";
-            const browserVersion = browserInfo.version ? ` ${browserInfo.version}` : "";
+            const browserVersion = browserInfo.version
+              ? ` ${browserInfo.version}`
+              : "";
             const os = osInfo.name || "Unknown OS";
             const osVersion = osInfo.version ? ` ${osInfo.version}` : "";
             const ipDisplay = sessionItem.ipAddress || "Unknown IP";
-            const lastActiveDate = sessionItem.updatedAt ?? sessionItem.createdAt ?? new Date(0);
-            const tokenPresent = !!(sessionItem.token && sessionItem.token.trim().length > 0);
+            const lastActiveDate =
+              sessionItem.updatedAt ?? sessionItem.createdAt ?? new Date(0);
 
             return (
               <div key={sessionItem.id}>
                 <div
                   className={cn(
                     "flex items-center justify-between p-4 rounded-lg border",
-                    isCurrent ? "border-primary bg-primary/5 shadow-sm" : ""
+                    isCurrent ? "border-primary bg-primary/5 shadow-sm" : "",
                   )}
                 >
                   <div className="flex items-center gap-4 flex-1">
@@ -250,7 +294,7 @@ export function SessionsFrame() {
                         <div
                           className={cn(
                             "p-2.5 rounded-lg cursor-help",
-                            isCurrent ? "bg-primary/10" : "bg-secondary"
+                            isCurrent ? "bg-primary/10" : "bg-secondary",
                           )}
                         >
                           {getBrowserIcon(sessionItem.userAgent)}
@@ -259,7 +303,9 @@ export function SessionsFrame() {
                       <TooltipContent side="right" className="max-w-sm">
                         <div className="space-y-2 text-xs">
                           <div>
-                            <p className="font-semibold mb-1">Session Details</p>
+                            <p className="font-semibold mb-1">
+                              Session Details
+                            </p>
                           </div>
                           <div className="space-y-1">
                             <div>
@@ -270,21 +316,29 @@ export function SessionsFrame() {
                               </p>
                             </div>
                             <div>
-                              <p className="text-muted-foreground">Operating System</p>
+                              <p className="text-muted-foreground">
+                                Operating System
+                              </p>
                               <p className="font-medium">
                                 {os}
                                 {osVersion}
                               </p>
                             </div>
                             <div>
-                              <p className="text-muted-foreground">IP Address</p>
-                              <p className="font-medium">{sessionItem.ipAddress || "Unknown"}</p>
+                              <p className="text-muted-foreground">
+                                IP Address
+                              </p>
+                              <p className="font-medium">
+                                {sessionItem.ipAddress || "Unknown"}
+                              </p>
                             </div>
                             <div>
                               <p className="text-muted-foreground">Created</p>
                               <p className="font-medium">
                                 {sessionItem.createdAt
-                                  ? new Date(sessionItem.createdAt).toLocaleString()
+                                  ? new Date(
+                                    sessionItem.createdAt,
+                                  ).toLocaleString()
                                   : "Unknown"}
                               </p>
                             </div>
@@ -311,11 +365,14 @@ export function SessionsFrame() {
                           <>
                             Last active{" "}
                             {lastActiveDate
-                              ? new Date(lastActiveDate).toLocaleDateString(undefined, {
+                              ? new Date(lastActiveDate).toLocaleDateString(
+                                undefined,
+                                {
                                   month: "short",
                                   day: "numeric",
                                   year: "numeric",
-                                })
+                                },
+                              )
                               : "Unknown"}
                           </>
                         )}
@@ -327,7 +384,6 @@ export function SessionsFrame() {
                     <AlertDialog>
                       <AlertDialogTrigger
                         render={<Button variant="ghost" size="sm" />}
-                        disabled={!tokenPresent}
                       >
                         Revoke
                       </AlertDialogTrigger>
@@ -335,8 +391,8 @@ export function SessionsFrame() {
                         <AlertDialogHeader>
                           <AlertDialogTitle>Revoke Session</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Are you sure you want to revoke this session? This device will need to
-                            sign in again.
+                            Are you sure you want to revoke this session? This
+                            device will need to sign in again.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
@@ -362,7 +418,10 @@ export function SessionsFrame() {
 
       <FrameFooter className="flex-row justify-end items-center gap-2">
         <AlertDialog>
-          <AlertDialogTrigger render={<Button variant="destructive" size="sm" />} disabled={isRevokingAll}>
+          <AlertDialogTrigger
+            render={<Button variant="destructive" size="sm" />}
+            disabled={isRevokingAll}
+          >
             {isRevokingAll ? (
               <Loader2 className="mr-2 size-4 animate-spin" />
             ) : (
@@ -374,14 +433,17 @@ export function SessionsFrame() {
             <AlertDialogHeader>
               <AlertDialogTitle>Revoke All Sessions</AlertDialogTitle>
               <AlertDialogDescription>
-                Choose whether to sign out from all devices or only other devices.
+                Choose whether to sign out from all devices or only other
+                devices.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <div className="px-6 py-4">
               <div className="flex items-start gap-3">
                 <Checkbox
                   checked={includeCurrentDevice}
-                  onCheckedChange={(checked) => setIncludeCurrentDevice(!!checked)}
+                  onCheckedChange={(checked) =>
+                    setIncludeCurrentDevice(!!checked)
+                  }
                   id="include-current"
                 />
                 <div className="flex flex-col gap-1">
@@ -398,9 +460,16 @@ export function SessionsFrame() {
               </div>
             </div>
             <AlertDialogFooter>
-              <AlertDialogClose render={<Button variant="ghost" />}>Cancel</AlertDialogClose>
-              <AlertDialogClose render={<Button variant="destructive" />} onClick={handleRevokeAllSessions}>
-                {includeCurrentDevice ? "Revoke All & Sign Out" : "Revoke Other Sessions"}
+              <AlertDialogClose render={<Button variant="ghost" />}>
+                Cancel
+              </AlertDialogClose>
+              <AlertDialogClose
+                render={<Button variant="destructive" />}
+                onClick={handleRevokeAllSessions}
+              >
+                {includeCurrentDevice
+                  ? "Revoke All & Sign Out"
+                  : "Revoke Other Sessions"}
               </AlertDialogClose>
             </AlertDialogFooter>
           </AlertDialogPopup>

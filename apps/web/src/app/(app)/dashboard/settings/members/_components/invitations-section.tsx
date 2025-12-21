@@ -25,7 +25,7 @@ import {
 	EmptyHeader,
 } from "@/components/ui/empty";
 import { authClient } from "@repo/auth/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { CancelInvitationDialog } from "./confirm-dialogs";
@@ -42,7 +42,6 @@ export function InvitationsSection() {
 	const [cancelInviteOpen, setCancelInviteOpen] = useState(false);
 	const [selectedInvitation, setSelectedInvitation] =
 		useState<Invitation | null>(null);
-	const [loading, setLoading] = useState(false);
 
 	const { data: invitationsData, refetch: refetchInvitations } = useQuery({
 		queryKey: ["organization-invitations", activeOrg?.id],
@@ -74,30 +73,39 @@ export function InvitationsSection() {
 		...invitations.filter((inv) => inv.status.toLowerCase() !== "pending"),
 	];
 
+	const cancelInvitationMutation = useMutation({
+		mutationFn: async (invitationId: string) => {
+			const result = await authClient.organization.cancelInvitation({
+				invitationId,
+			});
+			if (result.error) {
+				throw new Error(result.error.message || "Failed to cancel invitation");
+			}
+			return result.data;
+		},
+		onSuccess: () => {
+			toast.success("Invitation cancelled");
+			refetchInvitations();
+			setCancelInviteOpen(false);
+			setSelectedInvitation(null);
+		},
+		onError: (error) => {
+			toast.error(
+				error instanceof Error ? error.message : "Failed to cancel invitation",
+			);
+			setCancelInviteOpen(false);
+			setSelectedInvitation(null);
+		},
+	});
+
 	const openCancelInviteDialog = (invitation: Invitation) => {
 		setSelectedInvitation(invitation);
 		setCancelInviteOpen(true);
 	};
 
-	const cancelInvitation = async () => {
+	const cancelInvitation = () => {
 		if (!selectedInvitation) return;
-
-		setLoading(true);
-		const result = await authClient.organization.cancelInvitation({
-			invitationId: selectedInvitation.id,
-		});
-		setLoading(false);
-
-		setCancelInviteOpen(false);
-		setSelectedInvitation(null);
-
-		if (result.error) {
-			toast.error(result.error.message || "Failed to cancel invitation");
-			return;
-		}
-
-		toast.success("Invitation cancelled");
-		refetchInvitations();
+		cancelInvitationMutation.mutate(selectedInvitation.id);
 	};
 
 	return (
@@ -189,7 +197,7 @@ export function InvitationsSection() {
 				onOpenChange={setCancelInviteOpen}
 				email={selectedInvitation?.email}
 				onConfirm={cancelInvitation}
-				loading={loading}
+				loading={cancelInvitationMutation.isPending}
 			/>
 		</>
 	);

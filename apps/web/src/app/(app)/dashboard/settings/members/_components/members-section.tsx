@@ -27,7 +27,7 @@ import {
 	EmptyHeader,
 } from "@/components/ui/empty";
 import { authClient } from "@repo/auth/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { RoleChangeDialog, RemoveMemberDialog } from "./confirm-dialogs";
@@ -48,7 +48,6 @@ export function MembersSection() {
 	const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
 	const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 	const [pendingRole, setPendingRole] = useState("");
-	const [loading, setLoading] = useState(false);
 
 	const { data: membersData, refetch } = useQuery({
 		queryKey: ["organization-members", activeOrg?.id],
@@ -69,6 +68,65 @@ export function MembersSection() {
 
 	const members = membersData?.members || [];
 
+	const updateRoleMutation = useMutation({
+		mutationFn: async ({
+			memberId,
+			role,
+		}: {
+			memberId: string;
+			role: string;
+		}) => {
+			const result = await authClient.organization.updateMemberRole({
+				memberId,
+				role,
+			});
+			if (result.error) {
+				throw new Error(result.error.message || "Failed to update role");
+			}
+			return result.data;
+		},
+		onSuccess: () => {
+			toast.success("Role updated");
+			refetch();
+			setRoleConfirmOpen(false);
+			setSelectedMember(null);
+			setPendingRole("");
+		},
+		onError: (error) => {
+			toast.error(
+				error instanceof Error ? error.message : "Failed to update role",
+			);
+			setRoleConfirmOpen(false);
+			setSelectedMember(null);
+			setPendingRole("");
+		},
+	});
+
+	const removeMemberMutation = useMutation({
+		mutationFn: async (memberId: string) => {
+			const result = await authClient.organization.removeMember({
+				memberIdOrEmail: memberId,
+			});
+			if (result.error) {
+				throw new Error(result.error.message || "Failed to remove member");
+			}
+			return result.data;
+		},
+		onSuccess: () => {
+			toast.success("Member removed");
+			refetch();
+			setRemoveConfirmOpen(false);
+			setSelectedMember(null);
+		},
+		onError: (error) => {
+			toast.error(
+				error instanceof Error ? error.message : "Failed to remove member",
+			);
+			setRemoveConfirmOpen(false);
+			setSelectedMember(null);
+		},
+	});
+
 	const openRoleConfirmDialog = (member: Member, newRole: string) => {
 		if (newRole === member.role) return;
 
@@ -77,27 +135,12 @@ export function MembersSection() {
 		setRoleConfirmOpen(true);
 	};
 
-	const updateMemberRole = async () => {
+	const updateMemberRole = () => {
 		if (!selectedMember || !pendingRole) return;
-
-		setLoading(true);
-		const result = await authClient.organization.updateMemberRole({
+		updateRoleMutation.mutate({
 			memberId: selectedMember.id,
 			role: pendingRole,
 		});
-		setLoading(false);
-
-		setRoleConfirmOpen(false);
-		setSelectedMember(null);
-		setPendingRole("");
-
-		if (result.error) {
-			toast.error(result.error.message || "Failed to update role");
-			return;
-		}
-
-		toast.success("Role updated");
-		refetch();
 	};
 
 	const openRemoveConfirmDialog = (member: Member) => {
@@ -105,25 +148,9 @@ export function MembersSection() {
 		setRemoveConfirmOpen(true);
 	};
 
-	const removeMember = async () => {
+	const removeMember = () => {
 		if (!selectedMember) return;
-
-		setLoading(true);
-		const result = await authClient.organization.removeMember({
-			memberIdOrEmail: selectedMember.id,
-		});
-		setLoading(false);
-
-		setRemoveConfirmOpen(false);
-		setSelectedMember(null);
-
-		if (result.error) {
-			toast.error(result.error.message || "Failed to remove member");
-			return;
-		}
-
-		toast.success("Member removed");
-		refetch();
+		removeMemberMutation.mutate(selectedMember.id);
 	};
 
 	if (members.length === 0) {
@@ -214,7 +241,7 @@ export function MembersSection() {
 				currentRole={selectedMember?.role}
 				newRole={pendingRole}
 				onConfirm={updateMemberRole}
-				loading={loading}
+				loading={updateRoleMutation.isPending}
 			/>
 
 			<RemoveMemberDialog
@@ -222,7 +249,7 @@ export function MembersSection() {
 				onOpenChange={setRemoveConfirmOpen}
 				memberName={selectedMember?.user.name}
 				onConfirm={removeMember}
-				loading={loading}
+				loading={removeMemberMutation.isPending}
 			/>
 		</>
 	);
