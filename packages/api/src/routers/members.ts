@@ -1,22 +1,48 @@
 import { randomBytes } from "node:crypto";
 import { ORPCError } from "@orpc/server";
 import { and, count, db, eq, ilike, inArray, or, sql } from "@repo/db";
-import { clubMember, groupMember, group } from "@repo/db/schema";
+import { clubMember, contract, group, groupMember } from "@repo/db/schema";
 import { z } from "zod";
 import { protectedProcedure } from "../index";
 import { requirePermission } from "../middleware/permissions";
 import { rateLimitMiddleware } from "../middleware/ratelimit";
 
 const createMemberSchema = z.object({
+	// Personal info
 	firstName: z.string().min(1, "First name is required").max(255),
 	lastName: z.string().min(1, "Last name is required").max(255),
 	email: z.string().email("Invalid email address"),
 	phone: z.string().min(1, "Phone is required"),
+
+	// Address
 	street: z.string().min(1, "Street is required"),
 	city: z.string().min(1, "City is required"),
 	state: z.string().min(1, "State is required"),
 	postalCode: z.string().min(1, "Postal code is required"),
 	country: z.string().min(1, "Country is required"),
+
+	// Payment info
+	iban: z.string().min(1, "IBAN is required"),
+	bic: z.string().min(1, "BIC is required"),
+	cardHolder: z.string().min(1, "Card holder name is required"),
+
+	// Contract details
+	contractStartDate: z
+		.string()
+		.regex(/^\d{4}-\d{2}-01$/, "Must be 1st day of month (YYYY-MM-01)"),
+	initialPeriod: z.enum(["monthly", "half_yearly", "yearly"]),
+	joiningFeeAmount: z
+		.string()
+		.regex(/^\d+(\.\d{1,2})?$/)
+		.optional(),
+	yearlyFeeAmount: z
+		.string()
+		.regex(/^\d+(\.\d{1,2})?$/)
+		.optional(),
+
+	// Optional notes
+	memberNotes: z.string().max(1000).optional(),
+	contractNotes: z.string().max(1000).optional(),
 });
 
 const listMembersSchema = z.object({
@@ -32,6 +58,45 @@ const listMembersSchema = z.object({
 		)
 		.optional(),
 });
+
+/**
+ * Calculate the end date for the initial period based on contract type
+ */
+function calculateInitialPeriodEndDate(
+	startDate: string,
+	period: "monthly" | "half_yearly" | "yearly",
+): string {
+	const date = new Date(startDate);
+
+	switch (period) {
+		case "monthly":
+			// 1 month from start
+			date.setMonth(date.getMonth() + 1);
+			break;
+		case "half_yearly":
+			// 6 months from start
+			date.setMonth(date.getMonth() + 6);
+			break;
+		case "yearly":
+			// 12 months from start
+			date.setMonth(date.getMonth() + 12);
+			break;
+	}
+
+	// Subtract 1 day to get last day of period
+	date.setDate(date.getDate() - 1);
+
+	return date.toISOString().split("T")[0]!;
+}
+
+/**
+ * Get the next billing date (always 1st of next month from start date)
+ */
+function getNextBillingDate(startDate: string): string {
+	const date = new Date(startDate);
+	date.setMonth(date.getMonth() + 1);
+	return date.toISOString().split("T")[0]!;
+}
 
 export const membersRouter = {
 	list: protectedProcedure
@@ -74,6 +139,7 @@ export const membersRouter = {
 							ilike(clubMember.firstName, `%${search}%`),
 							ilike(clubMember.lastName, `%${search}%`),
 							ilike(clubMember.email, `%${search}%`),
+							ilike(clubMember.phone, `%${search}%`),
 							ilike(
 								sql`${clubMember.firstName} || ' ' || ${clubMember.lastName}`,
 								`%${search}%`,
@@ -87,6 +153,15 @@ export const membersRouter = {
               where ${inArray(groupMember.groupId, groupIds)}
             )`
 					: undefined,
+				// Only show members who haven't been cancelled OR are still in their paid period
+				sql`EXISTS (
+				SELECT 1 FROM ${contract}
+				WHERE ${contract.memberId} = ${clubMember.id}
+				AND (
+					${contract.cancellationEffectiveDate} IS NULL
+					OR ${contract.cancellationEffectiveDate} >= CURRENT_DATE
+				)
+			)`,
 			);
 
 			const members = await db
@@ -99,8 +174,14 @@ export const membersRouter = {
 					organizationId: clubMember.organizationId,
 					createdAt: clubMember.createdAt,
 					updatedAt: clubMember.updatedAt,
+					// Contract information (flat fields)
+					contractId: contract.id,
+					contractStartDate: contract.startDate,
+					contractCancelledAt: contract.cancelledAt,
+					contractCancellationEffectiveDate: contract.cancellationEffectiveDate,
 				})
 				.from(clubMember)
+				.innerJoin(contract, eq(contract.memberId, clubMember.id))
 				.where(memberWhere)
 				.limit(limit)
 				.offset(offset);
@@ -108,6 +189,7 @@ export const membersRouter = {
 			const [{ count: totalCount = 0 } = { count: 0 }] = await db
 				.select({ count: count() })
 				.from(clubMember)
+				.innerJoin(contract, eq(contract.memberId, clubMember.id))
 				.where(memberWhere);
 
 			const totalPages = Math.ceil(totalCount / limit);
@@ -130,24 +212,46 @@ export const membersRouter = {
 					.innerJoin(group, eq(group.id, groupMember.groupId))
 					.where(inArray(groupMember.memberId, memberIds));
 
-				groupMap = gmRows.reduce((acc, r) => {
-					const list = acc.get(r.memberId) ?? [];
-					list.push({
-						groupId: r.groupId,
-						group: { id: r.gId, name: r.gName },
-					});
-					acc.set(r.memberId, list);
-					return acc;
-				}, new Map<
-					string,
-					{ groupId: string; group: { id: string; name: string } }[]
-				>());
+				groupMap = gmRows.reduce(
+					(acc, r) => {
+						const list = acc.get(r.memberId) ?? [];
+						list.push({
+							groupId: r.groupId,
+							group: { id: r.gId, name: r.gName },
+						});
+						acc.set(r.memberId, list);
+						return acc;
+					},
+					new Map<
+						string,
+						{
+							groupId: string;
+							group: { id: string; name: string };
+						}[]
+					>(),
+				);
 			}
 
-			const data = members.map((m) => ({
-				...m,
-				groupMembers: groupMap.get(m.id) ?? [],
-			}));
+			const data = members.map((m) => {
+				const {
+					contractId,
+					contractStartDate,
+					contractCancelledAt,
+					contractCancellationEffectiveDate,
+					...memberData
+				} = m;
+
+				return {
+					...memberData,
+					contract: {
+						id: contractId,
+						startDate: contractStartDate,
+						cancelledAt: contractCancelledAt,
+						cancellationEffectiveDate: contractCancellationEffectiveDate,
+					},
+					groupMembers: groupMap.get(m.id) ?? [],
+				};
+			});
 
 			return {
 				data,
@@ -170,30 +274,79 @@ export const membersRouter = {
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
 
-			const newMember = await db
-				.insert(clubMember)
-				.values({
-					id: randomBytes(16).toString("hex"),
-					firstName: input.firstName,
-					lastName: input.lastName,
-					email: input.email,
-					phone: input.phone,
-					street: input.street,
-					city: input.city,
-					state: input.state,
-					postalCode: input.postalCode,
-					country: input.country,
-					organizationId,
-				})
-				.returning();
-
-			if (!newMember[0]) {
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message: "Failed to create member",
+			// Validate that contractStartDate is 1st of month
+			const startDate = new Date(input.contractStartDate);
+			if (startDate.getDate() !== 1) {
+				throw new ORPCError("BAD_REQUEST", {
+					message: "Contract start date must be the 1st of the month",
 				});
 			}
 
-			return newMember[0];
+			// Start a transaction to create member + contract atomically
+			const result = await db.transaction(async (tx) => {
+				// Create the member
+				const [newMember] = await tx
+					.insert(clubMember)
+					.values({
+						id: randomBytes(16).toString("hex"),
+						firstName: input.firstName,
+						lastName: input.lastName,
+						email: input.email,
+						phone: input.phone,
+						street: input.street,
+						city: input.city,
+						state: input.state,
+						postalCode: input.postalCode,
+						country: input.country,
+						iban: input.iban,
+						bic: input.bic,
+						cardHolder: input.cardHolder,
+						notes: input.memberNotes,
+						organizationId,
+					})
+					.returning();
+
+				if (!newMember) {
+					throw new ORPCError("INTERNAL_SERVER_ERROR", {
+						message: "Failed to create member",
+					});
+				}
+
+				// Calculate contract dates
+				const initialPeriodEndDate = calculateInitialPeriodEndDate(
+					input.contractStartDate,
+					input.initialPeriod,
+				);
+				const nextBillingDate = getNextBillingDate(input.contractStartDate);
+
+				// Create the contract
+				const [newContract] = await tx
+					.insert(contract)
+					.values({
+						memberId: newMember.id,
+						organizationId,
+						initialPeriod: input.initialPeriod,
+						status: "pending", // Will become "active" when startDate arrives
+						startDate: input.contractStartDate,
+						initialPeriodEndDate,
+						currentPeriodEndDate: initialPeriodEndDate,
+						nextBillingDate,
+						joiningFeeAmount: input.joiningFeeAmount,
+						yearlyFeeAmount: input.yearlyFeeAmount,
+						notes: input.contractNotes,
+					})
+					.returning();
+
+				if (!newContract) {
+					throw new ORPCError("INTERNAL_SERVER_ERROR", {
+						message: "Failed to create contract",
+					});
+				}
+
+				return { member: newMember, contract: newContract };
+			});
+
+			return result;
 		})
 		.route({ method: "POST", path: "/members" }),
 };
