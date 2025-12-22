@@ -111,9 +111,6 @@ export const groupMemberRelations = relations(groupMember, ({ one }) => ({
 	}),
 }));
 
-// ============================================
-// CONTRACT TABLE - One per member
-// ============================================
 export const contract = pgTable(
 	"contract",
 	{
@@ -125,17 +122,13 @@ export const contract = pgTable(
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
 
-		// Contract type and status
 		initialPeriod: text("initial_period").notNull(), // "monthly" | "half_yearly" | "yearly"
-		status: text("status").notNull().default("pending"), // "pending" | "active" | "cancelled" | "expired" | "suspended"
 
-		// Important dates (all date type, always 1st of month)
-		startDate: date("start_date").notNull(), // Contract start (always 1st of month)
-		initialPeriodEndDate: date("initial_period_end_date").notNull(), // When initial commitment ends
-		currentPeriodEndDate: date("current_period_end_date").notNull(), // End of current billing period
-		nextBillingDate: date("next_billing_date").notNull(), // Next payment due date (always 1st)
+		startDate: date("start_date").notNull(), // (always 1st of month)
+		initialPeriodEndDate: date("initial_period_end_date").notNull(),
+		currentPeriodEndDate: date("current_period_end_date").notNull(),
+		nextBillingDate: date("next_billing_date").notNull(), 
 
-		// Fee configuration (set at contract creation, per member)
 		joiningFeeAmount: decimal("joining_fee_amount", {
 			precision: 10,
 			scale: 2,
@@ -145,16 +138,13 @@ export const contract = pgTable(
 			scale: 2,
 		}), // Annual fee (charged in January)
 
-		// Fee payment tracking
 		joiningFeePaidAt: timestamp("joining_fee_paid_at"), // null = not paid yet
 		lastYearlyFeePaidYear: integer("last_yearly_fee_paid_year"), // e.g., 2025 (track which year was last paid)
 
-		// Cancellation tracking
 		cancelledAt: timestamp("cancelled_at"),
 		cancelReason: text("cancel_reason"),
 		cancellationEffectiveDate: date("cancellation_effective_date"), // When contract actually ends
 
-		// Metadata
 		notes: text("notes"),
 
 		createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -166,15 +156,11 @@ export const contract = pgTable(
 	(table) => [
 		index("contract_member_id_idx").on(table.memberId),
 		index("contract_org_id_idx").on(table.organizationId),
-		index("contract_status_idx").on(table.status),
 		index("contract_next_billing_idx").on(table.nextBillingDate), // For batch generation queries
 		unique("contract_member_unique").on(table.memberId), // One contract per member
 	],
 );
 
-// ============================================
-// PAYMENT BATCH TABLE - One per org per month
-// ============================================
 export const paymentBatch = pgTable(
 	"payment_batch",
 	{
@@ -183,11 +169,9 @@ export const paymentBatch = pgTable(
 			.notNull()
 			.references(() => organization.id, { onDelete: "cascade" }),
 
-		// Batch identification
 		billingMonth: date("billing_month").notNull(), // Which month this is for (always 1st of month, e.g., 2025-02-01)
 		batchNumber: text("batch_number"), // Human-readable identifier (e.g., "2025-02-ORG123")
 
-		// Batch totals (calculated when batch is generated)
 		totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).default(
 			"0",
 		),
@@ -224,9 +208,6 @@ export const paymentBatch = pgTable(
 	],
 );
 
-// ============================================
-// PAYMENT TABLE - One per contract per billing period
-// ============================================
 export const payment = pgTable(
 	"payment",
 	{
@@ -234,44 +215,37 @@ export const payment = pgTable(
 		contractId: uuid("contract_id")
 			.notNull()
 			.references(() => contract.id, { onDelete: "cascade" }),
-		batchId: uuid("batch_id").references(() => paymentBatch.id, {
-			onDelete: "set null",
-		}), // Can be null if not in batch yet
+		batchId: uuid("batch_id")
+			.notNull()
+			.references(() => paymentBatch.id, {
+				onDelete: "cascade",
+			}), // Delete payments when batch is deleted
 
-		// Amount breakdown (all separate for transparency and reporting)
 		membershipAmount: decimal("membership_amount", {
 			precision: 10,
 			scale: 2,
 		})
 			.notNull()
-			.default("0"), // Sum of all groupMember.membershipPrice
+			.default("0"), 
 		joiningFeeAmount: decimal("joining_fee_amount", {
 			precision: 10,
 			scale: 2,
 		})
 			.notNull()
-			.default("0"), // From contract.joiningFeeAmount (only in first payment)
+			.default("0"),
 		yearlyFeeAmount: decimal("yearly_fee_amount", {
 			precision: 10,
 			scale: 2,
 		})
 			.notNull()
-			.default("0"), // From contract.yearlyFeeAmount (only in January)
+			.default("0"),
 		totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(), // Sum of above three
 
-		// Billing period this payment covers
 		billingPeriodStart: date("billing_period_start").notNull(), // e.g., 2025-02-01
 		billingPeriodEnd: date("billing_period_end").notNull(), // e.g., 2025-02-28
 		dueDate: date("due_date").notNull(), // Always 1st of month (e.g., 2025-02-01)
 
-		// Payment tracking
-		paidAt: timestamp("paid_at"), // null = not paid yet, timestamp = paid
 
-		// Bank/SEPA details (optional, for reconciliation)
-		bankTransactionId: text("bank_transaction_id"), // From bank confirmation
-		mandateReference: text("mandate_reference"), // SEPA mandate reference
-
-		// Metadata
 		notes: text("notes"),
 
 		createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -291,9 +265,6 @@ export const payment = pgTable(
 	],
 );
 
-// ============================================
-// UPDATED RELATIONS
-// ============================================
 export const contractRelations = relations(contract, ({ one, many }) => ({
 	member: one(clubMember, {
 		fields: [contract.memberId],
