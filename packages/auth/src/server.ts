@@ -1,10 +1,10 @@
-import { betterAuth } from "better-auth/minimal";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { nextCookies } from "better-auth/next-js";
-import { db } from "@repo/db";
 import { passkey } from "@better-auth/passkey";
+import { db } from "@repo/db";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { betterAuth } from "better-auth/minimal";
+import { nextCookies } from "better-auth/next-js";
 import { organization, twoFactor } from "better-auth/plugins";
-import { ac, owner, admin, member } from "./permissions";
+import { ac, admin, member, owner } from "./permissions";
 import { manageSessions } from "./plugins/manageSessions";
 
 export const auth = betterAuth({
@@ -23,7 +23,7 @@ export const auth = betterAuth({
 	baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3001",
 	secret: process.env.BETTER_AUTH_SECRET!,
 	emailVerification: {
-		sendVerificationEmail: async ({ user, url, token }, request) => {
+		sendVerificationEmail: async ({ url }) => {
 			console.log("Email Verification: ", url);
 		},
 	},
