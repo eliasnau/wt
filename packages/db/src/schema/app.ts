@@ -1,11 +1,14 @@
 import { relations } from "drizzle-orm";
 import {
+	date,
 	decimal,
 	index,
+	integer,
 	pgTable,
 	primaryKey,
 	text,
 	timestamp,
+	unique,
 	uuid,
 } from "drizzle-orm/pg-core";
 import { organization } from "./auth";
@@ -43,6 +46,14 @@ export const clubMember = pgTable("club_member", {
 	state: text("state").notNull(),
 	postalCode: text("postal_code").notNull(),
 	country: text("country").notNull(),
+
+	iban: text("iban").notNull(),
+	bic: text("bic").notNull(),
+	cardHolder: text("card_holder").notNull(),
+
+	// Optional notes about the member
+	notes: text("notes"),
+
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at")
 		.defaultNow()
@@ -77,8 +88,12 @@ export const groupMember = pgTable(
 	],
 );
 
-export const clubMemberRelations = relations(clubMember, ({ many }) => ({
+export const clubMemberRelations = relations(clubMember, ({ many, one }) => ({
 	groupMembers: many(groupMember),
+	contract: one(contract, {
+		fields: [clubMember.id],
+		references: [contract.memberId],
+	}),
 }));
 
 export const groupRelations = relations(group, ({ many }) => ({
@@ -93,5 +108,222 @@ export const groupMemberRelations = relations(groupMember, ({ one }) => ({
 	member: one(clubMember, {
 		fields: [groupMember.memberId],
 		references: [clubMember.id],
+	}),
+}));
+
+// ============================================
+// CONTRACT TABLE - One per member
+// ============================================
+export const contract = pgTable(
+	"contract",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		memberId: uuid("member_id")
+			.notNull()
+			.references(() => clubMember.id, { onDelete: "cascade" }),
+		organizationId: text("organization_id")
+			.notNull()
+			.references(() => organization.id, { onDelete: "cascade" }),
+
+		// Contract type and status
+		initialPeriod: text("initial_period").notNull(), // "monthly" | "half_yearly" | "yearly"
+		status: text("status").notNull().default("pending"), // "pending" | "active" | "cancelled" | "expired" | "suspended"
+
+		// Important dates (all date type, always 1st of month)
+		startDate: date("start_date").notNull(), // Contract start (always 1st of month)
+		initialPeriodEndDate: date("initial_period_end_date").notNull(), // When initial commitment ends
+		currentPeriodEndDate: date("current_period_end_date").notNull(), // End of current billing period
+		nextBillingDate: date("next_billing_date").notNull(), // Next payment due date (always 1st)
+
+		// Fee configuration (set at contract creation, per member)
+		joiningFeeAmount: decimal("joining_fee_amount", {
+			precision: 10,
+			scale: 2,
+		}), // One-time joining fee
+		yearlyFeeAmount: decimal("yearly_fee_amount", {
+			precision: 10,
+			scale: 2,
+		}), // Annual fee (charged in January)
+
+		// Fee payment tracking
+		joiningFeePaidAt: timestamp("joining_fee_paid_at"), // null = not paid yet
+		lastYearlyFeePaidYear: integer("last_yearly_fee_paid_year"), // e.g., 2025 (track which year was last paid)
+
+		// Cancellation tracking
+		cancelledAt: timestamp("cancelled_at"),
+		cancelReason: text("cancel_reason"),
+		cancellationEffectiveDate: date("cancellation_effective_date"), // When contract actually ends
+
+		// Metadata
+		notes: text("notes"),
+
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("contract_member_id_idx").on(table.memberId),
+		index("contract_org_id_idx").on(table.organizationId),
+		index("contract_status_idx").on(table.status),
+		index("contract_next_billing_idx").on(table.nextBillingDate), // For batch generation queries
+		unique("contract_member_unique").on(table.memberId), // One contract per member
+	],
+);
+
+// ============================================
+// PAYMENT BATCH TABLE - One per org per month
+// ============================================
+export const paymentBatch = pgTable(
+	"payment_batch",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		organizationId: text("organization_id")
+			.notNull()
+			.references(() => organization.id, { onDelete: "cascade" }),
+
+		// Batch identification
+		billingMonth: date("billing_month").notNull(), // Which month this is for (always 1st of month, e.g., 2025-02-01)
+		batchNumber: text("batch_number"), // Human-readable identifier (e.g., "2025-02-ORG123")
+
+		// Batch totals (calculated when batch is generated)
+		totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).default(
+			"0",
+		),
+		membershipTotal: decimal("membership_total", {
+			precision: 10,
+			scale: 2,
+		}).default("0"),
+		joiningFeeTotal: decimal("joining_fee_total", {
+			precision: 10,
+			scale: 2,
+		}).default("0"),
+		yearlyFeeTotal: decimal("yearly_fee_total", {
+			precision: 10,
+			scale: 2,
+		}).default("0"),
+		transactionCount: integer("transaction_count").default(0),
+
+		// Metadata
+		notes: text("notes"),
+
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("payment_batch_org_id_idx").on(table.organizationId),
+		index("payment_batch_billing_month_idx").on(table.billingMonth),
+		unique("payment_batch_org_month_unique").on(
+			table.organizationId,
+			table.billingMonth,
+		), // One batch per org per month
+	],
+);
+
+// ============================================
+// PAYMENT TABLE - One per contract per billing period
+// ============================================
+export const payment = pgTable(
+	"payment",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		contractId: uuid("contract_id")
+			.notNull()
+			.references(() => contract.id, { onDelete: "cascade" }),
+		batchId: uuid("batch_id").references(() => paymentBatch.id, {
+			onDelete: "set null",
+		}), // Can be null if not in batch yet
+
+		// Amount breakdown (all separate for transparency and reporting)
+		membershipAmount: decimal("membership_amount", {
+			precision: 10,
+			scale: 2,
+		})
+			.notNull()
+			.default("0"), // Sum of all groupMember.membershipPrice
+		joiningFeeAmount: decimal("joining_fee_amount", {
+			precision: 10,
+			scale: 2,
+		})
+			.notNull()
+			.default("0"), // From contract.joiningFeeAmount (only in first payment)
+		yearlyFeeAmount: decimal("yearly_fee_amount", {
+			precision: 10,
+			scale: 2,
+		})
+			.notNull()
+			.default("0"), // From contract.yearlyFeeAmount (only in January)
+		totalAmount: decimal("total_amount", { precision: 10, scale: 2 }).notNull(), // Sum of above three
+
+		// Billing period this payment covers
+		billingPeriodStart: date("billing_period_start").notNull(), // e.g., 2025-02-01
+		billingPeriodEnd: date("billing_period_end").notNull(), // e.g., 2025-02-28
+		dueDate: date("due_date").notNull(), // Always 1st of month (e.g., 2025-02-01)
+
+		// Payment tracking
+		paidAt: timestamp("paid_at"), // null = not paid yet, timestamp = paid
+
+		// Bank/SEPA details (optional, for reconciliation)
+		bankTransactionId: text("bank_transaction_id"), // From bank confirmation
+		mandateReference: text("mandate_reference"), // SEPA mandate reference
+
+		// Metadata
+		notes: text("notes"),
+
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [
+		index("payment_contract_id_idx").on(table.contractId),
+		index("payment_batch_id_idx").on(table.batchId),
+		index("payment_due_date_idx").on(table.dueDate),
+		index("payment_billing_period_idx").on(
+			table.billingPeriodStart,
+			table.billingPeriodEnd,
+		),
+	],
+);
+
+// ============================================
+// UPDATED RELATIONS
+// ============================================
+export const contractRelations = relations(contract, ({ one, many }) => ({
+	member: one(clubMember, {
+		fields: [contract.memberId],
+		references: [clubMember.id],
+	}),
+	organization: one(organization, {
+		fields: [contract.organizationId],
+		references: [organization.id],
+	}),
+	payments: many(payment),
+}));
+
+export const paymentBatchRelations = relations(
+	paymentBatch,
+	({ one, many }) => ({
+		organization: one(organization, {
+			fields: [paymentBatch.organizationId],
+			references: [organization.id],
+		}),
+		payments: many(payment),
+	}),
+);
+
+export const paymentRelations = relations(payment, ({ one }) => ({
+	contract: one(contract, {
+		fields: [payment.contractId],
+		references: [contract.id],
+	}),
+	batch: one(paymentBatch, {
+		fields: [payment.batchId],
+		references: [paymentBatch.id],
 	}),
 }));
