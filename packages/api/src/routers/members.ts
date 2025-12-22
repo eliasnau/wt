@@ -48,15 +48,16 @@ const createMemberSchema = z.object({
 const listMembersSchema = z.object({
 	page: z.coerce.number().int().min(1).default(1),
 	limit: z.coerce.number().int().min(1).max(100).default(20),
-	search: z.string().max(255).optional(),
-	groupIds: z
-		.array(
-			z
-				.string()
-				.min(36, "Must be a valid UUID")
-				.max(36, "Must be a valid UUID"),
-		)
-		.optional(),
+	search: z.string().optional(),
+	groupIds: z.array(z.string().uuid()).optional(),
+});
+
+const cancelContractSchema = z.object({
+	memberId: z.string().uuid(),
+	cancelReason: z.string().min(1, "Cancel reason is required").max(1000),
+	cancellationEffectiveDate: z
+		.string()
+		.regex(/^\d{4}-\d{2}-01$/, "Must be 1st day of month (YYYY-MM-01)"),
 });
 
 /**
@@ -90,12 +91,11 @@ function calculateInitialPeriodEndDate(
 }
 
 /**
- * Get the next billing date (always 1st of next month from start date)
+ * Get the next billing date (first billing is same as start date)
  */
 function getNextBillingDate(startDate: string): string {
-	const date = new Date(startDate);
-	date.setMonth(date.getMonth() + 1);
-	return date.toISOString().split("T")[0]!;
+	// First billing happens immediately on start date
+	return startDate;
 }
 
 export const membersRouter = {
@@ -282,7 +282,6 @@ export const membersRouter = {
 				});
 			}
 
-			// Start a transaction to create member + contract atomically
 			const result = await db.transaction(async (tx) => {
 				// Create the member
 				const [newMember] = await tx
@@ -326,7 +325,6 @@ export const membersRouter = {
 						memberId: newMember.id,
 						organizationId,
 						initialPeriod: input.initialPeriod,
-						status: "pending", // Will become "active" when startDate arrives
 						startDate: input.contractStartDate,
 						initialPeriodEndDate,
 						currentPeriodEndDate: initialPeriodEndDate,
@@ -349,4 +347,63 @@ export const membersRouter = {
 			return result;
 		})
 		.route({ method: "POST", path: "/members" }),
+
+	cancelContract: protectedProcedure
+		.use(rateLimitMiddleware(10))
+		.use(requirePermission({ member: ["update"] }))
+		.input(cancelContractSchema)
+		.handler(async ({ input, context }) => {
+			const organizationId = context.session.activeOrganizationId!;
+
+			const effectiveDate = new Date(input.cancellationEffectiveDate);
+			if (effectiveDate.getDate() !== 1) {
+				throw new ORPCError("BAD_REQUEST", {
+					message: "Cancellation effective date must be the 1st of the month",
+				});
+			}
+
+			const today = new Date();
+			today.setHours(0, 0, 0, 0);
+			if (effectiveDate <= today) {
+				throw new ORPCError("BAD_REQUEST", {
+					message: "Cancellation effective date must be in the future",
+				});
+			}
+
+			const [existingContract] = await db
+				.select()
+				.from(contract)
+				.where(
+					and(
+						eq(contract.memberId, input.memberId),
+						eq(contract.organizationId, organizationId),
+					),
+				)
+				.limit(1);
+
+			if (!existingContract) {
+				throw new ORPCError("NOT_FOUND", {
+					message: "Contract not found for this member",
+				});
+			}
+
+			if (existingContract.cancelledAt) {
+				throw new ORPCError("BAD_REQUEST", {
+					message: "Contract is already cancelled",
+				});
+			}
+
+			const [updatedContract] = await db
+				.update(contract)
+				.set({
+					cancelledAt: new Date(),
+					cancelReason: input.cancelReason,
+					cancellationEffectiveDate: input.cancellationEffectiveDate,
+				})
+				.where(eq(contract.id, existingContract.id))
+				.returning();
+
+			return updatedContract;
+		})
+		.route({ method: "POST", path: "/members/:memberId/cancel-contract" }),
 };

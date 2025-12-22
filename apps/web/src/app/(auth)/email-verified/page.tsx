@@ -44,8 +44,7 @@ export default function VerifyEmailPage() {
 								<EmptyDescription>
 									{hasError
 										? "Failed to verify email."
-										: "Your email has been successfully verified! You can now access all features of your account."
-									}
+										: "Your email has been successfully verified! You can now access all features of your account."}
 								</EmptyDescription>
 							</EmptyHeader>
 							<EmptyContent>

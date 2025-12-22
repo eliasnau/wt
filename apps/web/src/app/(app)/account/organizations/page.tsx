@@ -5,6 +5,8 @@ import { Loader2 } from "lucide-react";
 import { OrganizationsFrame } from "./_components/organizations-frame";
 import { Suspense } from "react";
 
+export const dynamic = "force-dynamic";
+
 export default function OrganizationsPage() {
 	const { data: session } = authClient.useSession();
 

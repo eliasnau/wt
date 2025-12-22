@@ -118,9 +118,9 @@ const dashboardRoutes: NavRoute[] = [
 		id: "finance",
 		title: "Finance",
 		icon: <DollarSign className="size-4" />,
-		link: "#",
+		link: "/dashboard/finance/batches",
 		subs: [
-			{ title: "Overview", link: "#" },
+			{ title: "Payment Batches", link: "/dashboard/finance/batches" },
 			{ title: "Generate SEPA", link: "#" },
 			{ title: "History", link: "#" },
 		],

@@ -1,7 +1,8 @@
-import { publicProcedure } from "../index";
 import type { RouterClient } from "@orpc/server";
-import { membersRouter } from "./members";
+import { publicProcedure } from "../index";
 import { groupsRouter } from "./groups";
+import { membersRouter } from "./members";
+import { paymentBatchesRouter } from "./paymentBatches";
 
 export const appRouter = {
 	healthCheck: publicProcedure
@@ -9,9 +10,12 @@ export const appRouter = {
 			return "OK";
 		})
 		.route({ method: "GET", successStatus: 200 }),
-	members: {...membersRouter},
+	members: { ...membersRouter },
 	groups: {
-		...groupsRouter
+		...groupsRouter,
+	},
+	paymentBatches: {
+		...paymentBatchesRouter,
 	},
 };
 

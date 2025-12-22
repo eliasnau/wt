@@ -1,9 +1,4 @@
-import {
-	APIError,
-	type BetterAuthPlugin,
-	type Session,
-	type User,
-} from "better-auth";
+import { APIError, type BetterAuthPlugin, type Session } from "better-auth";
 import { sessionMiddleware } from "better-auth/api";
 import { createAuthEndpoint } from "better-auth/plugins";
 import { z } from "zod";
@@ -17,14 +12,14 @@ export const manageSessions = () => {
 				{
 					method: "POST",
 					use: [sessionMiddleware],
-                    body: z.object({
-                        sessionId: z.string().meta({
-                            description: "The id of the Session to revoke",
-                        }),
-                    }),
+					body: z.object({
+						sessionId: z.string().meta({
+							description: "The id of the Session to revoke",
+						}),
+					}),
 				},
 				async (ctx) => {
-                    const sessionId = ctx.body.sessionId;
+					const sessionId = ctx.body.sessionId;
 
 					const currentSession = ctx.context.session;
 					if (!currentSession?.user) {
@@ -43,19 +38,19 @@ export const manageSessions = () => {
 								},
 							],
 						});
-                    if (!session?.id) {
-                        throw new APIError("NOT_FOUND", {
-                            message: "This session does not exist",
-                            code: "NOT_FOUND"
-                        });
-                    }
+					if (!session?.id) {
+						throw new APIError("NOT_FOUND", {
+							message: "This session does not exist",
+							code: "NOT_FOUND",
+						});
+					}
 
-                    if (session.userId !== currentSession.user.id) {
-                        throw new APIError("NOT_FOUND", {
-                            message: "This session does not exist",
-                            code: "NOT_FOUND"
-                        });
-                    }
+					if (session.userId !== currentSession.user.id) {
+						throw new APIError("NOT_FOUND", {
+							message: "This session does not exist",
+							code: "NOT_FOUND",
+						});
+					}
 
 					await ctx.context.internalAdapter.deleteSession(session.token);
 
