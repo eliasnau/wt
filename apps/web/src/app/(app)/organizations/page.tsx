@@ -97,8 +97,9 @@ export default function OrganizationsPage() {
 				return;
 			}
 
-			// Redirect to the original page or dashboard
-			router.push(redirectUrl || "/dashboard");
+		// Redirect to the original page or dashboard
+		const targetUrl = redirectUrl || "/dashboard";
+		router.push(targetUrl as any);
 		} catch (error) {
 			toast.error("Failed to set active organization");
 			console.error(error);

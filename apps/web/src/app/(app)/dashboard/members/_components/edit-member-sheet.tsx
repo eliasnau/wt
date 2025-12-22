@@ -10,7 +10,11 @@ import {
 	SheetPanel,
 	SheetFooter,
 } from "@/components/ui/sheet";
-import type { Member } from "./types";
+import type { client } from "@/utils/orpc";
+import type { InferClientOutputs } from '@orpc/client';
+
+type MembersListResponse = InferClientOutputs<typeof client>['members']['list'];
+type Member = MembersListResponse["data"][number];
 
 interface EditMemberSheetProps {
 	open: boolean;
@@ -35,10 +39,17 @@ export function EditMemberSheet({
 				<SheetPanel>
 					<div className="space-y-4">
 						<Field>
-							<FieldLabel>Name</FieldLabel>
+							<FieldLabel>First Name</FieldLabel>
 							<Input
-								defaultValue={member?.name}
-								placeholder="Enter member name"
+								defaultValue={member?.firstName}
+								placeholder="Enter first name"
+							/>
+						</Field>
+						<Field>
+							<FieldLabel>Last Name</FieldLabel>
+							<Input
+								defaultValue={member?.lastName}
+								placeholder="Enter last name"
 							/>
 						</Field>
 						<Field>
@@ -60,7 +71,7 @@ export function EditMemberSheet({
 						<Field>
 							<FieldLabel>Groups</FieldLabel>
 							<Input
-								defaultValue={member?.groups.join(", ")}
+								defaultValue={member?.groupMembers?.map(gm => gm.group.name).join(", ") ?? ""}
 								placeholder="Enter groups separated by commas"
 							/>
 						</Field>

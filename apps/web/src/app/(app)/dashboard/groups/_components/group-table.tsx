@@ -74,9 +74,9 @@ import {
 	InputGroupText,
 } from "@/components/ui/input-group";
 import { Frame, FramePanel } from "@/components/ui/frame";
-import type { InferClientOutputs } from '@orpc/client'
+import type { InferClientOutputs } from "@orpc/client";
 
-type GroupsList = InferClientOutputs<typeof client>['groups']['list']
+type GroupsList = InferClientOutputs<typeof client>["groups"]["list"];
 type GroupRow = GroupsList[number];
 export const columns: ColumnDef<GroupRow>[] = [
 	{
@@ -134,11 +134,11 @@ export const columns: ColumnDef<GroupRow>[] = [
 	},
 ];
 
-export default function GroupTable<TData, TValue>({
+export default function GroupTable({
 	data,
 	loading = false,
 }: {
-	data: TData[];
+	data: GroupRow[];
 	loading?: boolean;
 }) {
 	const pageSize = 10;

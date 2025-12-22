@@ -27,8 +27,13 @@ import {
 } from "../_components/page-header";
 import { CreateMemberButton } from "./_components/create-member-button";
 import MembersTable from "./_components/members-table";
+import { Suspense } from "react";
 
 export default function MembersPage() {
+	return <Suspense><MembersPageContent /></Suspense>
+}
+
+export function MembersPageContent() {
 	const [{ page, limit, search, groupIds }, setPagination] = useQueryStates({
 		page: parseAsInteger.withDefault(1),
 		limit: parseAsInteger.withDefault(20),

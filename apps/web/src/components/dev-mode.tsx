@@ -1,17 +1,18 @@
 "use client";
 
+import { Suspense } from "react";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { useSearchParams } from "next/navigation";
 import { SystemBanner } from "@/components/ui/system-banner";
+import { useQueryState } from "nuqs";
 
-export function DevMode() {
-	const searchParams = useSearchParams();
-	const devParam = searchParams.get("dev");
+function DevModeContent() {
+	const [devParam] = useQueryState("dev");
+	const showDev =
+		devParam === "true" ||
+		process.env.NODE_ENV === "development";
 
-	const isDev = process.env.NODE_ENV === "development" || devParam === "true";
-
-	if (!isDev) return null;
-
+	if (!showDev) return null;
+	
 	return (
 		<>
 			<ReactQueryDevtools initialIsOpen={false} />
@@ -22,5 +23,16 @@ export function DevMode() {
 				show={true}
 			/>
 		</>
+	);
+}
+
+
+export function DevMode() {
+	
+
+	return (
+		<Suspense fallback={null}>
+			<DevModeContent />
+		</Suspense>
 	);
 }
