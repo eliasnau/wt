@@ -302,7 +302,10 @@ export function PasskeyFrame({
 									<Button
 										variant="ghost"
 										size="icon"
-										onClick={() => openEditDialog(passkey)}
+										onClick={() => openEditDialog({
+											...passkey,
+											name: passkey.name ?? null
+										})}
 										className="hover:bg-accent"
 									>
 										<Edit className="size-4" />
