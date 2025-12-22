@@ -71,6 +71,12 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipProvider,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useDebounce } from "@/hooks/use-debounce";
 import type { orpc } from "@/utils/orpc";
 
@@ -103,6 +109,42 @@ export const columns: ColumnDef<MemberRow>[] = [
 	{
 		accessorKey: "firstName",
 		header: "First Name",
+		cell: ({ row }) => {
+			const isCancelled = row.original.contract?.cancelledAt !== null;
+			const cancellationEffectiveDate =
+				row.original.contract?.cancellationEffectiveDate;
+
+			if (!isCancelled) {
+				return <span>{row.original.firstName}</span>;
+			}
+
+			return (
+				<div className="flex items-center gap-2">
+					<span>{row.original.firstName}</span>
+					<TooltipProvider>
+						<Tooltip>
+							<TooltipTrigger asChild>
+								<Badge variant="outline">
+									<span
+										aria-hidden="true"
+										className="size-1.5 rounded-full bg-red-500"
+									/>
+									Cancelled
+								</Badge>
+							</TooltipTrigger>
+							<TooltipContent>
+								<p className="text-sm">
+									Membership ends on{" "}
+									{cancellationEffectiveDate
+										? new Date(cancellationEffectiveDate).toLocaleDateString()
+										: "N/A"}
+								</p>
+							</TooltipContent>
+						</Tooltip>
+					</TooltipProvider>
+				</div>
+			);
+		},
 	},
 	{
 		accessorKey: "lastName",
