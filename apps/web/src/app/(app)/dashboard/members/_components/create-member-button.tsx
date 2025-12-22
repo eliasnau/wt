@@ -1,8 +1,17 @@
+"use client";
+
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Menu, MenuPopup, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { Plus, QrCodeIcon } from "lucide-react";
 
 export function CreateMemberButton() {
+	const router = useRouter();
+
+	const handleAddManually = () => {
+		router.push("/dashboard/members/new");
+	};
+
 	const handleGenerateQR = () => {
 		console.log("Generate QR Code");
 	};
@@ -20,7 +29,7 @@ export function CreateMemberButton() {
 				}
 			/>
 			<MenuPopup align="end">
-				<MenuItem onClick={() => console.log("Add manually")}>
+				<MenuItem onClick={handleAddManually}>
 					<Plus />
 					Add Manually
 				</MenuItem>
