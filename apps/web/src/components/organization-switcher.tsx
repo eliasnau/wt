@@ -173,7 +173,7 @@ export function OrganizationSwitcher({
 	if (trigger) {
 		return (
 			<Dialog open={open} onOpenChange={setOpen}>
-				<DialogTrigger render={trigger} />
+				<DialogTrigger render={trigger as any} />
 				{DialogContent}
 			</Dialog>
 		);

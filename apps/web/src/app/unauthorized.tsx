@@ -13,6 +13,7 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
+import type { Route } from "next";
 
 export default function Unauthorized() {
 	const pathname = usePathname();
@@ -33,9 +34,9 @@ export default function Unauthorized() {
 									You need to be signed in to access this page
 								</EmptyDescription>
 							</EmptyHeader>
-							<EmptyContent>
-								<Button render={<Link href={signInUrl}>Sign In</Link>} />
-							</EmptyContent>
+						<EmptyContent>
+							<Button render={<Link href={signInUrl as Route}>Sign In</Link>} />
+						</EmptyContent>
 						</Empty>
 					</FramePanel>
 
