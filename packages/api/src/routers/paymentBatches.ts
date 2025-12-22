@@ -345,9 +345,6 @@ export const paymentBatchesRouter = {
 					billingPeriodStart: payment.billingPeriodStart,
 					billingPeriodEnd: payment.billingPeriodEnd,
 					dueDate: payment.dueDate,
-					paidAt: payment.paidAt,
-					bankTransactionId: payment.bankTransactionId,
-					mandateReference: payment.mandateReference,
 					notes: payment.notes,
 					createdAt: payment.createdAt,
 					// Member info
