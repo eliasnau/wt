@@ -1,5 +1,4 @@
 "use client";
-import type { inferProcedureOutput } from "@orpc/client";
 import {
 	type ColumnDef,
 	flexRender,
@@ -78,11 +77,13 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useDebounce } from "@/hooks/use-debounce";
-import type { orpc } from "@/utils/orpc";
+import type { client, orpc } from "@/utils/orpc";
+import type { InferClientOutputs } from '@orpc/client'
 
-type MembersListResponse = inferProcedureOutput<typeof orpc.members.list>;
+
+type MembersListResponse = InferClientOutputs<typeof client>['members']['list'];
 type MemberRow = MembersListResponse["data"][number];
-type GroupsListResponse = inferProcedureOutput<typeof orpc.groups.list>;
+type GroupsListResponse = InferClientOutputs<typeof client>['groups']['list'];
 type Group = GroupsListResponse[number];
 
 interface MembersTableProps {

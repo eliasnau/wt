@@ -17,7 +17,6 @@ import {
 	type PaginationState,
 	type SortingState,
 } from "@tanstack/react-table";
-import type { inferProcedureOutput } from "@orpc/client";
 import {
 	flexRender,
 	getCoreRowModel,
@@ -75,8 +74,9 @@ import {
 	InputGroupText,
 } from "@/components/ui/input-group";
 import { Frame, FramePanel } from "@/components/ui/frame";
+import type { InferClientOutputs } from '@orpc/client'
 
-type GroupsList = inferProcedureOutput<typeof orpc.groups.list>;
+type GroupsList = InferClientOutputs<typeof client>['groups']['list']
 type GroupRow = GroupsList[number];
 export const columns: ColumnDef<GroupRow>[] = [
 	{
