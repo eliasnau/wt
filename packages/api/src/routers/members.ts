@@ -52,6 +52,10 @@ const listMembersSchema = z.object({
 	groupIds: z.array(z.string().uuid()).optional(),
 });
 
+const getMemberSchema = z.object({
+	memberId: z.string(),
+});
+
 const cancelContractSchema = z.object({
 	memberId: z.string().uuid(),
 	cancelReason: z.string().min(1, "Cancel reason is required").max(1000),
@@ -99,6 +103,110 @@ function getNextBillingDate(startDate: string): string {
 }
 
 export const membersRouter = {
+	get: protectedProcedure
+		.use(rateLimitMiddleware(1))
+		.use(requirePermission({ member: ["view"] }))
+		.input(getMemberSchema)
+		.handler(async ({ input, context }) => {
+			const organizationId = context.session.activeOrganizationId!;
+
+			const [member] = await db
+				.select({
+					id: clubMember.id,
+					firstName: clubMember.firstName,
+					lastName: clubMember.lastName,
+					email: clubMember.email,
+					phone: clubMember.phone,
+					street: clubMember.street,
+					city: clubMember.city,
+					state: clubMember.state,
+					postalCode: clubMember.postalCode,
+					country: clubMember.country,
+					notes: clubMember.notes,
+					organizationId: clubMember.organizationId,
+					createdAt: clubMember.createdAt,
+					updatedAt: clubMember.updatedAt,
+					contractId: contract.id,
+					contractStartDate: contract.startDate,
+					contractInitialPeriod: contract.initialPeriod,
+					contractInitialPeriodEndDate: contract.initialPeriodEndDate,
+					contractCurrentPeriodEndDate: contract.currentPeriodEndDate,
+					contractNextBillingDate: contract.nextBillingDate,
+					contractJoiningFeeAmount: contract.joiningFeeAmount,
+					contractYearlyFeeAmount: contract.yearlyFeeAmount,
+					contractNotes: contract.notes,
+					contractCancelledAt: contract.cancelledAt,
+					contractCancelReason: contract.cancelReason,
+					contractCancellationEffectiveDate: contract.cancellationEffectiveDate,
+				})
+				.from(clubMember)
+				.innerJoin(contract, eq(contract.memberId, clubMember.id))
+				.where(
+					and(
+						eq(clubMember.id, input.memberId),
+						eq(clubMember.organizationId, organizationId),
+					),
+				)
+				.limit(1);
+
+			if (!member) {
+				throw new ORPCError("NOT_FOUND", {
+					message: "Member not found",
+				});
+			}
+
+			const groupMemberships = await db
+				.select({
+					groupId: groupMember.groupId,
+					membershipPrice: groupMember.membershipPrice,
+					group: {
+						id: group.id,
+						name: group.name,
+						description: group.description,
+						defaultMembershipPrice: group.defaultMembershipPrice,
+					},
+				})
+				.from(groupMember)
+				.innerJoin(group, eq(group.id, groupMember.groupId))
+				.where(eq(groupMember.memberId, input.memberId));
+
+			const {
+				contractId,
+				contractStartDate,
+				contractInitialPeriod,
+				contractInitialPeriodEndDate,
+				contractCurrentPeriodEndDate,
+				contractNextBillingDate,
+				contractJoiningFeeAmount,
+				contractYearlyFeeAmount,
+				contractNotes,
+				contractCancelledAt,
+				contractCancelReason,
+				contractCancellationEffectiveDate,
+				...memberData
+			} = member;
+
+			return {
+				...memberData,
+				contract: {
+					id: contractId,
+					startDate: contractStartDate,
+					initialPeriod: contractInitialPeriod,
+					initialPeriodEndDate: contractInitialPeriodEndDate,
+					currentPeriodEndDate: contractCurrentPeriodEndDate,
+					nextBillingDate: contractNextBillingDate,
+					joiningFeeAmount: contractJoiningFeeAmount,
+					yearlyFeeAmount: contractYearlyFeeAmount,
+					notes: contractNotes,
+					cancelledAt: contractCancelledAt,
+					cancelReason: contractCancelReason,
+					cancellationEffectiveDate: contractCancellationEffectiveDate,
+				},
+				groups: groupMemberships,
+			};
+		})
+		.route({ method: "GET", path: "/members/:memberId" }),
+
 	list: protectedProcedure
 		.use(rateLimitMiddleware(1))
 		.use(requirePermission({ member: ["list"] }))
