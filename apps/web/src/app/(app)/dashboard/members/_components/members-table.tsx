@@ -1,4 +1,5 @@
 "use client";
+import type { InferClientOutputs } from "@orpc/client";
 import {
 	type ColumnDef,
 	flexRender,
@@ -77,13 +78,12 @@ import {
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useDebounce } from "@/hooks/use-debounce";
-import type { client, orpc } from "@/utils/orpc";
-import type { InferClientOutputs } from '@orpc/client'
+import type { client } from "@/utils/orpc";
+import { MemberOverviewSheet } from "./member-overview-sheet";
 
-
-type MembersListResponse = InferClientOutputs<typeof client>['members']['list'];
+type MembersListResponse = InferClientOutputs<typeof client>["members"]["list"];
 type MemberRow = MembersListResponse["data"][number];
-type GroupsListResponse = InferClientOutputs<typeof client>['groups']['list'];
+type GroupsListResponse = InferClientOutputs<typeof client>["groups"]["list"];
 type Group = GroupsListResponse[number];
 
 interface MembersTableProps {
@@ -106,7 +106,9 @@ interface MembersTableProps {
 	loading?: boolean;
 }
 
-export const columns: ColumnDef<MemberRow>[] = [
+const createColumns = (
+	onViewMember: (member: MemberRow) => void,
+): ColumnDef<MemberRow>[] => [
 	{
 		accessorKey: "firstName",
 		header: "First Name",
@@ -198,7 +200,7 @@ export const columns: ColumnDef<MemberRow>[] = [
 					<Button
 						size="sm"
 						variant="outline"
-						onClick={() => console.log("View member:", member)}
+						onClick={() => onViewMember(member)}
 					>
 						<EyeIcon />
 						View
@@ -248,9 +250,19 @@ export default function MembersTable({
 	const [localSearch, setLocalSearch] = useState(search);
 	const [includeCancelled, setIncludeCancelled] = useState(false);
 	const [showArchived, setShowArchived] = useState(false);
+	const [selectedMember, setSelectedMember] = useState<MemberRow | null>(null);
+	const [sheetOpen, setSheetOpen] = useState(false);
 
 	// Debounce the search change handler
 	const debouncedOnSearchChange = useDebounce(onSearchChange, 300);
+
+	// Handle member view
+	const handleViewMember = (member: MemberRow) => {
+		setSelectedMember(member);
+		setSheetOpen(true);
+	};
+
+	const columns = createColumns(handleViewMember);
 
 	// Sync localSearch with prop changes (e.g., from URL)
 	useEffect(() => {
@@ -593,6 +605,12 @@ export default function MembersTable({
 					</TableRow>
 				</TableFooter>
 			</Table>
+
+			<MemberOverviewSheet
+				member={selectedMember}
+				open={sheetOpen}
+				onOpenChange={setSheetOpen}
+			/>
 		</div>
 	);
 }
