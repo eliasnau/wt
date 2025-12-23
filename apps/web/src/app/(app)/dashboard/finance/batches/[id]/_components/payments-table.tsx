@@ -1,5 +1,5 @@
 "use client";
-import { CheckCircle2, Clock } from "lucide-react";
+import { Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Frame, FramePanel } from "@/components/ui/frame";
 import {
@@ -21,9 +21,6 @@ type Payment = {
 	billingPeriodStart: string;
 	billingPeriodEnd: string;
 	dueDate: string;
-	paidAt: Date | null;
-	bankTransactionId: string | null;
-	mandateReference: string | null;
 	notes: string | null;
 	createdAt: Date;
 	memberId: string;
@@ -104,17 +101,10 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
 									{payment.memberIban}
 								</TableCell>
 								<TableCell>
-									{payment.paidAt ? (
-										<Badge variant="default" className="gap-1">
-											<CheckCircle2 className="size-3" />
-											Paid
-										</Badge>
-									) : (
-										<Badge variant="secondary" className="gap-1">
-											<Clock className="size-3" />
-											Pending
-										</Badge>
-									)}
+									<Badge variant="secondary" className="gap-1">
+										<Clock className="size-3" />
+										Pending
+									</Badge>
 								</TableCell>
 							</TableRow>
 						))}
