@@ -15,7 +15,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
-import { ChevronsUpDown, Plus, Settings, Building2 } from "lucide-react";
+import { ChevronsUpDown, Plus, Building2 } from "lucide-react";
 import { authClient } from "@repo/auth/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -113,8 +113,9 @@ export const OrganizationSelector = () => {
             side={isMobile ? "bottom" : "right"}
             sideOffset={4}
           >
-            <DropdownMenuLabel className="text-xs text-muted-foreground">
-              Organizations
+            <DropdownMenuLabel className="flex items-center justify-between text-xs text-muted-foreground">
+              <span>Organizations</span>
+              <span className="font-normal opacity-70">⌘⇧O</span>
             </DropdownMenuLabel>
             {organizations?.map((org) => {
               const isActive = org.id === activeOrgId;
@@ -156,17 +157,6 @@ export const OrganizationSelector = () => {
               </div>
               <div className="font-medium text-muted-foreground">
                 Create organization
-              </div>
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="gap-2 p-2"
-              onClick={() => router.push("/account/organizations")}
-            >
-              <div className="flex size-6 items-center justify-center rounded-md border bg-background">
-                <Settings className="size-4" />
-              </div>
-              <div className="font-medium text-muted-foreground">
-                Manage organizations
               </div>
             </DropdownMenuItem>
           </DropdownMenuContent>
