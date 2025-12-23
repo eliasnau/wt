@@ -2,22 +2,36 @@
 
 import { authClient } from "@repo/auth/client";
 import { useMutation } from "@tanstack/react-query";
-import { Building2, Check, Loader2, Plus } from "lucide-react";
+import {
+  ArrowDownIcon,
+  ArrowUpIcon,
+  Building2,
+  Check,
+  CornerDownLeftIcon,
+  Loader2,
+  Plus,
+} from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import * as React from "react";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
-import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogFooter,
-  DialogHeader,
-  DialogPanel,
-  DialogPopup,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Command,
+  CommandCollection,
+  CommandDialog,
+  CommandDialogPopup,
+  CommandEmpty,
+  CommandFooter,
+  CommandGroup,
+  CommandGroupLabel,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandPanel,
+  CommandSeparator,
+} from "@/components/ui/command";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { ORPCError } from "@orpc/client";
 
 type Organization = {
@@ -27,26 +41,42 @@ type Organization = {
   logo?: string | null;
 };
 
-interface OrganizationSwitcherProps {
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-  trigger?: React.ReactNode;
+let setGlobalOpen: ((open: boolean) => void) | null = null;
+let globalOpenState = false;
+
+export function openOrganizationSwitcher() {
+  if (setGlobalOpen) {
+    globalOpenState = true;
+    setGlobalOpen(true);
+  }
 }
 
-export function OrganizationSwitcher({
-  open: controlledOpen,
-  onOpenChange: controlledOnOpenChange,
-  trigger,
-}: OrganizationSwitcherProps) {
+// export function closeOrganizationSwitcher() {
+//   if (setGlobalOpen) {
+//     globalOpenState = false;
+//     setGlobalOpen(false);
+//   }
+// }
+
+// export function toggleOrganizationSwitcher() {
+//   if (setGlobalOpen) {
+//     globalOpenState = !globalOpenState;
+//     setGlobalOpen(globalOpenState);
+//   }
+// }
+
+export function OrganizationSwitcher() {
   const router = useRouter();
-  const [internalOpen, setInternalOpen] = useState(false);
+  const [open, setOpen] = React.useState(false);
   const { session, switchOrganization } = useAuth();
 
-  const isControlled = controlledOpen !== undefined;
-  const open = isControlled ? controlledOpen : internalOpen;
-  const setOpen = isControlled
-    ? controlledOnOpenChange || (() => {})
-    : setInternalOpen;
+  React.useEffect(() => {
+    setGlobalOpen = setOpen;
+    globalOpenState = open;
+    return () => {
+      setGlobalOpen = null;
+    };
+  }, [open]);
 
   const { data: organizationsData, isPending } =
     authClient.useListOrganizations();
@@ -68,7 +98,6 @@ export function OrganizationSwitcher({
 
   const handleSwitchOrg = (organizationId: string) => {
     if (session?.session?.activeOrganizationId === organizationId) {
-      // Already active, just close the dialog
       setOpen(false);
       return;
     }
@@ -80,96 +109,168 @@ export function OrganizationSwitcher({
     router.push("/account/organizations");
   };
 
-  const DialogContent = (
-    <DialogPopup>
-      <DialogHeader>
-        <DialogTitle>Switch Organization</DialogTitle>
-      </DialogHeader>
-      <DialogPanel className="">
-        {isPending ? (
-          <div className="flex items-center justify-center py-8">
-            <Loader2 className="size-6 animate-spin text-muted-foreground" />
-          </div>
-        ) : organizations && organizations.length > 0 ? (
-          <div className="max-h-[400px] space-y-1 overflow-y-auto">
-            {organizations.map((org) => {
-              const isActive =
-                session?.session?.activeOrganizationId === org.id;
-              const isSwitching =
-                setActiveOrgMutation.isPending &&
-                setActiveOrgMutation.variables === org.id;
+  React.useEffect(() => {
+    const down = (e: KeyboardEvent) => {
+      if (e.key === "o" && e.shiftKey && (e.metaKey || e.ctrlKey)) {
+        e.preventDefault();
+        setOpen((prevOpen) => !prevOpen);
+      }
+    };
 
-              return (
-                <button
-                  type="button"
-                  key={org.id}
-                  onClick={() => handleSwitchOrg(org.id)}
-                  disabled={setActiveOrgMutation.isPending}
-                  className="flex w-full items-center gap-3 rounded-lg p-3 text-left transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {org.logo ? (
-                    <Image
-                      src={org.logo}
-                      alt={org.name}
-                      width={40}
-                      height={40}
-                      className="size-10 flex-shrink-0 rounded-md object-cover"
-                    />
-                  ) : (
-                    <div className="flex size-10 flex-shrink-0 items-center justify-center rounded-md bg-primary/10">
-                      <Building2 className="size-5 text-primary" />
-                    </div>
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{org.name}</p>
-                    <p className="truncate text-muted-foreground text-sm">
-                      {org.slug}
-                    </p>
-                  </div>
-                  {isSwitching ? (
-                    <Loader2 className="size-4 flex-shrink-0 animate-spin" />
-                  ) : isActive ? (
-                    <Check className="size-4 flex-shrink-0 text-primary" />
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
-        ) : (
-          <div className="space-y-4 py-8 text-center">
-            <p className="text-muted-foreground text-sm">
-              You don't have any organizations yet.
-            </p>
-            <Button onClick={handleCreateNew}>
-              <Plus className="mr-2 size-4" />
-              Create Organization
-            </Button>
-          </div>
-        )}
-      </DialogPanel>
-      {organizations && organizations.length > 0 && (
-        <DialogFooter className="flex-row justify-end">
-          <Button onClick={handleCreateNew}>
-            <Plus className="mr-2 size-4" />
-            Create New Organization
-          </Button>
-        </DialogFooter>
-      )}
-    </DialogPopup>
-  );
+    document.addEventListener("keydown", down);
+    return () => document.removeEventListener("keydown", down);
+  }, []);
 
-  if (trigger) {
-    return (
-      <Dialog open={open} onOpenChange={setOpen}>
-        <DialogTrigger render={trigger as any} />
-        {DialogContent}
-      </Dialog>
-    );
+  const orgItems =
+    organizations?.map((org) => ({
+      value: org.id,
+      label: org.name,
+      slug: org.slug,
+      logo: org.logo,
+      isActive: session?.session?.activeOrganizationId === org.id,
+    })) || [];
+
+  const createNewItem = {
+    value: "create-new",
+    label: "Create New Organization",
+  };
+
+  const groupedItems = [
+    {
+      value: "Organizations",
+      items: orgItems,
+    },
+    {
+      value: "Actions",
+      items: [createNewItem],
+    },
+  ];
+
+  function handleItemClick(item: { value: string }) {
+    if (item.value === "create-new") {
+      handleCreateNew();
+    } else {
+      handleSwitchOrg(item.value);
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      {DialogContent}
-    </Dialog>
+    <CommandDialog open={open} onOpenChange={setOpen}>
+      <CommandDialogPopup>
+        <Command items={groupedItems}>
+          <CommandInput placeholder="Search organizations..." />
+          <CommandPanel>
+            {isPending ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="size-6 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <>
+                <CommandEmpty>No organizations found.</CommandEmpty>
+                <CommandList>
+                  {(
+                    group: { value: string; items: typeof orgItems },
+                    _index: number,
+                  ) => (
+                    <React.Fragment key={group.value}>
+                      <CommandGroup items={group.items}>
+                        <CommandGroupLabel>{group.value}</CommandGroupLabel>
+                        <CommandCollection>
+                          {(item: (typeof orgItems)[0]) => {
+                            const isSwitching =
+                              setActiveOrgMutation.isPending &&
+                              setActiveOrgMutation.variables === item.value;
+
+                            return (
+                              <CommandItem
+                                key={item.value}
+                                onClick={() => handleItemClick(item)}
+                                value={item.value}
+                                disabled={setActiveOrgMutation.isPending}
+                                className="flex items-center gap-3"
+                              >
+                                {item.value === "create-new" ? (
+                                  <>
+                                    <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/10">
+                                      <Plus className="size-4 text-primary" />
+                                    </div>
+                                    <span className="flex-1">{item.label}</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    {item.logo ? (
+                                      <Image
+                                        src={item.logo}
+                                        alt={item.label}
+                                        width={32}
+                                        height={32}
+                                        className="size-8 shrink-0 rounded-md object-cover"
+                                      />
+                                    ) : (
+                                      <div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/10">
+                                        <Building2 className="size-4 text-primary" />
+                                      </div>
+                                    )}
+                                    <div className="min-w-0 flex-1">
+                                      <p className="truncate font-medium">
+                                        {item.label}
+                                      </p>
+                                      {item.slug && (
+                                        <p className="truncate text-muted-foreground text-xs">
+                                          {item.slug}
+                                        </p>
+                                      )}
+                                    </div>
+                                    {isSwitching ? (
+                                      <Loader2 className="size-4 shrink-0 animate-spin" />
+                                    ) : item.isActive ? (
+                                      <Check className="size-4 shrink-0 text-primary" />
+                                    ) : null}
+                                  </>
+                                )}
+                              </CommandItem>
+                            );
+                          }}
+                        </CommandCollection>
+                      </CommandGroup>
+                      <CommandSeparator />
+                    </React.Fragment>
+                  )}
+                </CommandList>
+              </>
+            )}
+          </CommandPanel>
+          <CommandFooter>
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-2">
+                <KbdGroup>
+                  <Kbd>
+                    <ArrowUpIcon />
+                  </Kbd>
+                  <Kbd>
+                    <ArrowDownIcon />
+                  </Kbd>
+                </KbdGroup>
+                <span>Navigate</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Kbd>
+                  <CornerDownLeftIcon />
+                </Kbd>
+                <span>Select</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <KbdGroup>
+                <Kbd>⌘</Kbd>
+                <Kbd>⇧</Kbd>
+                <Kbd>O</Kbd>
+              </KbdGroup>
+              <span>Close</span>
+            </div>
+          </CommandFooter>
+        </Command>
+      </CommandDialogPopup>
+    </CommandDialog>
   );
 }
