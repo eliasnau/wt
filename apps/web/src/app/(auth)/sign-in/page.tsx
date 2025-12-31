@@ -6,13 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
-import { Loader2, ArrowLeft, Key } from "lucide-react";
+import { Loader2, ArrowLeft } from "lucide-react";
 import { authClient } from "@repo/auth/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { Route } from "next";
 import { useQueryState } from "nuqs";
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
+import { Fingerprint } from "@/components/animate-ui/icons/fingerprint";
 
 export default function SignIn() {
 	const [email, setEmail] = useState("");
@@ -131,35 +133,36 @@ export default function SignIn() {
 									</span>
 								</div>
 							</div>
-
-							<Button
-								variant="outline"
-								className="w-full gap-2"
-								disabled={loading}
-								onClick={async () => {
-									await authClient.signIn.passkey({
-										fetchOptions: {
-											onRequest: () => {
-												setLoading(true);
+							<AnimateIcon animateOnHover>
+								<Button
+									variant="outline"
+									className="w-full gap-2"
+									disabled={loading}
+									onClick={async () => {
+										await authClient.signIn.passkey({
+											fetchOptions: {
+												onRequest: () => {
+													setLoading(true);
+												},
+												onResponse: () => {
+													setLoading(false);
+												},
+												onError: (ctx) => {
+													toast.error(
+														ctx.error.message || "Passkey authentication failed",
+													);
+												},
+												onSuccess: () => {
+													router.push(redirectUrl as Route);
+												},
 											},
-											onResponse: () => {
-												setLoading(false);
-											},
-											onError: (ctx) => {
-												toast.error(
-													ctx.error.message || "Passkey authentication failed",
-												);
-											},
-											onSuccess: () => {
-												router.push(redirectUrl as Route);
-											},
-										},
-									});
-								}}
-							>
-								<Key size={16} />
-								Passkey
-							</Button>
+										});
+									}}
+								>
+									<Fingerprint size={16} />
+									Passkey
+								</Button>
+							</AnimateIcon>
 						</form>
 					</FramePanel>
 

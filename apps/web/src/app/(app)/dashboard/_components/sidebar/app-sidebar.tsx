@@ -11,8 +11,9 @@ import {
 	Settings,
 	ShoppingBag,
 	Store,
-	Users,
 } from "lucide-react";
+import { Users } from "@/components/animate-ui/icons/users";
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
 import { CommandSearch } from "@/app/(app)/dashboard/_components/sidebar/command-search";
 import DashboardNavigation from "@/app/(app)/dashboard/_components/sidebar/nav-main";
 import { NotificationsPopover } from "@/app/(app)/dashboard/_components/sidebar/nav-notifications";
@@ -28,6 +29,10 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 import type { NavRoute } from "./nav-main";
+import { Blocks } from "@/components/animate-ui/icons/blocks";
+import { ChartLine } from "@/components/animate-ui/icons/chart-line";
+import { SlidersHorizontal } from "@/components/animate-ui/icons/sliders-horizontal";
+import { LayoutDashboard } from "@/components/animate-ui/icons/layout-dashboard";
 
 const sampleNotifications = [
 	{
@@ -57,25 +62,25 @@ const dashboardRoutes: NavRoute[] = [
 	{
 		id: "home",
 		title: "Home",
-		icon: <Home className="size-4" />,
+		icon: <LayoutDashboard className="size-4" />,
 		link: "/dashboard",
 	},
 	{
 		id: "Members",
 		title: "Members",
-		icon: <Users className="size-4" />,
+		icon: <Users className="size-4" size={16} />,
 		link: "/dashboard/members",
 	},
 	{
 		id: "groups",
 		title: "Groups",
-		icon: <Layers className="size-4" />,
+		icon: <Blocks className="size-4" />,
 		link: "/dashboard/groups",
 	},
 	{
 		id: "statistics",
 		title: "Statistics",
-		icon: <PieChart className="size-4" />,
+		icon: <ChartLine className="size-4" />,
 		link: "/dashboard/statistics/overview",
 		subs: [
 			{
@@ -109,12 +114,6 @@ const dashboardRoutes: NavRoute[] = [
 		],
 	},
 	{
-		id: "storefront",
-		title: "Storefront",
-		icon: <Store className="size-4" />,
-		link: "#",
-	},
-	{
 		id: "finance",
 		title: "Finance",
 		icon: <DollarSign className="size-4" />,
@@ -128,7 +127,7 @@ const dashboardRoutes: NavRoute[] = [
 	{
 		id: "settings",
 		title: "Settings",
-		icon: <Settings className="size-4" />,
+		icon: <SlidersHorizontal className="size-4" />,
 		link: "/dashboard/settings",
 		subs: [
 			{ title: "General", link: "/dashboard/settings/general" },

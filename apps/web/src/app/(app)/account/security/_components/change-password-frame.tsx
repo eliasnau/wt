@@ -27,7 +27,9 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { Loader2, Key, Info } from "lucide-react";
+import { Loader2, Info } from "lucide-react";
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
+import { Key } from "@/components/animate-ui/icons/key";
 
 export function ChangePasswordFrame() {
 	const [open, setOpen] = useState(false);
@@ -123,10 +125,12 @@ export function ChangePasswordFrame() {
 				</Tooltip>
 
 				<Dialog open={open} onOpenChange={handleOpenChange}>
+					<AnimateIcon animateOnHover>
 					<DialogTrigger render={<Button variant="outline" />}>
 						<Key className="mr-2 size-4" />
 						Change Password
 					</DialogTrigger>
+					</AnimateIcon>
 					<DialogPopup>
 						<DialogHeader>
 							<DialogTitle>Change Password</DialogTitle>

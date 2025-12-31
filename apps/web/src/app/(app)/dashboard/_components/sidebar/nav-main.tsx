@@ -1,5 +1,6 @@
 "use client";
 
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
 import {
 	Collapsible,
 	CollapsibleContent,
@@ -60,32 +61,34 @@ export default function DashboardNavigation({
 							>
 								<CollapsibleTrigger
 									render={(props) => (
-										<SidebarMenuButton
-											{...props}
-											className={cn(
-												"flex w-full items-center rounded-lg px-2 transition-colors",
-												isOpen
-													? "bg-sidebar-muted text-foreground"
-													: "text-muted-foreground hover:bg-sidebar-muted hover:text-foreground",
-												isCollapsed && "justify-center",
-											)}
-										>
-											{route.icon}
-											{!isCollapsed && (
-												<span className="ml-2 flex-1 text-sm font-medium">
-													{route.title}
-												</span>
-											)}
-											{!isCollapsed && hasSubRoutes && (
-												<span className="ml-auto">
-													{isOpen ? (
-														<ChevronUp className="size-4" />
-													) : (
-														<ChevronDown className="size-4" />
-													)}
-												</span>
-											)}
-										</SidebarMenuButton>
+										<AnimateIcon animateOnHover>
+											<SidebarMenuButton
+												{...props}
+												className={cn(
+													"flex w-full items-center rounded-lg px-2 transition-colors",
+													isOpen
+														? "bg-sidebar-muted text-foreground"
+														: "text-muted-foreground hover:bg-sidebar-muted hover:text-foreground",
+													isCollapsed && "justify-center",
+												)}
+											>
+												{route.icon}
+												{!isCollapsed && (
+													<span className="ml-2 flex-1 text-sm font-medium">
+														{route.title}
+													</span>
+												)}
+												{!isCollapsed && hasSubRoutes && (
+													<span className="ml-auto">
+														{isOpen ? (
+															<ChevronUp className="size-4" />
+														) : (
+															<ChevronDown className="size-4" />
+														)}
+													</span>
+												)}
+											</SidebarMenuButton>
+										</AnimateIcon>
 									)}
 								/>
 
@@ -113,23 +116,26 @@ export default function DashboardNavigation({
 								)}
 							</Collapsible>
 						) : (
-							<SidebarMenuButton tooltip={route.title} asChild>
-								<Link
-									href={route.link as Route}
-									prefetch={true}
-									className={cn(
-										"flex items-center rounded-lg px-2 transition-colors text-muted-foreground hover:bg-sidebar-muted hover:text-foreground",
-										isCollapsed && "justify-center",
-									)}
-								>
-									{route.icon}
-									{!isCollapsed && (
-										<span className="ml-2 text-sm font-medium">
-											{route.title}
-										</span>
-									)}
-								</Link>
-							</SidebarMenuButton>
+							<AnimateIcon animateOnHover>
+
+								<SidebarMenuButton tooltip={route.title} asChild>
+									<Link
+										href={route.link as Route}
+										prefetch={true}
+										className={cn(
+											"flex items-center rounded-lg px-2 transition-colors text-muted-foreground hover:bg-sidebar-muted hover:text-foreground",
+											isCollapsed && "justify-center",
+										)}
+									>
+										{route.icon}
+										{!isCollapsed && (
+											<span className="ml-2 text-sm font-medium">
+												{route.title}
+											</span>
+										)}
+									</Link>
+								</SidebarMenuButton>
+							</AnimateIcon>
 						)}
 					</SidebarMenuItem>
 				);

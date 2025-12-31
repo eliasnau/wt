@@ -46,11 +46,13 @@ import {
 	Info,
 	Loader2,
 	Plus,
-	Trash2,
 	AlertCircle,
 } from "lucide-react";
 import { getAAGUIDInfo } from "@/lib/aaguid-data";
 import { useQuery } from "@tanstack/react-query";
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
+import { FingerprintIcon } from "@/components/animate-ui/icons/fingerprint";
+import { Trash2 } from "@/components/animate-ui/icons/trash-2";
 
 type Passkey = {
 	id: string;
@@ -287,13 +289,13 @@ export function PasskeyFrame({
 											Added{" "}
 											{passkey.createdAt
 												? new Date(passkey.createdAt).toLocaleDateString(
-														undefined,
-														{
-															year: "numeric",
-															month: "long",
-															day: "numeric",
-														},
-													)
+													undefined,
+													{
+														year: "numeric",
+														month: "long",
+														day: "numeric",
+													},
+												)
 												: "recently"}
 										</p>
 									</div>
@@ -311,17 +313,19 @@ export function PasskeyFrame({
 										<Edit className="size-4" />
 									</Button>
 									<AlertDialog>
-										<AlertDialogTrigger
-											render={
-												<Button
-													variant="ghost"
-													size="icon"
-													className="hover:bg-destructive/10"
-												/>
-											}
-										>
-											<Trash2 className="size-4 text-destructive" />
-										</AlertDialogTrigger>
+										<AnimateIcon animateOnHover>
+											<AlertDialogTrigger
+												render={
+													<Button
+														variant="ghost"
+														size="icon"
+														className="hover:bg-destructive/10"
+													/>
+												}
+											>
+												<Trash2 className="size-4 text-destructive" />
+											</AlertDialogTrigger>
+										</AnimateIcon>
 										<AlertDialogPopup>
 											<AlertDialogHeader>
 												<AlertDialogTitle>Delete Passkey</AlertDialogTitle>
@@ -367,25 +371,26 @@ export function PasskeyFrame({
 							</p>
 						</TooltipContent>
 					</Tooltip>
-
-					<Button
-						onClick={handleAddPasskey}
-						disabled={isAddingPasskey}
-						variant="outline"
-						size="sm"
-					>
-						{isAddingPasskey ? (
-							<>
-								<Loader2 className="mr-2 size-4 animate-spin" />
-								Adding...
-							</>
-						) : (
-							<>
-								<Plus className="mr-2 size-4" />
-								Add Passkey
-							</>
-						)}
-					</Button>
+					<AnimateIcon animateOnHover>
+						<Button
+							onClick={handleAddPasskey}
+							disabled={isAddingPasskey}
+							variant="outline"
+							size="sm"
+						>
+							{isAddingPasskey ? (
+								<>
+									<Loader2 className="mr-2 size-4 animate-spin" />
+									Adding...
+								</>
+							) : (
+								<>
+									<FingerprintIcon className="mr-2 size-4" />
+									Add Passkey
+								</>
+							)}
+						</Button>
+					</AnimateIcon>
 				</FrameFooter>
 			</Frame>
 

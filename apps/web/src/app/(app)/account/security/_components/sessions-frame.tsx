@@ -32,7 +32,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { toast } from "sonner";
-import { Loader2, Trash2, Laptop, AlertCircle } from "lucide-react";
+import { Loader2, Laptop, AlertCircle } from "lucide-react";
 import { Chrome } from "@/components/ui/icons/browser/chrome";
 import { Edge } from "@/components/ui/icons/browser/edge";
 import { Firefox } from "@/components/ui/icons/browser/firefox";
@@ -45,6 +45,8 @@ import { Opera } from "@/components/ui/icons/browser/opera";
 import { BraveBrowser } from "@/components/ui/icons/browser/brave";
 import { useQuery } from "@tanstack/react-query";
 import { APIError } from "@repo/auth/client";
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
+import { Trash2 } from "@/components/animate-ui/icons/trash-2";
 
 type RawSession = {
   id: string;
@@ -418,6 +420,7 @@ export function SessionsFrame({
 
       <FrameFooter className="flex-row justify-end items-center gap-2">
         <AlertDialog>
+        <AnimateIcon animateOnHover>
           <AlertDialogTrigger
             render={<Button variant="destructive" size="sm" />}
             disabled={isRevokingAll}
@@ -429,6 +432,7 @@ export function SessionsFrame({
             )}
             Revoke All Sessions
           </AlertDialogTrigger>
+          </AnimateIcon>
           <AlertDialogPopup>
             <AlertDialogHeader>
               <AlertDialogTitle>Revoke All Sessions</AlertDialogTitle>
