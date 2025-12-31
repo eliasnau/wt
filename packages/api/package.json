@@ -29,7 +29,7 @@
 		"@repo/db": "workspace:*",
 		"@vercel/functions": "^3.3.4",
 		"dotenv": "catalog:",
-		"next": "catalog:",
+		"next": "16.1.1",
 		"zod": "catalog:"
 	}
 }
