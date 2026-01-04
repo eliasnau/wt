@@ -1,10 +1,11 @@
 import { protectedProcedure } from "../index";
 import { requirePermission } from "../middleware/permissions";
 import { rateLimitMiddleware } from "../middleware/ratelimit";
-import { db, eq } from "@repo/db";
 import { z } from "zod";
 import { ORPCError } from "@orpc/server";
-import { group } from "@repo/db/schema";
+import { DB } from "@repo/db/functions";
+import { logger } from "../lib/logger";
+import { after } from "next/server";
 
 const createGroupSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255),
@@ -32,11 +33,22 @@ export const groupsRouter = {
 		.handler(async ({ context }) => {
 			const organizationId = context.session.activeOrganizationId!;
 
-			const groups = await db
-				.select()
-				.from(group)
-				.where(eq(group.organizationId, organizationId));
-			return groups;
+			try {
+				const groups = await DB.query.groups.listGroups({ organizationId });
+				return groups;
+			} catch (error) {
+				after(() => {
+					logger.error("Failed to list groups", {
+						error,
+						organizationId,
+						userId: context.user.id,
+					});
+				});
+
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: "Failed to retrieve groups",
+				});
+			}
 		})
 		.route({ method: "GET", path: "/groups" }),
 
@@ -47,19 +59,36 @@ export const groupsRouter = {
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
 
-			const result = await db
-				.select()
-				.from(group)
-				.where(eq(group.id, input.id))
-				.limit(1);
+			try {
+				const result = await DB.query.groups.getGroupById({
+					groupId: input.id,
+				});
 
-			if (!result[0] || result[0].organizationId !== organizationId) {
-				throw new ORPCError("NOT_FOUND", {
-					message: "Group not found",
+				if (!result || result.organizationId !== organizationId) {
+					throw new ORPCError("NOT_FOUND", {
+						message: "Group not found",
+					});
+				}
+
+				return result;
+			} catch (error) {
+				if (error instanceof ORPCError) {
+					throw error;
+				}
+
+				after(() => {
+					logger.error("Failed to get group", {
+						error,
+						organizationId,
+						groupId: input.id,
+						userId: context.user.id,
+					});
+				});
+
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: "Failed to retrieve group",
 				});
 			}
-
-			return result[0];
 		})
 		.route({ method: "GET", path: "/groups/:id" }),
 	create: protectedProcedure
@@ -69,23 +98,29 @@ export const groupsRouter = {
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
 
-			const newGroup = await db
-				.insert(group)
-				.values({
+			try {
+				const newGroup = await DB.mutation.groups.createGroup({
+					organizationId,
 					name: input.name,
 					description: input.description,
 					defaultMembershipPrice: input.defaultMembershipPrice,
-					organizationId,
-				})
-				.returning();
+				});
 
-			if (!newGroup[0]) {
+				return newGroup;
+			} catch (error) {
+				after(() => {
+					logger.error("Failed to create group", {
+						error,
+						organizationId,
+						groupName: input.name,
+						userId: context.user.id,
+					});
+				});
+
 				throw new ORPCError("INTERNAL_SERVER_ERROR", {
 					message: "Failed to create group",
 				});
 			}
-
-			return newGroup[0];
 		})
 		.route({ method: "POST", path: "/groups" }),
 
@@ -107,28 +142,42 @@ export const groupsRouter = {
 				});
 			}
 
-			const existingGroup = await db
-				.select()
-				.from(group)
-				.where(eq(group.id, id))
-				.limit(1);
+			try {
+				// Verify group exists and belongs to organization
+				const existingGroup = await DB.query.groups.getGroupById({
+					groupId: id,
+				});
 
-			if (
-				!existingGroup[0] ||
-				existingGroup[0].organizationId !== organizationId
-			) {
-				throw new ORPCError("NOT_FOUND", {
-					message: "Group not found",
+				if (!existingGroup || existingGroup.organizationId !== organizationId) {
+					throw new ORPCError("NOT_FOUND", {
+						message: "Group not found",
+					});
+				}
+
+				const updatedGroup = await DB.mutation.groups.updateGroup({
+					groupId: id,
+					updates: cleanUpdates,
+				});
+
+				return updatedGroup!;
+			} catch (error) {
+				if (error instanceof ORPCError) {
+					throw error;
+				}
+
+				after(() => {
+					logger.error("Failed to update group", {
+						error,
+						organizationId,
+						groupId: id,
+						userId: context.user.id,
+					});
+				});
+
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: "Failed to update group",
 				});
 			}
-
-			const updatedGroup = await db
-				.update(group)
-				.set(cleanUpdates)
-				.where(eq(group.id, id))
-				.returning();
-
-			return updatedGroup[0]!;
 		})
 		.route({ method: "PATCH", path: "/groups/:id" }),
 
@@ -139,27 +188,41 @@ export const groupsRouter = {
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
 
-			const existingGroup = await db
-				.select()
-				.from(group)
-				.where(eq(group.id, input.id))
-				.limit(1);
+			try {
+				// Verify grouup exists and belongs to organization
+				const existingGroup = await DB.query.groups.getGroupById({
+					groupId: input.id,
+				});
 
-			if (
-				!existingGroup[0] ||
-				existingGroup[0].organizationId !== organizationId
-			) {
-				throw new ORPCError("NOT_FOUND", {
-					message: "Group not found",
+				if (!existingGroup || existingGroup.organizationId !== organizationId) {
+					throw new ORPCError("NOT_FOUND", {
+						message: "Group not found",
+					});
+				}
+
+				const deletedGroup = await DB.mutation.groups.deleteGroup({
+					groupId: input.id,
+				});
+
+				return deletedGroup!;
+			} catch (error) {
+				if (error instanceof ORPCError) {
+					throw error;
+				}
+
+				after(() => {
+					logger.error("Failed to delete group", {
+						error,
+						organizationId,
+						groupId: input.id,
+						userId: context.user.id,
+					});
+				});
+
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: "Failed to delete group",
 				});
 			}
-
-			const deletedGroup = await db
-				.delete(group)
-				.where(eq(group.id, input.id))
-				.returning();
-
-			return deletedGroup[0]!;
 		})
 		.route({ method: "DELETE", path: "/groups/:id" }),
 };

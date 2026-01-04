@@ -6,6 +6,9 @@ import { z } from "zod";
 import { protectedProcedure } from "../index";
 import { requirePermission } from "../middleware/permissions";
 import { rateLimitMiddleware } from "../middleware/ratelimit";
+import { DB } from "@repo/db/functions";
+import { logger } from "../lib/logger";
+import { after } from "next/server";
 
 const createMemberSchema = z.object({
 	// Personal info
@@ -109,45 +112,10 @@ export const membersRouter = {
 		.input(getMemberSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
-
-			const [member] = await db
-				.select({
-					id: clubMember.id,
-					firstName: clubMember.firstName,
-					lastName: clubMember.lastName,
-					email: clubMember.email,
-					phone: clubMember.phone,
-					street: clubMember.street,
-					city: clubMember.city,
-					state: clubMember.state,
-					postalCode: clubMember.postalCode,
-					country: clubMember.country,
-					notes: clubMember.notes,
-					organizationId: clubMember.organizationId,
-					createdAt: clubMember.createdAt,
-					updatedAt: clubMember.updatedAt,
-					contractId: contract.id,
-					contractStartDate: contract.startDate,
-					contractInitialPeriod: contract.initialPeriod,
-					contractInitialPeriodEndDate: contract.initialPeriodEndDate,
-					contractCurrentPeriodEndDate: contract.currentPeriodEndDate,
-					contractNextBillingDate: contract.nextBillingDate,
-					contractJoiningFeeAmount: contract.joiningFeeAmount,
-					contractYearlyFeeAmount: contract.yearlyFeeAmount,
-					contractNotes: contract.notes,
-					contractCancelledAt: contract.cancelledAt,
-					contractCancelReason: contract.cancelReason,
-					contractCancellationEffectiveDate: contract.cancellationEffectiveDate,
-				})
-				.from(clubMember)
-				.innerJoin(contract, eq(contract.memberId, clubMember.id))
-				.where(
-					and(
-						eq(clubMember.id, input.memberId),
-						eq(clubMember.organizationId, organizationId),
-					),
-				)
-				.limit(1);
+			try {
+			const member = await DB.query.members.getMemberWithDetails({
+				memberId: input.memberId,
+			});
 
 			if (!member) {
 				throw new ORPCError("NOT_FOUND", {
@@ -155,55 +123,29 @@ export const membersRouter = {
 				});
 			}
 
-			const groupMemberships = await db
-				.select({
-					groupId: groupMember.groupId,
-					membershipPrice: groupMember.membershipPrice,
-					group: {
-						id: group.id,
-						name: group.name,
-						description: group.description,
-						defaultMembershipPrice: group.defaultMembershipPrice,
-					},
-				})
-				.from(groupMember)
-				.innerJoin(group, eq(group.id, groupMember.groupId))
-				.where(eq(groupMember.memberId, input.memberId));
+			if (member.organizationId !== organizationId) {
+				throw new ORPCError("NOT_FOUND", {
+					message: "Member not found",
+				});
+			}
 
-			const {
-				contractId,
-				contractStartDate,
-				contractInitialPeriod,
-				contractInitialPeriodEndDate,
-				contractCurrentPeriodEndDate,
-				contractNextBillingDate,
-				contractJoiningFeeAmount,
-				contractYearlyFeeAmount,
-				contractNotes,
-				contractCancelledAt,
-				contractCancelReason,
-				contractCancellationEffectiveDate,
-				...memberData
-			} = member;
+			return member;
+		} catch (error) {
+			if (error instanceof ORPCError) throw error
 
-			return {
-				...memberData,
-				contract: {
-					id: contractId,
-					startDate: contractStartDate,
-					initialPeriod: contractInitialPeriod,
-					initialPeriodEndDate: contractInitialPeriodEndDate,
-					currentPeriodEndDate: contractCurrentPeriodEndDate,
-					nextBillingDate: contractNextBillingDate,
-					joiningFeeAmount: contractJoiningFeeAmount,
-					yearlyFeeAmount: contractYearlyFeeAmount,
-					notes: contractNotes,
-					cancelledAt: contractCancelledAt,
-					cancelReason: contractCancelReason,
-					cancellationEffectiveDate: contractCancellationEffectiveDate,
-				},
-				groups: groupMemberships,
-			};
+			after(() => {
+				logger.error("Failed to get group", {
+					error,
+					organizationId,
+					memberId: input.memberId,
+					userId: context.user.id,
+				});
+			});
+
+			throw new ORPCError("INTERNAL_SERVER_ERROR", {
+				message: "Internal Server Error",
+			});
+		}
 		})
 		.route({ method: "GET", path: "/members/:memberId" }),
 
@@ -408,12 +350,18 @@ export const membersRouter = {
 				});
 			}
 
-			const result = await db.transaction(async (tx) => {
-				// Create the member
-				const [newMember] = await tx
-					.insert(clubMember)
-					.values({
-						id: randomBytes(16).toString("hex"),
+			// Calculate contract dates
+			const initialPeriodEndDate = calculateInitialPeriodEndDate(
+				input.contractStartDate,
+				input.initialPeriod,
+			);
+			const nextBillingDate = getNextBillingDate(input.contractStartDate);
+
+			try {
+				const result = await DB.mutation.members.createMemberWithContract({
+					organizationId,
+					memberId: randomBytes(16).toString("hex"),
+					memberData: {
 						firstName: input.firstName,
 						lastName: input.lastName,
 						email: input.email,
@@ -427,50 +375,35 @@ export const membersRouter = {
 						bic: input.bic,
 						cardHolder: input.cardHolder,
 						notes: input.memberNotes,
-						organizationId,
-					})
-					.returning();
-
-				if (!newMember) {
-					throw new ORPCError("INTERNAL_SERVER_ERROR", {
-						message: "Failed to create member",
-					});
-				}
-
-				// Calculate contract dates
-				const initialPeriodEndDate = calculateInitialPeriodEndDate(
-					input.contractStartDate,
-					input.initialPeriod,
-				);
-				const nextBillingDate = getNextBillingDate(input.contractStartDate);
-
-				// Create the contract
-				const [newContract] = await tx
-					.insert(contract)
-					.values({
-						memberId: newMember.id,
-						organizationId,
+					},
+					contractData: {
 						initialPeriod: input.initialPeriod,
 						startDate: input.contractStartDate,
 						initialPeriodEndDate,
-						currentPeriodEndDate: initialPeriodEndDate,
 						nextBillingDate,
 						joiningFeeAmount: input.joiningFeeAmount,
 						yearlyFeeAmount: input.yearlyFeeAmount,
 						notes: input.contractNotes,
-					})
-					.returning();
+					},
+				});
 
-				if (!newContract) {
-					throw new ORPCError("INTERNAL_SERVER_ERROR", {
-						message: "Failed to create contract",
+				return result;
+			} catch (error) {
+				after(() => {
+					logger.error("Failed to create member", {
+						error,
+						organizationId,
+						email: input.email,
+						firstName: input.firstName,
+						lastName: input.lastName,
+						userId: context.user.id,
 					});
-				}
+				});
 
-				return { member: newMember, contract: newContract };
-			});
-
-			return result;
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: "Failed to create member",
+				});
+			}
 		})
 		.route({ method: "POST", path: "/members" }),
 
