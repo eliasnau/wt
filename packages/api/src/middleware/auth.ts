@@ -25,6 +25,8 @@ export const authMiddleware = os
 				logger.warn("Unauthorized request attempt", {
 					path: context.req.nextUrl.pathname,
 					method: context.req.method,
+					request_id: context.wideEvent.request_id,
+					trace_id: context.wideEvent.trace_id,
 					ip: ipAddress(context.req),
 					geo: {
 						city: geo.city,
@@ -37,6 +39,12 @@ export const authMiddleware = os
 			throw new ORPCError("UNAUTHORIZED", {
 				message: "You must be signed in to access this resource",
 			});
+		}
+
+		context.wideEvent.user_id = sessionData.user.id;
+		if (sessionData.session.activeOrganizationId) {
+			context.wideEvent.organization_id =
+				sessionData.session.activeOrganizationId;
 		}
 
 		return next({

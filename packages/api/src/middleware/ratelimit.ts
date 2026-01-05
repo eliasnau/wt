@@ -11,7 +11,7 @@ const aj = arcjet({
 		tokenBucket({
 			mode: "LIVE",
 			characteristics: ["userId"],
-			refillRate: 10,
+			refillRate: 30,
 			interval: 60,
 			capacity: 100,
 		}),
@@ -27,17 +27,14 @@ const aj = arcjet({
  * @example
  * protectedProcedure.use(rateLimitMiddleware(5)).handler(...)
  */
-export function rateLimitMiddleware(tokensToConsume: number = 1) {
+export function rateLimitMiddleware(tokensToConsume = 1) {
 	return os.$context<Context>().middleware(async ({ context, next }) => {
-		const userId = (context as any).userId as string | undefined;
+		const userId = context.session?.userId;
 
 		if (!userId) {
-			console.error(
+			throw new Error(
 				"Rate limiting middleware used without authentication. Ensure authMiddleware is used before rateLimitMiddleware.",
 			);
-			throw new ORPCError("UNAUTHORIZED", {
-				message: "Authentication required",
-			});
 		}
 
 		const decision = await aj.protect(context.req, {
@@ -49,7 +46,9 @@ export function rateLimitMiddleware(tokensToConsume: number = 1) {
 			after(() => {
 				const geo = geolocation(context.req);
 				logger.warn("Rate limit exceeded", {
-					userId: userId,
+					trace_id: context.wideEvent?.trace_id,
+					request_id: context.wideEvent?.request_id,
+					user_id: userId,
 					path: context.req.nextUrl.pathname,
 					method: context.req.method,
 					tokensRequested: tokensToConsume,
@@ -70,6 +69,6 @@ export function rateLimitMiddleware(tokensToConsume: number = 1) {
 			});
 		}
 
-		return next({ context });
+		return next();
 	});
 }
