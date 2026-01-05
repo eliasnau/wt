@@ -40,8 +40,13 @@ export const groupsRouter = {
 				after(() => {
 					logger.error("Failed to list groups", {
 						error,
-						organizationId,
-						userId: context.user.id,
+						user_id: context.user.id,
+						organization_id: organizationId,
+						deployment_id: context.wideEvent.deployment_id,
+						region: context.wideEvent.region,
+						trace_id: context.wideEvent.trace_id,
+						request_id: context.wideEvent.request_id,
+						timestamp: new Date().toISOString(),
 					});
 				});
 
@@ -79,15 +84,17 @@ export const groupsRouter = {
 				after(() => {
 					logger.error("Failed to get group", {
 						error,
-						organizationId,
-						groupId: input.id,
-						userId: context.user.id,
+						user_id: context.user.id,
+						organization_id: organizationId,
+						deployment_id: context.wideEvent.deployment_id,
+						region: context.wideEvent.region,
+						trace_id: context.wideEvent.trace_id,
+						request_id: context.wideEvent.request_id,
+						timestamp: new Date().toISOString(),
 					});
 				});
 
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message: "Failed to retrieve group",
-				});
+				throw error
 			}
 		})
 		.route({ method: "GET", path: "/groups/:id" }),
@@ -111,15 +118,17 @@ export const groupsRouter = {
 				after(() => {
 					logger.error("Failed to create group", {
 						error,
-						organizationId,
-						groupName: input.name,
-						userId: context.user.id,
+						user_id: context.user.id,
+						organization_id: organizationId,
+						deployment_id: context.wideEvent.deployment_id,
+						region: context.wideEvent.region,
+						trace_id: context.wideEvent.trace_id,
+						request_id: context.wideEvent.request_id,
+						timestamp: new Date().toISOString(),
 					});
 				});
 
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message: "Failed to create group",
-				});
+				throw error
 			}
 		})
 		.route({ method: "POST", path: "/groups" }),
@@ -143,7 +152,6 @@ export const groupsRouter = {
 			}
 
 			try {
-				// Verify group exists and belongs to organization
 				const existingGroup = await DB.query.groups.getGroupById({
 					groupId: id,
 				});
@@ -168,15 +176,17 @@ export const groupsRouter = {
 				after(() => {
 					logger.error("Failed to update group", {
 						error,
-						organizationId,
-						groupId: id,
-						userId: context.user.id,
+						user_id: context.user.id,
+						organization_id: organizationId,
+						deployment_id: context.wideEvent.deployment_id,
+						region: context.wideEvent.region,
+						trace_id: context.wideEvent.trace_id,
+						request_id: context.wideEvent.request_id,
+						timestamp: new Date().toISOString(),
 					});
 				});
 
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message: "Failed to update group",
-				});
+				throw error
 			}
 		})
 		.route({ method: "PATCH", path: "/groups/:id" }),
@@ -189,7 +199,6 @@ export const groupsRouter = {
 			const organizationId = context.session.activeOrganizationId!;
 
 			try {
-				// Verify grouup exists and belongs to organization
 				const existingGroup = await DB.query.groups.getGroupById({
 					groupId: input.id,
 				});
@@ -213,15 +222,17 @@ export const groupsRouter = {
 				after(() => {
 					logger.error("Failed to delete group", {
 						error,
-						organizationId,
-						groupId: input.id,
 						userId: context.user.id,
+						organization_id: organizationId,
+						deployment_id: context.wideEvent.deployment_id,
+						region: context.wideEvent.region,
+						trace_id: context.wideEvent.trace_id,
+						request_id: context.wideEvent.request_id,
+						timestamp: new Date().toISOString(),
 					});
 				});
 
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message: "Failed to delete group",
-				});
+				throw error
 			}
 		})
 		.route({ method: "DELETE", path: "/groups/:id" }),

@@ -113,39 +113,39 @@ export const membersRouter = {
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
 			try {
-			const member = await DB.query.members.getMemberWithDetails({
-				memberId: input.memberId,
-			});
-
-			if (!member) {
-				throw new ORPCError("NOT_FOUND", {
-					message: "Member not found",
-				});
-			}
-
-			if (member.organizationId !== organizationId) {
-				throw new ORPCError("NOT_FOUND", {
-					message: "Member not found",
-				});
-			}
-
-			return member;
-		} catch (error) {
-			if (error instanceof ORPCError) throw error
-
-			after(() => {
-				logger.error("Failed to get group", {
-					error,
-					organizationId,
+				const member = await DB.query.members.getMemberWithDetails({
 					memberId: input.memberId,
-					userId: context.user.id,
 				});
-			});
 
-			throw new ORPCError("INTERNAL_SERVER_ERROR", {
-				message: "Internal Server Error",
-			});
-		}
+				if (!member) {
+					throw new ORPCError("NOT_FOUND", {
+						message: "Member not found",
+					});
+				}
+
+				if (member.organizationId !== organizationId) {
+					throw new ORPCError("NOT_FOUND", {
+						message: "Member not found",
+					});
+				}
+
+				return member;
+			} catch (error) {
+				if (error instanceof ORPCError) throw error;
+
+				after(() => {
+					logger.error("Failed to get group", {
+						error,
+						organizationId,
+						memberId: input.memberId,
+						userId: context.user.id,
+					});
+				});
+
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: "Internal Server Error",
+				});
+			}
 		})
 		.route({ method: "GET", path: "/members/:memberId" }),
 
@@ -357,6 +357,7 @@ export const membersRouter = {
 			);
 			const nextBillingDate = getNextBillingDate(input.contractStartDate);
 
+			const dbStartTime = Date.now();
 			try {
 				const result = await DB.mutation.members.createMemberWithContract({
 					organizationId,
@@ -387,8 +388,23 @@ export const membersRouter = {
 					},
 				});
 
+				// Add success details to wide event
+				if (context.wideEvent) {
+					context.wideEvent.member_id = result.member.id;
+					context.wideEvent.contract_id = result.contract.id;
+					context.wideEvent.member_created = true;
+					context.wideEvent.db_latency_ms = Date.now() - dbStartTime;
+				}
+
 				return result;
 			} catch (error) {
+				// Add error details to wide event
+				if (context.wideEvent && !(error instanceof ORPCError)) {
+					context.wideEvent.db_error = true;
+					context.wideEvent.error_during = "member_creation";
+					context.wideEvent.db_latency_ms = Date.now() - dbStartTime;
+				}
+
 				after(() => {
 					logger.error("Failed to create member", {
 						error,
