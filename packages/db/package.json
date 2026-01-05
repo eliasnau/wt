@@ -7,6 +7,9 @@
 		},
 		"./schema": {
 			"default": "./src/schema/index.ts"
+		},
+		"./functions": {
+			"default": "./src/functions/index.ts"
 		}
 	},
 	"scripts": {
