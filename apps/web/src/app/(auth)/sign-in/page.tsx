@@ -15,6 +15,7 @@ import type { Route } from "next";
 import { useQueryState } from "nuqs";
 import { AnimateIcon } from "@/components/animate-ui/icons/icon";
 import { Fingerprint } from "@/components/animate-ui/icons/fingerprint";
+import posthog from "posthog-js";
 
 export default function SignIn() {
 	const [email, setEmail] = useState("");
@@ -58,7 +59,9 @@ export default function SignIn() {
 								<div className="flex items-center">
 									<Label htmlFor="password">Password</Label>
 									<Link
-										href={`/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ""}` as Route}
+										href={
+											`/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ""}` as Route
+										}
 										className="ml-auto inline-block text-sm underline"
 									>
 										Forgot your password?
@@ -104,6 +107,11 @@ export default function SignIn() {
 												toast.error(ctx.error.message);
 											},
 											onSuccess: (ctx) => {
+												posthog.capture("auth:sign_in", {
+													auth_method: "email",
+													has_two_factor: !!ctx.data.twoFactorRedirect,
+												});
+
 												if (ctx.data.twoFactorRedirect) {
 													router.push(
 														`/verify-2fa?redirectUrl=${encodeURIComponent(redirectUrl)}` as Route,
@@ -149,10 +157,15 @@ export default function SignIn() {
 												},
 												onError: (ctx) => {
 													toast.error(
-														ctx.error.message || "Passkey authentication failed",
+														ctx.error.message ||
+															"Passkey authentication failed",
 													);
 												},
 												onSuccess: () => {
+													posthog.capture("auth:sign_in", {
+														auth_method: "passkey",
+													});
+
 													router.push(redirectUrl as Route);
 												},
 											},

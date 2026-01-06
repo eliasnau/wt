@@ -356,8 +356,6 @@ export const membersRouter = {
 				input.initialPeriod,
 			);
 			const nextBillingDate = getNextBillingDate(input.contractStartDate);
-
-			const dbStartTime = Date.now();
 			try {
 				const result = await DB.mutation.members.createMemberWithContract({
 					organizationId,
@@ -388,22 +386,8 @@ export const membersRouter = {
 					},
 				});
 
-				// Add success details to wide event
-				if (context.wideEvent) {
-					context.wideEvent.member_id = result.member.id;
-					context.wideEvent.contract_id = result.contract.id;
-					context.wideEvent.member_created = true;
-					context.wideEvent.db_latency_ms = Date.now() - dbStartTime;
-				}
-
 				return result;
 			} catch (error) {
-				// Add error details to wide event
-				if (context.wideEvent && !(error instanceof ORPCError)) {
-					context.wideEvent.db_error = true;
-					context.wideEvent.error_during = "member_creation";
-					context.wideEvent.db_latency_ms = Date.now() - dbStartTime;
-				}
 
 				after(() => {
 					logger.error("Failed to create member", {

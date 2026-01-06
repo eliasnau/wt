@@ -12,6 +12,7 @@ import type { Route } from "next";
 import { useState } from "react";
 import { authClient } from "@repo/auth/client";
 import { useQueryState } from "nuqs";
+import posthog from "posthog-js";
 
 export default function SignUp() {
 	const [firstName, setFirstName] = useState("");
@@ -107,6 +108,10 @@ export default function SignUp() {
 												toast.error(ctx.error.message);
 											},
 											onSuccess: () => {
+												posthog.capture("auth:sign_up", {
+													auth_method: "email",
+												});
+
 												router.push(redirectUrl as Route);
 											},
 										},
