@@ -1,58 +1,52 @@
 "use client";
-import { useState } from "react";
 
-let globalCopyTimeout: NodeJS.Timeout | null = null;
-let globalSetCopied: ((value: boolean) => void) | null = null;
+import { CheckIcon, CopyIcon } from "lucide-react";
+import * as React from "react";
+
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
+import { toast } from "sonner";
+import { Tooltip, TooltipPopup, TooltipTrigger } from "@/components/ui/tooltip";
 
 export function CopyableTableCell({ value }: { value: string }) {
-	const [copied, setCopied] = useState(false);
-	const [cursorX, setCursorX] = useState(0);
+	const toastTimeout = 2000;
 
-	const handleCopy = async (e: React.MouseEvent<HTMLButtonElement>) => {
-		const target = e.currentTarget;
-		try {
-			await navigator.clipboard.writeText(value);
-			const rect = target.getBoundingClientRect();
-			setCursorX(e.clientX - rect.left);
+	const { copyToClipboard, isCopied } = useCopyToClipboard({
+		onCopy: () => {
+			toast.success("Copied to clipboard", {
+				description: value,
+			});
+		},
+		timeout: toastTimeout,
+	});
 
-			if (globalCopyTimeout) {
-				clearTimeout(globalCopyTimeout);
-			}
-			if (globalSetCopied && globalSetCopied !== setCopied) {
-				globalSetCopied(false);
-			}
-
-			setCopied(true);
-			globalSetCopied = setCopied;
-			globalCopyTimeout = setTimeout(() => {
-				setCopied(false);
-				globalSetCopied = null;
-				globalCopyTimeout = null;
-			}, 1000);
-		} catch (err) {
-			console.error("Failed to copy:", err);
-		}
-	};
+	async function handleCopy(e: React.MouseEvent) {
+		e.preventDefault();
+		e.stopPropagation();
+		await copyToClipboard(value);
+	}
 
 	return (
-		<div className="relative">
-			{copied && (
-				<div
-					className="fade-in-0 zoom-in-95 -translate-x-1/2 -translate-y-0 pointer-events-none absolute bottom-full z-50 mb-1.5 animate-in"
-					style={{ left: `${cursorX}px` }}
-				>
-					<div className="w-fit whitespace-nowrap text-balance rounded-md bg-foreground px-3 py-1.5 text-background text-xs">
-						Copied
-					</div>
-				</div>
-			)}
-			<button
-				type="button"
-				onClick={handleCopy}
-				className="cursor-pointer text-left"
+		<Tooltip>
+			<TooltipTrigger
+				render={
+					<button
+						type="button"
+						onClick={handleCopy}
+						disabled={isCopied}
+						className="inline-flex items-center gap-2 text-left hover:text-foreground transition-colors group cursor-pointer disabled:cursor-default disabled:opacity-70"
+					/>
+				}
 			>
-				{value}
-			</button>
-		</div>
+				<span className="truncate">{value}</span>
+				{isCopied ? (
+					<CheckIcon className="size-3 shrink-0" />
+				) : (
+					<CopyIcon className="size-3 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+				)}
+			</TooltipTrigger>
+			<TooltipPopup>
+				<p>Click to copy</p>
+			</TooltipPopup>
+		</Tooltip>
 	);
 }
