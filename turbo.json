@@ -1,11 +1,20 @@
 {
 	"$schema": "https://turbo.build/schema.json",
 	"ui": "tui",
+	"globalEnv": [
+		"CLERK_SECRET_KEY",
+		"DATABASE_URL",
+		"BETTER_AUTH_SECRET",
+		"ARCJET_KEY",
+		"AXIOM_TOKEN",
+		"AXIOM_DATASET"
+	],
 	"tasks": {
 		"build": {
 			"dependsOn": ["^build"],
 			"inputs": ["$TURBO_DEFAULT$", ".env*"],
-			"outputs": ["dist/**"]
+			"outputs": ["dist/**", ".next/**", "!.next/cache/**"],
+			"env": ["NEXT_PUBLIC_*", "POSTHOG_API_KEY", "POSTHOG_ENV_ID"]
 		},
 		"lint": {
 			"dependsOn": ["^lint"]
@@ -15,7 +24,9 @@
 		},
 		"dev": {
 			"cache": false,
-			"persistent": true
+			"persistent": true,
+			"inputs": ["$TURBO_DEFAULT$", ".env*"],
+			"env": ["NEXT_PUBLIC_*"]
 		},
 		"dev:setup": {
 			"cache": false,
