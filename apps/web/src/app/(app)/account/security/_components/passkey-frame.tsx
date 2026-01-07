@@ -220,14 +220,16 @@ export function PasskeyFrame({
 
 					<FrameFooter className="flex-row justify-between items-center">
 						<Tooltip>
-							<TooltipTrigger asChild>
-								<button
-									type="button"
-									className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-								>
-									<Info className="size-3.5" />
-									<span>What are passkeys?</span>
-								</button>
+							<TooltipTrigger
+								render={
+									<button
+										type="button"
+										className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+									/>
+								}
+							>
+								<Info className="size-3.5" />
+								<span>What are passkeys?</span>
 							</TooltipTrigger>
 							<TooltipContent>
 								<p className="text-xs max-w-xs">
@@ -289,13 +291,13 @@ export function PasskeyFrame({
 											Added{" "}
 											{passkey.createdAt
 												? new Date(passkey.createdAt).toLocaleDateString(
-													undefined,
-													{
-														year: "numeric",
-														month: "long",
-														day: "numeric",
-													},
-												)
+														undefined,
+														{
+															year: "numeric",
+															month: "long",
+															day: "numeric",
+														},
+													)
 												: "recently"}
 										</p>
 									</div>
@@ -304,10 +306,12 @@ export function PasskeyFrame({
 									<Button
 										variant="ghost"
 										size="icon"
-										onClick={() => openEditDialog({
-											...passkey,
-											name: passkey.name ?? null
-										})}
+										onClick={() =>
+											openEditDialog({
+												...passkey,
+												name: passkey.name ?? null,
+											})
+										}
 										className="hover:bg-accent"
 									>
 										<Edit className="size-4" />
@@ -355,14 +359,16 @@ export function PasskeyFrame({
 
 				<FrameFooter className="flex-row justify-between items-center">
 					<Tooltip>
-						<TooltipTrigger asChild>
-							<button
-								type="button"
-								className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-							>
-								<Info className="size-3.5" />
-								<span>What are passkeys?</span>
-							</button>
+						<TooltipTrigger
+							render={
+								<button
+									type="button"
+									className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+								/>
+							}
+						>
+							<Info className="size-3.5" />
+							<span>What are passkeys?</span>
 						</TooltipTrigger>
 						<TooltipContent>
 							<p className="text-xs max-w-xs">
@@ -446,7 +452,7 @@ function PasskeyIcon({ aaguid }: { aaguid?: string | null }) {
 
 	return (
 		<Tooltip>
-			<TooltipTrigger asChild>
+			<TooltipTrigger>
 				<div className="p-3 rounded-lg bg-primary/10 cursor-help">
 					{IconComponent ? (
 						<IconComponent

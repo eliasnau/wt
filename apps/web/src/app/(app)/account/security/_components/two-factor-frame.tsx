@@ -615,14 +615,13 @@ export function TwoFactorFrame({
 
 						<FrameFooter className="flex-row justify-between items-center">
 							<Tooltip>
-								<TooltipTrigger asChild>
-									<button
-										type="button"
-										className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-									>
-										<Info className="size-3.5" />
-										<span>What is 2FA?</span>
-									</button>
+								<TooltipTrigger render={<button
+									type="button"
+									className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+								/>
+								}>
+									<Info className="size-3.5" />
+									<span>What is 2FA?</span>
 								</TooltipTrigger>
 								<TooltipContent className="max-w-xs">
 									<p className="text-xs">

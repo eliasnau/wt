@@ -9,8 +9,9 @@ import { useState } from "react";
 import { queryClient } from "@/utils/orpc";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { AuthProvider } from "@/providers/auth-provider";
+import { env } from "@repo/env/web";
 
-const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+const convex = new ConvexReactClient(env.NEXT_PUBLIC_CONVEX_URL);
 
 export default function Providers({ children }: { children: React.ReactNode }) {
 	return (

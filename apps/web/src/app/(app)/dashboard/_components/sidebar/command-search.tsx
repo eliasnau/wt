@@ -210,7 +210,7 @@ export function CommandSearch() {
 					<Command items={groupedItems}>
 						<CommandInput
 							placeholder="Search for pages and commands..."
-							onValueChange={setSearchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
 						/>
 						<CommandPanel>
 							<CommandEmpty>No results found.</CommandEmpty>

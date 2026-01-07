@@ -113,11 +113,9 @@ export function ChangePasswordFrame() {
 			</FramePanel>
 			<FrameFooter className="flex-row justify-between items-center">
 				<Tooltip>
-					<TooltipTrigger asChild>
-						<button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
-							<Info className="size-3.5" />
-							<span>Password requirements</span>
-						</button>
+					<TooltipTrigger render={<button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors" />}>
+						<Info className="size-3.5" />
+						<span>Password requirements</span>
 					</TooltipTrigger>
 					<TooltipContent>
 						<p className="text-xs">Password must be at least 8 characters long</p>
@@ -126,10 +124,10 @@ export function ChangePasswordFrame() {
 
 				<Dialog open={open} onOpenChange={handleOpenChange}>
 					<AnimateIcon animateOnHover>
-					<DialogTrigger render={<Button variant="outline" />}>
-						<Key className="mr-2 size-4" />
-						Change Password
-					</DialogTrigger>
+						<DialogTrigger render={<Button variant="outline" />}>
+							<Key className="mr-2 size-4" />
+							Change Password
+						</DialogTrigger>
 					</AnimateIcon>
 					<DialogPopup>
 						<DialogHeader>
@@ -187,7 +185,7 @@ export function ChangePasswordFrame() {
 							<DialogClose render={<Button variant="ghost" />} disabled={isChangingPassword}>
 								Cancel
 							</DialogClose>
-							<Button 
+							<Button
 								onClick={handleChangePassword}
 								disabled={isChangingPassword}
 							>

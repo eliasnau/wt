@@ -292,7 +292,7 @@ export function SessionsFrame({
                 >
                   <div className="flex items-center gap-4 flex-1">
                     <Tooltip>
-                      <TooltipTrigger asChild>
+                      <TooltipTrigger>
                         <div
                           className={cn(
                             "p-2.5 rounded-lg cursor-help",

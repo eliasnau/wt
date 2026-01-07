@@ -169,10 +169,12 @@ export function GroupsChart() {
 							</Badge>
 						</FrameTitle>
 						<Tooltip>
-							<TooltipTrigger asChild>
-								<Button variant="ghost" size="sm" className="h-5 w-5 p-0">
-									<InfoIcon className="h-3.5 w-3.5 text-muted-foreground" />
-								</Button>
+							<TooltipTrigger
+								render={
+									<Button variant="ghost" size="sm" className="h-5 w-5 p-0" />
+								}
+							>
+								<InfoIcon className="h-3.5 w-3.5 text-muted-foreground" />
 							</TooltipTrigger>
 							<TooltipContent className="max-w-xs">
 								Displays the distribution of members across different activity

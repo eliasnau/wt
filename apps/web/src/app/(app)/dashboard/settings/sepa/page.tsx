@@ -47,7 +47,9 @@ export default function SepaSettingsPage() {
 			<div className="space-y-6">
 				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 					<FramePanel>
-						<h2 className="font-heading text-xl mb-2 text-foreground">Bank Account Details</h2>
+						<h2 className="font-heading text-xl mb-2 text-foreground">
+							Bank Account Details
+						</h2>
 						<p className="text-sm text-muted-foreground mb-6">
 							Enter your bank account information for SEPA direct debit
 						</p>
@@ -86,7 +88,9 @@ export default function SepaSettingsPage() {
 
 				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 					<FramePanel>
-						<h2 className="font-heading text-xl mb-2 text-foreground">Transaction Details</h2>
+						<h2 className="font-heading text-xl mb-2 text-foreground">
+							Transaction Details
+						</h2>
 						<p className="text-sm text-muted-foreground mb-6">
 							Customize how transactions appear on bank statements
 						</p>
@@ -136,7 +140,7 @@ export default function SepaSettingsPage() {
 					<FrameFooter>
 						<TooltipProvider>
 							<Tooltip>
-								<TooltipTrigger asChild>
+								<TooltipTrigger>
 									<div className="flex items-center gap-2 text-sm text-muted-foreground cursor-help w-fit">
 										<Info className="size-4" />
 										<span>Available variables</span>

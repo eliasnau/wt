@@ -126,14 +126,12 @@ const createColumns = (
 					<span>{row.original.firstName}</span>
 					<TooltipProvider>
 						<Tooltip>
-							<TooltipTrigger asChild>
-								<Badge variant="outline">
-									<span
-										aria-hidden="true"
-										className="size-1.5 rounded-full bg-red-500"
-									/>
-									Cancelled
-								</Badge>
+							<TooltipTrigger render={<Badge variant="outline" />}>
+								<span
+									aria-hidden="true"
+									className="size-1.5 rounded-full bg-red-500"
+								/>
+								Cancelled
 							</TooltipTrigger>
 							<TooltipContent>
 								<p className="text-sm">
