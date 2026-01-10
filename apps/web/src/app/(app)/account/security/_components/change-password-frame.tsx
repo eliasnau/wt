@@ -113,7 +113,7 @@ export function ChangePasswordFrame() {
 			</FramePanel>
 			<FrameFooter className="flex-row justify-between items-center">
 				<Tooltip>
-					<TooltipTrigger render={<button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors" />}>
+					<TooltipTrigger delay={0} render={<button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors" />}>
 						<Info className="size-3.5" />
 						<span>Password requirements</span>
 					</TooltipTrigger>

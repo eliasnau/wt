@@ -6,9 +6,30 @@ import { cn } from "@/lib/utils";
 
 const TooltipProvider = TooltipPrimitive.TooltipProvider;
 
-const Tooltip = TooltipPrimitive.Tooltip;
-
 const TooltipTrigger = TooltipPrimitive.TooltipTrigger;
+
+function Tooltip({
+	delay,
+	children,
+	...props
+}: TooltipPrimitive.TooltipProps & {
+	delay?: number;
+	children: React.ReactNode;
+}) {
+	if (delay !== undefined) {
+		return (
+			<TooltipPrimitive.TooltipProvider delay={delay}>
+				<TooltipPrimitive.Tooltip {...props}>
+					{children}
+				</TooltipPrimitive.Tooltip>
+			</TooltipPrimitive.TooltipProvider>
+		);
+	}
+
+	return (
+		<TooltipPrimitive.Tooltip {...props}>{children}</TooltipPrimitive.Tooltip>
+	);
+}
 
 function TooltipPopup({
 	className,
