@@ -11,20 +11,16 @@ import {
 	InputOTPSlot,
 } from "@/components/ui/input-otp";
 import { useState } from "react";
-import {
-	Loader2,
-	ArrowLeft,
-	Shield,
-	Key,
-	FileText,
-	ChevronRight,
-} from "lucide-react";
+import { Loader2, ArrowLeft, Shield, ChevronRight } from "lucide-react";
 import { authClient } from "@repo/auth/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import type { Route } from "next";
 import { useQueryState } from "nuqs";
+import { Key } from "@/components/animate-ui/icons/key";
+import { Binary } from "@/components/animate-ui/icons/binary";
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
 
 type VerificationMethod = "totp" | "backup";
 type View = "verify" | "method-selection";
@@ -138,29 +134,33 @@ export default function Verify2FA() {
 							</div>
 
 							<div className="space-y-0 border border-border rounded-lg overflow-hidden">
-								<button
-									type="button"
-									onClick={() => handleMethodSelect("totp")}
-									className="w-full px-4 py-4 flex items-center gap-3 hover:bg-accent transition-colors border-b border-border"
-								>
-									<Key className="h-5 w-5 flex-shrink-0" />
-									<span className="flex-1 text-left font-normal">
-										Authenticator App
-									</span>
-									<ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-								</button>
+								<AnimateIcon animateOnHover asChild>
+									<button
+										type="button"
+										onClick={() => handleMethodSelect("totp")}
+										className="w-full px-4 py-4 flex items-center gap-3 hover:bg-accent transition-colors border-b border-border"
+									>
+										<Key className="h-5 w-5 flex-shrink-0" />
+										<span className="flex-1 text-left font-normal">
+											Authenticator App
+										</span>
+										<ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+									</button>
+								</AnimateIcon>
 
-								<button
-									type="button"
-									onClick={() => handleMethodSelect("backup")}
-									className="w-full px-4 py-4 flex items-center gap-3 hover:bg-accent transition-colors"
-								>
-									<FileText className="h-5 w-5 flex-shrink-0" />
-									<span className="flex-1 text-left font-normal">
-										Backup Code
-									</span>
-									<ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
-								</button>
+								<AnimateIcon animateOnHover asChild>
+									<button
+										type="button"
+										onClick={() => handleMethodSelect("backup")}
+										className="w-full px-4 py-4 flex items-center gap-3 hover:bg-accent transition-colors"
+									>
+										<Binary className="h-5 w-5 flex-shrink-0" />
+										<span className="flex-1 text-left font-normal">
+											Backup Code
+										</span>
+										<ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+									</button>
+								</AnimateIcon>
 							</div>
 						</FramePanel>
 					</Frame>
