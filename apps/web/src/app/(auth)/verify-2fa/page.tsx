@@ -5,8 +5,20 @@ import { Frame, FramePanel, FrameFooter } from "@/components/ui/frame";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+	InputOTP,
+	InputOTPGroup,
+	InputOTPSlot,
+} from "@/components/ui/input-otp";
 import { useState } from "react";
-import { Loader2, ArrowLeft, Shield } from "lucide-react";
+import {
+	Loader2,
+	ArrowLeft,
+	Shield,
+	Key,
+	FileText,
+	ChevronRight,
+} from "lucide-react";
 import { authClient } from "@repo/auth/client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -15,12 +27,14 @@ import type { Route } from "next";
 import { useQueryState } from "nuqs";
 
 type VerificationMethod = "totp" | "backup";
+type View = "verify" | "method-selection";
 
 export default function Verify2FA() {
 	const [code, setCode] = useState("");
 	const [loading, setLoading] = useState(false);
 	const [trustDevice, setTrustDevice] = useState(false);
 	const [method, setMethod] = useState<VerificationMethod>("totp");
+	const [view, setView] = useState<View>("verify");
 	const router = useRouter();
 	const [redirectUrl] = useQueryState("redirectUrl", {
 		defaultValue: "/dashboard",
@@ -96,6 +110,65 @@ export default function Verify2FA() {
 		}
 	};
 
+	const handleMethodSelect = (selectedMethod: VerificationMethod) => {
+		setMethod(selectedMethod);
+		setCode("");
+		setView("verify");
+	};
+
+	if (view === "method-selection") {
+		return (
+			<div className="flex min-h-screen items-center justify-center p-4">
+				<div className="w-full max-w-md">
+					<div className="mb-4">
+						<button
+							onClick={() => setView("verify")}
+							className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+						>
+							<ArrowLeft className="h-4 w-4" />
+							Back
+						</button>
+					</div>
+					<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+						<FramePanel>
+							<div className="mb-6">
+								<h1 className="font-heading text-2xl">
+									Choose Verification Method
+								</h1>
+							</div>
+
+							<div className="space-y-0 border border-border rounded-lg overflow-hidden">
+								<button
+									type="button"
+									onClick={() => handleMethodSelect("totp")}
+									className="w-full px-4 py-4 flex items-center gap-3 hover:bg-accent transition-colors border-b border-border"
+								>
+									<Key className="h-5 w-5 flex-shrink-0" />
+									<span className="flex-1 text-left font-normal">
+										Authenticator App
+									</span>
+									<ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+								</button>
+
+								<button
+									type="button"
+									onClick={() => handleMethodSelect("backup")}
+									className="w-full px-4 py-4 flex items-center gap-3 hover:bg-accent transition-colors"
+								>
+									<FileText className="h-5 w-5 flex-shrink-0" />
+									<span className="flex-1 text-left font-normal">
+										Backup Code
+									</span>
+									<ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+								</button>
+							</div>
+						</FramePanel>
+					</Frame>
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className="flex min-h-screen items-center justify-center p-4">
 			<div className="w-full max-w-md">
@@ -121,48 +194,39 @@ export default function Verify2FA() {
 							{getDescription()}
 						</p>
 
-						<div className="flex gap-2 mb-6">
-							<Button
-								type="button"
-								variant={method === "totp" ? "default" : "outline"}
-								size="sm"
-								onClick={() => {
-									setMethod("totp");
-									setCode("");
-								}}
-								className="flex-1"
-							>
-								Authenticator
-							</Button>
-							<Button
-								type="button"
-								variant={method === "backup" ? "default" : "outline"}
-								size="sm"
-								onClick={() => {
-									setMethod("backup");
-									setCode("");
-								}}
-								className="flex-1"
-							>
-								Backup Code
-							</Button>
-						</div>
-
 						<form onSubmit={handleSubmit} className="space-y-4">
 							<div className="space-y-2">
 								<Label htmlFor="code">
 									{method === "backup" ? "Backup Code" : "Verification Code"}
 								</Label>
-								<Input
-									id="code"
-									type="text"
-									placeholder={getInputPlaceholder()}
-									required
-									onChange={(e) => setCode(e.target.value)}
-									value={code}
-									autoComplete="off"
-									maxLength={method === "totp" ? 6 : undefined}
-								/>
+								{method === "totp" ? (
+									<div className="flex justify-center py-2">
+										<InputOTP
+											maxLength={6}
+											value={code}
+											onChange={(value) => setCode(value)}
+										>
+											<InputOTPGroup>
+												<InputOTPSlot index={0} className="size-12 text-lg" />
+												<InputOTPSlot index={1} className="size-12 text-lg" />
+												<InputOTPSlot index={2} className="size-12 text-lg" />
+												<InputOTPSlot index={3} className="size-12 text-lg" />
+												<InputOTPSlot index={4} className="size-12 text-lg" />
+												<InputOTPSlot index={5} className="size-12 text-lg" />
+											</InputOTPGroup>
+										</InputOTP>
+									</div>
+								) : (
+									<Input
+										id="code"
+										type="text"
+										placeholder={getInputPlaceholder()}
+										required
+										onChange={(e) => setCode(e.target.value)}
+										value={code}
+										autoComplete="off"
+									/>
+								)}
 							</div>
 
 							<div className="flex items-center gap-2">
@@ -190,13 +254,13 @@ export default function Verify2FA() {
 
 					<FrameFooter className="flex-row items-center justify-center">
 						<p className="text-sm text-muted-foreground">
-							Having trouble?{" "}
-							<Link
-								href={"/support" as Route}
+							<button
+								type="button"
+								onClick={() => setView("method-selection")}
 								className="text-foreground hover:underline"
 							>
-								Contact Support
-							</Link>
+								Use a different method
+							</button>
 						</p>
 					</FrameFooter>
 				</Frame>
