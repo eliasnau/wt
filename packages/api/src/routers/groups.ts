@@ -208,6 +208,15 @@ export const groupsRouter = {
 						message: "Group not found",
 					});
 				}
+				//TODO: 1 query
+				const groupMembers = await DB.query.groups.getGroupMemberCount({groupId: existingGroup.id});
+
+				if (groupMembers > 0) {
+					throw new ORPCError("FORBIDDEN", {
+						message: "You cannot delete this Group. It has active Members",
+						status: 403,
+					});
+				}
 
 				const deletedGroup = await DB.mutation.groups.deleteGroup({
 					groupId: input.id,
