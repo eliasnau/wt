@@ -3,25 +3,22 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { User, Shield, Building2 } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
+import { User, Shield, Building2, ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const accountNavItems = [
 	{
 		title: "General",
-		description: "Personal information",
 		href: "/account",
 		icon: User,
 	},
 	{
 		title: "Security",
-		description: "Password & authentication",
 		href: "/account/security",
 		icon: Shield,
 	},
 	{
 		title: "Organizations",
-		description: "Manage organizations",
 		href: "/account/organizations",
 		icon: Building2,
 	},
@@ -33,76 +30,55 @@ export default function AccountLayout({
 	children: React.ReactNode;
 }) {
 	const pathname = usePathname();
+	const router = useRouter();
 
 	return (
-		<div className="bg-sidebar">
-			<div className="container max-w-6xl mx-auto py-8 space-y-8">
-				<div className="space-y-2">
-					<h1 className="text-3xl font-bold tracking-tight">
-						Account Settings
-					</h1>
-					<p className="text-base text-muted-foreground">
-						Manage your account settings and preferences
-					</p>
+		<div className="min-h-screen">
+			<div className="border-b">
+				<div className="mx-auto max-w-6xl px-4 sm:px-6">
+					<div className="flex h-14 items-center">
+						<button
+							onClick={() => router.push("/dashboard")}
+							className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+						>
+							<ArrowLeft className="h-4 w-4" />
+							<span className="hidden sm:inline">Dashboard</span>
+						</button>
+					</div>
+				</div>
+			</div>
+
+			<div className="mx-auto max-w-6xl px-4 sm:px-6">
+				<div className="border-b">
+					<div className="py-6">
+						<h1 className="text-2xl font-semibold">Account Settings</h1>
+					</div>
+
+					<nav className="-mb-px flex gap-6 overflow-x-auto">
+						{accountNavItems.map((item) => {
+							const Icon = item.icon;
+							const isActive = pathname === item.href;
+
+							return (
+								<Link
+									key={item.href}
+									href={item.href}
+									className={cn(
+										"flex items-center gap-2 border-b-2 px-1 py-3 text-sm font-medium transition-colors whitespace-nowrap",
+										isActive
+											? "border-primary text-foreground"
+											: "border-transparent text-muted-foreground hover:text-foreground hover:border-muted-foreground/50",
+									)}
+								>
+									<Icon className="size-4" />
+									<span>{item.title}</span>
+								</Link>
+							);
+						})}
+					</nav>
 				</div>
 
-				<Separator />
-
-				<div className="flex flex-col gap-8 lg:flex-row lg:gap-12">
-					<aside className="lg:w-56 shrink-0">
-						<nav className="flex gap-1 lg:flex-col overflow-x-auto lg:overflow-x-visible pb-2 lg:pb-0">
-							{accountNavItems.map((item) => {
-								const Icon = item.icon;
-								const isActive = pathname === item.href;
-
-								return (
-									<Link
-										key={item.href}
-										href={item.href}
-										className={cn(
-											"group flex items-start gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-all whitespace-nowrap lg:whitespace-normal",
-											isActive
-												? "bg-primary text-primary-foreground shadow-sm"
-												: "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
-										)}
-									>
-										<Icon
-											className={cn(
-												"size-5 shrink-0 mt-0.5",
-												isActive
-													? "text-primary-foreground"
-													: "text-muted-foreground group-hover:text-accent-foreground",
-											)}
-										/>
-										<div className="hidden lg:block">
-											<div
-												className={cn(
-													"font-semibold",
-													isActive ? "text-primary-foreground" : "",
-												)}
-											>
-												{item.title}
-											</div>
-											<div
-												className={cn(
-													"text-xs",
-													isActive
-														? "text-primary-foreground/80"
-														: "text-muted-foreground",
-												)}
-											>
-												{item.description}
-											</div>
-										</div>
-										<span className="lg:hidden">{item.title}</span>
-									</Link>
-								);
-							})}
-						</nav>
-					</aside>
-
-					<main className="flex-1 min-w-0">{children}</main>
-				</div>
+				<main className="py-6 sm:py-8">{children}</main>
 			</div>
 		</div>
 	);
