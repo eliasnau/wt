@@ -53,19 +53,15 @@ import { useQuery } from "@tanstack/react-query";
 import { AnimateIcon } from "@/components/animate-ui/icons/icon";
 import { FingerprintIcon } from "@/components/animate-ui/icons/fingerprint";
 import { Trash2 } from "@/components/animate-ui/icons/trash-2";
-
-type Passkey = {
-	id: string;
-	name: string | null;
-	createdAt: Date | string | null;
-	deviceType: string;
-	aaguid?: string | null;
-};
+import type { Passkey } from "@repo/auth";
+import { formatDistanceToNow } from "date-fns";
 
 export function PasskeyFrame({
 	currentSessionId,
+	initalPasskeys,
 }: {
 	currentSessionId: string;
+	initalPasskeys: Passkey[];
 }) {
 	const [isAddingPasskey, setIsAddingPasskey] = useState(false);
 	const [editingPasskey, setEditingPasskey] = useState<Passkey | null>(null);
@@ -87,6 +83,7 @@ export function PasskeyFrame({
 			}
 			return data;
 		},
+		initialData: initalPasskeys,
 	});
 
 	const handleAddPasskey = useCallback(async () => {
@@ -158,7 +155,10 @@ export function PasskeyFrame({
 
 	if (isPending) {
 		return (
-			<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+			<Frame
+				data-passkey-frame
+				className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72"
+			>
 				<FramePanel>
 					<h2 className="font-heading text-xl mb-2 text-foreground">
 						Passkeys
@@ -177,7 +177,10 @@ export function PasskeyFrame({
 
 	if (error) {
 		return (
-			<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+			<Frame
+				data-passkey-frame
+				className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72"
+			>
 				<FramePanel>
 					<Empty>
 						<EmptyHeader>
@@ -203,7 +206,10 @@ export function PasskeyFrame({
 	if (!passkeys || passkeys.length === 0) {
 		return (
 			<>
-				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+				<Frame
+					data-passkey-frame
+					className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72"
+				>
 					<FramePanel>
 						<Empty>
 							<EmptyHeader>
@@ -265,7 +271,10 @@ export function PasskeyFrame({
 
 	return (
 		<>
-			<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+			<Frame
+				data-passkey-frame
+				className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72"
+			>
 				<FramePanel>
 					<h2 className="font-heading text-xl mb-2 text-foreground">
 						Passkeys
@@ -290,14 +299,10 @@ export function PasskeyFrame({
 										<p className="text-xs text-muted-foreground">
 											Added{" "}
 											{passkey.createdAt
-												? new Date(passkey.createdAt).toLocaleDateString(
-														undefined,
-														{
-															year: "numeric",
-															month: "long",
-															day: "numeric",
-														},
-													)
+												? formatDistanceToNow(new Date(passkey.createdAt), {
+														addSuffix: true,
+														locale: undefined
+													})
 												: "recently"}
 										</p>
 									</div>
