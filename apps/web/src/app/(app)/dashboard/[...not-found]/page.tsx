@@ -24,7 +24,7 @@ export default function DashboardNotFound() {
 					<Button
 						className="group"
 						render={
-							<Link href="/support" target="_blank" rel="noopener noreferrer">
+							<Link href="#" target="_blank" rel="noopener noreferrer">
 								<TriangleAlert className="-ms-1 opacity-60" />
 								Support
 							</Link>

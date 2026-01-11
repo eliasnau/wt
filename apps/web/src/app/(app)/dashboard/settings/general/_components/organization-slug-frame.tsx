@@ -25,7 +25,6 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Form } from "@/components/ui/form";
 import { Frame, FrameFooter, FramePanel } from "@/components/ui/frame";
 import {
 	InputGroup,
@@ -162,7 +161,7 @@ export function OrganizationSlugFrame({
 					<DialogHeader>
 						<DialogTitle>Change Organization Slug</DialogTitle>
 					</DialogHeader>
-					<Form className="contents" onSubmit={handleEditSubmit}>
+					<form className="contents" onSubmit={handleEditSubmit}>
 						<DialogPanel>
 							<Field>
 								<FieldLabel>Organization Slug</FieldLabel>
@@ -199,7 +198,7 @@ export function OrganizationSlugFrame({
 								Continue
 							</Button>
 						</DialogFooter>
-					</Form>
+					</form>
 				</DialogPopup>
 
 				{/* Confirmation Dialog (nested) */}

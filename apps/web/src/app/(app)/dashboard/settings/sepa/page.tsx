@@ -19,7 +19,6 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Form } from "@/components/ui/form";
 import { Info } from "lucide-react";
 import {
 	Tooltip,
@@ -53,7 +52,7 @@ export default function SepaSettingsPage() {
 						<p className="text-sm text-muted-foreground mb-6">
 							Enter your bank account information for SEPA direct debit
 						</p>
-						<Form
+						<form
 							id="sepa-bank-form"
 							onSubmit={handleSubmit}
 							className="space-y-4"
@@ -74,7 +73,7 @@ export default function SepaSettingsPage() {
 								<FieldLabel>Creditor ID</FieldLabel>
 								<Input placeholder="DE98ZZZ09999999999" type="text" />
 							</Field>
-						</Form>
+						</form>
 					</FramePanel>
 					<FrameFooter className="flex-row justify-end gap-2">
 						<Button type="reset" form="sepa-bank-form" variant="ghost">
@@ -94,7 +93,7 @@ export default function SepaSettingsPage() {
 						<p className="text-sm text-muted-foreground mb-6">
 							Customize how transactions appear on bank statements
 						</p>
-						<Form
+						<form
 							id="sepa-transaction-form"
 							onSubmit={handleSubmit}
 							className="space-y-6"
@@ -127,15 +126,15 @@ export default function SepaSettingsPage() {
 							<Field>
 								<FieldLabel>Jahresbeitrag</FieldLabel>
 								<Input
-									placeholder="Annual membership fee %YEAR%"
+									placeholder="Annual membership fee for %YEAR%"
 									type="text"
 									maxLength={140}
 								/>
 								<p className="text-xs text-muted-foreground mt-1">
-									Description for annual fee (e.g., charged every January 1st)
+									Description for the annual membership payment
 								</p>
 							</Field>
-						</Form>
+						</form>
 					</FramePanel>
 					<FrameFooter>
 						<TooltipProvider>

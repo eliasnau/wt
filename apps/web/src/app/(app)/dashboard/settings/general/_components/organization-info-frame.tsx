@@ -7,7 +7,6 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Form } from "@/components/ui/form";
 import { Frame, FrameFooter, FramePanel } from "@/components/ui/frame";
 import { Input } from "@/components/ui/input";
 
@@ -76,7 +75,7 @@ export function OrganizationInfoFrame({
 				<p className="mb-6 text-muted-foreground text-sm">
 					Update your organization details and public information
 				</p>
-				<Form id="org-info-form" onSubmit={handleSubmit} className="space-y-4">
+				<form id="org-info-form" onSubmit={handleSubmit} className="space-y-4">
 					<Field>
 						<FieldLabel>Organization Name</FieldLabel>
 						<Input
@@ -86,7 +85,7 @@ export function OrganizationInfoFrame({
 							disabled={isUpdating}
 						/>
 					</Field>
-				</Form>
+				</form>
 			</FramePanel>
 			<FrameFooter className="flex-row justify-end gap-2">
 				<Button

@@ -49,7 +49,7 @@ export default function Forbidden() {
 					<FrameFooter className="flex-row items-center justify-center">
 						<p className="text-sm text-muted-foreground">
 							Need access?{" "}
-							<Link href="/support" className="text-foreground hover:underline">
+							<Link href="#" className="text-foreground hover:underline">
 								Contact Support
 							</Link>
 						</p>

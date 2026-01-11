@@ -326,6 +326,9 @@ importers:
       '@repo/db':
         specifier: workspace:*
         version: link:../db
+      '@repo/env':
+        specifier: workspace:*
+        version: link:../env
       '@vercel/functions':
         specifier: ^3.3.4
         version: 3.3.4

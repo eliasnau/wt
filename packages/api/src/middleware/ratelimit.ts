@@ -4,9 +4,10 @@ import type { Context } from "../context";
 import { logger } from "../lib/logger";
 import { ipAddress, geolocation } from "@vercel/functions";
 import { after } from "next/server";
+import { env } from "@repo/env/web";
 
 const aj = arcjet({
-	key: process.env.ARCJET_KEY!,
+	key: env.ARCJET_KEY!,
 	rules: [
 		tokenBucket({
 			mode: "LIVE",

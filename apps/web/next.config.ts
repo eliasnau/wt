@@ -24,12 +24,13 @@ const nextConfig: NextConfig = {
 	skipTrailingSlashRedirect: true,
 };
 
-export default withPostHogConfig(nextConfig, {
-	personalApiKey: env.POSTHOG_API_KEY,
-	envId: env.POSTHOG_ENV_ID,
-	host: env.NEXT_PUBLIC_POSTHOG_HOST,
-	sourcemaps: {
-		enabled: Boolean(env.POSTHOG_API_KEY && env.POSTHOG_ENV_ID),
-		deleteAfterUpload: true,
-	},
-});
+export default  nextConfig
+// withPostHogConfig(nextConfig, {
+// 	personalApiKey: env.POSTHOG_API_KEY,
+// 	envId: env.POSTHOG_ENV_ID,
+// 	host: env.NEXT_PUBLIC_POSTHOG_HOST,
+// 	sourcemaps: {
+// 		enabled: Boolean(env.POSTHOG_API_KEY && env.POSTHOG_ENV_ID),
+// 		deleteAfterUpload: true,
+// 	},
+// });

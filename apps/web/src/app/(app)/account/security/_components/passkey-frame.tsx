@@ -314,7 +314,7 @@ export function PasskeyFrame({
 										onClick={() =>
 											openEditDialog({
 												...passkey,
-												name: passkey.name ?? null,
+												name: passkey.name ?? undefined,
 											})
 										}
 										className="hover:bg-accent"
