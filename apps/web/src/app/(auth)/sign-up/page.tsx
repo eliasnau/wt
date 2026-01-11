@@ -9,20 +9,45 @@ import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import type { Route } from "next";
-import { useState } from "react";
 import { authClient } from "@repo/auth/client";
 import { useQueryState } from "nuqs";
 import posthog from "posthog-js";
+import { useForm } from "@tanstack/react-form";
 
 export default function SignUp() {
-	const [firstName, setFirstName] = useState("");
-	const [lastName, setLastName] = useState("");
-	const [email, setEmail] = useState("");
-	const [password, setPassword] = useState("");
 	const router = useRouter();
-	const [loading, setLoading] = useState(false);
 	const [redirectUrl] = useQueryState("redirectUrl", {
 		defaultValue: "/dashboard",
+	});
+
+	const form = useForm({
+		defaultValues: {
+			firstName: "",
+			lastName: "",
+			email: "",
+			password: "",
+		},
+		onSubmit: async ({ value }) => {
+			await authClient.signUp.email(
+				{
+					email: value.email,
+					password: value.password,
+					name: `${value.firstName} ${value.lastName}`,
+				},
+				{
+					onError: (ctx) => {
+						toast.error(ctx.error.message);
+					},
+					onSuccess: () => {
+						posthog.capture("auth:sign_up", {
+							auth_method: "email",
+						});
+
+						router.push(redirectUrl as Route);
+					},
+				},
+			);
+		},
 	});
 
 	return (
@@ -40,90 +65,168 @@ export default function SignUp() {
 				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 					<FramePanel>
 						<h1 className="font-heading text-2xl mb-4">Sign Up</h1>
-						<form className="space-y-3">
+						<form
+							onSubmit={(e) => {
+								e.preventDefault();
+								e.stopPropagation();
+								form.handleSubmit();
+							}}
+							className="space-y-3"
+						>
 							<div className="grid grid-cols-2 gap-4">
-								<div className="space-y-2">
-									<Label htmlFor="first-name">First name</Label>
-									<Input
-										id="first-name"
-										placeholder="Max"
-										required
-										onChange={(e) => setFirstName(e.target.value)}
-										value={firstName}
-									/>
-								</div>
-								<div className="space-y-2">
-									<Label htmlFor="last-name">Last name</Label>
-									<Input
-										id="last-name"
-										placeholder="Robinson"
-										required
-										onChange={(e) => setLastName(e.target.value)}
-										value={lastName}
-									/>
-								</div>
-							</div>
-							<div className="space-y-2">
-								<Label htmlFor="email">Email</Label>
-								<Input
-									id="email"
-									type="email"
-									placeholder="m@example.com"
-									required
-									onChange={(e) => setEmail(e.target.value)}
-									value={email}
-								/>
-							</div>
-							<div className="space-y-2">
-								<Label htmlFor="password">Password</Label>
-								<Input
-									id="password"
-									type="password"
-									value={password}
-									onChange={(e) => setPassword(e.target.value)}
-									autoComplete="new-password"
-									placeholder="Password"
-								/>
+								<form.Field
+									name="firstName"
+									validators={{
+										onBlur: ({ value }) => {
+											if (!value) return "First name is required";
+											if (value.length < 2)
+												return "First name must be at least 2 characters";
+											return undefined;
+										},
+									}}
+								>
+									{(field) => (
+										<div className="space-y-2">
+											<Label htmlFor={field.name}>First name</Label>
+											<Input
+												id={field.name}
+												name={field.name}
+												placeholder="Max"
+												value={field.state.value}
+												onBlur={field.handleBlur}
+												onChange={(e) => field.handleChange(e.target.value)}
+											/>
+											{field.state.meta.isTouched &&
+												!field.state.meta.isValidating &&
+												field.state.meta.errors.length > 0 && (
+													<p className="text-xs text-destructive">
+														{field.state.meta.errors[0]}
+													</p>
+												)}
+										</div>
+									)}
+								</form.Field>
+
+								<form.Field
+									name="lastName"
+									validators={{
+										onBlur: ({ value }) => {
+											if (!value) return "Last name is required";
+											if (value.length < 2)
+												return "Last name must be at least 2 characters";
+											return undefined;
+										},
+									}}
+								>
+									{(field) => (
+										<div className="space-y-2">
+											<Label htmlFor={field.name}>Last name</Label>
+											<Input
+												id={field.name}
+												name={field.name}
+												placeholder="Robinson"
+												value={field.state.value}
+												onBlur={field.handleBlur}
+												onChange={(e) => field.handleChange(e.target.value)}
+											/>
+											{field.state.meta.isTouched &&
+												!field.state.meta.isValidating &&
+												field.state.meta.errors.length > 0 && (
+													<p className="text-xs text-destructive">
+														{field.state.meta.errors[0]}
+													</p>
+												)}
+										</div>
+									)}
+								</form.Field>
 							</div>
 
-							<Button
-								type="submit"
-								className="w-full"
-								disabled={loading}
-								onClick={async () => {
-									await authClient.signUp.email(
-										{
-											email,
-											password,
-											name: `${firstName} ${lastName}`,
-										},
-										{
-											onResponse: () => {
-												setLoading(false);
-											},
-											onRequest: () => {
-												setLoading(true);
-											},
-											onError: (ctx) => {
-												toast.error(ctx.error.message);
-											},
-											onSuccess: () => {
-												posthog.capture("auth:sign_up", {
-													auth_method: "email",
-												});
-
-												router.push(redirectUrl as Route);
-											},
-										},
-									);
+							<form.Field
+								name="email"
+								validators={{
+									onBlur: ({ value }) => {
+										if (!value) return "Email is required";
+										if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
+											return "Invalid email address";
+										return undefined;
+									},
 								}}
 							>
-								{loading ? (
-									<Loader2 size={16} className="animate-spin" />
-								) : (
-									"Create an account"
+								{(field) => (
+									<div className="space-y-2">
+										<Label htmlFor={field.name}>Email</Label>
+										<Input
+											id={field.name}
+											name={field.name}
+											type="email"
+											placeholder="m@example.com"
+											value={field.state.value}
+											onBlur={field.handleBlur}
+											onChange={(e) => field.handleChange(e.target.value)}
+										/>
+										{field.state.meta.isTouched &&
+											!field.state.meta.isValidating &&
+											field.state.meta.errors.length > 0 && (
+												<p className="text-xs text-destructive">
+													{field.state.meta.errors[0]}
+												</p>
+											)}
+									</div>
 								)}
-							</Button>
+							</form.Field>
+
+							<form.Field
+								name="password"
+								validators={{
+									onBlur: ({ value }) => {
+										if (!value) return "Password is required";
+										if (value.length < 8)
+											return "Password must be at least 8 characters";
+										return undefined;
+									},
+								}}
+							>
+								{(field) => (
+									<div className="space-y-2">
+										<Label htmlFor={field.name}>Password</Label>
+										<Input
+											id={field.name}
+											name={field.name}
+											type="password"
+											placeholder="Password"
+											autoComplete="new-password"
+											value={field.state.value}
+											onBlur={field.handleBlur}
+											onChange={(e) => field.handleChange(e.target.value)}
+										/>
+										{field.state.meta.isTouched &&
+											!field.state.meta.isValidating &&
+											field.state.meta.errors.length > 0 && (
+												<p className="text-xs text-destructive">
+													{field.state.meta.errors[0]}
+												</p>
+											)}
+									</div>
+								)}
+							</form.Field>
+
+							<form.Subscribe
+								selector={(state) => [state.canSubmit, state.isSubmitting]}
+							>
+								{([canSubmit, isSubmitting]) => (
+									<Button
+										type="submit"
+										className="w-full"
+										disabled={!canSubmit || isSubmitting}
+									>
+										{isSubmitting ? (
+											<Loader2 size={16} className="animate-spin" />
+										) : (
+											"Create an account"
+										)}
+									</Button>
+								)}
+							</form.Subscribe>
 						</form>
 					</FramePanel>
 

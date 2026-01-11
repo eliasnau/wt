@@ -33,6 +33,11 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
+	InputOTP,
+	InputOTPGroup,
+	InputOTPSlot,
+} from "@/components/ui/input-otp";
+import {
 	Empty,
 	EmptyContent,
 	EmptyDescription,
@@ -276,7 +281,10 @@ export function TwoFactorFrame({
 
 	return (
 		<>
-			<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+			<Frame
+				data-2fa-frame
+				className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72"
+			>
 				{twoFactorEnabled ? (
 					<>
 						<FramePanel>
@@ -501,7 +509,10 @@ export function TwoFactorFrame({
 						>
 							<DialogPopup>
 								<DialogHeader>
-									<DialogTitle>Authenticator QR Code</DialogTitle>
+									<DialogTitle>
+										Authenticator QR Code
+										<Badge variant={"info"}>Recommended</Badge>
+									</DialogTitle>
 								</DialogHeader>
 								<DialogPanel className="space-y-4">
 									{!totpUri ? (
@@ -605,6 +616,9 @@ export function TwoFactorFrame({
 									<EmptyMedia variant="icon">
 										<Shield />
 									</EmptyMedia>
+									<Badge variant={"info"} className="mb-2">
+										Recommended
+									</Badge>
 									<EmptyTitle>Two-Factor Authentication</EmptyTitle>
 									<EmptyDescription>
 										Add an extra layer of security to your account with 2FA
@@ -615,11 +629,14 @@ export function TwoFactorFrame({
 
 						<FrameFooter className="flex-row justify-between items-center">
 							<Tooltip>
-								<TooltipTrigger render={<button
-									type="button"
-									className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-								/>
-								}>
+								<TooltipTrigger
+									render={
+										<button
+											type="button"
+											className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+										/>
+									}
+								>
 									<Info className="size-3.5" />
 									<span>What is 2FA?</span>
 								</TooltipTrigger>
@@ -766,19 +783,20 @@ export function TwoFactorFrame({
 														</p>
 														<Field>
 															<FieldLabel>6-digit code</FieldLabel>
-															<Input
-																type="text"
-																value={verificationCode}
-																onChange={(e) =>
-																	setVerificationCode(
-																		e.target.value
-																			.replace(/\D/g, "")
-																			.slice(0, 6),
-																	)
-																}
-																placeholder="000000"
+															<InputOTP
 																maxLength={6}
-															/>
+																value={verificationCode}
+																onChange={(value) => setVerificationCode(value)}
+															>
+																<InputOTPGroup>
+																	<InputOTPSlot index={0} />
+																	<InputOTPSlot index={1} />
+																	<InputOTPSlot index={2} />
+																	<InputOTPSlot index={3} />
+																	<InputOTPSlot index={4} />
+																	<InputOTPSlot index={5} />
+																</InputOTPGroup>
+															</InputOTP>
 														</Field>
 													</div>
 												</div>
