@@ -1,4 +1,4 @@
-import { db, eq } from "..";
+import { db, eq, count } from "..";
 import { clubMember, contract, group, groupMember } from "../schema";
 
 export const DB = {
@@ -150,6 +150,39 @@ export const DB = {
 					.limit(1);
 
 				return result[0] || null;
+			},
+			getGroupMembers: async ({ groupId }: { groupId: string }) => {
+				return db
+					.select({
+						// Member fields
+						memberId: clubMember.id,
+						firstName: clubMember.firstName,
+						lastName: clubMember.lastName,
+						email: clubMember.email,
+						phone: clubMember.phone,
+						street: clubMember.street,
+						city: clubMember.city,
+						state: clubMember.state,
+						postalCode: clubMember.postalCode,
+						country: clubMember.country,
+						notes: clubMember.notes,
+						memberCreatedAt: clubMember.createdAt,
+						memberUpdatedAt: clubMember.updatedAt,
+						// Group membership fields
+						membershipPrice: groupMember.membershipPrice,
+						joinedAt: groupMember.createdAt,
+					})
+					.from(groupMember)
+					.innerJoin(clubMember, eq(clubMember.id, groupMember.memberId))
+					.where(eq(groupMember.groupId, groupId));
+			},
+			getGroupMemberCount: async ({ groupId }: { groupId: string }) => {
+				const result = await db
+					.select({ count: count() })
+					.from(groupMember)
+					.where(eq(groupMember.groupId, groupId));
+
+				return result[0]?.count || 0;
 			},
 		},
 	},
