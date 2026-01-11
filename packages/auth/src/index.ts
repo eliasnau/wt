@@ -10,3 +10,4 @@ export type {
 	PermissionAction,
 	PermissionCheck,
 } from "./permissions";
+export type { Passkey } from "@better-auth/passkey"
