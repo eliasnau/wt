@@ -66,7 +66,7 @@ export default function GroupsPage() {
 					</FramePanel>
 				</Frame>
 			) : (
-				<GroupTable data={groups} loading={isPending} />
+				<GroupTable data={groups} loading={isPending} onRefetch={refetch} />
 			)}
 		</div>
 	);
