@@ -32,6 +32,15 @@ import {
 	MenuItem,
 	MenuPopup,
 } from "@/components/ui/menu";
+import {
+	AlertDialog,
+	AlertDialogClose,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogPopup,
+	AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
 	EditIcon,
@@ -75,9 +84,81 @@ import {
 } from "@/components/ui/input-group";
 import { Frame, FramePanel } from "@/components/ui/frame";
 import type { InferClientOutputs } from "@orpc/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Spinner } from "@/components/ui/spinner";
 
 type GroupsList = InferClientOutputs<typeof client>["groups"]["list"];
 type GroupRow = GroupsList[number];
+
+function DeleteGroupDialog({
+	group,
+	open,
+	onOpenChange,
+	onSuccess,
+}: {
+	group: GroupRow | null;
+	open: boolean;
+	onOpenChange: (open: boolean) => void;
+	onSuccess?: () => void;
+}) {
+	const deleteGroupMutation = useMutation({
+		mutationFn: async (id: string) => {
+			return client.groups.delete({ id });
+		},
+		onSuccess: () => {
+			toast.success("Group deleted successfully");
+			onOpenChange(false);
+			onSuccess?.();
+		},
+		onError: (error) => {
+			toast.error(error.message ?? "Failed to delete group");
+		},
+	});
+
+	const handleDelete = () => {
+		if (group) {
+			deleteGroupMutation.mutate(group.id);
+		}
+	};
+
+	return (
+		<AlertDialog open={open} onOpenChange={onOpenChange}>
+			<AlertDialogPopup>
+				<AlertDialogHeader>
+					<AlertDialogTitle>Delete Group</AlertDialogTitle>
+					<AlertDialogDescription>
+						Are you sure you want to delete "{group?.name}"? This action cannot
+						be undone.
+					</AlertDialogDescription>
+				</AlertDialogHeader>
+				<AlertDialogFooter>
+					<AlertDialogClose
+						render={<Button variant="outline" />}
+						disabled={deleteGroupMutation.isPending}
+					>
+						Cancel
+					</AlertDialogClose>
+					<Button
+						variant="destructive"
+						onClick={handleDelete}
+						disabled={deleteGroupMutation.isPending}
+					>
+						{deleteGroupMutation.isPending ? (
+							<>
+								<Spinner />
+								Deleting...
+							</>
+						) : (
+							"Delete"
+						)}
+					</Button>
+				</AlertDialogFooter>
+			</AlertDialogPopup>
+		</AlertDialog>
+	);
+}
+
 export const columns: ColumnDef<GroupRow>[] = [
 	{
 		accessorKey: "name",
@@ -96,8 +177,11 @@ export const columns: ColumnDef<GroupRow>[] = [
 		id: "actions",
 		header: "Actions",
 		enableSorting: false,
-		cell: ({ row }) => {
+		cell: ({ row, table }) => {
 			const group = row.original;
+			const { onDeleteGroup } = table.options.meta as {
+				onDeleteGroup: (group: GroupRow) => void;
+			};
 
 			return (
 				<div className="flex items-center justify-end gap-2">
@@ -121,7 +205,7 @@ export const columns: ColumnDef<GroupRow>[] = [
 							<MenuSeparator />
 							<MenuItem
 								variant="destructive"
-								onClick={() => console.log(group)}
+								onClick={() => onDeleteGroup(group)}
 							>
 								<TrashIcon />
 								Delete Group
@@ -137,9 +221,11 @@ export const columns: ColumnDef<GroupRow>[] = [
 export default function GroupTable({
 	data,
 	loading = false,
+	onRefetch,
 }: {
 	data: GroupRow[];
 	loading?: boolean;
+	onRefetch?: () => void;
 }) {
 	const pageSize = 10;
 
@@ -157,6 +243,14 @@ export default function GroupTable({
 		},
 	]);
 
+	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+	const [groupToDelete, setGroupToDelete] = useState<GroupRow | null>(null);
+
+	const handleDeleteGroup = (group: GroupRow) => {
+		setGroupToDelete(group);
+		setDeleteDialogOpen(true);
+	};
+
 	const table = useReactTable({
 		data: data || [],
 		columns,
@@ -168,6 +262,9 @@ export default function GroupTable({
 		onSortingChange: setSorting,
 		onColumnFiltersChange: setColumnFilters,
 		getFilteredRowModel: getFilteredRowModel(),
+		meta: {
+			onDeleteGroup: handleDeleteGroup,
+		},
 		state: {
 			pagination,
 			sorting,
@@ -390,6 +487,13 @@ export default function GroupTable({
 					</TableRow>
 				</TableFooter>
 			</Table>
+
+			<DeleteGroupDialog
+				group={groupToDelete}
+				open={deleteDialogOpen}
+				onOpenChange={setDeleteDialogOpen}
+				onSuccess={onRefetch}
+			/>
 		</div>
 	);
 }
