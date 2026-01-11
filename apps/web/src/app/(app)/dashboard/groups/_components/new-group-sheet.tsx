@@ -4,9 +4,23 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { FieldLabel } from "@/components/ui/field";
 import { Field } from "@/components/ui/field";
-import { Form } from "@/components/ui/form";
+import {
+	Form,
+	FormLabel,
+	FormItem,
+	FormDescription,
+	FormControl,
+	FormField,
+	FormMessage,
+} from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import {
+	InputGroup,
+	InputGroupAddon,
+	InputGroupInput,
+	InputGroupText,
+} from "@/components/ui/input-group";
 import {
 	Sheet,
 	SheetDescription,
@@ -22,50 +36,65 @@ import { Plus, Loader2 } from "lucide-react";
 import { client, orpc } from "@/utils/orpc";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import z from "zod";
+import { Spinner } from "@/components/ui/spinner";
 
 interface NewGroupSheetProps {
 	onGroupCreated?: () => void;
 }
 
+const formSchema = z.object({
+	name: z.string().min(3, {
+		message: "Name must be at least 3 characters.",
+	}),
+	description: z.string().optional(),
+	defaultMembershipPrice: z
+		.string()
+		.optional()
+		.refine((val) => !val || /^\d+(\.\d{1,2})?$/.test(val), {
+			message: "Please enter a valid price (e.g., 10 or 10.99)",
+		}),
+});
+
 export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 	const [open, setOpen] = React.useState(false);
-	const [name, setName] = React.useState("");
-	const [description, setDescription] = React.useState("");
-	const [price, setPrice] = React.useState("");
+
+	const form = useForm<z.infer<typeof formSchema>>({
+		resolver: zodResolver(formSchema),
+		defaultValues: {
+			name: "",
+			description: "",
+			defaultMembershipPrice: "",
+		},
+	});
 
 	const createGroupMutation = useMutation({
-		mutationFn: async (data: { name: string; description: string; defaultMembershipPrice?: string }) => {
+		mutationFn: async (data: {
+			name: string;
+			description?: string;
+			defaultMembershipPrice?: string;
+		}) => {
 			return client.groups.create(data);
 		},
 		onSuccess: () => {
 			toast.success("Group created successfully");
-			setOpen(false);
-			setName("");
-			setDescription("");
-			setPrice("");
+			form.reset();
 			onGroupCreated?.();
+			setOpen(false);
 		},
 		onError: (error) => {
-			toast.error(error instanceof Error ? error.message : "Failed to create group");
+			toast.error(error.message ?? "Failed to create group");
 		},
 	});
 
-	const handleSubmit = (event: React.FormEvent) => {
-		event.preventDefault();
-		
-		if (!name.trim()) {
-			toast.error("Name is required");
-			return;
-		}
-		if (!description.trim()) {
-			toast.error("Description is required");
-			return;
-		}
-
+	const handleSubmit = (values: z.infer<typeof formSchema>) => {
 		createGroupMutation.mutate({
-			name: name.trim(),
-			description: description.trim(),
-			defaultMembershipPrice: price.trim() || undefined,
+			name: values.name.trim(),
+			description: values.description?.trim(),
+			defaultMembershipPrice:
+				values.defaultMembershipPrice?.trim() || undefined,
 		});
 	};
 
@@ -76,60 +105,108 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 				New Group
 			</SheetTrigger>
 			<SheetPopup inset>
-				<Form className="h-full gap-0" onSubmit={handleSubmit}>
-					<SheetHeader>
-						<SheetTitle>Create Group</SheetTitle>
-						<SheetDescription>Create a new group with name, description, and membership price</SheetDescription>
-					</SheetHeader>
-					<SheetPanel className="grid gap-4">
-						<Field>
-							<FieldLabel>Name *</FieldLabel>
-							<Input
-								placeholder="Kids"
-								type="text"
-								value={name}
-								onChange={(e) => setName(e.target.value)}
-								disabled={createGroupMutation.isPending}
-								required
+				<Form {...form}>
+					<form
+						onSubmit={form.handleSubmit(handleSubmit)}
+						className="flex h-full flex-col"
+					>
+						<SheetHeader>
+							<SheetTitle>Create Group</SheetTitle>
+							<SheetDescription>
+								Create a new group with name, description, and membership price
+							</SheetDescription>
+						</SheetHeader>
+						<SheetPanel className="flex-1 grid gap-4">
+							<FormField
+								control={form.control}
+								name="name"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Name *</FormLabel>
+										<FormControl>
+											<Input
+												placeholder="Kids"
+												type="text"
+												{...field}
+												disabled={createGroupMutation.isPending}
+												required
+											/>
+										</FormControl>
+										<FormDescription>
+											This is the group's display name.
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
 							/>
-						</Field>
-						<Field>
-							<FieldLabel>Description</FieldLabel>
-							<Textarea
-								placeholder="Group description (optional)"
-								value={description}
-								onChange={(e) => setDescription(e.target.value)}
-								disabled={createGroupMutation.isPending}
-								rows={3}
+							<FormField
+								control={form.control}
+								name="description"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Description</FormLabel>
+										<FormControl>
+											<Textarea
+												placeholder="Group description (optional)"
+												rows={3}
+												{...field}
+												disabled={createGroupMutation.isPending}
+											/>
+										</FormControl>
+										<FormDescription>
+											Describe the group (optional).
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
 							/>
-						</Field>
-						<Field>
-							<FieldLabel>Default Membership Price</FieldLabel>
-							<Input
-								placeholder="0.00"
-								type="text"
-								value={price}
-								onChange={(e) => setPrice(e.target.value)}
-								disabled={createGroupMutation.isPending}
-								pattern="^\d+(\.\d{1,2})?$"
+							<FormField
+								control={form.control}
+								name="defaultMembershipPrice"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Default Membership Price</FormLabel>
+										<FormControl>
+											<InputGroup>
+												<InputGroupInput
+													placeholder="0.00"
+													type="text"
+													{...field}
+													disabled={createGroupMutation.isPending}
+													pattern="^\d+(\.\d{1,2})?$"
+												/>
+												<InputGroupAddon align="inline-end">
+													<InputGroupText>€</InputGroupText>
+												</InputGroupAddon>
+											</InputGroup>
+										</FormControl>
+										<FormDescription>
+											Optional. Enter a default price for new memberships.
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
 							/>
-						</Field>
-					</SheetPanel>
-					<SheetFooter>
-						<SheetClose render={<Button variant="ghost" />} disabled={createGroupMutation.isPending}>
-							Cancel
-						</SheetClose>
-						<Button type="submit" disabled={createGroupMutation.isPending}>
-							{createGroupMutation.isPending ? (
-								<>
-									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-									Creating...
-								</>
-							) : (
-								"Create Group"
-							)}
-						</Button>
-					</SheetFooter>
+						</SheetPanel>
+						<SheetFooter>
+							<SheetClose
+								render={<Button variant="ghost" />}
+								disabled={createGroupMutation.isPending}
+							>
+								Cancel
+							</SheetClose>
+							<Button type="submit" disabled={createGroupMutation.isPending}>
+								{createGroupMutation.isPending ? (
+									<>
+										<Spinner />
+										Creating...
+									</>
+								) : (
+									"Create Group"
+								)}
+							</Button>
+						</SheetFooter>
+					</form>
 				</Form>
 			</SheetPopup>
 		</Sheet>
