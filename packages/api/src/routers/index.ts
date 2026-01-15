@@ -3,6 +3,7 @@ import { publicProcedure } from "../index";
 import { groupsRouter } from "./groups";
 import { membersRouter } from "./members";
 import { paymentBatchesRouter } from "./paymentBatches";
+import { organizationsRouter } from "./organizations";
 
 export const appRouter = {
 	healthCheck: publicProcedure
@@ -16,6 +17,9 @@ export const appRouter = {
 	},
 	paymentBatches: {
 		...paymentBatchesRouter,
+	},
+	organizations: {
+		...organizationsRouter,
 	},
 };
 

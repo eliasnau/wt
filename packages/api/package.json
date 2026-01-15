@@ -27,10 +27,11 @@
 		"@orpc/zod": "catalog:",
 		"@repo/auth": "workspace:*",
 		"@repo/db": "workspace:*",
+		"@repo/env": "workspace:*",
 		"@vercel/functions": "^3.3.4",
+		"@vercel/sdk": "^1.18.7",
 		"dotenv": "catalog:",
 		"next": "16.1.1",
-		"zod": "catalog:",
-		"@repo/env": "workspace:*"
+		"zod": "catalog:"
 	}
 }
