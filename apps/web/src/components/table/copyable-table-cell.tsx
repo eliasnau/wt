@@ -6,6 +6,7 @@ import * as React from "react";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { toast } from "sonner";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@/components/ui/tooltip";
+import { AnimatePresence, motion } from "motion/react";
 
 export function CopyableTableCell({ value }: { value: string }) {
 	const toastTimeout = 2000;
@@ -38,11 +39,22 @@ export function CopyableTableCell({ value }: { value: string }) {
 				}
 			>
 				<span className="truncate">{value}</span>
-				{isCopied ? (
-					<CheckIcon className="size-3 shrink-0" />
-				) : (
-					<CopyIcon className="size-3 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
-				)}
+				<AnimatePresence mode="popLayout">
+					<motion.span
+						key={isCopied ? 'check' : 'copy'}
+						data-slot="copy-button-icon"
+						initial={{ scale: 0, opacity: 0.4, filter: 'blur(4px)' }}
+						animate={{ scale: 1, opacity: 1, filter: 'blur(0px)' }}
+						exit={{ scale: 0, opacity: 0.4, filter: 'blur(4px)' }}
+						transition={{ duration: 0.25 }}
+					>
+						{isCopied ? (
+							<CheckIcon className="size-3 shrink-0" />
+						) : (
+							<CopyIcon className="size-3 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+						)}
+					</motion.span>
+				</AnimatePresence>
 			</TooltipTrigger>
 			<TooltipPopup>
 				<p>Click to copy</p>
