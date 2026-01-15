@@ -10,6 +10,9 @@
 		},
 		"./functions": {
 			"default": "./src/functions/index.ts"
+		},
+		"./kv": {
+			"default": "./src/kv/index.ts"
 		}
 	},
 	"scripts": {
@@ -20,17 +23,18 @@
 		"check-types": "tsc --noEmit"
 	},
 	"devDependencies": {
-		"drizzle-kit": "^0.31.8",
+		"@repo/config": "workspace:*",
 		"@types/pg": "^8.15.6",
-		"@repo/config": "workspace:*"
+		"drizzle-kit": "^0.31.8"
 	},
 	"peerDependencies": {
 		"typescript": "^5"
 	},
 	"dependencies": {
+		"@upstash/redis": "^1.36.1",
+		"dotenv": "catalog:",
 		"drizzle-orm": "^0.45.0",
 		"pg": "^8.16.3",
-		"dotenv": "catalog:",
 		"zod": "catalog:"
 	}
 }
