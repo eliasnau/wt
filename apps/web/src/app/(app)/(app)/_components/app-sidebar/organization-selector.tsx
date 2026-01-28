@@ -20,6 +20,7 @@ import { authClient } from "@repo/auth/client";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
+import type { Route } from "next";
 
 type Organization = {
 	id: string;
@@ -58,7 +59,7 @@ export const OrganizationSelector = () => {
 				<SidebarMenuItem>
 					<SidebarMenuButton
 						size="lg"
-						onClick={() => router.push("/account/organizations")}
+						onClick={() => router.push("/account/organizations" as Route)}
 					>
 						<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
 							<Building2 className="size-4" />
@@ -81,15 +82,15 @@ export const OrganizationSelector = () => {
 				<DropdownMenu>
 					<DropdownMenuTrigger asChild>
 						<SidebarMenuButton
-							size="lg"
+							size="default"
 							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
 						>
-							<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+							<div className="flex aspect-square size-6 items-center justify-center rounded-sm bg-sidebar-primary text-sidebar-primary-foreground">
 								{activeOrg.logo ? (
 									<img
 										src={activeOrg.logo}
 										alt={activeOrg.name}
-										className="size-8 rounded-lg object-cover"
+										className="size-4 rounded-lg object-cover"
 									/>
 								) : (
 									<span className="text-lg font-semibold">
@@ -98,11 +99,7 @@ export const OrganizationSelector = () => {
 								)}
 							</div>
 							<div className="grid flex-1 text-left text-sm leading-tight">
-								<span className="truncate font-semibold">{activeOrg.name}</span>
-								<span className="truncate text-xs">
-									{activeOrg.members?.length || 0}{" "}
-									{activeOrg.members?.length === 1 ? "member" : "members"}
-								</span>
+								<span className="truncate text-primary">{activeOrg.name}</span>
 							</div>
 							<ChevronsUpDown className="ml-auto" />
 						</SidebarMenuButton>
@@ -150,7 +147,7 @@ export const OrganizationSelector = () => {
 						<DropdownMenuSeparator />
 						<DropdownMenuItem
 							className="gap-2 p-2"
-							onClick={() => router.push("/account/organizations")}
+							onClick={() => router.push("/account/organizations" as Route)}
 						>
 							<div className="flex size-6 items-center justify-center rounded-md border bg-background">
 								<Plus className="size-4" />

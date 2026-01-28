@@ -177,50 +177,6 @@ export default function SignIn() {
 								)}
 							</form.Field>
 
-							<form.Field
-								name="password"
-								validators={{
-									onBlur: ({ value }) => {
-										if (!value) return "Password is required";
-										if (value.length < 8)
-											return "Password must be at least 8 characters";
-										return undefined;
-									},
-								}}
-							>
-								{(field) => (
-									<div className="space-y-2">
-										<div className="flex items-center">
-											<Label htmlFor={field.name}>Password</Label>
-											<Link
-												href={
-													`/forgot-password${form.state.values.email ? `?email=${encodeURIComponent(form.state.values.email)}` : ""}` as Route
-												}
-												className="ml-auto inline-block text-sm underline"
-											>
-												Forgot your password?
-											</Link>
-										</div>
-										<Input
-											id={field.name}
-											name={field.name}
-											type="password"
-											placeholder="password"
-											autoComplete="password"
-											value={field.state.value}
-											onBlur={field.handleBlur}
-											onChange={(e) => field.handleChange(e.target.value)}
-										/>
-										{field.state.meta.isTouched &&
-											field.state.meta.errors.length > 0 && (
-												<p className="text-xs text-destructive">
-													{field.state.meta.errors[0]}
-												</p>
-											)}
-									</div>
-								)}
-							</form.Field>
-
 							<form.Field name="rememberMe">
 								{(field) => (
 									<div className="flex items-center gap-2">
