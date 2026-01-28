@@ -8,9 +8,15 @@ import { Menu } from "@/components/animate-ui/icons/menu";
 import { AnimateIcon } from "@/components/animate-ui/icons/icon";
 import { motion, AnimatePresence } from "motion/react";
 import { Plus } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export function MobileSidebarTrigger() {
   const { toggleSidebar, openMobile } = useSidebar();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const content = (
     <div className="fixed right-6 bottom-6 z-[100] md:hidden">
@@ -52,5 +58,5 @@ export function MobileSidebarTrigger() {
     </div>
   );
 
-  return createPortal(content, document.body);
+  return mounted ? createPortal(content, document.body) : null;
 }
