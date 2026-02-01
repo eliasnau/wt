@@ -1,0 +1,4 @@
+{
+	"title": "Sicherheit",
+	"pages": ["index", "2fa", "passkeys", "sessions"]
+}

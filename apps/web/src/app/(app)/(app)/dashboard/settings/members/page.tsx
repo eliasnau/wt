@@ -32,7 +32,7 @@ export default function MembersSettingsPage() {
 						<HeaderActions>
 							<Button onClick={() => setInviteOpen(true)}>
 								<UserPlus className="size-4" />
-								Invite Member
+								Invite User
 							</Button>
 						</HeaderActions>
 					)}

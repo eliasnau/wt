@@ -1,0 +1,54 @@
+---
+title: Passkeys
+description: Passwortlose Anmeldung mit Biometrie und Hardwareschlüsseln.
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+Passkeys bieten eine schnellere und sicherere Möglichkeit, sich als mit Passwörtern anzumelden. Sie verlassen sich auf die Sicherheitsfunktionen Ihres Geräts, wie FaceID, TouchID, Windows Hello oder einen YubiKey.
+
+## Was sind Passkeys?
+
+Passkeys sind ein moderner Ersatz für Passwörter. Anstatt eine geheime Zeichenfolge einzutippen, verwendet Ihr Gerät kryptografische Schlüssel, um Sie zu authentifizieren. Dies ist tatsächlich **sicherer** als ein traditionelles Passwort, da Passkeys nicht durch Phishing gestohlen oder erraten werden können.
+
+<Callout type="info">
+  Passkeys werden über Ihr Ökosystem synchronisiert (z. B. iCloud Keychain oder Google Password Manager), sodass ein auf Ihrem iPhone erstellter Passkey normalerweise auch auf Ihrem Mac funktioniert.
+</Callout>
+
+## Passkey hinzufügen
+
+<Steps>
+<Step>
+ 
+### Einrichtung starten
+
+Navigieren Sie zu **Konto > Sicherheit** und scrollen Sie zum Abschnitt **Passkeys**. Klicken Sie auf **Passkey hinzufügen**.
+
+![Passkey Setup](/images/account/passkey-setup.png)
+
+</Step>
+<Step>
+ 
+### Gerät authentifizieren
+
+Ihr Browser oder Betriebssystem fordert Sie zur Authentifizierung auf.
+- **Mobil/Tablet**: Verwenden Sie FaceID oder TouchID.
+- **Desktop**: Verwenden Sie Windows Hello, TouchID oder stecken Sie Ihren Sicherheitsschlüssel ein.
+
+</Step>
+<Step>
+ 
+### Passkey benennen
+
+Geben Sie Ihrem Passkey einen erkennbaren Namen (z. B. "MacBook Pro", "iPhone 15"), damit Sie ihn später verwalten können.
+
+</Step>
+</Steps>
+
+## Passkeys verwenden
+
+Sobald eingerichtet, können Sie auf dem Anmeldebildschirm **Mit Passkey anmelden** wählen. Ihr Gerät fordert Sie zur Biometrie auf (wie Fingerabdruck oder Gesichtsscan), und Sie werden sicher angemeldet.
+
+## Passkeys verwalten
+
+Sie können eine Liste aller registrierten Passkeys in den Sicherheitseinstellungen einsehen. Wenn Sie ein Gerät verlieren, sollten Sie den zugehörigen Passkey sofort löschen, um unbefugten Zugriff zu verhindern.

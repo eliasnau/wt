@@ -1,0 +1,54 @@
+---
+title: Passkeys
+description: Passwordless login with biometrics and hardware keys.
+---
+
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+Passkeys offer a faster and more secure way to sign in than passwords. They rely on your device's security capabilities, such as FaceID, TouchID, Windows Hello, or a YubiKey.
+
+## What are Passkeys?
+
+Passkeys are a modern replacement for passwords. Instead of typing a secret string of characters, your device uses cryptographic keys to authenticate you. This is actually **more secure** than a traditional password because passkeys cannot be phished or guessed.
+
+<Callout type="info">
+  Passkeys are synced across your ecosystem (e.g., iCloud Keychain or Google Password Manager), so a passkey created on your iPhone will typically work on your Mac.
+</Callout>
+
+## Adding a Passkey
+
+<Steps>
+<Step>
+ 
+### Initiate Setup
+
+Navigate to **Account > Security** and scroll to the **Passkeys** section. Click **Add Passkey**.
+
+![Passkey Setup](/images/account/passkey-setup.png)
+
+</Step>
+<Step>
+ 
+### Authenticate Device
+
+Your browser or operating system will prompt you to authenticate.
+- **Mobile/Tablet**: Use FaceID or TouchID.
+- **Desktop**: Use Windows Hello, TouchID, or insert your security key.
+
+</Step>
+<Step>
+ 
+### Name Your Passkey
+
+Give your passkey a recognizable name (e.g., "MacBook Pro", "iPhone 15") so you can manage it later.
+
+</Step>
+</Steps>
+
+## Using Passkeys
+
+Once set up, you can choose **Sign in with Passkey** on the login screen. Your device will prompt you for biometrics (like a fingerprint or face scan), and you'll be logged in securely.
+
+## Managing Passkeys
+
+You can view a list of all registered passkeys in the Security settings. If you lose a device, you should delete the associated passkey immediately to prevent unauthorized access.
