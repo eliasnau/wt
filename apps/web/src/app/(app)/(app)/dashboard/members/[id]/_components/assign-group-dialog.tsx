@@ -83,7 +83,7 @@ export function AssignGroupDialog({
 			membershipPrice: "",
 		},
 		validators: {
-			onSubmit: assignGroupSchema,
+			onSubmit: assignGroupSchema as any,
 		},
 		onSubmit: async ({ value }) => {
 			await assignGroupMutation.mutateAsync(value);
@@ -102,11 +102,9 @@ export function AssignGroupDialog({
 				}
 			}}
 		>
-			<DialogTrigger asChild>
-				<Button size="sm" variant="outline">
-					<PlusIcon className="size-4" />
-					Assign to Group
-				</Button>
+			<DialogTrigger render={<Button size="sm" variant="outline" />}>
+				<PlusIcon className="size-4" />
+				Assign to Group
 			</DialogTrigger>
 			<DialogContent>
 				<DialogHeader>
@@ -136,7 +134,7 @@ export function AssignGroupDialog({
 										<Select
 											name={field.name}
 											value={field.state.value}
-											onValueChange={(value) => field.handleChange(value)}
+											onValueChange={(value) => field.handleChange(value!)}
 											disabled={isLoadingGroups}
 										>
 											<SelectTrigger id="groupId" aria-invalid={isInvalid}>
@@ -211,10 +209,8 @@ export function AssignGroupDialog({
 				</form>
 
 				<DialogFooter>
-					<DialogClose asChild>
-						<Button type="button" variant="outline">
-							Cancel
-						</Button>
+					<DialogClose render={<Button type="button" variant="outline" />}>
+						Cancel
 					</DialogClose>
 					<Button
 						type="submit"
