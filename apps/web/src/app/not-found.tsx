@@ -1,8 +1,18 @@
-import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { Button } from "@/components/landing/_components/button";
+import {
+	Section,
+	SectionContent,
+} from "@/components/landing/_components/section";
+import {
+	PageHeading,
+	Paragraph,
+} from "@/components/landing/_components/typography";
+import { Footer } from "@/components/landing/footer";
 import { NotFoundTracker } from "./not-found-tracker";
+import { IconHouse } from "nucleo-glass";
 
 export const metadata: Metadata = {
 	description:
@@ -14,25 +24,25 @@ export default function NotFound() {
 	return (
 		<>
 			<NotFoundTracker />
-			<div className="flex min-h-screen items-center justify-center">
-				<div className="flex flex-col items-center gap-2 text-center">
-					<h1 className="font-heading text-4xl lg:text-5xl">Page not found</h1>
-					<p className="text-muted-foreground lg:text-lg">
-						This page doesn't exist
-					</p>
-					<div className="mt-4">
-						<Button
-							className="group"
-							render={
-								<Link href="/">
-									<ArrowLeft className="-ms-1 group-hover:-translate-x-0.5 opacity-60 transition-transform" />
-									Back to Home
+			<div className="flex min-h-screen flex-col justify-between bg-white">
+				<main className="flex flex-grow items-center justify-center">
+					<Section>
+						<SectionContent className="flex flex-col items-center gap-6 text-center">
+							<PageHeading>Page not found</PageHeading>
+							<Paragraph size="lg" color="light">
+								The page you&apos;re looking for doesn&apos;t exist or may have
+								been moved.
+							</Paragraph>
+							<Button size="lg" variant="primary" asChild>
+								<Link href="/" >
+									<IconHouse className="z-10 size-4"/>
+									<span className="relative z-10">Go Home</span>
 								</Link>
-							}
-							size="lg"
-						/>
-					</div>
-				</div>
+							</Button>
+						</SectionContent>
+					</Section>
+				</main>
+				<Footer className="mx-auto w-full max-w-6xl px-6 lg:px-8 xl:px-0" />
 			</div>
 		</>
 	);
