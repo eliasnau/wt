@@ -16,7 +16,7 @@ const convex = new ConvexReactClient(env.NEXT_PUBLIC_CONVEX_URL);
 
 export default function Providers({ children }: { children: React.ReactNode }) {
 	const pathname = usePathname()
-	const lightPages = ['/terms']
+	const lightPages = ['/terms', '/privacy']
 	const isLightPage = lightPages.some(path => pathname.startsWith(path)) || pathname == "/"
 	const forcedTheme = isLightPage ? 'light' : undefined
 
