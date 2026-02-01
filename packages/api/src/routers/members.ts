@@ -1,14 +1,14 @@
 import { randomBytes } from "node:crypto";
 import { ORPCError } from "@orpc/server";
 import { and, count, db, eq, ilike, inArray, or, sql } from "@repo/db";
+import { DB } from "@repo/db/functions";
 import { clubMember, contract, group, groupMember } from "@repo/db/schema";
+import { after } from "next/server";
 import { z } from "zod";
 import { protectedProcedure } from "../index";
+import { logger } from "../lib/logger";
 import { requirePermission } from "../middleware/permissions";
 import { rateLimitMiddleware } from "../middleware/ratelimit";
-import { DB } from "@repo/db/functions";
-import { logger } from "../lib/logger";
-import { after } from "next/server";
 
 const createMemberSchema = z.object({
 	// Personal info
@@ -46,6 +46,11 @@ const createMemberSchema = z.object({
 	// Optional notes
 	memberNotes: z.string().max(1000).optional(),
 	contractNotes: z.string().max(1000).optional(),
+
+	// Optional guardian info
+	guardianName: z.string().optional(),
+	guardianEmail: z.string().email().optional().or(z.literal("")),
+	guardianPhone: z.string().optional(),
 });
 
 const listMembersSchema = z.object({
@@ -227,6 +232,9 @@ export const membersRouter = {
 					postalCode: clubMember.postalCode,
 					country: clubMember.country,
 					notes: clubMember.notes,
+					guardianName: clubMember.guardianName,
+					guardianEmail: clubMember.guardianEmail,
+					guardianPhone: clubMember.guardianPhone,
 					organizationId: clubMember.organizationId,
 					createdAt: clubMember.createdAt,
 					updatedAt: clubMember.updatedAt,
@@ -374,6 +382,9 @@ export const membersRouter = {
 						bic: input.bic,
 						cardHolder: input.cardHolder,
 						notes: input.memberNotes,
+						guardianName: input.guardianName,
+						guardianEmail: input.guardianEmail || undefined,
+						guardianPhone: input.guardianPhone,
 					},
 					contractData: {
 						initialPeriod: input.initialPeriod,
@@ -388,7 +399,6 @@ export const membersRouter = {
 
 				return result;
 			} catch (error) {
-
 				after(() => {
 					logger.error("Failed to create member", {
 						error,

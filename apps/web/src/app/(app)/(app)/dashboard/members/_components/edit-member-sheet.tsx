@@ -1,19 +1,19 @@
+import type { InferClientOutputs } from "@orpc/client";
 import { Button } from "@/components/ui/button";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
 	Sheet,
-	SheetPopup,
-	SheetHeader,
-	SheetTitle,
 	SheetDescription,
-	SheetPanel,
 	SheetFooter,
+	SheetHeader,
+	SheetPanel,
+	SheetPopup,
+	SheetTitle,
 } from "@/components/ui/sheet";
 import type { client } from "@/utils/orpc";
-import type { InferClientOutputs } from '@orpc/client';
 
-type MembersListResponse = InferClientOutputs<typeof client>['members']['list'];
+type MembersListResponse = InferClientOutputs<typeof client>["members"]["list"];
 type Member = MembersListResponse["data"][number];
 
 interface EditMemberSheetProps {
@@ -68,10 +68,38 @@ export function EditMemberSheet({
 								placeholder="+1 (555) 000-0000"
 							/>
 						</Field>
+
+						<Field>
+							<FieldLabel>Guardian Name</FieldLabel>
+							<Input
+								defaultValue={member?.guardianName || ""}
+								placeholder="Guardian Name"
+							/>
+						</Field>
+						<Field>
+							<FieldLabel>Guardian Email</FieldLabel>
+							<Input
+								type="email"
+								defaultValue={member?.guardianEmail || ""}
+								placeholder="guardian@example.com"
+							/>
+						</Field>
+						<Field>
+							<FieldLabel>Guardian Phone</FieldLabel>
+							<Input
+								type="tel"
+								defaultValue={member?.guardianPhone || ""}
+								placeholder="+1 (555) 000-0000"
+							/>
+						</Field>
+
 						<Field>
 							<FieldLabel>Groups</FieldLabel>
 							<Input
-								defaultValue={member?.groupMembers?.map(gm => gm.group.name).join(", ") ?? ""}
+								defaultValue={
+									member?.groupMembers?.map((gm) => gm.group.name).join(", ") ??
+									""
+								}
 								placeholder="Enter groups separated by commas"
 							/>
 						</Field>

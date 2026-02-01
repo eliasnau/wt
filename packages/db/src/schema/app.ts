@@ -54,6 +54,11 @@ export const clubMember = pgTable("club_member", {
 	// Optional notes about the member
 	notes: text("notes"),
 
+	// Optional guardian info
+	guardianName: text("guardian_name"),
+	guardianEmail: text("guardian_email"),
+	guardianPhone: text("guardian_phone"),
+
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at")
 		.defaultNow()
@@ -127,7 +132,7 @@ export const contract = pgTable(
 		startDate: date("start_date").notNull(), // (always 1st of month)
 		initialPeriodEndDate: date("initial_period_end_date").notNull(),
 		currentPeriodEndDate: date("current_period_end_date").notNull(),
-		nextBillingDate: date("next_billing_date").notNull(), 
+		nextBillingDate: date("next_billing_date").notNull(),
 
 		joiningFeeAmount: decimal("joining_fee_amount", {
 			precision: 10,
@@ -226,7 +231,7 @@ export const payment = pgTable(
 			scale: 2,
 		})
 			.notNull()
-			.default("0"), 
+			.default("0"),
 		joiningFeeAmount: decimal("joining_fee_amount", {
 			precision: 10,
 			scale: 2,
@@ -244,7 +249,6 @@ export const payment = pgTable(
 		billingPeriodStart: date("billing_period_start").notNull(), // e.g., 2025-02-01
 		billingPeriodEnd: date("billing_period_end").notNull(), // e.g., 2025-02-28
 		dueDate: date("due_date").notNull(), // Always 1st of month (e.g., 2025-02-01)
-
 
 		notes: text("notes"),
 

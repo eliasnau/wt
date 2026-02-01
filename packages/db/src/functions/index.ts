@@ -1,4 +1,4 @@
-import { db, eq, count } from "..";
+import { count, db, eq } from "..";
 import { clubMember, contract, group, groupMember } from "../schema";
 
 export const DB = {
@@ -20,6 +20,9 @@ export const DB = {
 						postalCode: true,
 						country: true,
 						notes: true,
+						guardianName: true,
+						guardianEmail: true,
+						guardianPhone: true,
 						createdAt: true,
 						updatedAt: true,
 					},
@@ -52,6 +55,9 @@ export const DB = {
 						postalCode: clubMember.postalCode,
 						country: clubMember.country,
 						notes: clubMember.notes,
+						guardianName: clubMember.guardianName,
+						guardianEmail: clubMember.guardianEmail,
+						guardianPhone: clubMember.guardianPhone,
 						organizationId: clubMember.organizationId,
 						createdAt: clubMember.createdAt,
 						updatedAt: clubMember.updatedAt,
@@ -113,6 +119,9 @@ export const DB = {
 					postalCode: firstRow.postalCode,
 					country: firstRow.country,
 					notes: firstRow.notes,
+					guardianName: firstRow.guardianName,
+					guardianEmail: firstRow.guardianEmail,
+					guardianPhone: firstRow.guardianPhone,
 					organizationId: firstRow.organizationId,
 					createdAt: firstRow.createdAt,
 					updatedAt: firstRow.updatedAt,
@@ -210,6 +219,9 @@ export const DB = {
 					bic: string;
 					cardHolder: string;
 					notes?: string;
+					guardianName?: string;
+					guardianEmail?: string;
+					guardianPhone?: string;
 				};
 				contractData: {
 					initialPeriod: string;
@@ -239,6 +251,9 @@ export const DB = {
 							bic: memberData.bic,
 							cardHolder: memberData.cardHolder,
 							notes: memberData.notes,
+							guardianName: memberData.guardianName,
+							guardianEmail: memberData.guardianEmail,
+							guardianPhone: memberData.guardianPhone,
 							organizationId,
 						})
 						.returning();

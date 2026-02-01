@@ -49,6 +49,13 @@ const amountSchema = z
 		(val) => val === "" || /^\d+(\.\d{1,2})?$/.test(val),
 		"Invalid amount format",
 	);
+const guardianNameSchema = z.string().optional();
+const guardianEmailSchema = z
+	.string()
+	.email("Invalid email address")
+	.optional()
+	.or(z.literal(""));
+const guardianPhoneSchema = z.string().optional();
 const notesSchema = z.string().max(1000, "Maximum 1000 characters");
 
 const formSchema = z.object({
@@ -56,6 +63,9 @@ const formSchema = z.object({
 	lastName: lastNameSchema,
 	email: emailSchema,
 	phone: phoneSchema,
+	guardianName: guardianNameSchema,
+	guardianEmail: guardianEmailSchema,
+	guardianPhone: guardianPhoneSchema,
 	street: streetSchema,
 	city: citySchema,
 	state: stateSchema,
@@ -82,6 +92,9 @@ export function NewMemberForm() {
 			lastName: string;
 			email: string;
 			phone: string;
+			guardianName?: string;
+			guardianEmail?: string;
+			guardianPhone?: string;
 			street: string;
 			city: string;
 			state: string;
@@ -115,6 +128,9 @@ export function NewMemberForm() {
 			lastName: "",
 			email: "",
 			phone: "",
+			guardianName: "",
+			guardianEmail: "",
+			guardianPhone: "",
 			street: "",
 			city: "",
 			state: "",
@@ -148,6 +164,9 @@ export function NewMemberForm() {
 				lastName: value.lastName,
 				email: value.email,
 				phone: value.phone,
+				guardianName: value.guardianName,
+				guardianEmail: value.guardianEmail,
+				guardianPhone: value.guardianPhone,
 				street: value.street,
 				city: value.city,
 				state: value.state,
@@ -178,7 +197,7 @@ export function NewMemberForm() {
 						<div className="mb-4 flex size-16 items-center justify-center rounded-full border-2 border-green-500 bg-green-50 dark:bg-green-950">
 							<Check className="size-8 text-green-500" />
 						</div>
-						<h2 className="mb-2 text-2xl font-bold">Member Created</h2>
+						<h2 className="mb-2 font-bold text-2xl">Member Created</h2>
 						<p className="mb-6 text-lg text-muted-foreground">
 							The member has been successfully added to your organization
 						</p>
@@ -324,6 +343,88 @@ export function NewMemberForm() {
 										);
 									}}
 								</form.Field>
+							</div>
+
+							<FieldSeparator />
+
+							<div className="space-y-4">
+								<h3 className="font-semibold text-foreground text-sm">
+									Guardian Information (Optional)
+								</h3>
+								<div className="grid gap-4 md:grid-cols-2">
+									<form.Field name="guardianName">
+										{(field) => {
+											const isInvalid =
+												field.state.meta.isTouched && !field.state.meta.isValid;
+											return (
+												<Field data-invalid={isInvalid}>
+													<FieldLabel htmlFor="guardianName">Name</FieldLabel>
+													<Input
+														id="guardianName"
+														name={field.name}
+														value={field.state.value}
+														onBlur={field.handleBlur}
+														onChange={(e) => field.handleChange(e.target.value)}
+														aria-invalid={isInvalid}
+														placeholder="Guardian Name"
+														type="text"
+													/>
+													{isInvalid && (
+														<FieldError errors={field.state.meta.errors} />
+													)}
+												</Field>
+											);
+										}}
+									</form.Field>
+									<form.Field name="guardianEmail">
+										{(field) => {
+											const isInvalid =
+												field.state.meta.isTouched && !field.state.meta.isValid;
+											return (
+												<Field data-invalid={isInvalid}>
+													<FieldLabel htmlFor="guardianEmail">Email</FieldLabel>
+													<Input
+														id="guardianEmail"
+														name={field.name}
+														value={field.state.value}
+														onBlur={field.handleBlur}
+														onChange={(e) => field.handleChange(e.target.value)}
+														aria-invalid={isInvalid}
+														placeholder="guardian@example.com"
+														type="email"
+													/>
+													{isInvalid && (
+														<FieldError errors={field.state.meta.errors} />
+													)}
+												</Field>
+											);
+										}}
+									</form.Field>
+									<form.Field name="guardianPhone">
+										{(field) => {
+											const isInvalid =
+												field.state.meta.isTouched && !field.state.meta.isValid;
+											return (
+												<Field data-invalid={isInvalid}>
+													<FieldLabel htmlFor="guardianPhone">Phone</FieldLabel>
+													<Input
+														id="guardianPhone"
+														name={field.name}
+														value={field.state.value}
+														onBlur={field.handleBlur}
+														onChange={(e) => field.handleChange(e.target.value)}
+														aria-invalid={isInvalid}
+														placeholder="+1 234 567 8900"
+														type="tel"
+													/>
+													{isInvalid && (
+														<FieldError errors={field.state.meta.errors} />
+													)}
+												</Field>
+											);
+										}}
+									</form.Field>
+								</div>
 							</div>
 
 							<form.Field name="memberNotes">

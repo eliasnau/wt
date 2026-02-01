@@ -2,7 +2,7 @@
 
 import type { InferClientOutputs } from "@orpc/client";
 import { differenceInMonths, format } from "date-fns";
-import { ArrowRightIcon, MailIcon, PhoneIcon } from "lucide-react";
+import { ArrowRightIcon, MailIcon, PhoneIcon, UserIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CopyableTableCell } from "@/components/table/copyable-table-cell";
 import { Badge } from "@/components/ui/badge";
@@ -83,6 +83,41 @@ export function MemberOverviewSheet({
 								</div>
 							</div>
 						</div>
+
+						{(member.guardianName ||
+							member.guardianEmail ||
+							member.guardianPhone) && (
+							<>
+								<Separator />
+								<div className="space-y-3">
+									<h4 className="font-medium text-foreground text-sm">
+										Guardian Information
+									</h4>
+									<div className="space-y-2">
+										{member.guardianName && (
+											<div className="flex items-center gap-3 text-sm">
+												<UserIcon className="size-4 text-muted-foreground" />
+												<span className="text-foreground">
+													{member.guardianName}
+												</span>
+											</div>
+										)}
+										{member.guardianEmail && (
+											<div className="flex items-center gap-3 text-sm">
+												<MailIcon className="size-4 text-muted-foreground" />
+												<CopyableTableCell value={member.guardianEmail} />
+											</div>
+										)}
+										{member.guardianPhone && (
+											<div className="flex items-center gap-3 text-sm">
+												<PhoneIcon className="size-4 text-muted-foreground" />
+												<CopyableTableCell value={member.guardianPhone} />
+											</div>
+										)}
+									</div>
+								</div>
+							</>
+						)}
 
 						<Separator />
 
@@ -182,7 +217,7 @@ export function MemberOverviewSheet({
 											<p className="font-medium text-muted-foreground text-xs uppercase">
 												Member Notes
 											</p>
-											<p className="text-foreground text-sm leading-relaxed mt-1">
+											<p className="mt-1 text-foreground text-sm leading-relaxed">
 												{member.notes}
 											</p>
 										</div>
@@ -192,7 +227,7 @@ export function MemberOverviewSheet({
 											<p className="font-medium text-muted-foreground text-xs uppercase">
 												Contract Notes
 											</p>
-											<p className="text-foreground text-sm leading-relaxed mt-1">
+											<p className="mt-1 text-foreground text-sm leading-relaxed">
 												{member.contract.notes}
 											</p>
 										</div>
