@@ -14,7 +14,7 @@ import { Collapsible, CollapsibleContent } from '../ui/collapsible';
 import { cva } from 'class-variance-authority';
 import { usePathname } from 'next/navigation';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
-import type { FeedbackBlockProps } from 'fumadocs-core/mdx-plugins/remark-feedback-block';
+// import type { FeedbackBlockProps } from 'fumadocs-core/mdx-plugins/remark-feedback-block';
 import {
   actionResponse,
   blockFeedback,
@@ -194,136 +194,136 @@ export function Feedback({
  *
  * See https://fumadocs.dev/docs/integrations/feedback.
  */
-export function FeedbackBlock({
-  id,
-  body,
-  onSendAction,
-  children,
-}: FeedbackBlockProps & {
-  onSendAction: (feedback: BlockFeedback) => Promise<ActionResponse>;
-  children: ReactNode;
-}) {
-  const url = usePathname();
-  const blockId = `${url}-${id}`;
-  const { previous, setPrevious } = useSubmissionStorage(blockId, (v) => {
-    const result = blockFeedbackResult.safeParse(v);
-    if (result.success) return result.data;
-    return null;
-  });
-  const [message, setMessage] = useState('');
-  const [isPending, startTransition] = useTransition();
-  const [open, setOpen] = useState(false);
+// export function FeedbackBlock({
+//   id,
+//   body,
+//   onSendAction,
+//   children,
+// }: FeedbackBlockProps & {
+//   onSendAction: (feedback: BlockFeedback) => Promise<ActionResponse>;
+//   children: ReactNode;
+// }) {
+//   const url = usePathname();
+//   const blockId = `${url}-${id}`;
+//   const { previous, setPrevious } = useSubmissionStorage(blockId, (v) => {
+//     const result = blockFeedbackResult.safeParse(v);
+//     if (result.success) return result.data;
+//     return null;
+//   });
+//   const [message, setMessage] = useState('');
+//   const [isPending, startTransition] = useTransition();
+//   const [open, setOpen] = useState(false);
 
-  function submit(e?: SyntheticEvent) {
-    startTransition(async () => {
-      const feedback: BlockFeedback = {
-        blockId,
-        blockBody: body,
-        url,
-        message,
-      };
+//   function submit(e?: SyntheticEvent) {
+//     startTransition(async () => {
+//       const feedback: BlockFeedback = {
+//         blockId,
+//         blockBody: body,
+//         url,
+//         message,
+//       };
 
-      const response = await onSendAction(feedback);
-      setPrevious({
-        response,
-        ...feedback,
-      });
-      setMessage('');
-    });
+//       const response = await onSendAction(feedback);
+//       setPrevious({
+//         response,
+//         ...feedback,
+//       });
+//       setMessage('');
+//     });
 
-    e?.preventDefault();
-  }
+//     e?.preventDefault();
+//   }
 
-  return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <div className="relative group/feedback">
-        <div
-          className={cn(
-            'absolute -inset-1 rounded-sm pointer-events-none z-[-1]',
-            open ? 'bg-fd-accent' : 'group-hover/feedback:bg-fd-accent',
-          )}
-        />
-        <PopoverTrigger
-          className={cn(
-            buttonVariants({ variant: 'secondary', size: 'sm' }),
-            'absolute -top-7 end-0 backdrop-blur-sm text-fd-muted-foreground gap-1.5',
-            !open && 'invisible group-hover/feedback:visible hover:visible',
-          )}
-          onClick={(e) => {
-            setOpen((prev) => !prev);
-            e.stopPropagation();
-            e.preventDefault();
-          }}
-        >
-          <MessageSquare className="size-3.5" />
-          Feedback
-        </PopoverTrigger>
+//   return (
+//     <Popover open={open} onOpenChange={setOpen}>
+//       <div className="relative group/feedback">
+//         <div
+//           className={cn(
+//             'absolute -inset-1 rounded-sm pointer-events-none z-[-1]',
+//             open ? 'bg-fd-accent' : 'group-hover/feedback:bg-fd-accent',
+//           )}
+//         />
+//         <PopoverTrigger
+//           className={cn(
+//             buttonVariants({ variant: 'secondary', size: 'sm' }),
+//             'absolute -top-7 end-0 backdrop-blur-sm text-fd-muted-foreground gap-1.5',
+//             !open && 'invisible group-hover/feedback:visible hover:visible',
+//           )}
+//           onClick={(e) => {
+//             setOpen((prev) => !prev);
+//             e.stopPropagation();
+//             e.preventDefault();
+//           }}
+//         >
+//           <MessageSquare className="size-3.5" />
+//           Feedback
+//         </PopoverTrigger>
 
-        <div className="[.prose-no-margin_&]:prose-no-margin">{children}</div>
-      </div>
+//         <div className="[.prose-no-margin_&]:prose-no-margin">{children}</div>
+//       </div>
 
-      <PopoverContent className="min-w-[300px]">
-        {previous ? (
-          <div className="flex flex-col items-center gap-2 text-fd-muted-foreground text-sm text-center rounded-xl">
-            <p>Thank you for your feedback!</p>
-            <div className="flex flex-row items-center gap-2">
-              <a
-                href={previous.response?.githubUrl}
-                rel="noreferrer noopener"
-                target="_blank"
-                className={cn(
-                  buttonVariants({
-                    color: 'primary',
-                  }),
-                  'text-xs',
-                )}
-              >
-                View on GitHub
-              </a>
+//       <PopoverContent className="min-w-[300px]">
+//         {previous ? (
+//           <div className="flex flex-col items-center gap-2 text-fd-muted-foreground text-sm text-center rounded-xl">
+//             <p>Thank you for your feedback!</p>
+//             <div className="flex flex-row items-center gap-2">
+//               <a
+//                 href={previous.response?.githubUrl}
+//                 rel="noreferrer noopener"
+//                 target="_blank"
+//                 className={cn(
+//                   buttonVariants({
+//                     color: 'primary',
+//                   }),
+//                   'text-xs',
+//                 )}
+//               >
+//                 View on GitHub
+//               </a>
 
-              <button
-                className={cn(
-                  buttonVariants({
-                    color: 'secondary',
-                  }),
-                  'text-xs',
-                )}
-                onClick={() => {
-                  setPrevious(null);
-                }}
-              >
-                Submit Again
-              </button>
-            </div>
-          </div>
-        ) : (
-          <form className="flex flex-col gap-2" onSubmit={submit}>
-            <textarea
-              autoFocus
-              required
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="border rounded-lg bg-fd-secondary text-fd-secondary-foreground p-3 resize-none focus-visible:outline-none placeholder:text-fd-muted-foreground"
-              placeholder="Leave your feedback..."
-              onKeyDown={(e) => {
-                if (!e.shiftKey && e.key === 'Enter') {
-                  submit(e);
-                }
-              }}
-            />
-            <button
-              type="submit"
-              className={cn(buttonVariants({ color: 'outline' }), 'w-fit px-3')}
-              disabled={isPending}
-            >
-              Submit
-            </button>
-          </form>
-        )}
-      </PopoverContent>
-    </Popover>
-  );
-}
+//               <button
+//                 className={cn(
+//                   buttonVariants({
+//                     color: 'secondary',
+//                   }),
+//                   'text-xs',
+//                 )}
+//                 onClick={() => {
+//                   setPrevious(null);
+//                 }}
+//               >
+//                 Submit Again
+//               </button>
+//             </div>
+//           </div>
+//         ) : (
+//           <form className="flex flex-col gap-2" onSubmit={submit}>
+//             <textarea
+//               autoFocus
+//               required
+//               value={message}
+//               onChange={(e) => setMessage(e.target.value)}
+//               className="border rounded-lg bg-fd-secondary text-fd-secondary-foreground p-3 resize-none focus-visible:outline-none placeholder:text-fd-muted-foreground"
+//               placeholder="Leave your feedback..."
+//               onKeyDown={(e) => {
+//                 if (!e.shiftKey && e.key === 'Enter') {
+//                   submit(e);
+//                 }
+//               }}
+//             />
+//             <button
+//               type="submit"
+//               className={cn(buttonVariants({ color: 'outline' }), 'w-fit px-3')}
+//               disabled={isPending}
+//             >
+//               Submit
+//             </button>
+//           </form>
+//         )}
+//       </PopoverContent>
+//     </Popover>
+//   );
+// }
 
 function useSubmissionStorage<Result>(blockId: string, validate: (v: unknown) => Result | null) {
   const storageKey = `docs-feedback-${blockId}`;
