@@ -35,6 +35,7 @@ import { Frame, FrameHeader, FramePanel } from "@/components/ui/frame";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { orpc } from "@/utils/orpc";
+import { AssignGroupDialog } from "./_components/assign-group-dialog";
 import { MemberGroupsTable } from "./_components/member-groups-table";
 
 function formatDate(dateString: string | null | undefined) {
@@ -247,10 +248,7 @@ export default function MemberDetailPage() {
 								<UserPlus className="size-4" />
 								Group Memberships
 							</CollapsibleTrigger>
-							<Button size="sm" variant={"outline"}>
-								<UserPlus className="size-4" />
-								Assign to Group
-							</Button>
+							<AssignGroupDialog memberId={member.id} />
 						</FrameHeader>
 						<CollapsiblePanel>
 							<FramePanel>

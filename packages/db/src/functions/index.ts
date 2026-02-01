@@ -341,6 +341,26 @@ export const DB = {
 
 				return deletedGroup;
 			},
+			assignMemberToGroup: async ({
+				memberId,
+				groupId,
+				membershipPrice,
+			}: {
+				memberId: string;
+				groupId: string;
+				membershipPrice?: string;
+			}) => {
+				const [newGroupMember] = await db
+					.insert(groupMember)
+					.values({
+						memberId,
+						groupId,
+						membershipPrice,
+					})
+					.returning();
+
+				return newGroupMember;
+			},
 		},
 	},
 };

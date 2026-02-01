@@ -72,6 +72,15 @@ const cancelContractSchema = z.object({
 		.regex(/^\d{4}-\d{2}-01$/, "Must be 1st day of month (YYYY-MM-01)"),
 });
 
+const assignGroupSchema = z.object({
+	memberId: z.string(),
+	groupId: z.string(),
+	membershipPrice: z
+		.string()
+		.regex(/^\d+(\.\d{1,2})?$/)
+		.optional(),
+});
+
 /**
  * Calculate the end date for the initial period based on contract type
  */
@@ -475,4 +484,59 @@ export const membersRouter = {
 			return updatedContract;
 		})
 		.route({ method: "POST", path: "/members/:memberId/cancel-contract" }),
+
+	assignGroup: protectedProcedure
+		.use(rateLimitMiddleware(2))
+		.use(requirePermission({ member: ["update"] }))
+		.input(assignGroupSchema)
+		.handler(async ({ input, context }) => {
+			const organizationId = context.session.activeOrganizationId!;
+
+			// Validate member belongs to org
+			const member = await DB.query.members.getMemberById({
+				id: input.memberId,
+			});
+			if (!member || member.organizationId !== organizationId) {
+				throw new ORPCError("NOT_FOUND", { message: "Member not found" });
+			}
+
+			// Validate group belongs to org
+			const group = await DB.query.groups.getGroupById({
+				groupId: input.groupId,
+			});
+			if (!group || group.organizationId !== organizationId) {
+				throw new ORPCError("NOT_FOUND", { message: "Group not found" });
+			}
+
+			try {
+				const result = await DB.mutation.groups.assignMemberToGroup({
+					memberId: input.memberId,
+					groupId: input.groupId,
+					membershipPrice: input.membershipPrice,
+				});
+				return result;
+			} catch (error) {
+				// Check for duplicate key error (Postgres code 23505)
+				if ((error as any).code === "23505") {
+					throw new ORPCError("BAD_REQUEST", {
+						message: "Member is already in this group",
+					});
+				}
+
+				after(() => {
+					logger.error("Failed to assign group", {
+						error,
+						organizationId,
+						memberId: input.memberId,
+						groupId: input.groupId,
+						userId: context.user.id,
+					});
+				});
+
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: "Failed to assign group",
+				});
+			}
+		})
+		.route({ method: "POST", path: "/members/:memberId/groups" }),
 };

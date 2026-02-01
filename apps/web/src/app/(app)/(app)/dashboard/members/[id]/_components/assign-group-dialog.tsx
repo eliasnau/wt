@@ -1,0 +1,230 @@
+"use client";
+
+import { useForm } from "@tanstack/react-form";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { PlusIcon } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import * as z from "zod";
+import { Button } from "@/components/ui/button";
+import {
+	Dialog,
+	DialogClose,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogPanel,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { client, orpc } from "@/utils/orpc";
+
+const assignGroupSchema = z.object({
+	groupId: z.string().min(1, "Please select a group"),
+	membershipPrice: z
+		.string()
+		.regex(/^\d+(\.\d{1,2})?$/, "Invalid price format")
+		.optional()
+		.or(z.literal("")),
+});
+
+interface AssignGroupDialogProps {
+	memberId: string;
+	onSuccess?: () => void;
+}
+
+export function AssignGroupDialog({
+	memberId,
+	onSuccess,
+}: AssignGroupDialogProps) {
+	const [open, setOpen] = useState(false);
+	const queryClient = useQueryClient();
+
+	const { data: groups, isLoading: isLoadingGroups } = useQuery(
+		orpc.groups.list.queryOptions({}),
+	);
+
+	const assignGroupMutation = useMutation({
+		mutationFn: async (data: { groupId: string; membershipPrice?: string }) => {
+			return await client.members.assignGroup({
+				memberId,
+				groupId: data.groupId,
+				membershipPrice: data.membershipPrice || undefined,
+			});
+		},
+		onSuccess: () => {
+			toast.success("Member assigned to group successfully");
+			queryClient.invalidateQueries({
+				queryKey: orpc.members.get.queryKey({ input: { memberId } }),
+			});
+			setOpen(false);
+			onSuccess?.();
+		},
+		onError: (error) => {
+			toast.error(
+				error instanceof Error ? error.message : "Failed to assign group",
+			);
+		},
+	});
+
+	const form = useForm({
+		defaultValues: {
+			groupId: "",
+			membershipPrice: "",
+		},
+		validators: {
+			onSubmit: assignGroupSchema,
+		},
+		onSubmit: async ({ value }) => {
+			await assignGroupMutation.mutateAsync(value);
+		},
+	});
+
+	// Subscribe to form state changes to update UI based on selected group
+	return (
+		<Dialog
+			open={open}
+			onOpenChange={(newOpen) => {
+				setOpen(newOpen);
+				if (!newOpen) {
+					form.reset();
+					assignGroupMutation.reset();
+				}
+			}}
+		>
+			<DialogTrigger asChild>
+				<Button size="sm" variant="outline">
+					<PlusIcon className="size-4" />
+					Assign to Group
+				</Button>
+			</DialogTrigger>
+			<DialogContent>
+				<DialogHeader>
+					<DialogTitle>Assign to Group</DialogTitle>
+					<DialogDescription>
+						Add this member to a group. You can override the default membership
+						price.
+					</DialogDescription>
+				</DialogHeader>
+
+				<form
+					id="assign-group-form"
+					onSubmit={(e) => {
+						e.preventDefault();
+						e.stopPropagation();
+						form.handleSubmit();
+					}}
+				>
+					<DialogPanel className="space-y-4">
+						<form.Field name="groupId">
+							{(field) => {
+								const isInvalid =
+									field.state.meta.isTouched && !field.state.meta.isValid;
+								return (
+									<Field data-invalid={isInvalid}>
+										<FieldLabel htmlFor="groupId">Group *</FieldLabel>
+										<Select
+											name={field.name}
+											value={field.state.value}
+											onValueChange={(value) => field.handleChange(value)}
+											disabled={isLoadingGroups}
+										>
+											<SelectTrigger id="groupId" aria-invalid={isInvalid}>
+												<SelectValue placeholder="Select a group" />
+											</SelectTrigger>
+											<SelectContent>
+												{groups?.map((group) => (
+													<SelectItem key={group.id} value={group.id}>
+														{group.name}
+													</SelectItem>
+												))}
+												{groups?.length === 0 && (
+													<div className="p-2 text-center text-muted-foreground text-sm">
+														No groups found
+													</div>
+												)}
+											</SelectContent>
+										</Select>
+										{isInvalid && (
+											<FieldError errors={field.state.meta.errors} />
+										)}
+									</Field>
+								);
+							}}
+						</form.Field>
+
+						<form.Subscribe selector={(state) => state.values.groupId}>
+							{(selectedGroupId) => {
+								const selectedGroup = groups?.find(
+									(g) => g.id === selectedGroupId,
+								);
+								return (
+									<form.Field name="membershipPrice">
+										{(field) => {
+											const isInvalid =
+												field.state.meta.isTouched && !field.state.meta.isValid;
+											return (
+												<Field data-invalid={isInvalid}>
+													<FieldLabel htmlFor="membershipPrice">
+														Custom Monthly Price (Optional)
+													</FieldLabel>
+													<Input
+														id="membershipPrice"
+														name={field.name}
+														value={field.state.value}
+														onBlur={field.handleBlur}
+														onChange={(e) => field.handleChange(e.target.value)}
+														aria-invalid={isInvalid}
+														placeholder={
+															selectedGroup?.defaultMembershipPrice
+																? `Default: ${selectedGroup.defaultMembershipPrice}`
+																: "Leave empty to use default"
+														}
+													/>
+													{isInvalid && (
+														<FieldError errors={field.state.meta.errors} />
+													)}
+													{selectedGroup?.defaultMembershipPrice && (
+														<p className="text-muted-foreground text-xs">
+															Default price: €
+															{selectedGroup.defaultMembershipPrice}
+														</p>
+													)}
+												</Field>
+											);
+										}}
+									</form.Field>
+								);
+							}}
+						</form.Subscribe>
+					</DialogPanel>
+				</form>
+
+				<DialogFooter>
+					<DialogClose asChild>
+						<Button type="button" variant="outline">
+							Cancel
+						</Button>
+					</DialogClose>
+					<Button
+						type="submit"
+						form="assign-group-form"
+						disabled={assignGroupMutation.isPending}
+					>
+						{assignGroupMutation.isPending ? "Assigning..." : "Assign Group"}
+					</Button>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
+	);
+}
