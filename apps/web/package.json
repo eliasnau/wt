@@ -44,7 +44,7 @@
 		"framer-motion": "^12.23.26",
 		"input-otp": "^1.4.2",
 		"ios-haptics": "^0.1.4",
-		"lodash": "^4.17.21",
+		"lodash": "^4.17.23",
 		"lucide-react": "^0.546.0",
 		"motion": "^12.23.26",
 		"next": "^16.1.1",
