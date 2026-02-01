@@ -156,7 +156,7 @@ export function NewMemberForm() {
 			contractNotes: "",
 		},
 		validators: {
-			onSubmit: formSchema,
+			onSubmit: formSchema as any,
 		},
 		onSubmit: async ({ value }) => {
 			const submissionData = {
