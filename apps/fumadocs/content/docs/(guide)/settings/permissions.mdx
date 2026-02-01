@@ -1,0 +1,156 @@
+---
+title: Permissions & Roles
+description: Understanding Organization access levels and managing custom roles.
+---
+
+import { Shield, User, Users } from 'lucide-react';
+import { Step, Steps } from 'fumadocs-ui/components/steps';
+
+Roles determine what data a user can access and modify within your organization. The system comes with pre-defined roles for common scenarios, but also supports fully custom roles for granular control.
+
+You can manage permissions directly at [domain.com/dashboard/settings/members](https://domain.com/dashboard/settings/members).
+
+## Assigning Roles
+
+You can change a user's role at any time.
+
+<Steps>
+<Step>
+ 
+### Go to Members List
+
+Navigate to **Settings > Members** or visit [domain.com/dashboard/settings/members](https://domain.com/dashboard/settings/members).
+
+</Step>
+<Step>
+ 
+### Locate User
+
+Find the user you want to update in the list.
+
+</Step>
+<Step>
+ 
+### Edit Role
+
+Click on the **Role** dropdown menu in their row.
+
+</Step>
+<Step>
+ 
+### Save Changes
+
+Select the new role (Standard or Custom) from the list. The user's permissions will update immediately.
+
+</Step>
+</Steps>
+
+## Default Roles
+
+The platform provides three standard roles out of the box to get you started quickly.
+
+### Owner
+The **Owner** is the creator of the organization (or the person to whom ownership was transferred).
+- **Can:** Manage billing, view all data, delete the organization, and manage all users.
+- **Cannot:** Be removed by other administrators.
+
+### Administrator
+**Administrators** manage the day-to-day operations of the school.
+- **Can:** Manage students, payments, and classes. Create and manage other users (except Owners).
+- Has the same permissions as an Owner, except for deleting the organization.
+- **Cannot:** Delete the organization or remove Owners.
+
+### Member
+The **Member** role is designed for general staff (like front desk or junior instructors).
+- **Can:** View lists of members and groups. View basic student details.
+- **Cannot:** Edit members or groups. View sensitive financial information. Change organization settings.
+
+## Custom Roles
+
+<Callout type="info">
+  This feature is available on the **Pro Plan** and above.
+</Callout>
+
+If the default roles don't fit your specific workflow, you can create custom roles with specific permission sets.
+
+<Steps>
+<Step>
+ 
+### Navigate to Settings
+
+Go to your Dashboard and open **Settings > Members** or visit [domain.com/dashboard/settings/members](https://domain.com/dashboard/settings/members).
+
+</Step>
+<Step>
+ 
+### Access Roles Section
+
+Scroll down to the **Roles & Permissions** section.
+
+</Step>
+<Step>
+ 
+### Create Role
+
+Click on **Create Custom Role**. Give it a descriptive name (e.g., "Finance Manager", "Head Instructor").
+
+</Step>
+<Step>
+ 
+### Select Permissions
+
+Toggle the specific permissions you want to grant. See the [Permission Reference](#permission-reference) below for details on each option.
+
+</Step>
+<Step>
+ 
+### Assign Role
+
+Once created, you can assign this new role to any existing or new member in your organization.
+
+</Step>
+</Steps>
+
+## Permission Reference
+
+When creating custom roles, you can toggle the following permissions. These are grouped by the resource they affect.
+
+### Members (`member`)
+Control access to the student/member database.
+
+| Action | Description |
+| :--- | :--- |
+| `list` | View the list of all members. |
+| `view` | View individual member profiles (excluding sensitive payment info). |
+| `view_payment` | View sensitive payment details (IBAN, etc.) on a member profile. |
+| `create` | Add new members to the system. |
+| `update` | Edit existing member details. |
+| `delete` | Remove members from the system. |
+| `export` | Export member data to CSV/Excel. |
+
+### Groups (`groups`)
+Manage training classes and squads.
+
+| Action | Description |
+| :--- | :--- |
+| `view` | See available groups and their rosters. |
+| `create` | Create new groups. |
+| `update` | Edit group details (schedule, name). |
+| `delete` | Delete groups. |
+
+### Finance (`finance`)
+Access to billing and payment batches.
+
+| Action | Description |
+| :--- | :--- |
+| `view` | View payment batches and transaction history. |
+| `download` | Download invoices and receipts. |
+| `export` | Export financial data for accounting. |
+
+### Statistics (`statistics`)
+Access to dashboard analytics.
+
+| Action | Description |
+| :--- | :--- |
+| `view` | View charts and graphs. |
+| `export` | Export statistical data. |
