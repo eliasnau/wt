@@ -1,6 +1,5 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -10,8 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
-import { Check, Copy } from "lucide-react";
-import { type ComponentProps, useState } from "react";
+import { type ComponentProps } from "react";
 import { CopyButton } from "./animate-ui/components/buttons/copy";
 
 export type DNSRecord = {
@@ -31,46 +29,8 @@ export type DNSRecord = {
   ttl?: string;
 };
 
-export type DNSCopyButtonProps = {
-  text: string;
-  copyTimeout?: number;
-};
-
-export const DNSCopyButton = ({
-  text,
-  copyTimeout = 2000,
-}: DNSCopyButtonProps) => {
-  const [isCopied, setIsCopied] = useState<boolean>(false);
-
-  const handleCopy = async () => {
-    await navigator.clipboard.writeText(text);
-    setIsCopied(true);
-
-    setTimeout(() => {
-      setIsCopied(false);
-    }, copyTimeout);
-  };
-
-  return (
-    <Button
-      className="h-8 w-8 p-0 hover:bg-muted"
-      onClick={handleCopy}
-      size="sm"
-      variant="ghost"
-    >
-      {isCopied ? (
-        <Check className="h-4 w-4 text-green-600" />
-      ) : (
-        <Copy className="h-4 w-4" />
-      )}
-      <span className="sr-only">Copy {text}</span>
-    </Button>
-  );
-};
-
 export type DNSTableProps = ComponentProps<typeof Table> & {
   records: DNSRecord[];
-  copyTimeout?: number;
 };
 
 export const DNSTable = ({ records, className, ...props }: DNSTableProps) => {

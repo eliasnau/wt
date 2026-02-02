@@ -10,7 +10,6 @@ import {
 	Receipt,
 	UserPlus,
 } from "lucide-react";
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -23,6 +22,7 @@ import {
 	SheetTitle,
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { cn } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 
@@ -53,12 +53,12 @@ function CopyButton({
 	value: string;
 	className?: string;
 }) {
-	const [copied, setCopied] = useState(false);
+	const { copyToClipboard, isCopied } = useCopyToClipboard({
+		timeout: 2000,
+	});
 
-	const handleCopy = () => {
-		navigator.clipboard.writeText(value);
-		setCopied(true);
-		setTimeout(() => setCopied(false), 2000);
+	const handleCopy = async () => {
+		await copyToClipboard(value);
 	};
 
 	return (
@@ -71,7 +71,11 @@ function CopyButton({
 			)}
 			onClick={handleCopy}
 		>
-			{copied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
+			{isCopied ? (
+				<Check className="h-3 w-3" />
+			) : (
+				<Copy className="h-3 w-3" />
+			)}
 			<span className="sr-only">Copy</span>
 		</Button>
 	);

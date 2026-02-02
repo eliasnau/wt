@@ -1,15 +1,8 @@
 "use client";
 
+import { CopyIcon, ExternalLinkIcon, QrCodeIcon } from "lucide-react";
 import { useEffect, useState } from "react";
-import { CopyIcon, ExternalLinkIcon, QrCodeIcon, XIcon } from "lucide-react";
-
-const CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-
-function generateRegistrationCode() {
-	return Array.from({ length: 8 })
-		.map(() => CHARSET.charAt(Math.floor(Math.random() * CHARSET.length)))
-		.join("");
-}
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
 	Sheet,
@@ -20,6 +13,14 @@ import {
 	SheetPanel,
 	SheetFooter,
 } from "@/components/ui/sheet";
+
+const CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+
+function generateRegistrationCode() {
+	return Array.from({ length: 8 })
+		.map(() => CHARSET.charAt(Math.floor(Math.random() * CHARSET.length)))
+		.join("");
+}
 
 interface GenerateQRSheetProps {
 	open: boolean;
@@ -50,8 +51,14 @@ export function GenerateQRSheet({ open, onOpenChange }: GenerateQRSheetProps) {
 
 	const registrationUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/register-membership?code=${registrationCode}`;
 
-	const handleCopyUrl = () => {
-		navigator.clipboard.writeText(registrationUrl);
+	const handleCopyUrl = async () => {
+		try {
+			await navigator.clipboard.writeText(registrationUrl);
+			toast.success("Registration link copied");
+		} catch (error) {
+			console.error("Failed to copy registration link", error);
+			toast.error("Failed to copy registration link");
+		}
 	};
 
 	const handleOpenInNewTab = () => {

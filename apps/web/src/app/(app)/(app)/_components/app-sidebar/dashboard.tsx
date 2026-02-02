@@ -19,7 +19,6 @@ import {
 } from '@/components/ui/sidebar'
 import { cn } from '@/lib/utils'
 import {
-  Calendar,
   ChevronDown,
   ChevronUp,
   DollarSign,
@@ -85,12 +84,6 @@ const routes: NavRoute[] = [
     ]
   },
   {
-    id: 'events',
-    title: 'Events',
-    icon: <Calendar className='size-4' />,
-    link: '/dashboard/events'
-  },
-  {
     id: 'finance',
     title: 'Finance',
     icon: <DollarSign className='size-4' />,
@@ -98,7 +91,6 @@ const routes: NavRoute[] = [
     subs: [
       { title: 'Payment Batches', link: '/dashboard/finance/batches' },
       { title: 'Generate SEPA', link: '#' },
-      { title: 'History', link: '#' }
     ]
   },
   {
@@ -109,8 +101,7 @@ const routes: NavRoute[] = [
     subs: [
       { title: 'General', link: '/dashboard/settings/general' },
       { title: 'Users', link: '/dashboard/settings/members' },
-      { title: 'SEPA', link: '/dashboard/settings/sepa' },
-      { title: 'Billing', link: '#' }
+      { title: 'SEPA', link: '/dashboard/settings/sepa' }
     ]
   }
 ]
