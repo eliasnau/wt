@@ -134,7 +134,11 @@ export function OrganizationSlugFrame({
 								variant="ghost"
 								size="icon-sm"
 								onClick={() => {
-									window.open(`https://${slug}.domain.com`, "_blank");
+									window.open(
+										`https://${slug}.domain.com`,
+										"_blank",
+										"noopener,noreferrer",
+									);
 								}}
 								title="Open in new tab"
 							>
