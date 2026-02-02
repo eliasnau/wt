@@ -20,7 +20,6 @@
 	import { Field, FieldLabel } from "@/components/ui/field";
 	import { Input } from "@/components/ui/input";
 	import { toast } from "sonner";
-	import { Loader2 } from "lucide-react";
 import { Spinner } from "@/components/ui/spinner";
 
 	interface ProfileFrameProps {
@@ -71,9 +70,27 @@ import { Spinner } from "@/components/ui/spinner";
 		};
 
 		const handleUpdateEmail = async () => {
+			if (!newEmail.trim()) {
+				toast.error("Email cannot be empty");
+				return;
+			}
+
 			setIsUpdatingEmail(true);
 			try {
-				await new Promise((_, reject) => setTimeout(() => reject(new Error("Test error after 5 seconds")), 5000));
+				await authClient.updateUser(
+					{ email: newEmail.trim() },
+					{
+						onSuccess: () => {
+							toast.success("Email updated successfully");
+							setCurrentEmail(newEmail.trim());
+							setEmailDialogOpen(false);
+							setNewEmail("");
+						},
+						onError: (context) => {
+							toast.error(context.error.message || "Failed to change email");
+						},
+					}
+				);
 			} catch (error) {
 				toast.error("Failed to change email");
 				console.error(error);

@@ -15,7 +15,6 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,7 +33,9 @@ import {
 import { Frame, FrameHeader, FramePanel } from "@/components/ui/frame";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { orpc } from "@/utils/orpc";
+import { toast } from "sonner";
 import { AssignGroupDialog } from "./_components/assign-group-dialog";
 import { MemberGroupsTable } from "./_components/member-groups-table";
 
@@ -56,16 +57,13 @@ function formatCurrency(amount: string | null | undefined) {
 }
 
 function CopyButton({ value }: { value: string }) {
-	const [copied, setCopied] = useState(false);
+	const { copyToClipboard, isCopied } = useCopyToClipboard({
+		onCopy: () => toast.success("Copied to clipboard"),
+		timeout: 1000,
+	});
 
 	const handleCopy = async () => {
-		try {
-			await navigator.clipboard.writeText(value);
-			setCopied(true);
-			setTimeout(() => setCopied(false), 1000);
-		} catch (err) {
-			console.error("Failed to copy:", err);
-		}
+		await copyToClipboard(value);
 	};
 
 	return (
@@ -76,7 +74,7 @@ function CopyButton({ value }: { value: string }) {
 			title="Copy to clipboard"
 		>
 			<Copy className="size-3.5" />
-			{copied && <span className="text-xs">Copied!</span>}
+			{isCopied && <span className="text-xs">Copied!</span>}
 		</button>
 	);
 }

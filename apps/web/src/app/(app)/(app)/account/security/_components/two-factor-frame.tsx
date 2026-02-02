@@ -121,12 +121,17 @@ export function TwoFactorFrame({
 		}
 	};
 
-	const handleCopySecret = () => {
+	const handleCopySecret = async () => {
 		if (totpSecret) {
-			navigator.clipboard.writeText(totpSecret);
-			setCopiedSecret(true);
-			toast.success("Secret key copied to clipboard");
-			setTimeout(() => setCopiedSecret(false), 2000);
+			try {
+				await navigator.clipboard.writeText(totpSecret);
+				setCopiedSecret(true);
+				toast.success("Secret key copied to clipboard");
+				setTimeout(() => setCopiedSecret(false), 2000);
+			} catch (error) {
+				toast.error("Failed to copy secret key");
+				console.error(error);
+			}
 		}
 	};
 
@@ -257,12 +262,17 @@ export function TwoFactorFrame({
 		}
 	};
 
-	const handleCopyBackupCodes = () => {
+	const handleCopyBackupCodes = async () => {
 		const codesText = backupCodes.join("\n");
-		navigator.clipboard.writeText(codesText);
-		setCopiedCodes(true);
-		toast.success("Backup codes copied to clipboard");
-		setTimeout(() => setCopiedCodes(false), 2000);
+		try {
+			await navigator.clipboard.writeText(codesText);
+			setCopiedCodes(true);
+			toast.success("Backup codes copied to clipboard");
+			setTimeout(() => setCopiedCodes(false), 2000);
+		} catch (error) {
+			toast.error("Failed to copy backup codes");
+			console.error(error);
+		}
 	};
 
 	const handleDownloadBackupCodes = () => {
