@@ -50,7 +50,7 @@ export const wideEventMiddleware = <TContext extends BaseContext>() => {
 		const traceId =
 			context.req.headers.get("x-trace-id") || crypto.randomUUID();
 
-		const action = path.join('.');
+		const action = path.join(".");
 
 		const event: WideEvent = {
 			log_type: "wide_event",
@@ -74,7 +74,7 @@ export const wideEventMiddleware = <TContext extends BaseContext>() => {
 			event.geo = {
 				city: geo.city,
 				country: geo.country,
-				region: geo.countryRegion,
+				region: geo.region,
 			};
 		}
 
@@ -98,15 +98,25 @@ export const wideEventMiddleware = <TContext extends BaseContext>() => {
 
 			return result;
 		} catch (error: unknown) {
-			const err = error as any;
+			const err = error instanceof Error ? error : new Error("Unknown error");
+			const errorCode =
+				typeof (error as { code?: unknown })?.code === "string"
+					? (error as { code: string }).code
+					: undefined;
+			const status =
+				typeof (error as { status?: unknown })?.status === "number"
+					? (error as { status: number }).status
+					: typeof (error as { statusCode?: unknown })?.statusCode === "number"
+						? (error as { statusCode: number }).statusCode
+						: undefined;
 			event.outcome = "error";
 			event.error = {
 				type: err.name || "Error",
 				message: err.message || "Unknown error",
-				code: err.code,
+				code: errorCode,
 			};
 
-			event.status_code = err.status ?? 500;
+			event.status_code = status ?? 500;
 
 			// 4xx = client errors (warnings)
 			// 5xx = server errors (errors)

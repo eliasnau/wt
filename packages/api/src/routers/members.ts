@@ -119,6 +119,10 @@ function getNextBillingDate(startDate: string): string {
 	return startDate;
 }
 
+function isPostgresError(error: unknown): error is { code?: string } {
+	return typeof error === "object" && error !== null && "code" in error;
+}
+
 export const membersRouter = {
 	get: protectedProcedure
 		.use(rateLimitMiddleware(1))
@@ -148,7 +152,7 @@ export const membersRouter = {
 				if (error instanceof ORPCError) throw error;
 
 				after(() => {
-					logger.error("Failed to get group", {
+					logger.error("Failed to get member", {
 						error,
 						organizationId,
 						memberId: input.memberId,
@@ -517,7 +521,7 @@ export const membersRouter = {
 				return result;
 			} catch (error) {
 				// Check for duplicate key error (Postgres code 23505)
-				if ((error as any).code === "23505") {
+				if (isPostgresError(error) && error.code === "23505") {
 					throw new ORPCError("BAD_REQUEST", {
 						message: "Member is already in this group",
 					});

@@ -85,13 +85,14 @@ import { Spinner } from "@/components/ui/spinner";
 								description:
 									"Check your inbox to confirm the new email address.",
 							});
+              
 							setEmailDialogOpen(false);
 							setNewEmail("");
 						},
 						onError: (context) => {
 							toast.error(context.error.message || "Failed to change email");
 						},
-					},
+					}
 				);
 			} catch (error) {
 				toast.error("Failed to change email");

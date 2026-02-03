@@ -94,7 +94,9 @@ export const groupsRouter = {
 					});
 				});
 
-				throw error
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: "Failed to get group",
+				});
 			}
 		})
 		.route({ method: "GET", path: "/groups/:id" }),
@@ -128,7 +130,9 @@ export const groupsRouter = {
 					});
 				});
 
-				throw error
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: "Failed to create group",
+				});
 			}
 		})
 		.route({ method: "POST", path: "/groups" }),
@@ -186,7 +190,9 @@ export const groupsRouter = {
 					});
 				});
 
-				throw error
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: "Failed to update group",
+				});
 			}
 		})
 		.route({ method: "PATCH", path: "/groups/:id" }),
@@ -209,7 +215,9 @@ export const groupsRouter = {
 					});
 				}
 				//TODO: 1 query
-				const groupMembers = await DB.query.groups.getGroupMemberCount({groupId: existingGroup.id});
+				const groupMembers = await DB.query.groups.getGroupMemberCount({
+					groupId: existingGroup.id,
+				});
 
 				if (groupMembers > 0) {
 					throw new ORPCError("FORBIDDEN", {
@@ -231,7 +239,7 @@ export const groupsRouter = {
 				after(() => {
 					logger.error("Failed to delete group", {
 						error,
-						userId: context.user.id,
+						user_id: context.user.id,
 						organization_id: organizationId,
 						deployment_id: context.wideEvent.deployment_id,
 						region: context.wideEvent.region,
@@ -241,7 +249,9 @@ export const groupsRouter = {
 					});
 				});
 
-				throw error
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: "Failed to delete group",
+				});
 			}
 		})
 		.route({ method: "DELETE", path: "/groups/:id" }),
