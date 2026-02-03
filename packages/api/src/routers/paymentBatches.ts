@@ -6,11 +6,48 @@ import {
 	groupMember,
 	payment,
 	paymentBatch,
+	organization,
+	organizationSettings,
 } from "@repo/db/schema";
 import { z } from "zod";
 import { protectedProcedure } from "../index";
 import { requirePermission } from "../middleware/permissions";
 import { rateLimitMiddleware } from "../middleware/ratelimit";
+import {
+	loadSepaModule,
+	requireSepaSettings,
+	validateCreditorDetails,
+} from "../lib/sepa";
+
+type RemittanceContext = {
+	monthName: string;
+	year: string;
+	memberName: string;
+	memberId: string;
+	joinDate: string;
+};
+
+function applyTemplate(template: string, context: RemittanceContext): string {
+	return template
+		.replace(/%MONTH%/g, context.monthName)
+		.replace(/%YEAR%/g, context.year)
+		.replace(/%MEMBER_NAME%/g, context.memberName)
+		.replace(/%MEMBER_ID%/g, context.memberId)
+		.replace(/%JOIN_DATE%/g, context.joinDate);
+}
+
+function clampText(value: string, max: number): string {
+	if (value.length <= max) return value;
+	return value.slice(0, max);
+}
+
+function buildEndToEndId(prefix: string, paymentId: string): string {
+	const raw = `${prefix}.${paymentId}`;
+	if (raw.length <= 35) return raw;
+	const trimmedPrefix = prefix.slice(0, 20);
+	const trimmedPayment = paymentId.replace(/-/g, "").slice(0, 14);
+	return `${trimmedPrefix}.${trimmedPayment}`.slice(0, 35);
+}
 
 const createPaymentBatchSchema = z.object({
 	billingMonth: z
@@ -368,4 +405,227 @@ export const paymentBatchesRouter = {
 			};
 		})
 		.route({ method: "GET", path: "/payment-batches/:id" }),
+
+	exportSepa: protectedProcedure
+		.use(rateLimitMiddleware(3))
+		.use(requirePermission({ finance: ["export"] }))
+		.input(batchIdSchema)
+		.handler(async ({ input, context }) => {
+			const organizationId = context.session.activeOrganizationId!;
+
+			const [batch] = await db
+				.select({
+					id: paymentBatch.id,
+					billingMonth: paymentBatch.billingMonth,
+					batchNumber: paymentBatch.batchNumber,
+					organizationName: organization.name,
+				})
+				.from(paymentBatch)
+				.innerJoin(organization, eq(paymentBatch.organizationId, organization.id))
+				.where(
+					and(
+						eq(paymentBatch.id, input.id),
+						eq(paymentBatch.organizationId, organizationId),
+					),
+				)
+				.limit(1);
+
+			if (!batch) {
+				throw new ORPCError("NOT_FOUND", {
+					message: "Payment batch not found",
+				});
+			}
+
+			const [sepaRow] = await db
+				.select()
+				.from(organizationSettings)
+				.where(eq(organizationSettings.organizationId, organizationId))
+				.limit(1);
+
+			const sepaSettings = requireSepaSettings(sepaRow);
+
+			const payments = await db
+				.select({
+					id: payment.id,
+					contractId: payment.contractId,
+					totalAmount: payment.totalAmount,
+					membershipAmount: payment.membershipAmount,
+					joiningFeeAmount: payment.joiningFeeAmount,
+					yearlyFeeAmount: payment.yearlyFeeAmount,
+					dueDate: payment.dueDate,
+					contractStartDate: contract.startDate,
+					memberId: clubMember.id,
+					memberFirstName: clubMember.firstName,
+					memberLastName: clubMember.lastName,
+					memberIban: clubMember.iban,
+					memberBic: clubMember.bic,
+					memberCardHolder: clubMember.cardHolder,
+				})
+				.from(payment)
+				.innerJoin(contract, eq(payment.contractId, contract.id))
+				.innerJoin(clubMember, eq(contract.memberId, clubMember.id))
+				.where(
+					and(
+						eq(payment.batchId, input.id),
+						eq(contract.organizationId, organizationId),
+					),
+				)
+				.orderBy(clubMember.lastName, clubMember.firstName);
+
+			if (payments.length === 0) {
+				throw new ORPCError("BAD_REQUEST", {
+					message: "No payments found for this batch",
+				});
+			}
+
+			const sepa = await loadSepaModule();
+			validateCreditorDetails(sepa, sepaSettings);
+
+			const invalidMembers: string[] = [];
+			const bicRegex = /^[A-Z0-9]{8}([A-Z0-9]{3})?$/;
+
+			for (const paymentRow of payments) {
+				if (
+					!paymentRow.memberIban ||
+					!paymentRow.memberBic ||
+					!paymentRow.memberCardHolder
+				) {
+					invalidMembers.push(
+						`${paymentRow.memberFirstName} ${paymentRow.memberLastName}`.trim(),
+					);
+					continue;
+				}
+
+				if (!sepa.validateIBAN(paymentRow.memberIban)) {
+					invalidMembers.push(
+						`${paymentRow.memberFirstName} ${paymentRow.memberLastName}`.trim(),
+					);
+				}
+
+				if (!bicRegex.test(paymentRow.memberBic)) {
+					invalidMembers.push(
+						`${paymentRow.memberFirstName} ${paymentRow.memberLastName}`.trim(),
+					);
+				}
+
+				const amount = Number.parseFloat(paymentRow.totalAmount);
+				if (!Number.isFinite(amount) || amount <= 0) {
+					invalidMembers.push(
+						`${paymentRow.memberFirstName} ${paymentRow.memberLastName}`.trim(),
+					);
+				}
+			}
+
+			if (invalidMembers.length > 0) {
+				const sample = invalidMembers.slice(0, 3).join(", ");
+				throw new ORPCError("BAD_REQUEST", {
+					message: `SEPA export blocked. ${invalidMembers.length} member records are missing valid bank details or amounts. Fix them and try again. Example(s): ${sample}`,
+				});
+			}
+
+			const doc = new sepa.Document("pain.008.001.08");
+			const batchLabel = batch.batchNumber ?? batch.id;
+			doc.grpHdr.id = batchLabel;
+			doc.grpHdr.created = new Date();
+			doc.grpHdr.initiatorName =
+				sepaSettings.initiatorName ?? sepaSettings.creditorName;
+
+			const info = new sepa.PaymentInfo();
+			info.collectionDate = new Date(batch.billingMonth);
+			info.creditorIBAN = sepaSettings.creditorIban;
+			info.creditorBIC = sepaSettings.creditorBic;
+			info.creditorName = sepaSettings.creditorName;
+			info.creditorId = sepaSettings.creditorId;
+			if (typeof sepaSettings.batchBooking === "boolean") {
+				info.batchBooking = sepaSettings.batchBooking;
+			}
+
+			doc.addPaymentInfo(info);
+
+			const monthName = new Intl.DateTimeFormat("en-US", {
+				month: "long",
+			}).format(new Date(batch.billingMonth));
+			const year = new Intl.DateTimeFormat("en-US", { year: "numeric" }).format(
+				new Date(batch.billingMonth),
+			);
+
+			for (const paymentRow of payments) {
+				const amount = Number.parseFloat(paymentRow.totalAmount);
+				const memberName =
+					paymentRow.memberCardHolder ||
+					`${paymentRow.memberFirstName} ${paymentRow.memberLastName}`.trim();
+				const joinDate = new Date(paymentRow.contractStartDate)
+					.toISOString()
+					.split("T")[0]!;
+
+				const context: RemittanceContext = {
+					monthName,
+					year,
+					memberName,
+					memberId: paymentRow.memberId,
+					joinDate,
+				};
+
+				const remittanceParts: string[] = [];
+				const membershipAmount = Number.parseFloat(paymentRow.membershipAmount);
+				const joiningFeeAmount = Number.parseFloat(paymentRow.joiningFeeAmount);
+				const yearlyFeeAmount = Number.parseFloat(paymentRow.yearlyFeeAmount);
+
+				if (membershipAmount > 0) {
+					const template =
+						sepaSettings.remittanceTemplates?.membership ??
+						"Membership fee for %MONTH% %YEAR%";
+					remittanceParts.push(applyTemplate(template, context));
+				}
+				if (joiningFeeAmount > 0) {
+					const template =
+						sepaSettings.remittanceTemplates?.joiningFee ??
+						"Joining fee for %MEMBER_NAME%";
+					remittanceParts.push(applyTemplate(template, context));
+				}
+				if (yearlyFeeAmount > 0) {
+					const template =
+						sepaSettings.remittanceTemplates?.yearlyFee ??
+						"Annual fee for %YEAR%";
+					remittanceParts.push(applyTemplate(template, context));
+				}
+
+				const remittanceInfo = clampText(
+					remittanceParts.join(" / ") || "Membership fee",
+					140,
+				);
+
+				const tx = new sepa.Transaction();
+				tx.debitorName = memberName;
+				tx.debitorIBAN = paymentRow.memberIban;
+				tx.debitorBIC = paymentRow.memberBic;
+				tx.mandateId = paymentRow.contractId;
+				tx.mandateSignatureDate = new Date(paymentRow.contractStartDate);
+				tx.amount = amount;
+				tx.currency = "EUR";
+				tx.remittanceInfo = remittanceInfo;
+				tx.end2endId = buildEndToEndId(batchLabel, paymentRow.id);
+				info.addTransaction(tx);
+			}
+
+			let xml = "";
+			try {
+				xml = doc.toString();
+			} catch (error) {
+				throw new ORPCError("BAD_REQUEST", {
+					message:
+						error instanceof Error
+							? `SEPA export failed: ${error.message}`
+							: "SEPA export failed. Please verify the bank details.",
+				});
+			}
+			const sanitizedLabel = batchLabel.replace(/[^a-zA-Z0-9-_]/g, "-");
+			const fileName = `sepa-${sanitizedLabel}.xml`;
+
+			return {
+				fileName,
+				xml,
+			};
+		})
+		.route({ method: "GET", path: "/payment-batches/:id/sepa" }),
 };

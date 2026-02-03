@@ -14,4 +14,5 @@ export {
 	lte,
 	or,
 	sql,
+	type InferSelectModel,
 } from "drizzle-orm";

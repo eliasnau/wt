@@ -4,12 +4,18 @@ import { rateLimitMiddleware } from "../middleware/ratelimit";
 import { z } from "zod";
 import { ORPCError } from "@orpc/server";
 import { db, eq } from "@repo/db";
-import { organization } from "@repo/db/schema";
+import { organization, organizationSettings } from "@repo/db/schema";
 import { logger } from "../lib/logger";
 import { after } from "next/server";
 import { addDomain, getDomainStatus } from "../lib/add-custom-domain";
 import { projectsRemoveProjectDomain } from "@vercel/sdk/funcs/projectsRemoveProjectDomain.js";
 import { vercel, projectId, teamId } from "../lib/vercel";
+import {
+	mapSepaRowToSettings,
+	sepaSettingsSchema,
+	loadSepaModule,
+	validateCreditorDetailsIfPresent,
+} from "../lib/sepa";
 
 const addDomainSchema = z.object({
 	domain: z
@@ -19,6 +25,8 @@ const addDomainSchema = z.object({
 			"Invalid domain format",
 		),
 });
+
+const updateOrganizationSettingsSchema = sepaSettingsSchema;
 
 export const organizationsRouter = {
 	addDomain: protectedProcedure
@@ -255,5 +263,100 @@ export const organizationsRouter = {
 					message: "Failed to remove domain",
 				});
 			}
+		}),
+
+	getSettings: protectedProcedure
+		.use(rateLimitMiddleware(3))
+		.use(requirePermission({ finance: ["view"] }))
+		.handler(async ({ context }) => {
+			const organizationId = context.session.activeOrganizationId!;
+
+			const [row] = await db
+				.select({
+					creditorName: organizationSettings.creditorName,
+					creditorIban: organizationSettings.creditorIban,
+					creditorBic: organizationSettings.creditorBic,
+					creditorId: organizationSettings.creditorId,
+					initiatorName: organizationSettings.initiatorName,
+					batchBooking: organizationSettings.batchBooking,
+					remittanceMembership: organizationSettings.remittanceMembership,
+					remittanceJoiningFee: organizationSettings.remittanceJoiningFee,
+					remittanceYearlyFee: organizationSettings.remittanceYearlyFee,
+				})
+				.from(organizationSettings)
+				.where(eq(organizationSettings.organizationId, organizationId))
+				.limit(1);
+
+			return {
+				settings: row ? mapSepaRowToSettings(row) : null,
+			};
+		}),
+
+	updateSettings: protectedProcedure
+		.use(rateLimitMiddleware(5))
+		.use(requirePermission({ finance: ["export"] }))
+		.input(updateOrganizationSettingsSchema)
+		.handler(async ({ context, input }) => {
+			const organizationId = context.session.activeOrganizationId!;
+
+			const normalized = {
+				...input,
+				creditorName: input.creditorName?.trim() || undefined,
+				creditorIban:
+					input.creditorIban?.replace(/\s+/g, "").toUpperCase() ||
+					undefined,
+				creditorBic:
+					input.creditorBic?.replace(/\s+/g, "").toUpperCase() || undefined,
+				creditorId:
+					input.creditorId?.replace(/\s+/g, "").toUpperCase() || undefined,
+				initiatorName: input.initiatorName?.trim() || undefined,
+				remittanceTemplates: input.remittanceTemplates
+					? {
+							membership:
+								input.remittanceTemplates.membership?.trim() || undefined,
+							joiningFee:
+								input.remittanceTemplates.joiningFee?.trim() || undefined,
+							yearlyFee: input.remittanceTemplates.yearlyFee?.trim() || undefined,
+						}
+					: undefined,
+			};
+
+			const sepa = await loadSepaModule();
+			validateCreditorDetailsIfPresent(sepa, normalized);
+
+			const existing = await db
+				.select({ organizationId: organizationSettings.organizationId })
+				.from(organizationSettings)
+				.where(eq(organizationSettings.organizationId, organizationId))
+				.limit(1);
+
+			const values = {
+				organizationId,
+				creditorName: normalized.creditorName ?? null,
+				creditorIban: normalized.creditorIban ?? null,
+				creditorBic: normalized.creditorBic ?? null,
+				creditorId: normalized.creditorId ?? null,
+				initiatorName: normalized.initiatorName ?? null,
+				batchBooking: normalized.batchBooking ?? true,
+				remittanceMembership:
+					normalized.remittanceTemplates?.membership ?? null,
+				remittanceJoiningFee:
+					normalized.remittanceTemplates?.joiningFee ?? null,
+				remittanceYearlyFee:
+					normalized.remittanceTemplates?.yearlyFee ?? null,
+			};
+
+			if (existing.length === 0) {
+				await db.insert(organizationSettings).values(values);
+			} else {
+				await db
+					.update(organizationSettings)
+					.set(values)
+					.where(eq(organizationSettings.organizationId, organizationId));
+			}
+
+			return {
+				settings: normalized,
+			};
 		}),
 };
