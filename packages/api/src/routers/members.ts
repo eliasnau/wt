@@ -7,6 +7,7 @@ import { after } from "next/server";
 import { z } from "zod";
 import { protectedProcedure } from "../index";
 import { logger } from "../lib/logger";
+import { loadSepaModule } from "../lib/sepa";
 import { requirePermission } from "../middleware/permissions";
 import { rateLimitMiddleware } from "../middleware/ratelimit";
 
@@ -364,6 +365,20 @@ export const membersRouter = {
 			if (startDate.getDate() !== 1) {
 				throw new ORPCError("BAD_REQUEST", {
 					message: "Contract start date must be the 1st of the month",
+				});
+			}
+
+			const sepa = await loadSepaModule();
+			if (!sepa.validateIBAN(input.iban)) {
+				throw new ORPCError("BAD_REQUEST", {
+					message: "Invalid IBAN",
+				});
+			}
+
+			const bicRegex = /^[A-Z0-9]{8}([A-Z0-9]{3})?$/;
+			if (!bicRegex.test(input.bic)) {
+				throw new ORPCError("BAD_REQUEST", {
+					message: "Invalid BIC",
 				});
 			}
 
