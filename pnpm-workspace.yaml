@@ -3,12 +3,12 @@ packages:
   - packages/*
 
 catalog:
-  '@orpc/client': ^1.13.0
-  '@orpc/openapi': ^1.13.0
-  '@orpc/server': ^1.13.0
-  '@orpc/zod': ^1.13.0
-  convex: ^1.31.2
-  dotenv: ^16.4.7
+  '@orpc/client': ^1.13.4
+  '@orpc/openapi': ^1.13.4
+  '@orpc/server': ^1.13.4
+  '@orpc/zod': ^1.13.4
+  convex: ^1.31.7
+  dotenv: ^17.2.3
   next: ^16.0.7
   typescript: ^5.9.3
-  zod: ^4.1.12
+  zod: ^4.3.6

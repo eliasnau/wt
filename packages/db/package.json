@@ -24,17 +24,17 @@
 	},
 	"devDependencies": {
 		"@repo/config": "workspace:*",
-		"@types/pg": "^8.15.6",
+		"@types/pg": "^8.16.0",
 		"drizzle-kit": "^0.31.8"
 	},
 	"peerDependencies": {
 		"typescript": "^5"
 	},
 	"dependencies": {
-		"@upstash/redis": "^1.36.1",
+		"@upstash/redis": "^1.36.2",
 		"dotenv": "catalog:",
-		"drizzle-orm": "^0.45.0",
-		"pg": "^8.16.3",
+		"drizzle-orm": "^0.45.1",
+		"pg": "^8.18.0",
 		"zod": "catalog:"
 	}
 }
