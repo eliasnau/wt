@@ -1,3 +1,4 @@
+/// <reference path="../types/sepa.d.ts" />
 import { ORPCError } from "@orpc/server";
 import { z } from "zod";
 import type { InferSelectModel } from "@repo/db";

@@ -272,17 +272,7 @@ export const organizationsRouter = {
 			const organizationId = context.session.activeOrganizationId!;
 
 			const [row] = await db
-				.select({
-					creditorName: organizationSettings.creditorName,
-					creditorIban: organizationSettings.creditorIban,
-					creditorBic: organizationSettings.creditorBic,
-					creditorId: organizationSettings.creditorId,
-					initiatorName: organizationSettings.initiatorName,
-					batchBooking: organizationSettings.batchBooking,
-					remittanceMembership: organizationSettings.remittanceMembership,
-					remittanceJoiningFee: organizationSettings.remittanceJoiningFee,
-					remittanceYearlyFee: organizationSettings.remittanceYearlyFee,
-				})
+				.select()
 				.from(organizationSettings)
 				.where(eq(organizationSettings.organizationId, organizationId))
 				.limit(1);
