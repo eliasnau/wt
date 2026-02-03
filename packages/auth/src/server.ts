@@ -53,6 +53,7 @@ export const auth = betterAuth({
 				admin,
 				member,
 			},
+			disableOrganizationDeletion: true,
 			dynamicAccessControl: {
 				enabled: true,
 			},
