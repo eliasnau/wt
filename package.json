@@ -21,9 +21,9 @@
 		"db:migrate": "turbo -F @repo/db db:migrate"
 	},
 	"dependencies": {
-		"dotenv": "^17.2.3",
+		"dotenv": "catalog:",
 		"pg": "^8.18.0",
-		"zod": "^4.3.6"
+		"zod": "catalog:"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.3.14",
