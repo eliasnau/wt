@@ -6,7 +6,6 @@ import { nextCookies } from "better-auth/next-js";
 import { organization, twoFactor } from "better-auth/plugins";
 import { ac, admin, member, owner } from "./permissions";
 import { manageSessions } from "./plugins/manageSessions";
-import { redis } from "@repo/db/kv";
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, {

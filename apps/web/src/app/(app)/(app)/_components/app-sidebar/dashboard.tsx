@@ -90,7 +90,7 @@ const routes: NavRoute[] = [
     link: '/dashboard/finance/batches',
     subs: [
       { title: 'Payment Batches', link: '/dashboard/finance/batches' },
-      { title: 'Generate SEPA', link: '#' },
+      { title: 'Generate SEPA', link: '/dashboard/finance/sepa' },
     ]
   },
   {

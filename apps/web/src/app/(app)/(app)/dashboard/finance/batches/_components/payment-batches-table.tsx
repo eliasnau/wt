@@ -17,6 +17,7 @@ import {
 	ChevronUpIcon,
 	Download,
 	EyeIcon,
+	Loader2,
 	MoreVerticalIcon,
 	SearchIcon,
 	XIcon,
@@ -89,15 +90,34 @@ const formatCurrency = (amount: string | null) => {
 interface BatchActionsProps {
 	batch: BatchRow;
 	onViewBatch: (batchId: string) => void;
+	onExportSepa?: (batchId: string) => void;
+	exportingBatchId?: string | null;
 }
 
-function BatchActions({ batch, onViewBatch }: BatchActionsProps) {
+function BatchActions({
+	batch,
+	onViewBatch,
+	onExportSepa,
+	exportingBatchId,
+}: BatchActionsProps) {
+	const isExporting = exportingBatchId === batch.id;
 	return (
 		<div className="flex items-center justify-end gap-2">
 			<Button size="sm" variant="outline" onClick={() => onViewBatch(batch.id)}>
 				<EyeIcon />
 				View
 			</Button>
+			{onExportSepa ? (
+				<Button
+					size="sm"
+					variant="outline"
+					onClick={() => onExportSepa(batch.id)}
+					disabled={isExporting}
+				>
+					{isExporting ? <Loader2 className="animate-spin" /> : <Download />}
+					{isExporting ? "Preparing..." : "Download"}
+				</Button>
+			) : null}
 			<Menu>
 				<MenuTrigger
 					render={
@@ -111,9 +131,12 @@ function BatchActions({ batch, onViewBatch }: BatchActionsProps) {
 						<EyeIcon />
 						View Details
 					</MenuItem>
-					<MenuItem disabled>
-						<Download />
-						Export SEPA
+					<MenuItem
+						disabled={!onExportSepa || isExporting}
+						onClick={() => onExportSepa?.(batch.id)}
+					>
+						{isExporting ? <Loader2 className="animate-spin" /> : <Download />}
+						{isExporting ? "Preparing..." : "Export SEPA"}
 					</MenuItem>
 				</MenuPopup>
 			</Menu>
@@ -123,6 +146,8 @@ function BatchActions({ batch, onViewBatch }: BatchActionsProps) {
 
 export const createColumns = (
 	onViewBatch: (batchId: string) => void,
+	onExportSepa?: (batchId: string) => void,
+	exportingBatchId?: string | null,
 ): ColumnDef<BatchRow>[] => [
 	{
 		accessorKey: "billingMonth",
@@ -169,7 +194,14 @@ export const createColumns = (
 		enableSorting: false,
 		cell: ({ row }) => {
 			const batch = row.original;
-			return <BatchActions batch={batch} onViewBatch={onViewBatch} />;
+			return (
+				<BatchActions
+					batch={batch}
+					onViewBatch={onViewBatch}
+					onExportSepa={onExportSepa}
+					exportingBatchId={exportingBatchId}
+				/>
+			);
 		},
 	},
 ];
@@ -177,9 +209,13 @@ export const createColumns = (
 export default function PaymentBatchesTable({
 	data,
 	loading = false,
+	onExportSepa,
+	exportingBatchId,
 }: {
 	data: BatchRow[];
 	loading?: boolean;
+	onExportSepa?: (batchId: string) => void;
+	exportingBatchId?: string | null;
 }) {
 	const pageSize = 10;
 
@@ -206,8 +242,8 @@ export default function PaymentBatchesTable({
 	}, []);
 
 	const columns = useMemo(
-		() => createColumns(handleViewBatch),
-		[handleViewBatch],
+		() => createColumns(handleViewBatch, onExportSepa, exportingBatchId),
+		[handleViewBatch, onExportSepa, exportingBatchId],
 	);
 
 	const table = useReactTable({

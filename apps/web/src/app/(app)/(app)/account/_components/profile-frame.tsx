@@ -77,12 +77,15 @@ import { Spinner } from "@/components/ui/spinner";
 
 			setIsUpdatingEmail(true);
 			try {
-				await authClient.updateUser(
-					{ email: newEmail.trim() },
+				await authClient.changeEmail(
+					{ newEmail: newEmail.trim() },
 					{
 						onSuccess: () => {
-							toast.success("Email updated successfully");
-							setCurrentEmail(newEmail.trim());
+							toast.success("Verification email sent", {
+								description:
+									"Check your inbox to confirm the new email address.",
+							});
+              
 							setEmailDialogOpen(false);
 							setNewEmail("");
 						},

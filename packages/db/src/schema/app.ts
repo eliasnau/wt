@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+	boolean,
 	date,
 	decimal,
 	index,
@@ -211,6 +212,31 @@ export const paymentBatch = pgTable(
 			table.billingMonth,
 		), // One batch per org per month
 	],
+);
+
+export const organizationSettings = pgTable(
+	"organization_settings",
+	{
+		organizationId: text("organization_id")
+			.notNull()
+			.references(() => organization.id, { onDelete: "cascade" })
+			.primaryKey(),
+		creditorName: text("creditor_name"),
+		creditorIban: text("creditor_iban"),
+		creditorBic: text("creditor_bic"),
+		creditorId: text("creditor_id"),
+		initiatorName: text("initiator_name"),
+		batchBooking: boolean("batch_booking").default(true),
+		remittanceMembership: text("remittance_membership"),
+		remittanceJoiningFee: text("remittance_joining_fee"),
+		remittanceYearlyFee: text("remittance_yearly_fee"),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+		updatedAt: timestamp("updated_at")
+			.defaultNow()
+			.$onUpdate(() => new Date())
+			.notNull(),
+	},
+	(table) => [index("organization_settings_org_id_idx").on(table.organizationId)],
 );
 
 export const payment = pgTable(
