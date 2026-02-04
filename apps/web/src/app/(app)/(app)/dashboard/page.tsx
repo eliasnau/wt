@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
 	ArrowRight,
 	BadgeCheck,
+	BarChart3,
 	CreditCard,
 	Settings,
 	Users,
@@ -111,7 +112,7 @@ export default async function DashboardPage() {
 							variant="outline"
 							render={
 								<Link href="/dashboard/statistics/overview">
-									<CreditCard className="size-4" />
+									<BarChart3 className="size-4" />
 									This Month’s Statistics
 								</Link>
 							}
