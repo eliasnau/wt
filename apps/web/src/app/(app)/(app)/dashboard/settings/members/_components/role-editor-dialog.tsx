@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@repo/auth/client";
-import type { PermissionCheck } from "@repo/auth/permissions";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -18,18 +17,18 @@ import {
 } from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Loader2 } from "lucide-react";
-import { Info } from "lucide-react";
+import { Info, Loader2 } from "lucide-react";
 import {
 	defaultRoleNames,
 	formatRoleLabel,
 	normalizePermissions,
+	type PermissionMap,
 } from "./role-utils";
 import { RolePermissionGrid } from "./role-permission-grid";
 import type { OrganizationRole } from "./use-org-roles";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
-const EMPTY_PERMISSIONS: PermissionCheck = {};
+const EMPTY_PERMISSIONS: PermissionMap = {};
 
 type RoleEditorDialogProps = {
 	open: boolean;
@@ -47,13 +46,13 @@ export function RoleEditorDialog({
 	const { data: activeOrg } = authClient.useActiveOrganization();
 	const queryClient = useQueryClient();
 	const [roleName, setRoleName] = useState("");
-	const [permissions, setPermissions] = useState<PermissionCheck>({});
+	const [permissions, setPermissions] = useState<PermissionMap>({});
 
 	useEffect(() => {
 		if (!open) return;
 		if (mode === "edit" && role) {
 			setRoleName(role.role ?? "");
-			setPermissions((role.permission ?? {}) as PermissionCheck);
+			setPermissions((role.permission ?? {}) as PermissionMap);
 			return;
 		}
 		setRoleName("");
@@ -82,9 +81,7 @@ export function RoleEditorDialog({
 					roleName: role?.role,
 					organizationId: activeOrg?.id,
 					data: {
-						permission: Object.keys(normalized).length
-							? (normalized as Record<string, string[]>)
-							: undefined,
+						permission: normalized,
 						roleName: trimmedName,
 					},
 				});
@@ -96,9 +93,7 @@ export function RoleEditorDialog({
 
 			const result = await authClient.organization.createRole({
 				role: trimmedName,
-				permission: Object.keys(normalized).length
-					? (normalized as Record<string, string[]>)
-					: undefined,
+				permission: normalized,
 				organizationId: activeOrg?.id,
 			});
 			if (result.error) {

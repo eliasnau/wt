@@ -3,20 +3,26 @@ import {
 	roles as builtinRoles,
 	statement,
 } from "@repo/auth/permissions";
-import type { PermissionCheck } from "@repo/auth/permissions";
+
+export type PermissionMap = Record<string, string[]>;
 
 export const defaultRoleNames = Object.keys(builtinRoles);
 
 export const builtinRolePermissions = Object.fromEntries(
 	Object.entries(builtinRoles).map(([name, role]) => [
 		name,
-		role.statements as PermissionCheck,
+		role.statements as PermissionMap,
 	]),
-) as Record<string, PermissionCheck>;
+) as Record<string, PermissionMap>;
 
 const hiddenResources = new Set(["team", "teams"]);
 
-const allPermissionResources = Object.entries(statement)
+export type PermissionResourceItem = {
+	resource: string;
+	actions: string[];
+};
+
+const allPermissionResources: PermissionResourceItem[] = Object.entries(statement)
 	.filter(([resource]) => !hiddenResources.has(resource))
 	.map(([resource, actions]) => ({
 		resource,
@@ -24,7 +30,7 @@ const allPermissionResources = Object.entries(statement)
 	}))
 	.sort((a, b) => a.resource.localeCompare(b.resource));
 
-const customResourceSet = new Set(customResources);
+const customResourceSet = new Set<string>(customResources as string[]);
 
 export const permissionResources = allPermissionResources;
 
@@ -34,7 +40,7 @@ export const permissionResourceGroups = [
 		title: "App permissions",
 		description: "Permissions specific to your product features.",
 		resources: allPermissionResources.filter(({ resource }) =>
-			customResourceSet.has(resource as keyof typeof statement),
+			customResourceSet.has(resource),
 		),
 	},
 	{
@@ -42,7 +48,7 @@ export const permissionResourceGroups = [
 		title: "Core permissions",
 		description: "Foundation permissions used across accounts and access control.",
 		resources: allPermissionResources.filter(
-			({ resource }) => !customResourceSet.has(resource as keyof typeof statement),
+			({ resource }) => !customResourceSet.has(resource),
 		),
 	},
 ] as const;
@@ -53,7 +59,7 @@ export function formatRoleLabel(role: string) {
 		.replace(/\b\w/g, (char) => char.toUpperCase());
 }
 
-export function flattenPermissions(permissions?: PermissionCheck | null) {
+export function flattenPermissions(permissions?: PermissionMap | null) {
 	if (!permissions) return [] as string[];
 	const entries = Object.entries(permissions);
 	const flattened: string[] = [];
@@ -65,15 +71,15 @@ export function flattenPermissions(permissions?: PermissionCheck | null) {
 	return flattened;
 }
 
-export function countPermissions(permissions?: PermissionCheck | null) {
+export function countPermissions(permissions?: PermissionMap | null) {
 	return flattenPermissions(permissions).length;
 }
 
-export function normalizePermissions(permissions: PermissionCheck) {
-	const next: PermissionCheck = {};
+export function normalizePermissions(permissions: PermissionMap) {
+	const next: PermissionMap = {};
 	for (const [resource, actions] of Object.entries(permissions)) {
 		if (actions && actions.length > 0) {
-			next[resource as keyof PermissionCheck] = actions;
+			next[resource] = actions;
 		}
 	}
 	return next;

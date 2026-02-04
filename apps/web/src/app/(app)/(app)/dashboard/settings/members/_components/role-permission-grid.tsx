@@ -2,46 +2,49 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
-import { permissionResources, permissionResourceGroups } from "./role-utils";
-import type { PermissionCheck } from "@repo/auth/permissions";
+import {
+	permissionResources,
+	permissionResourceGroups,
+	type PermissionMap,
+} from "./role-utils";
 
 function toggleAction(
-	permissions: PermissionCheck,
+	permissions: PermissionMap,
 	resource: string,
 	action: string,
 ) {
-	const current = permissions[resource as keyof PermissionCheck] ?? [];
+	const current = permissions[resource] ?? [];
 	const hasAction = current.includes(action);
 	const nextActions = hasAction
 		? current.filter((value) => value !== action)
 		: [...current, action];
 	const nextPermissions = { ...permissions };
 	if (nextActions.length === 0) {
-		delete nextPermissions[resource as keyof PermissionCheck];
+		delete nextPermissions[resource];
 	} else {
-		nextPermissions[resource as keyof PermissionCheck] = nextActions;
+		nextPermissions[resource] = nextActions;
 	}
 	return nextPermissions;
 }
 
 function setAllActions(
-	permissions: PermissionCheck,
+	permissions: PermissionMap,
 	resource: string,
 	actions: string[],
 	enabled: boolean,
 ) {
 	const nextPermissions = { ...permissions };
 	if (!enabled) {
-		delete nextPermissions[resource as keyof PermissionCheck];
+		delete nextPermissions[resource];
 		return nextPermissions;
 	}
-	nextPermissions[resource as keyof PermissionCheck] = actions;
+	nextPermissions[resource] = actions;
 	return nextPermissions;
 }
 
 type RolePermissionGridProps = {
-	value: PermissionCheck;
-	onChange: (value: PermissionCheck) => void;
+	value: PermissionMap;
+	onChange: (value: PermissionMap) => void;
 	disabled?: boolean;
 	grouped?: boolean;
 };
@@ -79,7 +82,7 @@ export function RolePermissionGrid({
 					)}
 					{group.resources.map(({ resource, actions }) => {
 						const selected = new Set(
-							value[resource as keyof PermissionCheck] ?? [],
+							value[resource] ?? [],
 						);
 						const allSelected = actions.every((action) =>
 							selected.has(action),
@@ -135,7 +138,6 @@ export function RolePermissionGrid({
 													checked={checked}
 													disabled={disabled}
 													onCheckedChange={(nextChecked) => {
-														if (nextChecked === "indeterminate") return;
 														onChange(
 															toggleAction(value, resource, action),
 														);

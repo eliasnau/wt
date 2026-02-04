@@ -52,7 +52,7 @@ export function InviteMemberDialog({
 		setLoading(true);
 		const result = await authClient.organization.inviteMember({
 			email,
-			role,
+			role: role as "member" | "owner" | "admin",
 		});
 		setLoading(false);
 

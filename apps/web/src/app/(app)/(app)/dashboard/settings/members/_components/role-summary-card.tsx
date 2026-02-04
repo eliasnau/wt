@@ -3,14 +3,18 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, Pencil, Trash2 } from "lucide-react";
-import type { PermissionCheck } from "@repo/auth/permissions";
-import { countPermissions, flattenPermissions, formatRoleLabel } from "./role-utils";
+import {
+	countPermissions,
+	flattenPermissions,
+	formatRoleLabel,
+	type PermissionMap,
+} from "./role-utils";
 
 const MAX_PERMISSION_PREVIEW = 6;
 
 type RoleSummaryCardProps = {
 	roleName: string;
-	permission?: PermissionCheck | null;
+	permission?: PermissionMap | null;
 	isSystem?: boolean;
 	canEdit?: boolean;
 	canDelete?: boolean;

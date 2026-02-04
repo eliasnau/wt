@@ -1,6 +1,5 @@
 "use client";
 
-import type { PermissionCheck } from "@repo/auth/permissions";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -12,14 +11,14 @@ import {
 	DialogTitle,
 	DialogDescription,
 } from "@/components/ui/dialog";
-import { formatRoleLabel } from "./role-utils";
+import { formatRoleLabel, type PermissionMap } from "./role-utils";
 import { RolePermissionGrid } from "./role-permission-grid";
 
 export type RolePreviewDialogProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	roleName?: string;
-	permissions?: PermissionCheck | null;
+	permissions?: PermissionMap | null;
 };
 
 export function RolePreviewDialog({
@@ -41,7 +40,7 @@ export function RolePreviewDialog({
 				</DialogHeader>
 				<DialogPanel>
 					<RolePermissionGrid
-						value={(permissions ?? {}) as PermissionCheck}
+						value={(permissions ?? {}) as PermissionMap}
 						onChange={() => undefined}
 						disabled
 						grouped

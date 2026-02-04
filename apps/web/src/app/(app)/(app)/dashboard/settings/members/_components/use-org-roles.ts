@@ -8,8 +8,8 @@ export type OrganizationRole = {
 	id: string;
 	role: string;
 	permission: Record<string, string[]> | null;
-	createdAt?: string;
-	updatedAt?: string;
+	createdAt?: Date | string;
+	updatedAt?: Date | string;
 };
 
 export function useOrgRoles() {
@@ -26,7 +26,7 @@ export function useOrgRoles() {
 			if (result.error) {
 				throw new Error(result.error.message || "Failed to load roles");
 			}
-			return result.data as OrganizationRole[];
+			return result.data as unknown as OrganizationRole[];
 		},
 		enabled: !!activeOrg,
 	});

@@ -19,10 +19,13 @@ import {
 } from "@/components/ui/empty";
 import { Badge } from "@/components/ui/badge";
 import { authClient } from "@repo/auth/client";
-import type { PermissionCheck } from "@repo/auth/permissions";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { builtinRolePermissions, defaultRoleNames } from "./role-utils";
+import {
+	builtinRolePermissions,
+	defaultRoleNames,
+	type PermissionMap,
+} from "./role-utils";
 import { useOrgRoles, type OrganizationRole } from "./use-org-roles";
 import { RoleSummaryCard } from "./role-summary-card";
 import { RoleEditorDialog } from "./role-editor-dialog";
@@ -44,7 +47,7 @@ export function RolesPermissionsSection() {
 	const [previewOpen, setPreviewOpen] = useState(false);
 	const [previewRole, setPreviewRole] = useState<{
 		roleName: string;
-		permissions: PermissionCheck;
+		permissions: PermissionMap;
 	} | null>(null);
 
 	const permissionQuery = useQuery({
@@ -123,7 +126,7 @@ export function RolesPermissionsSection() {
 		deleteRoleMutation.mutate(deletingRole);
 	};
 
-	const openPreviewDialog = (roleName: string, permissions: PermissionCheck) => {
+	const openPreviewDialog = (roleName: string, permissions: PermissionMap) => {
 		setPreviewRole({ roleName, permissions });
 		setPreviewOpen(true);
 	};
@@ -133,13 +136,13 @@ export function RolesPermissionsSection() {
 				<RoleSummaryCard
 					key={role.id}
 					roleName={role.role}
-					permission={(role.permission ?? undefined) as PermissionCheck}
+					permission={(role.permission ?? undefined) as PermissionMap}
 					canEdit={canUpdate}
 					canDelete={canDelete}
 					onView={() =>
 						openPreviewDialog(
 							role.role,
-							(role.permission ?? {}) as PermissionCheck,
+							(role.permission ?? {}) as PermissionMap,
 						)
 					}
 					onEdit={() => openEditDialog(role)}
