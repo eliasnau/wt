@@ -31,6 +31,8 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { RoleChangeDialog, RemoveMemberDialog } from "./confirm-dialogs";
+import { formatRoleLabel } from "./role-utils";
+import { useOrgRoles } from "./use-org-roles";
 
 type Member = {
 	id: string;
@@ -48,6 +50,7 @@ export function MembersSection() {
 	const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
 	const [selectedMember, setSelectedMember] = useState<Member | null>(null);
 	const [pendingRole, setPendingRole] = useState("");
+	const { roleOptions } = useOrgRoles();
 
 	const { data: membersData, refetch } = useQuery({
 		queryKey: ["organization-members", activeOrg?.id],
@@ -210,13 +213,17 @@ export function MembersSection() {
 											value && openRoleConfirmDialog(member, value)
 										}
 									>
-										<SelectTrigger className="w-[140px]">
-											<SelectValue />
+										<SelectTrigger className="w-[170px]">
+											<SelectValue
+												placeholder={formatRoleLabel(member.role)}
+											/>
 										</SelectTrigger>
 										<SelectContent>
-											<SelectItem value="member">Member</SelectItem>
-											<SelectItem value="admin">Admin</SelectItem>
-											<SelectItem value="owner">Owner</SelectItem>
+											{roleOptions.map((roleOption) => (
+												<SelectItem key={roleOption} value={roleOption}>
+													{formatRoleLabel(roleOption)}
+												</SelectItem>
+											))}
 										</SelectContent>
 									</Select>
 								</TableCell>
