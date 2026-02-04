@@ -26,6 +26,8 @@ export const statement = {
 	...customStatement,
 } as const;
 
+export const customResources = Object.keys(customStatement) as PermissionResource[];
+
 export const ac = createAccessControl(statement);
 
 export const owner = ac.newRole({

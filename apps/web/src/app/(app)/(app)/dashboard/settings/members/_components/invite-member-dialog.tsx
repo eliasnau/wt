@@ -24,6 +24,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { formatRoleLabel } from "./role-utils";
+import { useOrgRoles } from "./use-org-roles";
 
 type InviteMemberDialogProps = {
 	open: boolean;
@@ -36,8 +38,9 @@ export function InviteMemberDialog({
 }: InviteMemberDialogProps) {
 	const { data: activeOrg } = authClient.useActiveOrganization();
 	const queryClient = useQueryClient();
+	const { roleOptions } = useOrgRoles();
 	const [email, setEmail] = useState("");
-	const [role, setRole] = useState<"member" | "admin" | "owner">("member");
+	const [role, setRole] = useState("member");
 	const [loading, setLoading] = useState(false);
 
 	const handleSubmit = async () => {
@@ -90,17 +93,17 @@ export function InviteMemberDialog({
 							<FieldLabel>Role</FieldLabel>
 							<Select
 								value={role}
-								onValueChange={(value) =>
-									value && setRole(value as "member" | "admin" | "owner")
-								}
+								onValueChange={(value) => value && setRole(value)}
 							>
 								<SelectTrigger>
 									<SelectValue />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="member">Member</SelectItem>
-									<SelectItem value="admin">Admin</SelectItem>
-									<SelectItem value="owner">Owner</SelectItem>
+									{roleOptions.map((roleOption) => (
+										<SelectItem key={roleOption} value={roleOption}>
+											{formatRoleLabel(roleOption)}
+										</SelectItem>
+									))}
 								</SelectContent>
 							</Select>
 						</Field>
