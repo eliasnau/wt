@@ -4,6 +4,7 @@ import { groupsRouter } from "./groups";
 import { membersRouter } from "./members";
 import { paymentBatchesRouter } from "./paymentBatches";
 import { organizationsRouter } from "./organizations";
+import { statisticsRouter } from "./statistics";
 
 export const appRouter = {
 	healthCheck: publicProcedure
@@ -20,6 +21,9 @@ export const appRouter = {
 	},
 	organizations: {
 		...organizationsRouter,
+	},
+	statistics: {
+		...statisticsRouter,
 	},
 };
 
