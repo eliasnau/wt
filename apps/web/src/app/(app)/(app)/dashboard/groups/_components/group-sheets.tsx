@@ -42,6 +42,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Spinner } from "@/components/ui/spinner";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
 	Form,
 	FormControl,
@@ -581,11 +582,15 @@ export function GroupMembersSheet({
 													<TableCell>{member.email}</TableCell>
 													<TableCell>{member.phone}</TableCell>
 													<TableCell className="text-right">
-														<Button size="sm" variant="outline" asChild>
-															<Link href={`/dashboard/members/${member.id}`}>
-																View
-															</Link>
-														</Button>
+														<Button
+															size="sm"
+															variant="outline"
+															render={
+																<Link href={`/dashboard/members/${member.id}`}>
+																	View
+																</Link>
+															}
+														/>
 													</TableCell>
 												</TableRow>
 											))
