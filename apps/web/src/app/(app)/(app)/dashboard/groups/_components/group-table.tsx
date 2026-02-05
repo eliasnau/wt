@@ -2,14 +2,13 @@
 import {
 	Table,
 	TableBody,
-	TableCaption,
 	TableCell,
 	TableFooter,
 	TableHead,
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import { client, type orpc } from "@/utils/orpc";
+import { client } from "@/utils/orpc";
 import {
 	getFilteredRowModel,
 	type ColumnDef,
@@ -80,13 +79,13 @@ import {
 	InputGroup,
 	InputGroupAddon,
 	InputGroupInput,
-	InputGroupText,
 } from "@/components/ui/input-group";
 import { Frame, FramePanel } from "@/components/ui/frame";
 import type { InferClientOutputs } from "@orpc/client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Spinner } from "@/components/ui/spinner";
+import { EditGroupSheet, GroupMembersSheet } from "./group-sheets";
 
 type GroupsList = InferClientOutputs<typeof client>["groups"]["list"];
 type GroupRow = GroupsList[number];
@@ -159,6 +158,7 @@ function DeleteGroupDialog({
 	);
 }
 
+
 export const columns: ColumnDef<GroupRow>[] = [
 	{
 		accessorKey: "name",
@@ -179,13 +179,16 @@ export const columns: ColumnDef<GroupRow>[] = [
 		enableSorting: false,
 		cell: ({ row, table }) => {
 			const group = row.original;
-			const { onDeleteGroup } = table.options.meta as {
+			const { onDeleteGroup, onEditGroup, onViewMembers } = table.options
+				.meta as {
 				onDeleteGroup: (group: GroupRow) => void;
+				onEditGroup: (group: GroupRow) => void;
+				onViewMembers: (group: GroupRow) => void;
 			};
 
 			return (
 				<div className="flex items-center justify-end gap-2">
-					<Button size="sm" variant="outline">
+					<Button size="sm" variant="outline" onClick={() => onViewMembers(group)}>
 						<UserIcon />
 						Members
 					</Button>
@@ -198,7 +201,7 @@ export const columns: ColumnDef<GroupRow>[] = [
 							}
 						/>
 						<MenuPopup align="end">
-							<MenuItem>
+							<MenuItem onClick={() => onEditGroup(group)}>
 								<EditIcon />
 								Edit
 							</MenuItem>
@@ -245,10 +248,23 @@ export default function GroupTable({
 
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [groupToDelete, setGroupToDelete] = useState<GroupRow | null>(null);
+	const [editGroupOpen, setEditGroupOpen] = useState(false);
+	const [membersSheetOpen, setMembersSheetOpen] = useState(false);
+	const [activeGroup, setActiveGroup] = useState<GroupRow | null>(null);
 
 	const handleDeleteGroup = (group: GroupRow) => {
 		setGroupToDelete(group);
 		setDeleteDialogOpen(true);
+	};
+
+	const handleEditGroup = (group: GroupRow) => {
+		setActiveGroup(group);
+		setEditGroupOpen(true);
+	};
+
+	const handleViewMembers = (group: GroupRow) => {
+		setActiveGroup(group);
+		setMembersSheetOpen(true);
 	};
 
 	const table = useReactTable({
@@ -264,6 +280,8 @@ export default function GroupTable({
 		getFilteredRowModel: getFilteredRowModel(),
 		meta: {
 			onDeleteGroup: handleDeleteGroup,
+			onEditGroup: handleEditGroup,
+			onViewMembers: handleViewMembers,
 		},
 		state: {
 			pagination,
@@ -493,6 +511,19 @@ export default function GroupTable({
 				open={deleteDialogOpen}
 				onOpenChange={setDeleteDialogOpen}
 				onSuccess={onRefetch}
+			/>
+
+			<EditGroupSheet
+				group={activeGroup}
+				open={editGroupOpen}
+				onOpenChange={setEditGroupOpen}
+				onSuccess={onRefetch}
+			/>
+
+			<GroupMembersSheet
+				group={activeGroup}
+				open={membersSheetOpen}
+				onOpenChange={setMembersSheetOpen}
 			/>
 		</div>
 	);
