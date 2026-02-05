@@ -8,6 +8,8 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { format, formatDistanceToNow } from "date-fns";
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -20,6 +22,25 @@ import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
+  AlertDialog,
+  AlertDialogClose,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogPopup,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogPanel,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   Empty,
   EmptyDescription,
   EmptyHeader,
@@ -27,6 +48,7 @@ import {
   EmptyTitle,
 } from "@/components/ui/empty";
 import { Frame, FramePanel } from "@/components/ui/frame";
+import { Input } from "@/components/ui/input";
 import {
   Menu,
   MenuItem,
@@ -44,10 +66,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { client, orpc } from "@/utils/orpc";
+import { toast } from "sonner";
 
 interface MemberGroup {
   groupId: string;
   membershipPrice: string | null;
+  joinedAt: string | Date | null;
   group: {
     id: string;
     name: string;
@@ -58,6 +83,7 @@ interface MemberGroup {
 
 interface MemberGroupsTableProps {
   groups: MemberGroup[];
+  memberId: string;
   loading?: boolean;
 }
 
@@ -69,81 +95,230 @@ function formatCurrency(amount: string | null | undefined) {
   }).format(Number.parseFloat(amount));
 }
 
-export const columns: ColumnDef<MemberGroup>[] = [
-  {
-    accessorKey: "group.name",
-    header: "Group Name",
-    cell: ({ row }) => {
-      const gm = row.original;
-      const isDefaultPrice =
-        !gm.membershipPrice && gm.group.defaultMembershipPrice;
-      return (
-        <div className="flex items-center gap-2">
-          <span>{gm.group.name}</span>
-          {isDefaultPrice && (
-            <Badge variant="outline" className="text-xs">
-              Default
-            </Badge>
-          )}
-        </div>
+const priceRegex = /^\d+(\.\d{1,2})?$/;
+
+function EditPriceDialog({
+  group,
+  memberId,
+  open,
+  onOpenChange,
+  onSuccess,
+}: {
+  group: MemberGroup;
+  memberId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const [price, setPrice] = useState(group.membershipPrice ?? "");
+  const [error, setError] = useState<string | null>(null);
+
+  const updateMutation = useMutation({
+    mutationFn: async (membershipPrice: string | null) => {
+      return client.members.updateGroupMembership({
+        memberId,
+        groupId: group.groupId,
+        membershipPrice,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Membership price updated");
+      queryClient.invalidateQueries({
+        queryKey: orpc.members.get.queryKey({ input: { memberId } }),
+      });
+      onOpenChange(false);
+      onSuccess?.();
+    },
+    onError: (mutationError) => {
+      toast.error(
+        mutationError instanceof Error
+          ? mutationError.message
+          : "Failed to update membership price",
       );
     },
-  },
-  {
-    accessorKey: "group.description",
-    header: "Description",
-    enableSorting: false,
-    cell: ({ row }) => row.original.group.description || "—",
-  },
-  {
-    id: "price",
-    header: "Monthly Price",
-    cell: ({ row }) => {
-      const gm = row.original;
-      const price =
-        gm.membershipPrice || gm.group.defaultMembershipPrice || "0";
-      return formatCurrency(price);
-    },
-  },
-  {
-    id: "actions",
-    header: "Actions",
-    enableSorting: false,
-    cell: ({ row }) => {
-      const group = row.original;
-      return (
-        <div className="flex items-center justify-end gap-2">
-          <Menu>
-            <MenuTrigger
-              render={
-                <Button size="sm" variant="outline">
-                  <MoreVerticalIcon />
-                </Button>
+  });
+
+  const handleSubmit = () => {
+    if (price && !priceRegex.test(price)) {
+      setError("Invalid price format");
+      return;
+    }
+
+    setError(null);
+    updateMutation.mutate(price === "" ? null : price);
+  };
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(nextOpen) => {
+        onOpenChange(nextOpen);
+        if (nextOpen) {
+          setPrice(group.membershipPrice ?? "");
+          setError(null);
+        }
+      }}
+    >
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Edit Membership Price</DialogTitle>
+          <DialogDescription>
+            Update the monthly price for this member in "{group.group.name}".
+          </DialogDescription>
+        </DialogHeader>
+        <DialogPanel className="space-y-2">
+          <div className="space-y-1">
+            <label className="font-medium text-sm" htmlFor="membership-price">
+              Custom Monthly Price
+            </label>
+            <Input
+              id="membership-price"
+              value={price}
+              onChange={(event) => setPrice(event.target.value)}
+              placeholder={
+                group.group.defaultMembershipPrice
+                  ? `Default: ${group.group.defaultMembershipPrice}`
+                  : "Leave empty to use default"
               }
             />
-            <MenuPopup align="end">
-              <MenuItem onClick={() => console.log("Edit price:", group)}>
-                <EditIcon />
-                Edit Price
-              </MenuItem>
-              <MenuSeparator />
-              <MenuItem
-                variant="destructive"
-                onClick={() => console.log("Remove from group:", group)}
-              >
-                <TrashIcon />
-                Remove from Group
-              </MenuItem>
-            </MenuPopup>
-          </Menu>
-        </div>
+            {group.group.defaultMembershipPrice && (
+              <p className="text-muted-foreground text-xs">
+                Default price: €{group.group.defaultMembershipPrice}
+              </p>
+            )}
+            {error && <p className="text-destructive text-xs">{error}</p>}
+          </div>
+        </DialogPanel>
+        <DialogFooter>
+          <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+          <Button onClick={handleSubmit} disabled={updateMutation.isPending}>
+            {updateMutation.isPending ? "Saving..." : "Save Changes"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+function RemoveFromGroupDialog({
+  group,
+  memberId,
+  open,
+  onOpenChange,
+  onSuccess,
+}: {
+  group: MemberGroup;
+  memberId: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
+}) {
+  const queryClient = useQueryClient();
+  const removeMutation = useMutation({
+    mutationFn: async () => {
+      return client.members.removeGroupMembership({
+        memberId,
+        groupId: group.groupId,
+      });
+    },
+    onSuccess: () => {
+      toast.success("Member removed from group");
+      queryClient.invalidateQueries({
+        queryKey: orpc.members.get.queryKey({ input: { memberId } }),
+      });
+      onOpenChange(false);
+      onSuccess?.();
+    },
+    onError: (mutationError) => {
+      toast.error(
+        mutationError instanceof Error
+          ? mutationError.message
+          : "Failed to remove member from group",
       );
     },
-  },
-];
+  });
+
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogPopup>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remove from Group</AlertDialogTitle>
+          <AlertDialogDescription>
+            Remove this member from "{group.group.name}"? This won't delete the
+            member, only their group membership.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogClose render={<Button variant="outline" />}>
+            Cancel
+          </AlertDialogClose>
+          <Button
+            variant="destructive"
+            onClick={() => removeMutation.mutate()}
+            disabled={removeMutation.isPending}
+          >
+            {removeMutation.isPending ? "Removing..." : "Remove"}
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogPopup>
+    </AlertDialog>
+  );
+}
+
+function GroupActionsCell({
+  group,
+  memberId,
+}: {
+  group: MemberGroup;
+  memberId: string;
+}) {
+  const [editOpen, setEditOpen] = useState(false);
+  const [removeOpen, setRemoveOpen] = useState(false);
+
+  return (
+    <>
+      <EditPriceDialog
+        group={group}
+        memberId={memberId}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+      />
+      <RemoveFromGroupDialog
+        group={group}
+        memberId={memberId}
+        open={removeOpen}
+        onOpenChange={setRemoveOpen}
+      />
+      <div className="flex items-center justify-end gap-2">
+        <Menu>
+          <MenuTrigger
+            render={
+              <Button size="sm" variant="outline">
+                <MoreVerticalIcon />
+              </Button>
+            }
+          />
+          <MenuPopup align="end">
+            <MenuItem onClick={() => setEditOpen(true)}>
+              <EditIcon />
+              Edit Price
+            </MenuItem>
+            <MenuSeparator />
+            <MenuItem variant="destructive" onClick={() => setRemoveOpen(true)}>
+              <TrashIcon />
+              Remove from Group
+            </MenuItem>
+          </MenuPopup>
+        </Menu>
+      </div>
+    </>
+  );
+}
 
 export function MemberGroupsTable({
   groups,
+  memberId,
   loading = false,
 }: MemberGroupsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([
@@ -152,6 +327,70 @@ export function MemberGroupsTable({
       id: "group.name",
     },
   ]);
+
+  const columns: ColumnDef<MemberGroup>[] = [
+    {
+      accessorKey: "group.name",
+      header: "Group Name",
+      cell: ({ row }) => {
+        const gm = row.original;
+        const isDefaultPrice =
+          !gm.membershipPrice && gm.group.defaultMembershipPrice;
+        return (
+          <div className="flex items-center gap-2">
+            <span>{gm.group.name}</span>
+            {isDefaultPrice && (
+              <Badge variant="outline" className="text-xs">
+                Default
+              </Badge>
+            )}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "group.description",
+      header: "Description",
+      enableSorting: false,
+      cell: ({ row }) => row.original.group.description || "—",
+    },
+    {
+      id: "price",
+      header: "Monthly Price",
+      cell: ({ row }) => {
+        const gm = row.original;
+        const price =
+          gm.membershipPrice || gm.group.defaultMembershipPrice || "0";
+        return formatCurrency(price);
+      },
+    },
+    {
+      id: "memberSince",
+      header: "Member Since",
+      cell: ({ row }) => {
+        const joinedAt = row.original.joinedAt
+          ? new Date(row.original.joinedAt)
+          : null;
+        if (!joinedAt) return "—";
+        return (
+          <div className="flex flex-col">
+            <span>{formatDistanceToNow(joinedAt, { addSuffix: true })}</span>
+            <span className="text-muted-foreground text-xs">
+              {format(joinedAt, "MMM d, yyyy")}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      enableSorting: false,
+      cell: ({ row }) => (
+        <GroupActionsCell group={row.original} memberId={memberId} />
+      ),
+    },
+  ];
 
   const table = useReactTable({
     data: groups || [],

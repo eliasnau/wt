@@ -82,6 +82,20 @@ const assignGroupSchema = z.object({
 		.optional(),
 });
 
+const updateGroupMembershipSchema = z.object({
+	memberId: z.string(),
+	groupId: z.string(),
+	membershipPrice: z
+		.string()
+		.regex(/^\d+(\.\d{1,2})?$/)
+		.nullable(),
+});
+
+const removeGroupMembershipSchema = z.object({
+	memberId: z.string(),
+	groupId: z.string(),
+});
+
 /**
  * Calculate the end date for the initial period based on contract type
  */
@@ -554,4 +568,114 @@ export const membersRouter = {
 			}
 		})
 		.route({ method: "POST", path: "/members/:memberId/groups" }),
+
+	updateGroupMembership: protectedProcedure
+		.use(rateLimitMiddleware(2))
+		.use(requirePermission({ member: ["update"] }))
+		.input(updateGroupMembershipSchema)
+		.handler(async ({ input, context }) => {
+			const organizationId = context.session.activeOrganizationId!;
+
+			const [member, group] = await Promise.all([
+				DB.query.members.getMemberById({
+					id: input.memberId,
+				}),
+				DB.query.groups.getGroupById({
+					groupId: input.groupId,
+				}),
+			]);
+
+			if (!member || member.organizationId !== organizationId) {
+				throw new ORPCError("NOT_FOUND", { message: "Member not found" });
+			}
+			if (!group || group.organizationId !== organizationId) {
+				throw new ORPCError("NOT_FOUND", { message: "Group not found" });
+			}
+
+			try {
+				const result = await DB.mutation.groups.updateGroupMember({
+					memberId: input.memberId,
+					groupId: input.groupId,
+					membershipPrice: input.membershipPrice ?? null,
+				});
+
+				if (!result) {
+					throw new ORPCError("NOT_FOUND", {
+						message: "Membership not found",
+					});
+				}
+
+				return result;
+			} catch (error) {
+				if (error instanceof ORPCError) throw error;
+
+				after(() => {
+					logger.error("Failed to update group membership", {
+						error,
+						organizationId,
+						memberId: input.memberId,
+						groupId: input.groupId,
+						userId: context.user.id,
+					});
+				});
+
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: "Failed to update group membership",
+				});
+			}
+		})
+		.route({ method: "PATCH", path: "/members/:memberId/groups/:groupId" }),
+
+	removeGroupMembership: protectedProcedure
+		.use(rateLimitMiddleware(2))
+		.use(requirePermission({ member: ["update"] }))
+		.input(removeGroupMembershipSchema)
+		.handler(async ({ input, context }) => {
+			const organizationId = context.session.activeOrganizationId!;
+
+			const [member, group] = await Promise.all([
+				DB.query.members.getMemberById({ id: input.memberId }),
+				DB.query.groups.getGroupById({ groupId: input.groupId }),
+			]);
+
+			if (!member || member.organizationId !== organizationId) {
+				throw new ORPCError("NOT_FOUND", { message: "Member not found" });
+			}
+
+			if (!group || group.organizationId !== organizationId) {
+				throw new ORPCError("NOT_FOUND", { message: "Group not found" });
+			}
+
+			try {
+				const result = await DB.mutation.groups.removeMemberFromGroup({
+					memberId: input.memberId,
+					groupId: input.groupId,
+				});
+
+				if (!result) {
+					throw new ORPCError("NOT_FOUND", {
+						message: "Membership not found",
+					});
+				}
+
+				return result;
+			} catch (error) {
+				if (error instanceof ORPCError) throw error;
+
+				after(() => {
+					logger.error("Failed to remove member from group", {
+						error,
+						organizationId,
+						memberId: input.memberId,
+						groupId: input.groupId,
+						userId: context.user.id,
+					});
+				});
+
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: "Failed to remove member from group",
+				});
+			}
+		})
+		.route({ method: "DELETE", path: "/members/:memberId/groups/:groupId" }),
 };

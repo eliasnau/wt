@@ -1,4 +1,4 @@
-import { count, db, eq } from "..";
+import { and, count, db, eq } from "..";
 import { clubMember, contract, group, groupMember } from "../schema";
 
 export const DB = {
@@ -78,6 +78,7 @@ export const DB = {
 						// Group membership fields
 						groupId: groupMember.groupId,
 						membershipPrice: groupMember.membershipPrice,
+						groupMemberCreatedAt: groupMember.createdAt,
 						groupName: group.name,
 						groupDescription: group.description,
 						groupDefaultMembershipPrice: group.defaultMembershipPrice,
@@ -99,6 +100,7 @@ export const DB = {
 					.map((row) => ({
 						groupId: row.groupId!,
 						membershipPrice: row.membershipPrice,
+						joinedAt: row.groupMemberCreatedAt,
 						group: {
 							id: row.groupId!,
 							name: row.groupName!,
@@ -360,6 +362,47 @@ export const DB = {
 					.returning();
 
 				return newGroupMember;
+			},
+			updateGroupMember: async ({
+				memberId,
+				groupId,
+				membershipPrice,
+			}: {
+				memberId: string;
+				groupId: string;
+				membershipPrice: string | null;
+			}) => {
+				const [updatedGroupMember] = await db
+					.update(groupMember)
+					.set({ membershipPrice })
+					.where(
+						and(
+							eq(groupMember.memberId, memberId),
+							eq(groupMember.groupId, groupId),
+						),
+					)
+					.returning();
+
+				return updatedGroupMember;
+			},
+			removeMemberFromGroup: async ({
+				memberId,
+				groupId,
+			}: {
+				memberId: string;
+				groupId: string;
+			}) => {
+				const [deletedGroupMember] = await db
+					.delete(groupMember)
+					.where(
+						and(
+							eq(groupMember.memberId, memberId),
+							eq(groupMember.groupId, groupId),
+						),
+					)
+					.returning();
+
+				return deletedGroupMember;
 			},
 		},
 	},

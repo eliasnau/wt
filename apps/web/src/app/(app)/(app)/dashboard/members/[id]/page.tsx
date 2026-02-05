@@ -250,7 +250,7 @@ export default function MemberDetailPage() {
 						</FrameHeader>
 						<CollapsiblePanel>
 							<FramePanel>
-								<MemberGroupsTable groups={member.groups} />
+								<MemberGroupsTable groups={member.groups} memberId={member.id} />
 							</FramePanel>
 						</CollapsiblePanel>
 					</Collapsible>
