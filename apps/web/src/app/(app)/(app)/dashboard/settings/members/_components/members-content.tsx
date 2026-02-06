@@ -24,7 +24,7 @@ export function MembersContent() {
 		retry: 1,
 		queryFn: async () => {
 			const result = await authClient.organization.listMembers({
-				query: { limit: 100 },
+				query: { limit: 10 },
 			});
 
 			if (result.error) {

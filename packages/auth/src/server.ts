@@ -57,6 +57,7 @@ export const auth = betterAuth({
 			dynamicAccessControl: {
 				enabled: true,
 			},
+			membershipLimit: 15,
 		}),
 		twoFactor({
 			issuer: "WT",
