@@ -19,7 +19,7 @@ import {
 	UserXIcon,
 	XIcon,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CopyableTableCell } from "@/components/table/copyable-table-cell";
 import { DataTableFacetedFilter } from "@/components/table/data-table-faceted-filter";
 import { Badge } from "@/components/ui/badge";
@@ -261,6 +261,27 @@ export default function MembersTable({
 	};
 
 	const columns = createColumns(handleViewMember);
+	const skeletonRowKeys = useMemo(
+		() =>
+			Array.from(
+				{ length: pagination.limit },
+				() =>
+					globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`,
+			),
+		[pagination.limit],
+	);
+	const skeletonColumnKeys = useMemo(
+		() =>
+			columns.map(
+				(column) =>
+					column.id ??
+					(typeof column.header === "string"
+						? column.header
+						: (globalThis.crypto?.randomUUID?.() ??
+							`${Date.now()}-${Math.random()}`)),
+			),
+		[columns],
+	);
 
 	// Sync localSearch with prop changes (e.g., from URL)
 	useEffect(() => {
@@ -290,7 +311,7 @@ export default function MembersTable({
 
 	if (hasNoMembers) {
 		return (
-			<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+			<Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 				<FramePanel className="py-12">
 					<Empty>
 						<EmptyHeader>
@@ -376,7 +397,7 @@ export default function MembersTable({
 						/>
 						<PopoverPopup align="end" className="w-[280px]">
 							<div className="flex flex-col gap-1 p-2">
-								<label className="flex cursor-pointer items-center justify-between gap-3 rounded-sm px-3 py-2.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground">
+								<div className="flex cursor-pointer items-center justify-between gap-3 rounded-sm px-3 py-2.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground">
 									<span className="flex items-center gap-2">
 										<UserXIcon className="size-4" />
 										Include Cancelled Members
@@ -386,9 +407,10 @@ export default function MembersTable({
 										onCheckedChange={(checked) =>
 											setIncludeCancelled(checked as boolean)
 										}
+										aria-label="Include cancelled members"
 									/>
-								</label>
-								<label className="flex cursor-pointer items-center justify-between gap-3 rounded-sm px-3 py-2.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground">
+								</div>
+								<div className="flex cursor-pointer items-center justify-between gap-3 rounded-sm px-3 py-2.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground">
 									<span className="flex items-center gap-2">
 										<UserIcon className="size-4" />
 										Show Archived Members
@@ -398,8 +420,9 @@ export default function MembersTable({
 										onCheckedChange={(checked) =>
 											setShowArchived(checked as boolean)
 										}
+										aria-label="Show archived members"
 									/>
-								</label>
+								</div>
 								<Separator className="my-1" />
 								<button
 									type="button"
@@ -425,17 +448,10 @@ export default function MembersTable({
 										className={isLast ? "text-right" : undefined}
 									>
 										{header.isPlaceholder ? null : header.column.getCanSort() ? (
-											<div
-												className="flex h-full cursor-pointer select-none items-center justify-between gap-2"
+											<button
+												className="flex h-full w-full cursor-pointer select-none items-center justify-between gap-2"
 												onClick={header.column.getToggleSortingHandler()}
-												onKeyDown={(e) => {
-													if (e.key === "Enter" || e.key === " ") {
-														e.preventDefault();
-														header.column.getToggleSortingHandler()?.(e);
-													}
-												}}
-												role="button"
-												tabIndex={0}
+												type="button"
 											>
 												{flexRender(
 													header.column.columnDef.header,
@@ -455,7 +471,7 @@ export default function MembersTable({
 														/>
 													),
 												}[header.column.getIsSorted() as string] ?? null}
-											</div>
+											</button>
 										) : (
 											flexRender(
 												header.column.columnDef.header,
@@ -470,10 +486,10 @@ export default function MembersTable({
 				</TableHeader>
 				<TableBody>
 					{loading ? (
-						Array.from({ length: pagination.limit }).map((_, idx) => (
-							<TableRow key={`skeleton-${idx}`}>
-								{columns.map((_column, colIdx) => (
-									<TableCell key={`skeleton-${idx}-${colIdx}`} className="py-3">
+						skeletonRowKeys.map((rowKey) => (
+							<TableRow key={rowKey}>
+								{skeletonColumnKeys.map((columnKey) => (
+									<TableCell key={`${rowKey}-${columnKey}`} className="py-3">
 										<Skeleton className="h-5 w-full" />
 									</TableCell>
 								))}

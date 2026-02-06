@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
 	AlertCircle,
 	ArrowLeft,
@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -32,8 +33,10 @@ import {
 	EmptyTitle,
 } from "@/components/ui/empty";
 import { Frame, FrameHeader, FramePanel } from "@/components/ui/frame";
+import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { orpc } from "@/utils/orpc";
 import { AssignGroupDialog } from "./_components/assign-group-dialog";
@@ -54,6 +57,15 @@ function formatCurrency(amount: string | null | undefined) {
 		style: "currency",
 		currency: "EUR",
 	}).format(Number.parseFloat(amount));
+}
+
+function parseInitialPeriod(
+	value: string | null | undefined,
+): "monthly" | "half_yearly" | "yearly" {
+	if (value === "monthly" || value === "half_yearly" || value === "yearly") {
+		return value;
+	}
+	return "monthly";
 }
 
 function CopyButton({ value }: { value: string }) {
@@ -82,6 +94,27 @@ function CopyButton({ value }: { value: string }) {
 export default function MemberDetailPage() {
 	const params = useParams();
 	const memberId = params.id as string;
+	const [isEditing, setIsEditing] = useState(false);
+	const [formState, setFormState] = useState({
+		firstName: "",
+		lastName: "",
+		email: "",
+		phone: "",
+		guardianName: "",
+		guardianEmail: "",
+		guardianPhone: "",
+		street: "",
+		city: "",
+		state: "",
+		postalCode: "",
+		country: "",
+		memberNotes: "",
+		contractNotes: "",
+		contractStartDate: "",
+		initialPeriod: "monthly" as "monthly" | "half_yearly" | "yearly",
+		joiningFeeAmount: "",
+		yearlyFeeAmount: "",
+	});
 
 	const {
 		data: member,
@@ -100,6 +133,45 @@ export default function MemberDetailPage() {
 			enabled: false,
 		}),
 	);
+
+	const updateMemberMutation = useMutation(
+		orpc.members.update.mutationOptions({
+			onSuccess: () => {
+				toast.success("Member updated");
+				setIsEditing(false);
+				refetch();
+			},
+			onError: (error) => {
+				toast.error(
+					error instanceof Error ? error.message : "Failed to update member",
+				);
+			},
+		}),
+	);
+
+	useEffect(() => {
+		if (!member || isEditing) return;
+		setFormState({
+			firstName: member.firstName ?? "",
+			lastName: member.lastName ?? "",
+			email: member.email ?? "",
+			phone: member.phone ?? "",
+			guardianName: member.guardianName ?? "",
+			guardianEmail: member.guardianEmail ?? "",
+			guardianPhone: member.guardianPhone ?? "",
+			street: member.street ?? "",
+			city: member.city ?? "",
+			state: member.state ?? "",
+			postalCode: member.postalCode ?? "",
+			country: member.country ?? "",
+			memberNotes: member.notes ?? "",
+			contractNotes: member.contract.notes ?? "",
+			contractStartDate: member.contract.startDate ?? "",
+			initialPeriod: parseInitialPeriod(member.contract.initialPeriod),
+			joiningFeeAmount: member.contract.joiningFeeAmount ?? "",
+			yearlyFeeAmount: member.contract.yearlyFeeAmount ?? "",
+		});
+	}, [member, isEditing]);
 
 	if (isPending) {
 		return (
@@ -161,6 +233,55 @@ export default function MemberDetailPage() {
 		? Number.parseFloat(member.contract.yearlyFeeAmount) / 12
 		: 0;
 	const totalMonthlyPayment = totalGroupPayment + yearlyFeeMonthly;
+	const isSubmitting = updateMemberMutation.isPending;
+
+	const handleEditCancel = () => {
+		setIsEditing(false);
+		setFormState({
+			firstName: member.firstName ?? "",
+			lastName: member.lastName ?? "",
+			email: member.email ?? "",
+			phone: member.phone ?? "",
+			guardianName: member.guardianName ?? "",
+			guardianEmail: member.guardianEmail ?? "",
+			guardianPhone: member.guardianPhone ?? "",
+			street: member.street ?? "",
+			city: member.city ?? "",
+			state: member.state ?? "",
+			postalCode: member.postalCode ?? "",
+			country: member.country ?? "",
+			memberNotes: member.notes ?? "",
+			contractNotes: member.contract.notes ?? "",
+			contractStartDate: member.contract.startDate ?? "",
+			initialPeriod: parseInitialPeriod(member.contract.initialPeriod),
+			joiningFeeAmount: member.contract.joiningFeeAmount ?? "",
+			yearlyFeeAmount: member.contract.yearlyFeeAmount ?? "",
+		});
+	};
+
+	const handleEditSubmit = async () => {
+		await updateMemberMutation.mutateAsync({
+			memberId,
+			firstName: formState.firstName,
+			lastName: formState.lastName,
+			email: formState.email,
+			phone: formState.phone,
+			guardianName: formState.guardianName || undefined,
+			guardianEmail: formState.guardianEmail || undefined,
+			guardianPhone: formState.guardianPhone || undefined,
+			street: formState.street,
+			city: formState.city,
+			state: formState.state,
+			postalCode: formState.postalCode,
+			country: formState.country,
+			memberNotes: formState.memberNotes || undefined,
+			contractNotes: formState.contractNotes || undefined,
+			contractStartDate: formState.contractStartDate,
+			initialPeriod: formState.initialPeriod,
+			joiningFeeAmount: formState.joiningFeeAmount || undefined,
+			yearlyFeeAmount: formState.yearlyFeeAmount || undefined,
+		});
+	};
 
 	return (
 		<div className="flex flex-col gap-8">
@@ -172,11 +293,33 @@ export default function MemberDetailPage() {
 			</Link>
 
 			<div className="space-y-2">
-				<div className="flex items-center gap-3">
-					<h1 className="font-heading text-3xl">
-						{member.firstName} {member.lastName}
-					</h1>
-					{isCancelled && <Badge variant="destructive">Cancelled</Badge>}
+				<div className="flex flex-wrap items-center justify-between gap-3">
+					<div className="flex items-center gap-3">
+						<h1 className="font-heading text-3xl">
+							{member.firstName} {member.lastName}
+						</h1>
+						{isCancelled && <Badge variant="destructive">Cancelled</Badge>}
+					</div>
+					<div className="flex items-center gap-2">
+						{isEditing ? (
+							<>
+								<Button
+									variant="outline"
+									onClick={handleEditCancel}
+									disabled={isSubmitting}
+								>
+									Cancel
+								</Button>
+								<Button onClick={handleEditSubmit} disabled={isSubmitting}>
+									{isSubmitting ? "Saving..." : "Save"}
+								</Button>
+							</>
+						) : (
+							<Button variant="outline" onClick={() => setIsEditing(true)}>
+								Edit
+							</Button>
+						)}
+					</div>
 				</div>
 				<div className="flex items-center gap-2 font-mono text-muted-foreground text-sm">
 					<span>ID: {member.id}</span>
@@ -204,37 +347,146 @@ export default function MemberDetailPage() {
 										<p className="font-medium text-muted-foreground text-sm">
 											First Name
 										</p>
-										<p className="mt-1 text-sm">{member.firstName}</p>
+										{isEditing ? (
+											<Input
+												value={formState.firstName}
+												onChange={(event) =>
+													setFormState((prev) => ({
+														...prev,
+														firstName: event.target.value,
+													}))
+												}
+												className="mt-1"
+											/>
+										) : (
+											<p className="mt-1 text-sm">{member.firstName}</p>
+										)}
 									</div>
 									<div>
 										<p className="font-medium text-muted-foreground text-sm">
 											Last Name
 										</p>
-										<p className="mt-1 text-sm">{member.lastName}</p>
+										{isEditing ? (
+											<Input
+												value={formState.lastName}
+												onChange={(event) =>
+													setFormState((prev) => ({
+														...prev,
+														lastName: event.target.value,
+													}))
+												}
+												className="mt-1"
+											/>
+										) : (
+											<p className="mt-1 text-sm">{member.lastName}</p>
+										)}
 									</div>
 									<div>
 										<p className="font-medium text-muted-foreground text-sm">
 											Email
 										</p>
-										<p className="mt-1 text-sm">{member.email}</p>
+										{isEditing ? (
+											<Input
+												type="email"
+												value={formState.email}
+												onChange={(event) =>
+													setFormState((prev) => ({
+														...prev,
+														email: event.target.value,
+													}))
+												}
+												className="mt-1"
+											/>
+										) : (
+											<p className="mt-1 text-sm">{member.email}</p>
+										)}
 									</div>
 									<div>
 										<p className="font-medium text-muted-foreground text-sm">
 											Phone
 										</p>
-										<p className="mt-1 text-sm">{member.phone}</p>
+										{isEditing ? (
+											<Input
+												type="tel"
+												value={formState.phone}
+												onChange={(event) =>
+													setFormState((prev) => ({
+														...prev,
+														phone: event.target.value,
+													}))
+												}
+												className="mt-1"
+											/>
+										) : (
+											<p className="mt-1 text-sm">{member.phone}</p>
+										)}
 									</div>
 									<div className="sm:col-span-2">
 										<p className="font-medium text-muted-foreground text-sm">
 											Address
 										</p>
-										<p className="mt-1 text-sm">
-											{member.street}
-											<br />
-											{member.postalCode} {member.city}, {member.state}
-											<br />
-											{member.country}
-										</p>
+										{isEditing ? (
+											<div className="mt-1 grid gap-2 md:grid-cols-2">
+												<Input
+													value={formState.street}
+													onChange={(event) =>
+														setFormState((prev) => ({
+															...prev,
+															street: event.target.value,
+														}))
+													}
+													placeholder="Street"
+												/>
+												<Input
+													value={formState.city}
+													onChange={(event) =>
+														setFormState((prev) => ({
+															...prev,
+															city: event.target.value,
+														}))
+													}
+													placeholder="City"
+												/>
+												<Input
+													value={formState.state}
+													onChange={(event) =>
+														setFormState((prev) => ({
+															...prev,
+															state: event.target.value,
+														}))
+													}
+													placeholder="State"
+												/>
+												<Input
+													value={formState.postalCode}
+													onChange={(event) =>
+														setFormState((prev) => ({
+															...prev,
+															postalCode: event.target.value,
+														}))
+													}
+													placeholder="Postal Code"
+												/>
+												<Input
+													value={formState.country}
+													onChange={(event) =>
+														setFormState((prev) => ({
+															...prev,
+															country: event.target.value,
+														}))
+													}
+													placeholder="Country"
+												/>
+											</div>
+										) : (
+											<p className="mt-1 text-sm">
+												{member.street}
+												<br />
+												{member.postalCode} {member.city}, {member.state}
+												<br />
+												{member.country}
+											</p>
+										)}
 									</div>
 								</div>
 							</FramePanel>
@@ -286,9 +538,23 @@ export default function MemberDetailPage() {
 											<p className="font-medium text-muted-foreground text-sm">
 												Start Date
 											</p>
-											<p className="mt-1 text-sm">
-												{formatDate(member.contract.startDate)}
-											</p>
+											{isEditing ? (
+												<Input
+													type="date"
+													value={formState.contractStartDate}
+													onChange={(event) =>
+														setFormState((prev) => ({
+															...prev,
+															contractStartDate: event.target.value,
+														}))
+													}
+													className="mt-1"
+												/>
+											) : (
+												<p className="mt-1 text-sm">
+													{formatDate(member.contract.startDate)}
+												</p>
+											)}
 										</div>
 										<div>
 											<p className="font-medium text-muted-foreground text-sm">
@@ -318,9 +584,23 @@ export default function MemberDetailPage() {
 													One-time
 												</p>
 											</div>
-											<span className="font-semibold text-lg">
-												{formatCurrency(member.contract.joiningFeeAmount)}
-											</span>
+											{isEditing ? (
+												<Input
+													value={formState.joiningFeeAmount}
+													onChange={(event) =>
+														setFormState((prev) => ({
+															...prev,
+															joiningFeeAmount: event.target.value,
+														}))
+													}
+													className="w-28"
+													placeholder="0.00"
+												/>
+											) : (
+												<span className="font-semibold text-lg">
+													{formatCurrency(member.contract.joiningFeeAmount)}
+												</span>
+											)}
 										</div>
 										<div className="flex items-center justify-between rounded-lg border bg-muted/50 p-4">
 											<div>
@@ -329,9 +609,23 @@ export default function MemberDetailPage() {
 													{formatCurrency(yearlyFeeMonthly.toFixed(2))}/month
 												</p>
 											</div>
-											<span className="font-semibold text-lg">
-												{formatCurrency(member.contract.yearlyFeeAmount)}
-											</span>
+											{isEditing ? (
+												<Input
+													value={formState.yearlyFeeAmount}
+													onChange={(event) =>
+														setFormState((prev) => ({
+															...prev,
+															yearlyFeeAmount: event.target.value,
+														}))
+													}
+													className="w-28"
+													placeholder="0.00"
+												/>
+											) : (
+												<span className="font-semibold text-lg">
+													{formatCurrency(member.contract.yearlyFeeAmount)}
+												</span>
+											)}
 										</div>
 									</div>
 
@@ -397,9 +691,59 @@ export default function MemberDetailPage() {
 						</FrameHeader>
 						<CollapsiblePanel>
 							<FramePanel>
-								{member.guardianName ||
-								member.guardianEmail ||
-								member.guardianPhone ? (
+								{isEditing ? (
+									<div className="grid gap-6 sm:grid-cols-2">
+										<div>
+											<p className="font-medium text-muted-foreground text-sm">
+												Name
+											</p>
+											<Input
+												value={formState.guardianName}
+												onChange={(event) =>
+													setFormState((prev) => ({
+														...prev,
+														guardianName: event.target.value,
+													}))
+												}
+												className="mt-1"
+											/>
+										</div>
+										<div>
+											<p className="font-medium text-muted-foreground text-sm">
+												Email
+											</p>
+											<Input
+												type="email"
+												value={formState.guardianEmail}
+												onChange={(event) =>
+													setFormState((prev) => ({
+														...prev,
+														guardianEmail: event.target.value,
+													}))
+												}
+												className="mt-1"
+											/>
+										</div>
+										<div>
+											<p className="font-medium text-muted-foreground text-sm">
+												Phone
+											</p>
+											<Input
+												type="tel"
+												value={formState.guardianPhone}
+												onChange={(event) =>
+													setFormState((prev) => ({
+														...prev,
+														guardianPhone: event.target.value,
+													}))
+												}
+												className="mt-1"
+											/>
+										</div>
+									</div>
+								) : member.guardianName ||
+									member.guardianEmail ||
+									member.guardianPhone ? (
 									<div className="grid gap-6 sm:grid-cols-2">
 										<div>
 											<p className="font-medium text-muted-foreground text-sm">
@@ -459,41 +803,80 @@ export default function MemberDetailPage() {
 						<CollapsiblePanel>
 							<FramePanel>
 								<div className="space-y-4">
-									{member.notes && (
-										<div>
-											<p className="font-medium text-muted-foreground text-sm">
-												Member Notes
-											</p>
-											<p className="mt-2 whitespace-pre-wrap text-sm">
-												{member.notes}
-											</p>
-										</div>
-									)}
-									{member.contract.notes && (
-										<>
-											{member.notes && <Separator />}
+									{isEditing ? (
+										<div className="space-y-4">
+											<div>
+												<p className="font-medium text-muted-foreground text-sm">
+													Member Notes
+												</p>
+												<Textarea
+													value={formState.memberNotes}
+													onChange={(event) =>
+														setFormState((prev) => ({
+															...prev,
+															memberNotes: event.target.value,
+														}))
+													}
+													className="mt-2"
+													rows={3}
+												/>
+											</div>
 											<div>
 												<p className="font-medium text-muted-foreground text-sm">
 													Contract Notes
 												</p>
-												<p className="mt-2 whitespace-pre-wrap text-sm">
-													{member.contract.notes}
-												</p>
+												<Textarea
+													value={formState.contractNotes}
+													onChange={(event) =>
+														setFormState((prev) => ({
+															...prev,
+															contractNotes: event.target.value,
+														}))
+													}
+													className="mt-2"
+													rows={3}
+												/>
 											</div>
+										</div>
+									) : (
+										<>
+											{member.notes && (
+												<div>
+													<p className="font-medium text-muted-foreground text-sm">
+														Member Notes
+													</p>
+													<p className="mt-2 whitespace-pre-wrap text-sm">
+														{member.notes}
+													</p>
+												</div>
+											)}
+											{member.contract.notes && (
+												<>
+													{member.notes && <Separator />}
+													<div>
+														<p className="font-medium text-muted-foreground text-sm">
+															Contract Notes
+														</p>
+														<p className="mt-2 whitespace-pre-wrap text-sm">
+															{member.contract.notes}
+														</p>
+													</div>
+												</>
+											)}
+											{!member.notes && !member.contract.notes && (
+												<Empty>
+													<EmptyHeader>
+														<EmptyMedia variant="icon">
+															<FileText />
+														</EmptyMedia>
+														<EmptyTitle>No Notes</EmptyTitle>
+														<EmptyDescription>
+															No notes have been added for this member yet.
+														</EmptyDescription>
+													</EmptyHeader>
+												</Empty>
+											)}
 										</>
-									)}
-									{!member.notes && !member.contract.notes && (
-										<Empty>
-											<EmptyHeader>
-												<EmptyMedia variant="icon">
-													<FileText />
-												</EmptyMedia>
-												<EmptyTitle>No Notes</EmptyTitle>
-												<EmptyDescription>
-													No notes have been added for this member yet.
-												</EmptyDescription>
-											</EmptyHeader>
-										</Empty>
 									)}
 								</div>
 							</FramePanel>

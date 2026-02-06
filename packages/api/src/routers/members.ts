@@ -73,6 +73,43 @@ const cancelContractSchema = z.object({
 		.regex(/^\d{4}-\d{2}-01$/, "Must be 1st day of month (YYYY-MM-01)"),
 });
 
+const updateMemberSchema = z.object({
+	memberId: z.string(),
+	// Personal info
+	firstName: z.string().min(1, "First name is required").max(255),
+	lastName: z.string().min(1, "Last name is required").max(255),
+	email: z.string().email("Invalid email address"),
+	phone: z.string().min(1, "Phone is required"),
+	// Address
+	street: z.string().min(1, "Street is required"),
+	city: z.string().min(1, "City is required"),
+	state: z.string().min(1, "State is required"),
+	postalCode: z.string().min(1, "Postal code is required"),
+	country: z.string().min(1, "Country is required"),
+	// Optional notes
+	memberNotes: z.string().max(1000).optional(),
+	// Optional guardian info
+	guardianName: z.string().optional(),
+	guardianEmail: z.string().email().optional().or(z.literal("")),
+	guardianPhone: z.string().optional(),
+	// Contract details
+	contractStartDate: z
+		.string()
+		.regex(/^\d{4}-\d{2}-01$/, "Must be 1st day of month (YYYY-MM-01)"),
+	initialPeriod: z.enum(["monthly", "half_yearly", "yearly"]),
+	joiningFeeAmount: z
+		.string()
+		.regex(/^\d+(\.\d{1,2})?$/)
+		.optional()
+		.or(z.literal("")),
+	yearlyFeeAmount: z
+		.string()
+		.regex(/^\d+(\.\d{1,2})?$/)
+		.optional()
+		.or(z.literal("")),
+	contractNotes: z.string().max(1000).optional(),
+});
+
 const assignGroupSchema = z.object({
 	memberId: z.string(),
 	groupId: z.string(),
@@ -479,6 +516,69 @@ export const membersRouter = {
 			}
 		})
 		.route({ method: "POST", path: "/members" }),
+
+	update: protectedProcedure
+		.use(rateLimitMiddleware(5))
+		.use(requirePermission({ member: ["update"] }))
+		.input(updateMemberSchema)
+		.handler(async ({ input, context }) => {
+			const organizationId = context.session.activeOrganizationId!;
+
+			// Validate that contractStartDate is 1st of month
+			const startDate = new Date(input.contractStartDate);
+			if (startDate.getDate() !== 1) {
+				throw new ORPCError("BAD_REQUEST", {
+					message: "Contract start date must be the 1st of the month",
+				});
+			}
+
+			try {
+				const result = await DB.mutation.members.updateMember({
+					memberId: input.memberId,
+					organizationId,
+					memberData: {
+						firstName: input.firstName,
+						lastName: input.lastName,
+						email: input.email,
+						phone: input.phone,
+						street: input.street,
+						city: input.city,
+						state: input.state,
+						postalCode: input.postalCode,
+						country: input.country,
+						notes: input.memberNotes,
+						guardianName: input.guardianName,
+						guardianEmail: input.guardianEmail || undefined,
+						guardianPhone: input.guardianPhone,
+					},
+					contractData: {
+						// initialPeriod: input.initialPeriod,
+						startDate: input.contractStartDate,
+						joiningFeeAmount: input.joiningFeeAmount?.trim() || undefined,
+						yearlyFeeAmount: input.yearlyFeeAmount?.trim() || undefined,
+						notes: input.contractNotes,
+					},
+				});
+
+				return result;
+			} catch (error) {
+				if (error instanceof ORPCError) throw error;
+
+				after(() => {
+					logger.error("Failed to update member", {
+						error,
+						organizationId,
+						memberId: input.memberId,
+						userId: context.user.id,
+					});
+				});
+
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: "Failed to update member",
+				});
+			}
+		})
+		.route({ method: "PATCH", path: "/members/:memberId" }),
 
 	cancelContract: protectedProcedure
 		.use(rateLimitMiddleware(10))

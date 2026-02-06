@@ -199,6 +199,91 @@ export const DB = {
 	},
 	mutation: {
 		members: {
+			updateMember: async ({
+				memberId,
+				organizationId,
+				memberData,
+				contractData,
+			}: {
+				memberId: string;
+				organizationId: string;
+				memberData: {
+					firstName: string;
+					lastName: string;
+					email: string;
+					phone: string;
+					street: string;
+					city: string;
+					state: string;
+					postalCode: string;
+					country: string;
+					notes?: string;
+					guardianName?: string;
+					guardianEmail?: string;
+					guardianPhone?: string;
+				};
+				contractData: {
+					// initialPeriod: string;
+					startDate: string;
+					joiningFeeAmount?: string;
+					yearlyFeeAmount?: string;
+					notes?: string;
+				};
+			}) => {
+				return db.transaction(async (tx) => {
+					const [updatedMember] = await tx
+						.update(clubMember)
+						.set({
+							firstName: memberData.firstName,
+							lastName: memberData.lastName,
+							email: memberData.email,
+							phone: memberData.phone,
+							street: memberData.street,
+							city: memberData.city,
+							state: memberData.state,
+							postalCode: memberData.postalCode,
+							country: memberData.country,
+							notes: memberData.notes,
+							guardianName: memberData.guardianName,
+							guardianEmail: memberData.guardianEmail,
+							guardianPhone: memberData.guardianPhone,
+						})
+						.where(
+							and(
+								eq(clubMember.id, memberId),
+								eq(clubMember.organizationId, organizationId),
+							),
+						)
+						.returning();
+
+					if (!updatedMember) {
+						throw new Error("Failed to update member");
+					}
+
+					const [updatedContract] = await tx
+						.update(contract)
+						.set({
+							// initialPeriod: contractData.initialPeriod,
+							startDate: contractData.startDate,
+							joiningFeeAmount: contractData.joiningFeeAmount,
+							yearlyFeeAmount: contractData.yearlyFeeAmount,
+							notes: contractData.notes,
+						})
+						.where(
+							and(
+								eq(contract.memberId, memberId),
+								eq(contract.organizationId, organizationId),
+							),
+						)
+						.returning();
+
+					if (!updatedContract) {
+						throw new Error("Failed to update contract");
+					}
+
+					return { member: updatedMember, contract: updatedContract };
+				});
+			},
 			createMemberWithContract: async ({
 				organizationId,
 				memberId,
