@@ -6,6 +6,7 @@ import { nextCookies } from "better-auth/next-js";
 import { organization, twoFactor } from "better-auth/plugins";
 import { ac, admin, member, owner } from "./permissions";
 import { manageSessions } from "./plugins/manageSessions";
+import { haveIBeenPwned } from "better-auth/plugins"
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, {
@@ -63,6 +64,9 @@ export const auth = betterAuth({
 			issuer: "WT",
 		}),
 		manageSessions(),
+		haveIBeenPwned({
+			customPasswordCompromisedMessage: "This password has been found in a Data breach. Please choose a more secure one"
+		}),
 		nextCookies(), //! has to be last plugin in array
 	],
 	experimental: { joins: true },
