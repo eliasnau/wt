@@ -75,10 +75,42 @@ export function requireSepaSettings(
 	return settings as SepaSettingsRequiredCore;
 }
 
+export type SepaPaymentInfo = {
+	collectionDate?: Date;
+	creditorIBAN?: string;
+	creditorBIC?: string;
+	creditorName?: string;
+	creditorId?: string;
+	batchBooking?: boolean;
+	addTransaction: (tx: SepaTransaction) => void;
+	createTransaction: () => SepaTransaction;
+};
+
+export type SepaTransaction = {
+	debtorName?: string;
+	debtorIBAN?: string;
+	debtorBIC?: string;
+	mandateId?: string;
+	mandateSignatureDate?: Date;
+	amount?: number;
+	currency?: string;
+	remittanceInfo?: string;
+	end2endId?: string;
+};
+
+export type SepaDocument = {
+	grpHdr: {
+		id: string;
+		created: Date;
+		initiatorName: string;
+	};
+	addPaymentInfo: (info: SepaPaymentInfo) => void;
+	createPaymentInfo: () => SepaPaymentInfo;
+	toString: () => string;
+};
+
 export type SepaModule = {
-	Document: new (format?: string) => any;
-	PaymentInfo: new () => any;
-	Transaction: new () => any;
+	Document: new (format?: string) => SepaDocument;
 	validateIBAN: (iban: string) => boolean;
 	validateCreditorID: (creditorId: string) => boolean;
 };

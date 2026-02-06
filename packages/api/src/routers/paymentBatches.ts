@@ -41,6 +41,15 @@ function clampText(value: string, max: number): string {
 	return value.slice(0, max);
 }
 
+function normalizeSepaId(value: string, maxLength: number): string {
+	const normalized = value
+		.replace(/[^A-Za-z0-9+?\/\-:().,' ]+/g, "")
+		.replace(/^\/+/, "");
+	return normalized.length <= maxLength
+		? normalized
+		: normalized.slice(0, maxLength);
+}
+
 function buildEndToEndId(prefix: string, paymentId: string): string {
 	const raw = `${prefix}.${paymentId}`;
 	if (raw.length <= 35) return raw;
@@ -530,7 +539,7 @@ export const paymentBatchesRouter = {
 			doc.grpHdr.initiatorName =
 				sepaSettings.initiatorName ?? sepaSettings.creditorName;
 
-			const info = new sepa.PaymentInfo();
+			const info = doc.createPaymentInfo();
 			info.collectionDate = new Date(batch.billingMonth);
 			info.creditorIBAN = sepaSettings.creditorIban;
 			info.creditorBIC = sepaSettings.creditorBic;
@@ -595,16 +604,19 @@ export const paymentBatchesRouter = {
 					140,
 				);
 
-				const tx = new sepa.Transaction();
-				tx.debitorName = memberName;
-				tx.debitorIBAN = paymentRow.memberIban;
-				tx.debitorBIC = paymentRow.memberBic;
-				tx.mandateId = paymentRow.contractId;
+				const tx = info.createTransaction();
+				tx.debtorName = memberName;
+				tx.debtorIBAN = paymentRow.memberIban;
+				tx.debtorBIC = paymentRow.memberBic;
+				tx.mandateId = normalizeSepaId(paymentRow.contractId, 35);
 				tx.mandateSignatureDate = new Date(paymentRow.contractStartDate);
 				tx.amount = amount;
 				tx.currency = "EUR";
 				tx.remittanceInfo = remittanceInfo;
-				tx.end2endId = buildEndToEndId(batchLabel, paymentRow.id);
+				tx.end2endId = normalizeSepaId(
+					buildEndToEndId(batchLabel, paymentRow.id),
+					35,
+				);
 				info.addTransaction(tx);
 			}
 
