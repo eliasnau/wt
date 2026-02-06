@@ -4,20 +4,20 @@ import {
 	clubMember,
 	contract,
 	groupMember,
-	payment,
-	paymentBatch,
 	organization,
 	organizationSettings,
+	payment,
+	paymentBatch,
 } from "@repo/db/schema";
 import { z } from "zod";
 import { protectedProcedure } from "../index";
-import { requirePermission } from "../middleware/permissions";
-import { rateLimitMiddleware } from "../middleware/ratelimit";
 import {
 	loadSepaModule,
 	requireSepaSettings,
 	validateCreditorDetails,
 } from "../lib/sepa";
+import { requirePermission } from "../middleware/permissions";
+import { rateLimitMiddleware } from "../middleware/ratelimit";
 
 type RemittanceContext = {
 	monthName: string;
@@ -389,9 +389,6 @@ export const paymentBatchesRouter = {
 					memberFirstName: clubMember.firstName,
 					memberLastName: clubMember.lastName,
 					memberEmail: clubMember.email,
-					memberIban: clubMember.iban,
-					memberBic: clubMember.bic,
-					memberCardHolder: clubMember.cardHolder,
 				})
 				.from(payment)
 				.innerJoin(contract, eq(payment.contractId, contract.id))
@@ -421,7 +418,10 @@ export const paymentBatchesRouter = {
 					organizationName: organization.name,
 				})
 				.from(paymentBatch)
-				.innerJoin(organization, eq(paymentBatch.organizationId, organization.id))
+				.innerJoin(
+					organization,
+					eq(paymentBatch.organizationId, organization.id),
+				)
 				.where(
 					and(
 						eq(paymentBatch.id, input.id),

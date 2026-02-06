@@ -27,9 +27,6 @@ type Payment = {
 	memberFirstName: string;
 	memberLastName: string;
 	memberEmail: string;
-	memberIban: string;
-	memberBic: string | null;
-	memberCardHolder: string;
 };
 
 export function PaymentsTable({ payments }: { payments: Payment[] }) {
@@ -64,7 +61,6 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
 							<TableHead className="text-right">Joining Fee</TableHead>
 							<TableHead className="text-right">Yearly Fee</TableHead>
 							<TableHead className="text-right">Total</TableHead>
-							<TableHead>IBAN</TableHead>
 							<TableHead>Status</TableHead>
 						</TableRow>
 					</TableHeader>
@@ -96,9 +92,6 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
 								</TableCell>
 								<TableCell className="text-right font-semibold">
 									{formatCurrency(payment.totalAmount)}
-								</TableCell>
-								<TableCell className="font-mono text-sm">
-									{payment.memberIban}
 								</TableCell>
 								<TableCell>
 									<Badge variant="secondary" className="gap-1">
