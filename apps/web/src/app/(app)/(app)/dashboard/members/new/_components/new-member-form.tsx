@@ -1,12 +1,14 @@
 "use client";
 
 import { useForm } from "@tanstack/react-form";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { Check } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Field,
 	FieldError,
@@ -24,7 +26,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { client } from "@/utils/orpc";
+import { client, orpc } from "@/utils/orpc";
 
 const firstNameSchema = z.string().min(1, "First name is required").max(255);
 const lastNameSchema = z.string().min(1, "Last name is required").max(255);
@@ -57,6 +59,7 @@ const guardianEmailSchema = z
 	.or(z.literal(""));
 const guardianPhoneSchema = z.string().optional();
 const notesSchema = z.string().max(1000, "Maximum 1000 characters");
+const groupPriceSchema = /^\d+(\.\d{1,2})?$/;
 
 const formSchema = z.object({
 	firstName: firstNameSchema,
@@ -83,8 +86,34 @@ const formSchema = z.object({
 	contractNotes: notesSchema,
 });
 
+type GroupAssignment = {
+	groupId: string;
+	membershipPrice?: string;
+};
+
 export function NewMemberForm() {
 	const router = useRouter();
+	const [selectedGroupIds, setSelectedGroupIds] = useState<string[]>([]);
+	const [groupPrices, setGroupPrices] = useState<Record<string, string>>({});
+
+	const { data: groups = [], isLoading: isLoadingGroups } = useQuery(
+		orpc.groups.list.queryOptions({}),
+	);
+
+	const priceErrors = useMemo(() => {
+		return selectedGroupIds.reduce<Record<string, string | undefined>>(
+			(errors, groupId) => {
+				const value = groupPrices[groupId];
+				if (value && !groupPriceSchema.test(value)) {
+					errors[groupId] = "Invalid price format";
+				}
+				return errors;
+			},
+			{},
+		);
+	}, [groupPrices, selectedGroupIds]);
+
+	const hasInvalidGroupPrice = Object.keys(priceErrors).length > 0;
 
 	const createMemberMutation = useMutation({
 		mutationFn: async (data: {
@@ -109,11 +138,35 @@ export function NewMemberForm() {
 			yearlyFeeAmount?: string;
 			memberNotes?: string;
 			contractNotes?: string;
+			groupAssignments: GroupAssignment[];
 		}) => {
-			return await client.members.create(data);
+			const { groupAssignments, ...memberData } = data;
+			const result = await client.members.create(memberData);
+			const failedAssignments: GroupAssignment[] = [];
+
+			for (const assignment of groupAssignments) {
+				try {
+					await client.members.assignGroup({
+						memberId: result.member.id,
+						groupId: assignment.groupId,
+						membershipPrice: assignment.membershipPrice,
+					});
+				} catch {
+					failedAssignments.push(assignment);
+				}
+			}
+
+			return { result, failedAssignments };
 		},
-		onSuccess: () => {
+		onSuccess: ({ failedAssignments }) => {
 			toast.success("Member created successfully");
+			if (failedAssignments.length > 0) {
+				toast.error(
+					`Member created, but ${failedAssignments.length} group assignment${
+						failedAssignments.length === 1 ? "" : "s"
+					} failed.`,
+				);
+			}
 		},
 		onError: (error) => {
 			toast.error(
@@ -182,7 +235,25 @@ export function NewMemberForm() {
 				memberNotes: value.memberNotes,
 				contractNotes: value.contractNotes,
 			};
-			await createMemberMutation.mutateAsync(submissionData);
+			if (hasInvalidGroupPrice) {
+				toast.error("Please fix group price errors before submitting.");
+				return;
+			}
+
+			const groupAssignments = selectedGroupIds.map((groupId) => {
+				const membershipPrice = groupPrices[groupId];
+				return {
+					groupId,
+					membershipPrice: membershipPrice?.trim()
+						? membershipPrice.trim()
+						: undefined,
+				};
+			});
+
+			await createMemberMutation.mutateAsync({
+				...submissionData,
+				groupAssignments,
+			});
 		},
 	});
 
@@ -591,6 +662,111 @@ export function NewMemberForm() {
 									</form.Field>
 								</div>
 							</div>
+						</div>
+
+						<FieldSeparator />
+
+						<div className="space-y-4">
+							<div>
+								<h3 className="font-semibold text-foreground text-sm">
+									Group Assignments
+								</h3>
+								<p className="text-muted-foreground text-sm">
+									Assign this member to one or more groups. You can override the
+									default membership price per group.
+								</p>
+							</div>
+
+							{isLoadingGroups ? (
+								<p className="text-muted-foreground text-sm">Loading groups...</p>
+							) : groups.length === 0 ? (
+								<p className="text-muted-foreground text-sm">
+									No groups found. Create a group to assign members.
+								</p>
+							) : (
+								<div className="space-y-3">
+									{groups.map((group) => {
+										const isSelected = selectedGroupIds.includes(group.id);
+										const priceError = priceErrors[group.id];
+										return (
+											<div
+												key={group.id}
+												className="flex items-start gap-3 rounded-lg border bg-background p-3"
+											>
+												<Checkbox
+													checked={isSelected}
+													onCheckedChange={(checked) => {
+														const isChecked = checked === true;
+														setSelectedGroupIds((prev) => {
+															if (isChecked) {
+																return prev.includes(group.id)
+																	? prev
+																	: [...prev, group.id];
+															}
+															const next = prev.filter((id) => id !== group.id);
+															setGroupPrices((prices) => {
+																if (!(group.id in prices)) return prices;
+																const { [group.id]: _, ...rest } = prices;
+																return rest;
+															});
+															return next;
+														});
+													}}
+													disabled={isLoading}
+													aria-label={`Select ${group.name}`}
+												/>
+												<div className="flex-1 space-y-2">
+													<div className="flex flex-wrap items-center justify-between gap-2">
+														<span className="font-medium text-sm">
+															{group.name}
+														</span>
+														{group.defaultMembershipPrice ? (
+															<span className="text-muted-foreground text-xs">
+																Default: €{group.defaultMembershipPrice}
+															</span>
+														) : null}
+													</div>
+													{group.description ? (
+														<p className="text-muted-foreground text-xs">
+															{group.description}
+														</p>
+													) : null}
+
+													{isSelected ? (
+														<div className="space-y-1.5">
+															<FieldLabel htmlFor={`group-price-${group.id}`}>
+																Custom Monthly Price (Optional)
+															</FieldLabel>
+															<Input
+																id={`group-price-${group.id}`}
+																value={groupPrices[group.id] ?? ""}
+																onChange={(event) => {
+																	const value = event.target.value;
+																	setGroupPrices((prev) => ({
+																		...prev,
+																		[group.id]: value,
+																	}));
+																}}
+																placeholder={
+																	group.defaultMembershipPrice
+																		? `Default: ${group.defaultMembershipPrice}`
+																		: "Leave empty to use default"
+																}
+																aria-invalid={!!priceError}
+															/>
+															{priceError ? (
+																<p className="text-destructive text-xs">
+																	{priceError}
+																</p>
+															) : null}
+														</div>
+													) : null}
+												</div>
+											</div>
+										);
+									})}
+								</div>
+							)}
 						</div>
 
 						<FieldSeparator />
