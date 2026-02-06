@@ -178,6 +178,31 @@ export const membersRouter = {
 		})
 		.route({ method: "GET", path: "/members/:memberId" }),
 
+	getPaymentDetails: protectedProcedure
+		.use(rateLimitMiddleware(2))
+		.use(requirePermission({ member: ["view_payment"] }))
+		.input(getMemberSchema)
+		.handler(async ({ input, context }) => {
+			const organizationId = context.session.activeOrganizationId!;
+			const member = await DB.query.members.getMembersPaymentInfo({
+				id: input.memberId,
+			});
+
+			if (!member || member.organizationId !== organizationId) {
+				throw new ORPCError("NOT_FOUND", {
+					message: "Member not found",
+				});
+			}
+
+			return {
+				memberId: member.id,
+				iban: member.iban,
+				bic: member.bic,
+				cardHolder: member.cardHolder,
+			};
+		})
+		.route({ method: "GET", path: "/members/:memberId/payment-details" }),
+
 	list: protectedProcedure
 		.use(rateLimitMiddleware(1))
 		.use(requirePermission({ member: ["list"] }))

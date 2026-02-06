@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,7 +36,6 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { orpc } from "@/utils/orpc";
-import { toast } from "sonner";
 import { AssignGroupDialog } from "./_components/assign-group-dialog";
 import { MemberGroupsTable } from "./_components/member-groups-table";
 
@@ -91,6 +91,13 @@ export default function MemberDetailPage() {
 	} = useQuery(
 		orpc.members.get.queryOptions({
 			input: { memberId },
+		}),
+	);
+
+	const paymentDetailsQuery = useQuery(
+		orpc.members.getPaymentDetails.queryOptions({
+			input: { memberId },
+			enabled: false,
 		}),
 	);
 
@@ -250,7 +257,10 @@ export default function MemberDetailPage() {
 						</FrameHeader>
 						<CollapsiblePanel>
 							<FramePanel>
-								<MemberGroupsTable groups={member.groups} memberId={member.id} />
+								<MemberGroupsTable
+									groups={member.groups}
+									memberId={member.id}
+								/>
 							</FramePanel>
 						</CollapsiblePanel>
 					</Collapsible>
@@ -505,17 +515,64 @@ export default function MemberDetailPage() {
 						</FrameHeader>
 						<CollapsiblePanel>
 							<FramePanel>
-								<Empty>
-									<EmptyHeader>
-										<EmptyMedia variant="icon">
-											<CreditCard />
-										</EmptyMedia>
-										<EmptyTitle>No Permission</EmptyTitle>
-										<EmptyDescription>
-											You don't have permission to view payment information.
-										</EmptyDescription>
-									</EmptyHeader>
-								</Empty>
+								{paymentDetailsQuery.data ? (
+									<div className="grid gap-6 sm:grid-cols-2">
+										<div>
+											<p className="font-medium text-muted-foreground text-sm">
+												IBAN
+											</p>
+											<p className="mt-1 font-mono text-sm">
+												{paymentDetailsQuery.data.iban}
+											</p>
+										</div>
+										<div>
+											<p className="font-medium text-muted-foreground text-sm">
+												BIC
+											</p>
+											<p className="mt-1 font-mono text-sm">
+												{paymentDetailsQuery.data.bic}
+											</p>
+										</div>
+										<div className="sm:col-span-2">
+											<p className="font-medium text-muted-foreground text-sm">
+												Account Holder
+											</p>
+											<p className="mt-1 text-sm">
+												{paymentDetailsQuery.data.cardHolder}
+											</p>
+										</div>
+									</div>
+								) : paymentDetailsQuery.error ? (
+									<Empty>
+										<EmptyHeader>
+											<EmptyMedia variant="icon">
+												<CreditCard />
+											</EmptyMedia>
+											<EmptyTitle>No Permission</EmptyTitle>
+											<EmptyDescription>
+												You don't have permission to view payment information.
+											</EmptyDescription>
+										</EmptyHeader>
+									</Empty>
+								) : (
+									<div className="flex items-center justify-between gap-4">
+										<div>
+											<p className="font-medium text-sm">
+												View payment details
+											</p>
+											<p className="text-muted-foreground text-xs">
+												Sensitive information. Access is audited.
+											</p>
+										</div>
+										<Button
+											variant="outline"
+											onClick={() => paymentDetailsQuery.refetch()}
+											disabled={paymentDetailsQuery.isFetching}
+										>
+											{paymentDetailsQuery.isFetching ? "Loading..." : "View"}
+										</Button>
+									</div>
+								)}
 							</FramePanel>
 						</CollapsiblePanel>
 					</Collapsible>
