@@ -192,7 +192,7 @@ export function MembersSection() {
 										<Avatar>
 											<AvatarImage
 												alt={member.user.name || "User"}
-												src={member.user.image || undefined}
+												src={member.user.image || `https://avatar.vercel.sh/${member.user.id}` || undefined}
 											/>
 											<AvatarFallback>
 												<User className="size-4" />
