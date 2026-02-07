@@ -40,6 +40,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { orpc } from "@/utils/orpc";
 import { AssignGroupDialog } from "./_components/assign-group-dialog";
+import { CancelMemberDialog } from "../_components/cancel-member-dialog";
 import { MemberGroupsTable } from "./_components/member-groups-table";
 
 function formatDate(dateString: string | null | undefined) {
@@ -95,6 +96,7 @@ export default function MemberDetailPage() {
 	const params = useParams();
 	const memberId = params.id as string;
 	const [isEditing, setIsEditing] = useState(false);
+	const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 	const [formState, setFormState] = useState({
 		firstName: "",
 		lastName: "",
@@ -221,6 +223,7 @@ export default function MemberDetailPage() {
 	}
 
 	const isCancelled = !!member.contract.cancelledAt;
+	const memberName = `${member.firstName} ${member.lastName}`.trim();
 
 	// Calculate total monthly payment from groups
 	const totalGroupPayment = member.groups.reduce((sum, gm) => {
@@ -315,9 +318,19 @@ export default function MemberDetailPage() {
 								</Button>
 							</>
 						) : (
-							<Button variant="outline" onClick={() => setIsEditing(true)}>
-								Edit
-							</Button>
+							<>
+								{!isCancelled && (
+									<Button
+										variant="destructive"
+										onClick={() => setCancelDialogOpen(true)}
+									>
+										Cancel Membership
+									</Button>
+								)}
+								<Button variant="outline" onClick={() => setIsEditing(true)}>
+									Edit
+								</Button>
+							</>
 						)}
 					</div>
 				</div>
@@ -961,6 +974,15 @@ export default function MemberDetailPage() {
 					</Collapsible>
 				</Frame>
 			</div>
+
+			<CancelMemberDialog
+				memberId={member.id}
+				memberName={memberName}
+				initialPeriodEndDate={member.contract.initialPeriodEndDate}
+				open={cancelDialogOpen}
+				onOpenChange={setCancelDialogOpen}
+				onSuccess={() => refetch()}
+			/>
 		</div>
 	);
 }

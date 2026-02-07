@@ -79,6 +79,7 @@ import {
 } from "@/components/ui/tooltip";
 import { useDebounce } from "@/hooks/use-debounce";
 import type { client } from "@/utils/orpc";
+import { CancelMemberDialog } from "./cancel-member-dialog";
 import { MemberOverviewSheet } from "./member-overview-sheet";
 
 type MembersListResponse = InferClientOutputs<typeof client>["members"]["list"];
@@ -99,15 +100,18 @@ interface MembersTableProps {
 	search: string;
 	groupIds: string[];
 	groups: Group[];
+	includeCancelled: boolean;
 	onSearchChange: (search: string) => void;
 	onPageChange: (page: number) => void;
 	onLimitChange: (limit: number) => void;
 	onGroupFilterChange: (groupIds: string[]) => void;
+	onIncludeCancelledChange: (includeCancelled: boolean) => void;
 	loading?: boolean;
 }
 
 const createColumns = (
 	onViewMember: (member: MemberRow) => void,
+	onCancelMember: (member: MemberRow) => void,
 ): ColumnDef<MemberRow>[] => [
 	{
 		accessorKey: "firstName",
@@ -192,6 +196,7 @@ const createColumns = (
 		enableSorting: false,
 		cell: ({ row }) => {
 			const member = row.original;
+			const isCancelled = member.contract?.cancelledAt !== null;
 
 			return (
 				<div className="flex items-center justify-end gap-2">
@@ -219,10 +224,11 @@ const createColumns = (
 							<MenuSeparator />
 							<MenuItem
 								variant="destructive"
-								onClick={() => console.log("Cancel membership:", member)}
+								disabled={isCancelled}
+								onClick={() => onCancelMember(member)}
 							>
 								<UserXIcon />
-								Cancel Membership
+								{isCancelled ? "Already Cancelled" : "Cancel Membership"}
 							</MenuItem>
 						</MenuPopup>
 					</Menu>
@@ -238,18 +244,21 @@ export default function MembersTable({
 	search,
 	groupIds,
 	groups,
+	includeCancelled,
 	onSearchChange,
 	onPageChange,
 	onLimitChange,
 	onGroupFilterChange,
+	onIncludeCancelledChange,
 	loading = false,
 }: MembersTableProps) {
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [localSearch, setLocalSearch] = useState(search);
-	const [includeCancelled, setIncludeCancelled] = useState(false);
 	const [showArchived, setShowArchived] = useState(false);
 	const [selectedMember, setSelectedMember] = useState<MemberRow | null>(null);
 	const [sheetOpen, setSheetOpen] = useState(false);
+	const [cancelMember, setCancelMember] = useState<MemberRow | null>(null);
+	const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
 	// Debounce the search change handler
 	const debouncedOnSearchChange = useDebounce(onSearchChange, 300);
@@ -260,7 +269,12 @@ export default function MembersTable({
 		setSheetOpen(true);
 	};
 
-	const columns = createColumns(handleViewMember);
+	const handleCancelMember = (member: MemberRow) => {
+		setCancelMember(member);
+		setCancelDialogOpen(true);
+	};
+
+	const columns = createColumns(handleViewMember, handleCancelMember);
 	const skeletonRowKeys = useMemo(
 		() =>
 			Array.from(
@@ -405,7 +419,7 @@ export default function MembersTable({
 									<Checkbox
 										checked={includeCancelled}
 										onCheckedChange={(checked) =>
-											setIncludeCancelled(checked as boolean)
+											onIncludeCancelledChange(checked as boolean)
 										}
 										aria-label="Include cancelled members"
 									/>
@@ -625,6 +639,21 @@ export default function MembersTable({
 				open={sheetOpen}
 				onOpenChange={setSheetOpen}
 			/>
+
+			{cancelMember && (
+				<CancelMemberDialog
+					memberId={cancelMember.id}
+					memberName={`${cancelMember.firstName} ${cancelMember.lastName}`.trim()}
+					initialPeriodEndDate={cancelMember.contract?.initialPeriodEndDate}
+					open={cancelDialogOpen}
+					onOpenChange={(nextOpen) => {
+						setCancelDialogOpen(nextOpen);
+						if (!nextOpen) {
+							setCancelMember(null);
+						}
+					}}
+				/>
+			)}
 		</div>
 	);
 }

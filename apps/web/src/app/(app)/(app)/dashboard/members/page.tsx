@@ -27,7 +27,7 @@ import {
 } from "../_components/page-header";
 import { CreateMemberButton } from "./_components/create-member-button";
 import MembersTable from "./_components/members-table";
-import { Suspense } from "react";
+import { Suspense, useState } from "react";
 
 export default function MembersPage() {
 	return <Suspense><MembersPageContent /></Suspense>
@@ -40,6 +40,7 @@ export function MembersPageContent() {
 		search: parseAsString.withDefault(""),
 		groupIds: parseAsArrayOf(parseAsString).withDefault([]),
 	});
+	const [includeCancelled, setIncludeCancelled] = useState(false);
 
 	const UUID_REGEX =
 		/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -58,6 +59,7 @@ export function MembersPageContent() {
 				limit,
 				search: search || undefined,
 				groupIds: validGroupIds.length > 0 ? validGroupIds : undefined,
+				includeCancelled,
 			},
 		}),
 	);
@@ -86,6 +88,11 @@ export function MembersPageContent() {
 			(id) => id && id.trim().length > 0 && UUID_REGEX.test(id),
 		);
 		setPagination({ page: 1, groupIds: validGroupIds });
+	};
+
+	const handleIncludeCancelledChange = (nextValue: boolean) => {
+		setIncludeCancelled(nextValue);
+		setPagination({ page: 1 });
 	};
 
 	return (
@@ -139,10 +146,12 @@ export function MembersPageContent() {
 					search={search}
 					groupIds={groupIds}
 					groups={groupsData ?? []}
+					includeCancelled={includeCancelled}
 					onSearchChange={handleSearchChange}
 					onPageChange={handlePageChange}
 					onLimitChange={handleLimitChange}
 					onGroupFilterChange={handleGroupFilterChange}
+					onIncludeCancelledChange={handleIncludeCancelledChange}
 					loading={isPending}
 				/>
 			)}

@@ -59,6 +59,7 @@ const listMembersSchema = z.object({
 	limit: z.coerce.number().int().min(1).max(100).default(20),
 	search: z.string().optional(),
 	groupIds: z.array(z.string().uuid()).optional(),
+	includeCancelled: z.boolean().optional(),
 });
 
 const getMemberSchema = z.object({
@@ -247,6 +248,7 @@ export const membersRouter = {
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
 			const { page, limit } = input;
+			const includeCancelled = input.includeCancelled ?? false;
 
 			const rawSearch = input.search?.trim();
 			const search = rawSearch && rawSearch.length > 0 ? rawSearch : undefined;
@@ -295,7 +297,9 @@ export const membersRouter = {
             )`
 					: undefined,
 				// Only show members who haven't been cancelled OR are still in their paid period
-				sql`EXISTS (
+				includeCancelled
+					? undefined
+					: sql`EXISTS (
 				SELECT 1 FROM ${contract}
 				WHERE ${contract.memberId} = ${clubMember.id}
 				AND (
@@ -328,6 +332,7 @@ export const membersRouter = {
 					contractId: contract.id,
 					contractStartDate: contract.startDate,
 					contractInitialPeriod: contract.initialPeriod,
+					contractInitialPeriodEndDate: contract.initialPeriodEndDate,
 					contractJoiningFeeAmount: contract.joiningFeeAmount,
 					contractYearlyFeeAmount: contract.yearlyFeeAmount,
 					contractNotes: contract.notes,
@@ -391,6 +396,7 @@ export const membersRouter = {
 					contractId,
 					contractStartDate,
 					contractInitialPeriod,
+					contractInitialPeriodEndDate,
 					contractJoiningFeeAmount,
 					contractYearlyFeeAmount,
 					contractNotes,
@@ -405,6 +411,7 @@ export const membersRouter = {
 						id: contractId,
 						startDate: contractStartDate,
 						initialPeriod: contractInitialPeriod,
+						initialPeriodEndDate: contractInitialPeriodEndDate,
 						joiningFeeAmount: contractJoiningFeeAmount,
 						yearlyFeeAmount: contractYearlyFeeAmount,
 						notes: contractNotes,
@@ -588,6 +595,7 @@ export const membersRouter = {
 			const organizationId = context.session.activeOrganizationId!;
 
 			const effectiveDate = new Date(input.cancellationEffectiveDate);
+			effectiveDate.setHours(0, 0, 0, 0);
 			if (effectiveDate.getDate() !== 1) {
 				throw new ORPCError("BAD_REQUEST", {
 					message: "Cancellation effective date must be the 1st of the month",
@@ -623,6 +631,33 @@ export const membersRouter = {
 				throw new ORPCError("BAD_REQUEST", {
 					message: "Contract is already cancelled",
 				});
+			}
+
+			if (existingContract.initialPeriodEndDate) {
+				const initialEndDate = new Date(existingContract.initialPeriodEndDate);
+				initialEndDate.setHours(0, 0, 0, 0);
+
+				if (!Number.isNaN(initialEndDate.getTime())) {
+					const earliestEffectiveDate = new Date(
+						initialEndDate.getFullYear(),
+						initialEndDate.getMonth() + 1,
+						1,
+					);
+					earliestEffectiveDate.setHours(0, 0, 0, 0);
+
+					if (effectiveDate < earliestEffectiveDate) {
+						const formattedInitialEnd = initialEndDate
+							.toISOString()
+							.split("T")[0]!;
+						const formattedEarliest = earliestEffectiveDate
+							.toISOString()
+							.split("T")[0]!;
+
+						throw new ORPCError("BAD_REQUEST", {
+							message: `Initial period ends on ${formattedInitialEnd}. Cancellation effective date must be on or after ${formattedEarliest}.`,
+						});
+					}
+				}
 			}
 
 			const [updatedContract] = await db
