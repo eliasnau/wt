@@ -12,8 +12,6 @@ import { AuthProvider } from "@/providers/auth-provider";
 import { env } from "@repo/env/web";
 import { usePathname } from "next/navigation";
 
-const convex = new ConvexReactClient(env.NEXT_PUBLIC_CONVEX_URL);
-
 export default function Providers({ children }: { children: React.ReactNode }) {
 	const pathname = usePathname()
 	const lightPages = ['/terms', '/privacy']
@@ -29,11 +27,9 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 			disableTransitionOnChange
 		>
 			<QueryClientProvider client={queryClient}>
-				<ConvexProvider client={convex}>
 					<AuthProvider>
 						<NuqsAdapter>{children}</NuqsAdapter>
 					</AuthProvider>
-				</ConvexProvider>
 			</QueryClientProvider>
 			<Toaster richColors />
 		</ThemeProvider>
