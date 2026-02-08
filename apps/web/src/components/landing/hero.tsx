@@ -35,11 +35,13 @@ interface HeroProps {
     badge?: React.ReactNode;
     badgeVariant?: BadgeVariant;
     children?: React.ReactNode;
+    isSignedIn?: Boolean;
 }
 
 export function Hero({
     title,
     subtitle,
+    isSignedIn,
     badge,
     badgeVariant = "blue",
     children,
@@ -63,7 +65,7 @@ export function Hero({
                 <div className="space-y-3 mb-8">
                     <BlurFade duration={0.4} delay={0.125 * 7}>
                         <div className={"flex justify-center items-center gap-4"}>
-                            <Button size="xl" asChild>
+                            {isSignedIn ? <><Button size="xl" asChild>
                                 <Link
                                     href="/sign-up"
                                 >
@@ -72,13 +74,21 @@ export function Hero({
                             </Button>
                             <Button variant="secondary-two" size="xl" asChild>
                                 <Link
-                                    href={"/sales" as any}
-                                    target="_blank"
+                                    href={"/sign-in" as any}
                                 >
                                     {/* <IconMsgs /> */}
                                     Log in
                                 </Link>
-                            </Button>
+                            </Button> </>:
+                                <Button variant="secondary-two" size="xl" asChild>
+                                    <Link
+                                        href={"/dashboard" as any}
+                                    >
+                                        {/* <IconMsgs /> */}
+                                        Dashboard
+                                    </Link>
+                                </Button>
+                            }
                         </div>
                     </BlurFade>
                     {/* <BlurFade duration={0.4} delay={0.125 * 8}>

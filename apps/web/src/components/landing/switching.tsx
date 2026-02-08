@@ -37,9 +37,9 @@ export function SwitchingSection() {
 									</Paragraph>
 								</div>
 								<div className="flex flex-wrap gap-4">
-									<Button size="lg" className="z-10" asChild>
+									{/* <Button size="lg" className="z-10" asChild>
 										<Link href={"/contact" as any}>Book a migration call</Link>
-									</Button>
+									</Button> */}
 									<Button variant="secondary" size="lg" asChild>
 										<Link href={"/demo" as any}>See how it works</Link>
 									</Button>
