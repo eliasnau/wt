@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server";
-import { and, db, desc, eq, inArray, isNull, or, sql } from "@repo/db";
+import { and, db, desc, eq, inArray, isNull, or, sql, wsDb } from "@repo/db";
 import {
 	clubMember,
 	contract,
@@ -128,7 +128,7 @@ export const paymentBatchesRouter = {
 			}
 
 			// Start transaction to create batch and payments atomically
-			const result = await db.transaction(async (tx) => {
+			const result = await wsDb.transaction(async (tx) => {
 				// Find all active contracts for this organization
 				// that should be billed for this month
 				const activeContracts = await tx

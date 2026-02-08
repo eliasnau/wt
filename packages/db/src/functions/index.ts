@@ -1,4 +1,4 @@
-import { and, count, db, eq } from "..";
+import { and, count, db, eq, wsDb } from "..";
 import { clubMember, contract, group, groupMember } from "../schema";
 
 export const DB = {
@@ -230,7 +230,7 @@ export const DB = {
 					notes?: string;
 				};
 			}) => {
-				return db.transaction(async (tx) => {
+				return wsDb.transaction(async (tx) => {
 					const [updatedMember] = await tx
 						.update(clubMember)
 						.set({
@@ -320,7 +320,7 @@ export const DB = {
 					notes?: string;
 				};
 			}) => {
-				return db.transaction(async (tx) => {
+				return wsDb.transaction(async (tx) => {
 					const [newMember] = await tx
 						.insert(clubMember)
 						.values({
