@@ -14,7 +14,7 @@ export const env = createEnv({
 		AXIOM_DATASET: z.string().optional(),
 
 		// Database
-		DATABASE_URL: z.url(),
+		DATABASE_URL: z.string(), //String so it alows "*" pattern
 
 		// Better Auth
 		BETTER_AUTH_SECRET: z.string().min(32).optional(),
