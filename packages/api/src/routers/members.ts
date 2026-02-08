@@ -58,7 +58,7 @@ const listMembersSchema = z.object({
 	page: z.coerce.number().int().min(1).default(1),
 	limit: z.coerce.number().int().min(1).max(100).default(20),
 	search: z.string().optional(),
-	groupIds: z.array(z.string().uuid()).optional(),
+	groupIds: z.array(z.string()).optional(),
 	options: z
 		.object({
 			includeCancelledMembers: z.boolean().optional(),
@@ -71,7 +71,7 @@ const getMemberSchema = z.object({
 });
 
 const cancelContractSchema = z.object({
-	memberId: z.string().uuid(),
+	memberId: z.string(),
 	cancelReason: z.string().min(1, "Cancel reason is required").max(1000),
 	cancellationEffectiveDate: z
 		.string()
