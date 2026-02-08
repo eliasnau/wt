@@ -59,7 +59,11 @@ const listMembersSchema = z.object({
 	limit: z.coerce.number().int().min(1).max(100).default(20),
 	search: z.string().optional(),
 	groupIds: z.array(z.string().uuid()).optional(),
-	includeCancelled: z.boolean().optional(),
+	options: z
+		.object({
+			includeCancelledMembers: z.boolean().optional(),
+		})
+		.optional(),
 });
 
 const getMemberSchema = z.object({
@@ -248,7 +252,8 @@ export const membersRouter = {
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
 			const { page, limit } = input;
-			const includeCancelled = input.includeCancelled ?? false;
+			const includeCancelled =
+				input.options?.includeCancelledMembers ?? false;
 
 			const rawSearch = input.search?.trim();
 			const search = rawSearch && rawSearch.length > 0 ? rawSearch : undefined;

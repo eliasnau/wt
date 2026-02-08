@@ -24,7 +24,6 @@ import { CopyableTableCell } from "@/components/table/copyable-table-cell";
 import { DataTableFacetedFilter } from "@/components/table/data-table-faceted-filter";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Empty,
 	EmptyDescription,
@@ -40,6 +39,7 @@ import {
 } from "@/components/ui/input-group";
 import {
 	Menu,
+	MenuCheckboxItem,
 	MenuItem,
 	MenuPopup,
 	MenuSeparator,
@@ -52,7 +52,6 @@ import {
 	PaginationNext,
 	PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
 import {
 	Select,
 	SelectItem,
@@ -60,7 +59,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
 	Table,
@@ -120,6 +118,16 @@ const createColumns = (
 			const isCancelled = row.original.contract?.cancelledAt !== null;
 			const cancellationEffectiveDate =
 				row.original.contract?.cancellationEffectiveDate;
+			const effectiveDate = cancellationEffectiveDate
+				? new Date(cancellationEffectiveDate)
+				: null;
+			const today = new Date();
+			today.setHours(0, 0, 0, 0);
+			if (effectiveDate) {
+				effectiveDate.setHours(0, 0, 0, 0);
+			}
+			const isCancellationEffective =
+				isCancelled && effectiveDate ? effectiveDate < today : false;
 
 			if (!isCancelled) {
 				return <span>{row.original.firstName}</span>;
@@ -130,16 +138,26 @@ const createColumns = (
 					<span>{row.original.firstName}</span>
 					<TooltipProvider>
 						<Tooltip>
-							<TooltipTrigger render={<Badge variant="outline" />}>
+							<TooltipTrigger
+								render={
+									<Badge variant={isCancellationEffective ? "secondary" : "outline"} />
+								}
+							>
 								<span
 									aria-hidden="true"
-									className="size-1.5 rounded-full bg-red-500"
+									className={
+										isCancellationEffective
+											? "size-1.5 rounded-full bg-amber-500"
+											: "size-1.5 rounded-full bg-red-500"
+									}
 								/>
-								Cancelled
+								{isCancellationEffective ? "Ended" : "Cancelled"}
 							</TooltipTrigger>
 							<TooltipContent>
 								<p className="text-sm">
-									Membership ends on{" "}
+									{isCancellationEffective
+										? "Membership ended on "
+										: "Membership ends on "}
 									{cancellationEffectiveDate
 										? new Date(cancellationEffectiveDate).toLocaleDateString()
 										: "N/A"}
@@ -254,7 +272,6 @@ export default function MembersTable({
 }: MembersTableProps) {
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [localSearch, setLocalSearch] = useState(search);
-	const [showArchived, setShowArchived] = useState(false);
 	const [selectedMember, setSelectedMember] = useState<MemberRow | null>(null);
 	const [sheetOpen, setSheetOpen] = useState(false);
 	const [cancelMember, setCancelMember] = useState<MemberRow | null>(null);
@@ -400,54 +417,26 @@ export default function MembersTable({
 						</Button>
 					)}
 
-					{/* View Options Popover */}
-					<Popover>
-						<PopoverTrigger
+					<Menu>
+						<MenuTrigger
 							render={
 								<Button variant="outline" size="sm">
 									<MoreVerticalIcon />
 								</Button>
 							}
 						/>
-						<PopoverPopup align="end" className="w-[280px]">
-							<div className="flex flex-col gap-1 p-2">
-								<div className="flex cursor-pointer items-center justify-between gap-3 rounded-sm px-3 py-2.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground">
-									<span className="flex items-center gap-2">
-										<UserXIcon className="size-4" />
-										Include Cancelled Members
-									</span>
-									<Checkbox
-										checked={includeCancelled}
-										onCheckedChange={(checked) =>
-											onIncludeCancelledChange(checked as boolean)
-										}
-										aria-label="Include cancelled members"
-									/>
-								</div>
-								<div className="flex cursor-pointer items-center justify-between gap-3 rounded-sm px-3 py-2.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground">
-									<span className="flex items-center gap-2">
-										<UserIcon className="size-4" />
-										Show Archived Members
-									</span>
-									<Checkbox
-										checked={showArchived}
-										onCheckedChange={(checked) =>
-											setShowArchived(checked as boolean)
-										}
-										aria-label="Show archived members"
-									/>
-								</div>
-								<Separator className="my-1" />
-								<button
-									type="button"
-									onClick={() => console.log("Export")}
-									className="flex items-center gap-2 rounded-sm px-3 py-2.5 text-sm outline-none hover:bg-accent hover:text-accent-foreground"
-								>
-									Export to CSV
-								</button>
-							</div>
-						</PopoverPopup>
-					</Popover>
+						<MenuPopup align="end" className="w-[280px]">
+							<MenuCheckboxItem
+								variant="switch"
+								checked={includeCancelled}
+								onCheckedChange={(checked) =>
+									onIncludeCancelledChange(Boolean(checked))
+								}
+							>
+								Include Cancelled Members
+							</MenuCheckboxItem>
+						</MenuPopup>
+					</Menu>
 				</div>
 			</div>
 			<Table>

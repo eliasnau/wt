@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AlertCircle } from "lucide-react";
 import {
 	parseAsArrayOf,
+	parseAsBoolean,
 	parseAsInteger,
 	parseAsString,
 	useQueryStates,
@@ -27,20 +28,23 @@ import {
 } from "../_components/page-header";
 import { CreateMemberButton } from "./_components/create-member-button";
 import MembersTable from "./_components/members-table";
-import { Suspense, useState } from "react";
+import { Suspense } from "react";
 
 export default function MembersPage() {
 	return <Suspense><MembersPageContent /></Suspense>
 }
 
 export function MembersPageContent() {
-	const [{ page, limit, search, groupIds }, setPagination] = useQueryStates({
+	const [
+		{ page, limit, search, groupIds, includeCancelledMembers },
+		setPagination,
+	] = useQueryStates({
 		page: parseAsInteger.withDefault(1),
 		limit: parseAsInteger.withDefault(20),
 		search: parseAsString.withDefault(""),
 		groupIds: parseAsArrayOf(parseAsString).withDefault([]),
+		includeCancelledMembers: parseAsBoolean.withDefault(false),
 	});
-	const [includeCancelled, setIncludeCancelled] = useState(false);
 
 	const UUID_REGEX =
 		/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -59,7 +63,7 @@ export function MembersPageContent() {
 				limit,
 				search: search || undefined,
 				groupIds: validGroupIds.length > 0 ? validGroupIds : undefined,
-				includeCancelled,
+				options: { includeCancelledMembers }
 			},
 		}),
 	);
@@ -91,8 +95,10 @@ export function MembersPageContent() {
 	};
 
 	const handleIncludeCancelledChange = (nextValue: boolean) => {
-		setIncludeCancelled(nextValue);
-		setPagination({ page: 1 });
+		setPagination({
+			page: 1,
+			includeCancelledMembers: nextValue ? true : false,
+		});
 	};
 
 	return (
@@ -146,7 +152,7 @@ export function MembersPageContent() {
 					search={search}
 					groupIds={groupIds}
 					groups={groupsData ?? []}
-					includeCancelled={includeCancelled}
+					includeCancelled={includeCancelledMembers}
 					onSearchChange={handleSearchChange}
 					onPageChange={handlePageChange}
 					onLimitChange={handleLimitChange}
