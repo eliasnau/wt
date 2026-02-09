@@ -72,7 +72,7 @@ type DefaultIconProps<T = string> = {
 };
 
 type AnimateIconProps<T = string> = WithAsChild<
-  HTMLMotionProps<'span'> &
+  Omit<HTMLMotionProps<'span'>, 'ref'> &
     DefaultIconProps<T> & {
       children: React.ReactNode;
       asChild?: boolean;
