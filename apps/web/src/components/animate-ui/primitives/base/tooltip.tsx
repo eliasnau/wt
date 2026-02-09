@@ -142,9 +142,9 @@ function TooltipPositioner(props: TooltipPositionerProps) {
 
 type TooltipPopupProps = Omit<
   React.ComponentProps<typeof TooltipPrimitive.Popup>,
-  'render'
+  'render' | 'ref'
 > &
-  HTMLMotionProps<'div'>;
+  Omit<HTMLMotionProps<'div'>, 'ref'>;
 
 function TooltipPopup({
   transition = { type: 'spring', stiffness: 300, damping: 25 },

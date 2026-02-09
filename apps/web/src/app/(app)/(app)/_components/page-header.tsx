@@ -1,11 +1,11 @@
-import type { ReactNode } from "react";
+import type { ComponentPropsWithoutRef } from "react";
 import { cn } from "@/lib/utils";
 
 function Header({
 	className,
 	children,
 	...props
-}: React.ComponentProps<"header">) {
+}: ComponentPropsWithoutRef<"header">) {
 	return (
 		<header
 			className={cn(
@@ -23,7 +23,7 @@ function HeaderContent({
 	className,
 	children,
 	...props
-}: React.ComponentProps<"div">) {
+}: ComponentPropsWithoutRef<"div">) {
 	return (
 		<div className={cn("flex-1 space-y-1", className)} {...props}>
 			{children}
@@ -35,7 +35,7 @@ function HeaderTitle({
 	className,
 	children,
 	...props
-}: React.ComponentProps<"h1">) {
+}: ComponentPropsWithoutRef<"h1">) {
 	return (
 		<h1
 			className={cn(
@@ -53,7 +53,7 @@ function HeaderDescription({
 	className,
 	children,
 	...props
-}: React.ComponentProps<"p">) {
+}: ComponentPropsWithoutRef<"p">) {
 	return (
 		<p
 			className={cn("text-muted-foreground text-sm sm:text-base", className)}
@@ -68,7 +68,7 @@ function HeaderActions({
 	className,
 	children,
 	...props
-}: React.ComponentProps<"div">) {
+}: ComponentPropsWithoutRef<"div">) {
 	return (
 		<div
 			className={cn(
