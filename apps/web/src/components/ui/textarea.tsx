@@ -6,7 +6,7 @@ import type * as React from "react";
 
 import { cn } from "@/lib/utils";
 
-type TextareaProps = React.ComponentProps<"textarea"> & {
+type TextareaProps = React.ComponentPropsWithoutRef<"textarea"> & {
   size?: "sm" | "default" | "lg" | number;
   unstyled?: boolean;
 };

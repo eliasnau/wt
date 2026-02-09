@@ -22,7 +22,8 @@ import {
   ChevronDown,
   ChevronUp,
   DollarSign,
-  PieChart
+  PieChart,
+  Sparkles
 } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
@@ -64,6 +65,12 @@ const routes: NavRoute[] = [
     title: 'Groups',
     icon: <Blocks className='size-4' />,
     link: '/dashboard/groups'
+  },
+  {
+    id: 'ai',
+    title: 'AI Assistant',
+    icon: <Sparkles className='size-4' />,
+    link: '/dashboard/ai'
   },
   {
     id: 'statistics',

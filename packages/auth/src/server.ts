@@ -38,7 +38,7 @@ export const auth = betterAuth({
 			maxAge: 3 * 60,
 		},
 	},
-	// baseURL: process.env.BETTER_AUTH_URL || "http://localhost:3001",
+	baseURL: process.env.BETTER_AUTH_URL || process.env.VERCEL_URL || "http://localhost:3001",
 	trustedOrigins: [process.env.VERCEL_URL!, process.env.BETTER_AUTH_URL!],
 	secret: process.env.BETTER_AUTH_SECRET!,
 	emailVerification: {

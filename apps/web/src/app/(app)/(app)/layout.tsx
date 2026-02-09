@@ -43,7 +43,7 @@ export default function DashboardLayout({
         </div>
       </SidebarProvider>
       <OrganizationSwitcher />
-      <style jsx global>{`
+      <style>{`
         html,
         body {
           overscroll-behavior: none;
