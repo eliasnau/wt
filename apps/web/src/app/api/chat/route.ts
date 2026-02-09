@@ -10,6 +10,9 @@ import { z } from "zod";
 import { auth } from "@repo/auth";
 import { and, count, db, eq, ilike, or, sql, inArray } from "@repo/db";
 import { clubMember, contract, group, groupMember } from "@repo/db/schema";
+import { withTracing } from "@posthog/ai"
+import { PostHog } from "posthog-node";
+
 
 const searchMembersInput = z.object({
 	query: z
@@ -46,6 +49,7 @@ const getOrganizationSession = async (req: Request) => {
 	return {
 		organizationId: sessionData.session.activeOrganizationId,
 		userName: sessionData.user.name,
+		userId: sessionData.user.id
 	};
 };
 
@@ -357,8 +361,23 @@ export async function POST(req: Request) {
 		);
 	}
 
+	const phClient = new PostHog(
+		'phc_5IpoPfDwxD67IpBzfbF51WSGFA6Jw6CXuWD3LZNIlE2',
+		{ host: 'https://eu.i.posthog.com' }
+	  );
+	  
+	
+	const model = withTracing(gateway("openai/gpt-5-mini"), phClient, {
+		posthogDistinctId: session.userId,
+		posthogTraceId: messages.length > 0 ? messages[messages.length - 1].id : undefined,
+		// posthogProperties: { conversationId: "abc123", paid: true }, // optional
+		posthogPrivacyMode: false,
+		posthogGroups: { organization: session.organizationId },
+	  });
+	  
+
 	const result = streamText({
-		model: gateway("openai/gpt-5-mini"),
+		model,
 		system:
 			`You are a helpful assistant for MatDesk, a martial arts school management platform. Keep the conversation related to the user's school. When listing members, call searchMembers with an empty query to list all (paginated) and never use "*". For one specific member, call getMemberInfo. Reply with Markdown your response is rendered in a Markdown component supporting github flavored md. Users usually do not care about UUIDs, so only include IDs when explicitly useful. Use tools to read school data. Context user: ${session.userName}.`,
 		messages: await convertToModelMessages(messages),
