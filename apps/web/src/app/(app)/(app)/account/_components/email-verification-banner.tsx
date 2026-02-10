@@ -42,7 +42,7 @@ export function EmailVerificationBanner({ email }: { email: string }) {
 	return (
 		<Alert variant="warning">
 			<MailWarning />
-			<AlertTitle>Email not verified</AlertTitle>
+			<AlertTitle>E-Mail nicht verifiziert</AlertTitle>
 			<AlertDescription>
 				Your email address hasn't been verified yet. Please check your inbox for
 				a verification link.

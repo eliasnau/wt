@@ -122,7 +122,7 @@ export function MemberOverviewSheet({
 						<Separator />
 
 						<div className="space-y-3">
-							<h4 className="font-medium text-foreground text-sm">Address</h4>
+							<h4 className="font-medium text-foreground text-sm">Adresse</h4>
 							<div className="text-sm">
 								<p className="text-foreground">{member.street}</p>
 								<p className="text-foreground">
@@ -161,7 +161,7 @@ export function MemberOverviewSheet({
 									</h4>
 									<div className="space-y-2 text-sm">
 										<div className="flex justify-between">
-											<span className="text-muted-foreground">Start Date</span>
+											<span className="text-muted-foreground">Startdatum</span>
 											<span className="text-foreground">
 												{format(new Date(member.contract.startDate), "PPP")}
 											</span>
@@ -196,7 +196,7 @@ export function MemberOverviewSheet({
 										)}
 										{isCancelled && cancellationEffectiveDate && (
 											<div className="flex justify-between">
-												<span className="text-muted-foreground">Ends On</span>
+												<span className="text-muted-foreground">Endet am</span>
 												<span className="text-foreground">
 													{format(new Date(cancellationEffectiveDate), "PPP")}
 												</span>
@@ -209,7 +209,7 @@ export function MemberOverviewSheet({
 						)}
 
 						<div className="space-y-3">
-							<h4 className="font-medium text-foreground text-sm">Notes</h4>
+							<h4 className="font-medium text-foreground text-sm">Notizen</h4>
 							{member.notes || member.contract?.notes ? (
 								<div className="space-y-3">
 									{member.notes && (
@@ -234,7 +234,7 @@ export function MemberOverviewSheet({
 									)}
 								</div>
 							) : (
-								<p className="text-muted-foreground text-sm">No notes</p>
+								<p className="text-muted-foreground text-sm">Keine Notizen</p>
 							)}
 						</div>
 					</div>

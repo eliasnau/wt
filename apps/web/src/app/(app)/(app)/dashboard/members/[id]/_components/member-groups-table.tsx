@@ -193,7 +193,7 @@ function EditPriceDialog({
         <DialogFooter>
           <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
           <Button onClick={handleSubmit} disabled={updateMutation.isPending}>
-            {updateMutation.isPending ? "Saving..." : "Save Changes"}
+            {updateMutation.isPending ? "Saving..." : "Änderungen speichern"}
           </Button>
         </DialogFooter>
       </DialogContent>

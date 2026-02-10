@@ -189,7 +189,7 @@ const createColumns = (
 	},
 	{
 		accessorKey: "groups",
-		header: "Groups",
+		header: "Gruppen",
 		cell: ({ row }) => {
 			const memberRow = row.original;
 			const groupMembers: NonNullable<typeof memberRow.groupMembers> =
@@ -349,7 +349,7 @@ export default function MembersTable({
 							<EmptyMedia variant="icon">
 								<UserIcon />
 							</EmptyMedia>
-							<EmptyTitle>No Members yet</EmptyTitle>
+							<EmptyTitle>Noch keine Mitglieder</EmptyTitle>
 							<EmptyDescription>
 								Get started by creating your first member.
 							</EmptyDescription>
@@ -394,7 +394,7 @@ export default function MembersTable({
 
 					{/* Group Filter */}
 					<DataTableFacetedFilter
-						title="Groups"
+						title="Gruppen"
 						options={groups.map((g) => ({ label: g.name, value: g.id }))}
 						selectedValues={groupIds}
 						onValueChange={onGroupFilterChange}

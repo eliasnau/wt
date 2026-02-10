@@ -195,7 +195,7 @@ export function PasskeyFrame({
 							</EmptyDescription>
 						</EmptyHeader>
 						<EmptyContent>
-							<Button onClick={() => refetch()}>Try Again</Button>
+							<Button onClick={() => refetch()}>Erneut versuchen</Button>
 						</EmptyContent>
 					</Empty>
 				</FramePanel>
@@ -441,7 +441,7 @@ export function PasskeyFrame({
 									Saving...
 								</>
 							) : (
-								"Save Changes"
+								"Änderungen speichern"
 							)}
 						</Button>
 					</DialogFooter>

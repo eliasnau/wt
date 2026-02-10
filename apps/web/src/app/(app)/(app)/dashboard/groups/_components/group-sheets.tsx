@@ -425,7 +425,7 @@ export function EditGroupSheet({
 										Saving...
 									</>
 								) : (
-									"Save Changes"
+									"Änderungen speichern"
 								)}
 							</Button>
 						</SheetFooter>
@@ -535,7 +535,7 @@ export function GroupMembersSheet({
 										</EmptyDescription>
 									</EmptyHeader>
 									<EmptyContent>
-										<Button onClick={() => refetch()}>Try Again</Button>
+										<Button onClick={() => refetch()}>Erneut versuchen</Button>
 									</EmptyContent>
 								</Empty>
 							</FramePanel>

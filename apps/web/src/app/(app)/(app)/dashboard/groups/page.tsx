@@ -60,7 +60,7 @@ export default function GroupsPage() {
 								</EmptyDescription>
 							</EmptyHeader>
 							<EmptyContent>
-								<Button onClick={() => refetch()}>Try Again</Button>
+								<Button onClick={() => refetch()}>Erneut versuchen</Button>
 							</EmptyContent>
 						</Empty>
 					</FramePanel>

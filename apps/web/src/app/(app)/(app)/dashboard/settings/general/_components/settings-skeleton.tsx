@@ -15,7 +15,7 @@ export function OrganizationInfoSkeleton() {
 				</p>
 				<div className="space-y-4">
 					<Field>
-						<FieldLabel>Organization Name</FieldLabel>
+						<FieldLabel>Organisationsname</FieldLabel>
 						<Skeleton className="h-8 w-full rounded-lg" />
 					</Field>
 				</div>

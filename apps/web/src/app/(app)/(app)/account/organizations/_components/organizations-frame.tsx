@@ -181,7 +181,7 @@ export function OrganizationsFrame() {
                 <EmptyMedia variant="icon">
                   <Building2 />
                 </EmptyMedia>
-                <EmptyTitle>Organizations</EmptyTitle>
+                <EmptyTitle>Organisationen</EmptyTitle>
                 <EmptyDescription>
                   Create an organization to collaborate with your team
                 </EmptyDescription>
@@ -204,7 +204,7 @@ export function OrganizationsFrame() {
             </DialogHeader>
             <DialogPanel className="space-y-4">
               <Field>
-                <FieldLabel>Organization Name</FieldLabel>
+                <FieldLabel>Organisationsname</FieldLabel>
                 <Input
                   value={orgName}
                   onChange={(e) => handleNameChange(e.target.value)}
@@ -368,7 +368,7 @@ export function OrganizationsFrame() {
           </DialogHeader>
           <DialogPanel className="space-y-4">
             <Field>
-              <FieldLabel>Organization Name</FieldLabel>
+              <FieldLabel>Organisationsname</FieldLabel>
               <Input
                 value={orgName}
                 onChange={(e) => handleNameChange(e.target.value)}

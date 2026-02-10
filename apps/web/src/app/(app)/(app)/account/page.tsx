@@ -11,7 +11,7 @@ export default async function AccountPage() {
 		<div className="flex flex-col gap-8">
 			<Header>
 				<HeaderContent>
-					<HeaderTitle>Profile</HeaderTitle>
+					<HeaderTitle>Profil</HeaderTitle>
 					<HeaderDescription>
 						Manage your Profile Information
 					</HeaderDescription>
