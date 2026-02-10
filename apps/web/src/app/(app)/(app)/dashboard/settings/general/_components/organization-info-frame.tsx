@@ -77,7 +77,7 @@ export function OrganizationInfoFrame({
 				</p>
 				<form id="org-info-form" onSubmit={handleSubmit} className="space-y-4">
 					<Field>
-						<FieldLabel>Organization Name</FieldLabel>
+						<FieldLabel>Organisationsname</FieldLabel>
 						<Input
 							placeholder="Acme Inc."
 							value={orgName}
@@ -107,7 +107,7 @@ export function OrganizationInfoFrame({
 							Saving...
 						</>
 					) : (
-						"Save Changes"
+						"Änderungen speichern"
 					)}
 				</Button>
 			</FrameFooter>

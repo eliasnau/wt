@@ -23,7 +23,7 @@ export default function MembersSettingsPage() {
 			<div className="flex flex-col gap-8">
 				<Header>
 					<HeaderContent>
-						<HeaderTitle>User Management</HeaderTitle>
+						<HeaderTitle>Benutzerverwaltung</HeaderTitle>
 						<HeaderDescription>
 							Manage organization members and their roles
 						</HeaderDescription>

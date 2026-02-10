@@ -77,7 +77,7 @@ export default function BatchDetailsPage({
 								</EmptyDescription>
 							</EmptyHeader>
 							<EmptyContent>
-								<Button onClick={() => refetch()}>Try Again</Button>
+								<Button onClick={() => refetch()}>Erneut versuchen</Button>
 							</EmptyContent>
 						</Empty>
 					</FramePanel>

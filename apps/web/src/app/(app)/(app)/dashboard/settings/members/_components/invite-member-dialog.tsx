@@ -80,7 +80,7 @@ export function InviteMemberDialog({
 				<DialogPanel>
 					<div className="space-y-4">
 						<Field>
-							<FieldLabel>Email Address</FieldLabel>
+							<FieldLabel>E-Mail-Adresse</FieldLabel>
 							<Input
 								type="email"
 								value={email}

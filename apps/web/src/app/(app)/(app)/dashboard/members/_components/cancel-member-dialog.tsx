@@ -178,7 +178,7 @@ export function CancelMemberDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Cancel Membership</DialogTitle>
+					<DialogTitle>Mitgliedschaft kündigen</DialogTitle>
 					<DialogDescription>
 						Set the cancellation effective month and provide a reason for this
 						member.
@@ -188,7 +188,7 @@ export function CancelMemberDialog({
 				<DialogPanel className="space-y-4">
 					<Alert variant="warning">
 						<AlertTriangle />
-						<AlertTitle>Cancellation timing</AlertTitle>
+						<AlertTitle>Zeitpunkt der Kündigung</AlertTitle>
 						<AlertDescription>
 							{commitmentEndLabel && (
 								<span>
@@ -223,7 +223,7 @@ export function CancelMemberDialog({
 					</Field>
 
 					<Field>
-						<FieldLabel htmlFor="cancel-reason">Reason</FieldLabel>
+						<FieldLabel htmlFor="cancel-reason">Grund</FieldLabel>
 						<Textarea
 							id="cancel-reason"
 							value={cancelReason}

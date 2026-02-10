@@ -47,7 +47,7 @@ export function RolePreviewDialog({
 					/>
 				</DialogPanel>
 				<DialogFooter variant="bare">
-					<DialogClose render={<Button variant="outline" />}>Close</DialogClose>
+					<DialogClose render={<Button variant="outline" />}>Schließen</DialogClose>
 				</DialogFooter>
 			</DialogPopup>
 		</Dialog>

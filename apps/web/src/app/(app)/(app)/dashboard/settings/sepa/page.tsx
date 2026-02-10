@@ -147,7 +147,7 @@ export default function SepaSettingsPage() {
 		<div className="flex flex-col gap-8">
 			<Header>
 				<HeaderContent>
-					<HeaderTitle>SEPA Payment Settings</HeaderTitle>
+					<HeaderTitle>SEPA-Zahlungseinstellungen</HeaderTitle>
 					<HeaderDescription>
 						Configure your SEPA direct debit payment information
 					</HeaderDescription>
@@ -158,7 +158,7 @@ export default function SepaSettingsPage() {
 				{!isPending && !isSepaComplete ? (
 					<Alert variant="warning">
 						<AlertTriangle />
-						<AlertTitle>Complete SEPA information</AlertTitle>
+						<AlertTitle>SEPA-Informationen vervollständigen</AlertTitle>
 						<AlertDescription>
 							Add creditor name, IBAN, BIC, and creditor ID to enable SEPA
 							exports.
@@ -179,7 +179,7 @@ export default function SepaSettingsPage() {
 							className="space-y-4"
 						>
 							<Field>
-							<FieldLabel>Creditor Name</FieldLabel>
+							<FieldLabel>Gläubigername</FieldLabel>
 							<Input
 								placeholder={isLoading ? "Loading..." : "Example LLC"}
 								type="text"
@@ -228,7 +228,7 @@ export default function SepaSettingsPage() {
 								/>
 							</Field>
 							<Field>
-							<FieldLabel>Creditor ID</FieldLabel>
+							<FieldLabel>Gläubiger-ID</FieldLabel>
 							<Input
 								placeholder={isLoading ? "Loading..." : "DE98ZZZ09999999999"}
 								type="text"
@@ -258,7 +258,7 @@ export default function SepaSettingsPage() {
 								/>
 							</Field>
 							<Field>
-								<FieldLabel>Batch Booking</FieldLabel>
+								<FieldLabel>Sammelbuchung</FieldLabel>
 								<div className="flex items-center gap-3">
 									<Checkbox
 										checked={formState.batchBooking}
@@ -292,7 +292,7 @@ export default function SepaSettingsPage() {
 							form="sepa-bank-form"
 							disabled={updateMutation.isPending || isLoading}
 						>
-							{updateMutation.isPending ? "Saving..." : "Save Changes"}
+							{updateMutation.isPending ? "Saving..." : "Änderungen speichern"}
 						</Button>
 					</FrameFooter>
 				</Frame>
@@ -386,14 +386,14 @@ export default function SepaSettingsPage() {
 							form="sepa-transaction-form"
 							disabled={updateMutation.isPending || isLoading}
 						>
-							{updateMutation.isPending ? "Saving..." : "Save Changes"}
+							{updateMutation.isPending ? "Saving..." : "Änderungen speichern"}
 						</Button>
 						<TooltipProvider>
 							<Tooltip>
 								<TooltipTrigger>
 									<div className="flex items-center gap-2 text-sm text-muted-foreground cursor-help w-fit">
 										<Info className="size-4" />
-										<span>Available variables</span>
+										<span>Verfügbare Variablen</span>
 									</div>
 								</TooltipTrigger>
 								<TooltipContent className="max-w-xs" side="top" align="start">

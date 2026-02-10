@@ -147,7 +147,7 @@ export function GenerateQRSheet({ open, onOpenChange }: GenerateQRSheetProps) {
 					<Button variant="destructive" onClick={handleRevokeCode}>
 						Revoke Code
 					</Button>
-					<Button onClick={() => onOpenChange(false)}>Close</Button>
+					<Button onClick={() => onOpenChange(false)}>Schließen</Button>
 				</SheetFooter>
 			</SheetPopup>
 		</Sheet>

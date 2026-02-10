@@ -206,7 +206,7 @@ export function OrganizationSettingsSheet({
 
 						{/* Danger Zone */}
 						<div>
-							<h3 className="font-semibold text-sm mb-3 text-destructive">Danger Zone</h3>
+							<h3 className="font-semibold text-sm mb-3 text-destructive">Gefahrenbereich</h3>
 							<AlertDialog>
 								<AlertDialogTrigger
 									render={

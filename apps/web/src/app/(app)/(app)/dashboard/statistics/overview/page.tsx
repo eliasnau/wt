@@ -97,7 +97,7 @@ export default function StatisticsOverviewPage() {
 	} satisfies ChartConfig;
 
 	const groupChartConfig = {
-		value: { label: "Members", color: "var(--chart-3)" },
+		value: { label: "Mitglieder", color: "var(--chart-3)" },
 	} satisfies ChartConfig;
 
 
@@ -105,7 +105,7 @@ export default function StatisticsOverviewPage() {
 		<div className="flex flex-col gap-8">
 			<Header>
 				<HeaderContent>
-					<HeaderTitle>Monthly Overview</HeaderTitle>
+					<HeaderTitle>Monatliche Übersicht</HeaderTitle>
 					<HeaderDescription>
 						A snapshot of performance for a single month. Future months are
 						disabled.
@@ -163,7 +163,7 @@ export default function StatisticsOverviewPage() {
 								</EmptyDescription>
 							</EmptyHeader>
 							<EmptyContent>
-								<Button onClick={() => refetch()}>Try Again</Button>
+								<Button onClick={() => refetch()}>Erneut versuchen</Button>
 							</EmptyContent>
 						</Empty>
 					</FramePanel>

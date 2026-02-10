@@ -90,13 +90,13 @@ export const UserButton = () => {
           </MenuTrigger>
           <MenuPopup align={"end"} side={isMobile ? "top": "right"}>
             <MenuGroup>
-              <MenuGroupLabel>Account</MenuGroupLabel>
+              <MenuGroupLabel>Konto</MenuGroupLabel>
               <AnimateIcon animateOnHover>
                 <MenuItem
                   onClick={() => router.push("/account" as Route)}
                 >
                   <User />
-                  <span>Account</span>
+                  <span>Konto</span>
                 </MenuItem>
               </AnimateIcon>
             </MenuGroup>
@@ -105,7 +105,7 @@ export const UserButton = () => {
               <AnimateIcon animateOnHover>
                 <MenuSubTrigger>
                   <SunMoon />
-                  <span>Theme</span>
+                  <span>Design</span>
                 </MenuSubTrigger>
               </AnimateIcon>
               <MenuSubPopup>
@@ -115,7 +115,7 @@ export const UserButton = () => {
                     className="gap-2"
                   >
                     <Sun className="size-4" />
-                    <span>Light</span>
+                    <span>Hell</span>
                   </MenuItem>
                 </AnimateIcon>
                 <AnimateIcon animateOnHover>
@@ -124,7 +124,7 @@ export const UserButton = () => {
                     className="gap-2"
                   >
                     <Moon className="size-4" />
-                    <span>Dark</span>
+                    <span>Dunkel</span>
                   </MenuItem>
                 </AnimateIcon>
                 <AnimateIcon animateOnHover>
@@ -147,7 +147,7 @@ export const UserButton = () => {
                 className="gap-2 text-red-600 focus:text-red-600"
               >
                 <LogOut className="size-4" />
-                <span>Sign out</span>
+                <span>Abmelden</span>
               </MenuItem>
             </AnimateIcon>
           </MenuPopup>

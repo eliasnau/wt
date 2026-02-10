@@ -529,7 +529,7 @@ export function NewMemberForm() {
 						<FieldSeparator />
 
 						<div className="space-y-4">
-							<h3 className="font-semibold text-foreground text-sm">Address</h3>
+							<h3 className="font-semibold text-foreground text-sm">Adresse</h3>
 							<div className="grid gap-4">
 								<form.Field name="street">
 									{(field) => {

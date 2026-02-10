@@ -93,7 +93,7 @@ export default function RangeComparisonPage() {
 						<PopoverContent className="w-auto p-0" align="end">
 							<div className="flex flex-col gap-2 p-3">
 								<div className="space-y-2">
-									<p className="text-sm font-medium">Start Date</p>
+									<p className="text-sm font-medium">Startdatum</p>
 									<CalendarComponent
 										mode="single"
 										selected={startDate}

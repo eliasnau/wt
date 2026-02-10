@@ -31,7 +31,7 @@ export function EditMemberSheet({
 		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetPopup inset>
 				<SheetHeader>
-					<SheetTitle>Edit Member</SheetTitle>
+					<SheetTitle>Mitglied bearbeiten</SheetTitle>
 					<SheetDescription>
 						Update member information and group assignments.
 					</SheetDescription>
@@ -39,14 +39,14 @@ export function EditMemberSheet({
 				<SheetPanel>
 					<div className="space-y-4">
 						<Field>
-							<FieldLabel>First Name</FieldLabel>
+							<FieldLabel>Vorname</FieldLabel>
 							<Input
 								defaultValue={member?.firstName}
 								placeholder="Enter first name"
 							/>
 						</Field>
 						<Field>
-							<FieldLabel>Last Name</FieldLabel>
+							<FieldLabel>Nachname</FieldLabel>
 							<Input
 								defaultValue={member?.lastName}
 								placeholder="Enter last name"

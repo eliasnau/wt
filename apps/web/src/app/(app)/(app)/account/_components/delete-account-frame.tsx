@@ -48,7 +48,7 @@ export function DeleteAccountFrame() {
 	return (
 		<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72 border-destructive/50">
 			<FramePanel>
-				<h2 className="font-heading text-xl text-destructive mb-2">Danger Zone</h2>
+				<h2 className="font-heading text-xl text-destructive mb-2">Gefahrenbereich</h2>
 				<p className="text-sm text-muted-foreground">
 					Permanently delete your account and all associated data. This action
 					cannot be undone and you will lose access to all your data.
@@ -71,7 +71,7 @@ export function DeleteAccountFrame() {
 					</AlertDialogTrigger>
 					<AlertDialogPopup>
 						<AlertDialogHeader>
-							<AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+							<AlertDialogTitle>Bist du dir absolut sicher?</AlertDialogTitle>
 							<AlertDialogDescription>
 								This action cannot be undone. This will permanently delete your
 								account and remove all of your data from our servers including:

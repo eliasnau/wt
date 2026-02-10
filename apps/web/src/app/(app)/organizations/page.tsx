@@ -223,7 +223,7 @@ export default function OrganizationsPage() {
 					</DialogHeader>
 					<DialogPanel className="space-y-4">
 						<Field>
-							<FieldLabel>Organization Name</FieldLabel>
+							<FieldLabel>Organisationsname</FieldLabel>
 							<Input
 								value={orgName}
 								onChange={(e) => handleNameChange(e.target.value)}

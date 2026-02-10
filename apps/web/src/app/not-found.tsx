@@ -28,7 +28,7 @@ export default function NotFound() {
 				<main className="flex flex-grow items-center justify-center">
 					<Section>
 						<SectionContent className="flex flex-col items-center gap-6 text-center">
-							<PageHeading>Page not found</PageHeading>
+							<PageHeading>Seite nicht gefunden</PageHeading>
 							<Paragraph size="lg" color="light">
 								The page you&apos;re looking for doesn&apos;t exist or may have
 								been moved.
