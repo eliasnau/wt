@@ -437,7 +437,11 @@ export function MemberGroupsTable({
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow className="hover:bg-transparent" key={headerGroup.id}>
               {headerGroup.headers.map((header, idx) => {
-                const isLast = idx === headerGroup.headers.length - 1;
+                const isLast = idx 
+                
+                
+                
+                headerGroup.headers.length - 1;
                 return (
                   <TableHead
                     key={header.id}
