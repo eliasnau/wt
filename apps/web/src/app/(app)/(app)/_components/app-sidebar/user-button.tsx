@@ -41,7 +41,7 @@ export const UserButton = () => {
   const { theme, setTheme } = useTheme();
 
   const handleSignOut = async () => {
-    posthog.capture("auth:sign_out");
+    posthog.capture("auth:abmelden");
     posthog.reset();
 
     await authClient.signOut({

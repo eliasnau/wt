@@ -16,7 +16,7 @@ import { IconHouse } from "nucleo-glass";
 
 export const metadata: Metadata = {
 	description:
-		"The page you're looking for doesn't exist or may have been moved.",
+		"Die gesuchte Seite existiert nicht oder wurde verschoben.",
 	title: "Page Not Found",
 };
 
@@ -31,12 +31,12 @@ export default function NotFound() {
 							<PageHeading>Seite nicht gefunden</PageHeading>
 							<Paragraph size="lg" color="light">
 								The page you&apos;re looking for doesn&apos;t exist or may have
-								been moved.
+								verschoben.
 							</Paragraph>
 							<Button size="lg" variant="primary" asChild>
 								<Link href="/" >
 									<IconHouse className="z-10 size-4"/>
-									<span className="relative z-10">Go Home</span>
+									<span className="relative z-10">Zur Startseite</span>
 								</Link>
 							</Button>
 						</SectionContent>

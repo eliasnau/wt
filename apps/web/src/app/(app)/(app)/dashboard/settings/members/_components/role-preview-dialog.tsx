@@ -32,7 +32,7 @@ export function RolePreviewDialog({
 			<DialogPopup>
 				<DialogHeader>
 					<DialogTitle>
-						{roleName ? formatRoleLabel(roleName) : "Role"} permissions
+						{roleName ? formatRoleLabel(roleName) : "Rolle"} permissions
 					</DialogTitle>
 					<DialogDescription>
 						Review the permissions included in this role.

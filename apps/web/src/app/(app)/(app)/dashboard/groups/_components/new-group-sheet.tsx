@@ -47,7 +47,7 @@ interface NewGroupSheetProps {
 
 const formSchema = z.object({
 	name: z.string().min(3, {
-		message: "Name must be at least 3 characters.",
+		message: "Name muss mindestens 3 Zeichen lang sein.",
 	}),
 	description: z.string().optional(),
 	defaultMembershipPrice: z
@@ -79,13 +79,13 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 			return client.groups.create(data);
 		},
 		onSuccess: () => {
-			toast.success("Group created successfully");
+			toast.success("Gruppe erfolgreich erstellt");
 			form.reset();
 			onGroupCreated?.();
 			setOpen(false);
 		},
 		onError: (error) => {
-			toast.error(error.message ?? "Failed to create group");
+			toast.error(error.message ?? "Gruppe konnte nicht erstellt werden");
 		},
 	});
 
@@ -111,7 +111,7 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 						className="flex h-full flex-col"
 					>
 						<SheetHeader>
-							<SheetTitle>Create Group</SheetTitle>
+							<SheetTitle>Gruppe erstellen</SheetTitle>
 							<SheetDescription>
 								Create a new group with name, description, and membership price
 							</SheetDescription>
@@ -165,7 +165,7 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 								name="defaultMembershipPrice"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Default Membership Price</FormLabel>
+										<FormLabel>Standard-Mitgliedsbeitrag</FormLabel>
 										<FormControl>
 											<InputGroup>
 												<InputGroupInput
@@ -202,7 +202,7 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 										Creating...
 									</>
 								) : (
-									"Create Group"
+									"Gruppe erstellen"
 								)}
 							</Button>
 						</SheetFooter>

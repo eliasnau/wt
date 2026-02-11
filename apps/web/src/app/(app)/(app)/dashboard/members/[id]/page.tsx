@@ -84,7 +84,7 @@ function CopyButton({ value }: { value: string }) {
 			type="button"
 			onClick={handleCopy}
 			className="inline-flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground"
-			title="Copy to clipboard"
+			title="In Zwischenablage kopieren"
 		>
 			<Copy className="size-3.5" />
 			{isCopied && <span className="text-xs">Copied!</span>}
@@ -145,7 +145,7 @@ export default function MemberDetailPage() {
 			},
 			onError: (error) => {
 				toast.error(
-					error instanceof Error ? error.message : "Failed to update member",
+					error instanceof Error ? error.message : "Mitglied konnte nicht aktualisiert werden",
 				);
 			},
 		}),
@@ -194,7 +194,7 @@ export default function MemberDetailPage() {
 				<Link href="/dashboard/members">
 					<Button variant="ghost" className="gap-2">
 						<ArrowLeft className="size-4" />
-						Back to Members
+						Zurück zu Mitgliedern
 					</Button>
 				</Link>
 
@@ -205,11 +205,11 @@ export default function MemberDetailPage() {
 								<EmptyMedia variant="icon">
 									<AlertCircle />
 								</EmptyMedia>
-								<EmptyTitle>Failed to load Member</EmptyTitle>
+								<EmptyTitle>Mitglied konnte nicht geladen werden</EmptyTitle>
 								<EmptyDescription>
 									{error instanceof Error
 										? error.message
-										: "Something went wrong. Please try again."}
+										: "Etwas ist schiefgelaufen. Bitte versuche es erneut."}
 								</EmptyDescription>
 							</EmptyHeader>
 							<EmptyContent>
@@ -291,7 +291,7 @@ export default function MemberDetailPage() {
 			<Link href="/dashboard/members">
 				<Button variant="ghost" className="gap-2">
 					<ArrowLeft className="size-4" />
-					Back to Members
+					Zurück zu Mitgliedern
 				</Button>
 			</Link>
 
@@ -301,7 +301,7 @@ export default function MemberDetailPage() {
 						<h1 className="font-heading text-3xl">
 							{member.firstName} {member.lastName}
 						</h1>
-						{isCancelled && <Badge variant="destructive">Cancelled</Badge>}
+						{isCancelled && <Badge variant="destructive">Gekündigt</Badge>}
 					</div>
 					<div className="flex items-center gap-2">
 						{isEditing ? (
@@ -314,7 +314,7 @@ export default function MemberDetailPage() {
 									Cancel
 								</Button>
 								<Button onClick={handleEditSubmit} disabled={isSubmitting}>
-									{isSubmitting ? "Saving..." : "Save"}
+									{isSubmitting ? "Speichern..." : "Speichern"}
 								</Button>
 							</>
 						) : (
@@ -324,7 +324,7 @@ export default function MemberDetailPage() {
 										variant="destructive"
 										onClick={() => setCancelDialogOpen(true)}
 									>
-										Cancel Membership
+										Mitgliedschaft kündigen
 									</Button>
 								)}
 								<Button variant="outline" onClick={() => setIsEditing(true)}>
@@ -516,7 +516,7 @@ export default function MemberDetailPage() {
 							>
 								<ChevronDownIcon className="size-4" />
 								<UserPlus className="size-4" />
-								Group Memberships
+								Gruppenmitgliedschaften
 							</CollapsibleTrigger>
 							<AssignGroupDialog memberId={member.id} />
 						</FrameHeader>
@@ -592,7 +592,7 @@ export default function MemberDetailPage() {
 									<div className="grid gap-4 sm:grid-cols-2">
 										<div className="flex items-center justify-between rounded-lg border bg-muted/50 p-4">
 											<div>
-												<span className="font-medium text-sm">Joining Fee</span>
+												<span className="font-medium text-sm">Aufnahmegebühr</span>
 												<p className="text-muted-foreground text-xs">
 													One-time
 												</p>
@@ -617,7 +617,7 @@ export default function MemberDetailPage() {
 										</div>
 										<div className="flex items-center justify-between rounded-lg border bg-muted/50 p-4">
 											<div>
-												<span className="font-medium text-sm">Yearly Fee</span>
+												<span className="font-medium text-sm">Jahresbeitrag</span>
 												<p className="text-muted-foreground text-xs">
 													{formatCurrency(yearlyFeeMonthly.toFixed(2))}/month
 												</p>
@@ -789,7 +789,7 @@ export default function MemberDetailPage() {
 											<EmptyMedia variant="icon">
 												<Shield />
 											</EmptyMedia>
-											<EmptyTitle>No Guardian Information</EmptyTitle>
+											<EmptyTitle>Keine Angaben zum Erziehungsberechtigten</EmptyTitle>
 											<EmptyDescription>
 												No guardian information has been added for this member.
 											</EmptyDescription>
@@ -882,7 +882,7 @@ export default function MemberDetailPage() {
 														<EmptyMedia variant="icon">
 															<FileText />
 														</EmptyMedia>
-														<EmptyTitle>No Notes</EmptyTitle>
+														<EmptyTitle>Keine Notizen</EmptyTitle>
 														<EmptyDescription>
 															No notes have been added for this member yet.
 														</EmptyDescription>
@@ -944,9 +944,9 @@ export default function MemberDetailPage() {
 											<EmptyMedia variant="icon">
 												<CreditCard />
 											</EmptyMedia>
-											<EmptyTitle>No Permission</EmptyTitle>
+											<EmptyTitle>Keine Berechtigung</EmptyTitle>
 											<EmptyDescription>
-												You don't have permission to view payment information.
+												Du hast keine Berechtigung, Zahlungsinformationen anzuzeigen.
 											</EmptyDescription>
 										</EmptyHeader>
 									</Empty>
@@ -965,7 +965,7 @@ export default function MemberDetailPage() {
 											onClick={() => paymentDetailsQuery.refetch()}
 											disabled={paymentDetailsQuery.isFetching}
 										>
-											{paymentDetailsQuery.isFetching ? "Loading..." : "View"}
+											{paymentDetailsQuery.isFetching ? "Lädt..." : "View"}
 										</Button>
 									</div>
 								)}

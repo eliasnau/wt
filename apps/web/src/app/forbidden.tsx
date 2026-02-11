@@ -23,7 +23,7 @@ export default function Forbidden() {
 						className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
 					>
 						<ArrowLeft className="h-4 w-4" />
-						Back to Dashboard
+						Zurück zum Dashboard
 					</Link>
 				</div>
 				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
@@ -33,14 +33,14 @@ export default function Forbidden() {
 								<EmptyMedia variant="icon">
 									<ShieldAlert />
 								</EmptyMedia>
-								<EmptyTitle>Access Denied</EmptyTitle>
+								<EmptyTitle>Zugriff verweigert</EmptyTitle>
 								<EmptyDescription>
-									You don't have permission to access this page
+									Du hast keine Berechtigung, auf diese Seite zuzugreifen
 								</EmptyDescription>
 							</EmptyHeader>
 							<EmptyContent>
 								<Button
-									render={<Link href="/dashboard">Go to Dashboard</Link>}
+									render={<Link href="/dashboard">Zum Dashboard</Link>}
 								/>
 							</EmptyContent>
 						</Empty>
@@ -48,9 +48,9 @@ export default function Forbidden() {
 
 					<FrameFooter className="flex-row items-center justify-center">
 						<p className="text-sm text-muted-foreground">
-							Need access?{" "}
+							Zugriff benötigt?{" "}
 							<Link href="#" className="text-foreground hover:underline">
-								Contact Support
+								Support kontaktieren
 							</Link>
 						</p>
 					</FrameFooter>

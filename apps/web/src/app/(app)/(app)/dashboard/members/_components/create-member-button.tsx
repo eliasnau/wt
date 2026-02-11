@@ -23,7 +23,7 @@ export function CreateMemberButton() {
 					<Button className="w-full justify-between gap-2 sm:w-auto sm:justify-center">
 						<span className="flex items-center gap-2">
 							<Plus className="size-4" />
-							Create Member
+							Mitglied erstellen
 						</span>
 					</Button>
 				}

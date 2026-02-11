@@ -29,7 +29,7 @@ export function DeleteAccountFrame() {
 
 		try {
 			await authClient.deleteUser();
-			toast.success("Account deleted successfully");
+			toast.success("Konto erfolgreich gelöscht");
 
 			await authClient.signOut({
 				fetchOptions: {
@@ -39,7 +39,7 @@ export function DeleteAccountFrame() {
 				},
 			});
 		} catch (error) {
-			toast.error("Failed to delete account");
+			toast.error("Konto konnte nicht gelöscht werden");
 			console.error(error);
 			setIsDeleting(false);
 		}
@@ -50,8 +50,8 @@ export function DeleteAccountFrame() {
 			<FramePanel>
 				<h2 className="font-heading text-xl text-destructive mb-2">Gefahrenbereich</h2>
 				<p className="text-sm text-muted-foreground">
-					Permanently delete your account and all associated data. This action
-					cannot be undone and you will lose access to all your data.
+					Lösche dein Konto und alle zugehörigen Daten dauerhaft. Diese Aktion
+					kann nicht rückgängig gemacht werden und du verlierst den Zugriff auf alle deine Daten.
 				</p>
 			</FramePanel>
 			<FrameFooter className="flex-row justify-end gap-2">
@@ -63,23 +63,23 @@ export function DeleteAccountFrame() {
 						{isDeleting ? (
 							<>
 								<Loader2 className="mr-2 size-4 animate-spin" />
-								Deleting account...
+								Konto wird gelöscht...
 							</>
 						) : (
-							"Delete My Account"
+							"Mein Konto löschen"
 						)}
 					</AlertDialogTrigger>
 					<AlertDialogPopup>
 						<AlertDialogHeader>
 							<AlertDialogTitle>Bist du dir absolut sicher?</AlertDialogTitle>
 							<AlertDialogDescription>
-								This action cannot be undone. This will permanently delete your
-								account and remove all of your data from our servers including:
+								Diese Aktion kann nicht rückgängig gemacht werden. Dadurch wird dein
+								Konto dauerhaft gelöscht und alle deine Daten von unseren Servern entfernt, einschließlich:
 								<ul className="list-disc list-inside mt-2 space-y-1">
-									<li>Your profile and personal information</li>
-									<li>All organizations you own</li>
-									<li>All projects and associated data</li>
-									<li>Your access to shared resources</li>
+									<li>Dein Profil und persönliche Informationen</li>
+									<li>Alle Organisationen, die dir gehören</li>
+									<li>Alle Projekte und zugehörigen Daten</li>
+									<li>Dein Zugriff auf geteilte Ressourcen</li>
 								</ul>
 							</AlertDialogDescription>
 						</AlertDialogHeader>
@@ -91,7 +91,7 @@ export function DeleteAccountFrame() {
 								render={<Button variant="destructive" />}
 								onClick={handleDeleteAccount}
 							>
-								Yes, Delete My Account
+								Ja, mein Konto löschen
 							</AlertDialogClose>
 						</AlertDialogFooter>
 					</AlertDialogPopup>

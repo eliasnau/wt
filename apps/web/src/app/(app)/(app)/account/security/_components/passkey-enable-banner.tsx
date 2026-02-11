@@ -20,7 +20,7 @@ export function PasskeyEnableBanner() {
 	return (
 		<Alert variant="info">
 			<Fingerprint />
-			<AlertTitle>Add a Passkey</AlertTitle>
+			<AlertTitle>Einen Passkey hinzufügen</AlertTitle>
 			<AlertDescription>
 				Use passkeys for faster, more secure sign-ins without passwords.
 			</AlertDescription>

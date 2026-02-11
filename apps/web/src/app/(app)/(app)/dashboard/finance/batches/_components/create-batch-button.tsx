@@ -27,7 +27,7 @@ export function CreateBatchButton() {
 	const createMutation = useMutation(
 		orpc.paymentBatches.create.mutationOptions({
 			onSuccess: (data) => {
-				toast.success("Payment batch created", {
+				toast.success("Zahlungslauf erstellt", {
 					description: `Batch ${data.batch.batchNumber} created with ${data.payments.length} payments`,
 				});
 				queryClient.invalidateQueries({
@@ -38,9 +38,9 @@ export function CreateBatchButton() {
 				setNotes("");
 			},
 			onError: (error: any) => {
-				toast.error("Failed to create batch", {
+				toast.error("Lauf konnte nicht erstellt werden", {
 					description:
-						error instanceof Error ? error.message : "Something went wrong",
+						error instanceof Error ? error.message : "Etwas ist schiefgelaufen",
 				});
 			},
 		})
@@ -48,7 +48,7 @@ export function CreateBatchButton() {
 
 	const handleSubmit = () => {
 		if (!billingMonth) {
-			toast.error("Please select a billing month");
+			toast.error("Bitte wähle einen Abrechnungsmonat");
 			return;
 		}
 
@@ -69,7 +69,7 @@ export function CreateBatchButton() {
 			</DialogTrigger>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Create Payment Batch</DialogTitle>
+					<DialogTitle>Zahlungslauf erstellen</DialogTitle>
 					<DialogDescription>
 						Generate a new payment batch for all active members for a specific
 						month
@@ -78,7 +78,7 @@ export function CreateBatchButton() {
 
 				<div className="space-y-4">
 					<Field>
-						<FieldLabel>Billing Month</FieldLabel>
+						<FieldLabel>Abrechnungsmonat</FieldLabel>
 						<Input
 							type="month"
 							value={billingMonth}
@@ -91,7 +91,7 @@ export function CreateBatchButton() {
 					</Field>
 
 					<Field>
-						<FieldLabel>Notes (Optional)</FieldLabel>
+						<FieldLabel>Notizen (optional)</FieldLabel>
 						<Textarea
 							value={notes}
 							onChange={(e) => setNotes(e.target.value)}
@@ -109,7 +109,7 @@ export function CreateBatchButton() {
 						onClick={handleSubmit}
 						disabled={createMutation.isPending || !billingMonth}
 					>
-						{createMutation.isPending ? "Creating..." : "Create Batch"}
+						{createMutation.isPending ? "Creating..." : "Lauf erstellen"}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

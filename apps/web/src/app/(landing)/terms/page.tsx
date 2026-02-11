@@ -20,7 +20,7 @@ export default function TermsPage() {
 				<Section className="mt-20 md:mt-32">
 					<SectionContent>
 						<BlurFade inView>
-							<PageHeading>Terms of Service</PageHeading>
+							<PageHeading>Nutzungsbedingungen</PageHeading>
 							<div className="mt-8">
 								<CardWrapper className="p-8 md:p-12">
 									<div className="space-y-8">
@@ -29,7 +29,7 @@ export default function TermsPage() {
 										</Paragraph>
 
 										<div className="space-y-4">
-											<Subheading>1. Acceptance of Terms</Subheading>
+											<Subheading>1. Akzeptanz der Bedingungen</Subheading>
 											<Paragraph>
 												By accessing or using the Martial Arts Manager website
 												and services, you agree to be bound by these Terms of
@@ -40,7 +40,7 @@ export default function TermsPage() {
 										</div>
 
 										<div className="space-y-4">
-											<Subheading>2. Use License</Subheading>
+											<Subheading>2. Nutzungslizenz</Subheading>
 											<Paragraph>
 												Permission is granted to temporarily download one copy
 												of the materials (information or software) on Martial
@@ -51,7 +51,7 @@ export default function TermsPage() {
 											</Paragraph>
 											<ul className="list-disc space-y-2 pl-5">
 												<li>
-													<Paragraph>modify or copy the materials;</Paragraph>
+													<Paragraph>die Materialien zu verändern oder zu kopieren;</Paragraph>
 												</li>
 												<li>
 													<Paragraph>
@@ -82,7 +82,7 @@ export default function TermsPage() {
 										</div>
 
 										<div className="space-y-4">
-											<Subheading>3. Disclaimer</Subheading>
+											<Subheading>3. Haftungsausschluss</Subheading>
 											<Paragraph>
 												The materials on Martial Arts Manager's website are
 												provided on an 'as is' basis. Martial Arts Manager makes
@@ -96,7 +96,7 @@ export default function TermsPage() {
 										</div>
 
 										<div className="space-y-4">
-											<Subheading>4. Limitations</Subheading>
+											<Subheading>4. Einschränkungen</Subheading>
 											<Paragraph>
 												In no event shall Martial Arts Manager or its suppliers
 												be liable for any damages (including, without
@@ -110,7 +110,7 @@ export default function TermsPage() {
 										</div>
 
 										<div className="space-y-4">
-											<Subheading>5. Governing Law</Subheading>
+											<Subheading>5. Anwendbares Recht</Subheading>
 											<Paragraph>
 												These terms and conditions are governed by and construed
 												in accordance with the laws and you irrevocably submit

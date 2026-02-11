@@ -33,7 +33,7 @@ export function RoleChangeDialog({
 		<AlertDialog open={open} onOpenChange={onOpenChange}>
 			<AlertDialogPopup>
 				<AlertDialogHeader>
-					<AlertDialogTitle>Confirm Role Change</AlertDialogTitle>
+					<AlertDialogTitle>Rollenänderung bestätigen</AlertDialogTitle>
 					<AlertDialogDescription>
 						Change {memberName}'s role from{" "}
 						<strong className="capitalize">{currentRole}</strong> to{" "}
@@ -82,7 +82,7 @@ export function RemoveMemberDialog({
 		<AlertDialog open={open} onOpenChange={onOpenChange}>
 			<AlertDialogPopup>
 				<AlertDialogHeader>
-					<AlertDialogTitle>Remove Member</AlertDialogTitle>
+					<AlertDialogTitle>Mitglied entfernen</AlertDialogTitle>
 					<AlertDialogDescription>
 						Remove <strong>{memberName}</strong> from the organization? They
 						will lose access immediately.
@@ -130,7 +130,7 @@ export function CancelInvitationDialog({
 		<AlertDialog open={open} onOpenChange={onOpenChange}>
 			<AlertDialogPopup>
 				<AlertDialogHeader>
-					<AlertDialogTitle>Cancel Invitation</AlertDialogTitle>
+					<AlertDialogTitle>Einladung abbrechen</AlertDialogTitle>
 					<AlertDialogDescription>
 						Cancel invitation for <strong>{email}</strong>? They will not be
 						able to join using this invitation.
@@ -150,7 +150,7 @@ export function CancelInvitationDialog({
 								Cancelling...
 							</>
 						) : (
-							"Cancel Invitation"
+							"Einladung abbrechen"
 						)}
 					</Button>
 				</AlertDialogFooter>

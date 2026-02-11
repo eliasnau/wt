@@ -67,7 +67,7 @@ export function OrganizationSettingsSheet({
 			});
 
 			if (error) {
-				toast.error(error.message || "Failed to leave organization");
+				toast.error(error.message || "Organisation konnte nicht verlassen werden");
 				return;
 			}
 
@@ -75,7 +75,7 @@ export function OrganizationSettingsSheet({
 			onOpenChange(false);
 			onLeave?.();
 		} catch (error) {
-			toast.error("Failed to leave organization");
+			toast.error("Organisation konnte nicht verlassen werden");
 			console.error(error);
 		} finally {
 			setIsLeaving(false);
@@ -118,16 +118,16 @@ export function OrganizationSettingsSheet({
 					<div className="space-y-6">
 						{/* Your Membership Section */}
 						<div>
-							<h3 className="font-semibold text-sm mb-3">Your Membership</h3>
+							<h3 className="font-semibold text-sm mb-3">Deine Mitgliedschaft</h3>
 							<div className="space-y-3">
 								<div className="flex items-center justify-between">
-									<span className="text-sm text-muted-foreground">Role</span>
+									<span className="text-sm text-muted-foreground">Rolle</span>
 									<Badge variant="secondary" className="capitalize">
 										{userRole}
 									</Badge>
 								</div>
 								<div className="flex items-center justify-between">
-									<span className="text-sm text-muted-foreground">Member since</span>
+									<span className="text-sm text-muted-foreground">Mitglied seit</span>
 									<span className="text-sm">
 										{formatDate(organization.createdAt)}
 									</span>
@@ -139,12 +139,12 @@ export function OrganizationSettingsSheet({
 
 						{/* Organization Overview */}
 						<div>
-							<h3 className="font-semibold text-sm mb-3">Organization Overview</h3>
+							<h3 className="font-semibold text-sm mb-3">Organisationsübersicht</h3>
 							<div className="space-y-3">
 								<div className="flex items-center justify-between">
 									<div className="flex items-center gap-2 text-sm text-muted-foreground">
 										<Users className="size-4" />
-										<span>Total Members</span>
+										<span>Mitglieder gesamt</span>
 									</div>
 									<span className="text-sm font-medium">
 										{organization.members?.length || 0}
@@ -153,7 +153,7 @@ export function OrganizationSettingsSheet({
 								<div className="flex items-center justify-between">
 									<div className="flex items-center gap-2 text-sm text-muted-foreground">
 										<Calendar className="size-4" />
-										<span>Created</span>
+										<span>Erstellt</span>
 									</div>
 									<span className="text-sm font-medium">
 										{formatDate(organization.createdAt)}
@@ -162,7 +162,7 @@ export function OrganizationSettingsSheet({
 								<div className="flex items-center justify-between">
 									<div className="flex items-center gap-2 text-sm text-muted-foreground">
 										<Building2 className="size-4" />
-										<span>Organization ID</span>
+										<span>Organisations-ID</span>
 									</div>
 									<span className="text-sm font-mono text-muted-foreground truncate max-w-[200px]">
 										{organization.id.substring(0, 12)}...
@@ -175,14 +175,14 @@ export function OrganizationSettingsSheet({
 
 						{/* Quick Actions */}
 						<div>
-							<h3 className="font-semibold text-sm mb-3">Quick Actions</h3>
+							<h3 className="font-semibold text-sm mb-3">Schnellaktionen</h3>
 							<div className="space-y-2">
 								<Button
 									variant="outline"
 									className="w-full justify-between"
 									onClick={handleManageOrganization}
 								>
-									<span>Manage Organization Settings</span>
+									<span>Organisationseinstellungen verwalten</span>
 									<ArrowRight className="size-4" />
 								</Button>
 								{/* Temporarily show for all roles - testing */}
@@ -195,7 +195,7 @@ export function OrganizationSettingsSheet({
 											onOpenChange(false);
 										}}
 									>
-										<span>Invite Members</span>
+										<span>Mitglieder einladen</span>
 										<ArrowRight className="size-4" />
 									</Button>
 								)}
@@ -222,9 +222,9 @@ export function OrganizationSettingsSheet({
 								/>
 								<AlertDialogPopup>
 									<AlertDialogHeader>
-										<AlertDialogTitle>Leave Organization</AlertDialogTitle>
+										<AlertDialogTitle>Organisation verlassen</AlertDialogTitle>
 										<AlertDialogDescription>
-											Are you sure you want to leave <strong>{organization.name}</strong>? You will lose access to all resources and will need to be re-invited to rejoin.
+											Möchtest du <strong>{organization.name}</strong> wirklich verlassen? Du verlierst den Zugriff auf alle Ressourcen und musst erneut eingeladen werden, um wieder beizutreten.
 										</AlertDialogDescription>
 									</AlertDialogHeader>
 									<AlertDialogFooter>
@@ -236,7 +236,7 @@ export function OrganizationSettingsSheet({
 											onClick={handleLeaveOrganization}
 											disabled={isLeaving}
 										>
-											{isLeaving ? "Leaving..." : "Leave Organization"}
+											{isLeaving ? "Leaving..." : "Organisation verlassen"}
 										</AlertDialogClose>
 									</AlertDialogFooter>
 								</AlertDialogPopup>

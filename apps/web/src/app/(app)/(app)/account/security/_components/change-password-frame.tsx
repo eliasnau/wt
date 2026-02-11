@@ -55,22 +55,22 @@ export function ChangePasswordFrame() {
 
 	const handleChangePassword = async () => {
 		if (!currentPassword.trim()) {
-			toast.error("Current password is required");
+			toast.error("Aktuelles Passwort ist erforderlich");
 			return;
 		}
 
 		if (!newPassword.trim()) {
-			toast.error("New password is required");
+			toast.error("Neues Passwort ist erforderlich");
 			return;
 		}
 
 		if (newPassword !== confirmPassword) {
-			toast.error("Passwords do not match");
+			toast.error("Passwörter stimmen nicht überein");
 			return;
 		}
 
 		if (newPassword.length < 8) {
-			toast.error("Password must be at least 8 characters");
+			toast.error("Das Passwort muss mindestens 8 Zeichen lang sein");
 			return;
 		}
 
@@ -84,19 +84,19 @@ export function ChangePasswordFrame() {
 			});
 
 			if (error) {
-				toast.error(error.message || "Failed to change password");
+				toast.error(error.message || "Passwort konnte nicht geändert werden");
 				console.error(error);
 			} else {
 				toast.success(
 					revokeOtherSessions
-						? "Password changed and other sessions revoked"
-						: "Password changed successfully"
+						? "Passwort geändert und andere Sitzungen widerrufen"
+						: "Passwort erfolgreich geändert"
 				);
 				resetForm();
 				setOpen(false);
 			}
 		} catch (error) {
-			toast.error("Failed to change password");
+			toast.error("Passwort konnte nicht geändert werden");
 			console.error(error);
 		} finally {
 			setIsChangingPassword(false);
@@ -106,19 +106,19 @@ export function ChangePasswordFrame() {
 	return (
 		<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 			<FramePanel>
-				<h2 className="font-heading text-xl mb-2 text-foreground">Password</h2>
+				<h2 className="font-heading text-xl mb-2 text-foreground">Passwort</h2>
 				<p className="text-sm text-muted-foreground">
-					Update your password regularly to keep your account secure.
+					Aktualisiere dein Passwort regelmäßig, um dein Konto zu schützen.
 				</p>
 			</FramePanel>
 			<FrameFooter className="flex-row justify-between items-center">
 				<Tooltip>
 					<TooltipTrigger delay={0} render={<button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors" />}>
 						<Info className="size-3.5" />
-						<span>Password requirements</span>
+						<span>Passwortanforderungen</span>
 					</TooltipTrigger>
 					<TooltipContent>
-						<p className="text-xs">Password must be at least 8 characters long</p>
+						<p className="text-xs">Das Passwort muss mindestens 8 Zeichen lang sein</p>
 					</TooltipContent>
 				</Tooltip>
 
@@ -131,36 +131,36 @@ export function ChangePasswordFrame() {
 					</AnimateIcon>
 					<DialogPopup>
 						<DialogHeader>
-							<DialogTitle>Change Password</DialogTitle>
+							<DialogTitle>Passwort ändern</DialogTitle>
 						</DialogHeader>
 						<DialogPanel className="space-y-4">
 							<Field>
-								<FieldLabel>Current Password</FieldLabel>
+								<FieldLabel>Aktuelles Passwort</FieldLabel>
 								<Input
 									type="password"
 									value={currentPassword}
 									onChange={(e) => setCurrentPassword(e.target.value)}
-									placeholder="Enter your current password"
+									placeholder="Gib dein aktuelles Passwort ein"
 								/>
 							</Field>
 
 							<Field>
-								<FieldLabel>New Password</FieldLabel>
+								<FieldLabel>Neues Passwort</FieldLabel>
 								<Input
 									type="password"
 									value={newPassword}
 									onChange={(e) => setNewPassword(e.target.value)}
-									placeholder="Enter your new password"
+									placeholder="Gib dein neues Passwort ein"
 								/>
 							</Field>
 
 							<Field>
-								<FieldLabel>Confirm New Password</FieldLabel>
+								<FieldLabel>Neues Passwort bestätigen</FieldLabel>
 								<Input
 									type="password"
 									value={confirmPassword}
 									onChange={(e) => setConfirmPassword(e.target.value)}
-									placeholder="Confirm your new password"
+									placeholder="Bestätige dein neues Passwort"
 								/>
 							</Field>
 
@@ -195,7 +195,7 @@ export function ChangePasswordFrame() {
 										Updating...
 									</>
 								) : (
-									"Update Password"
+									"Passwort aktualisieren"
 								)}
 							</Button>
 						</DialogFooter>

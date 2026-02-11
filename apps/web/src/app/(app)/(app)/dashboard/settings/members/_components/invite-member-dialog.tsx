@@ -45,7 +45,7 @@ export function InviteMemberDialog({
 
 	const handleSubmit = async () => {
 		if (!email.trim()) {
-			toast.error("Email is required");
+			toast.error("E-Mail ist erforderlich");
 			return;
 		}
 
@@ -57,7 +57,7 @@ export function InviteMemberDialog({
 		setLoading(false);
 
 		if (result.error) {
-			toast.error(result.error.message || "Failed to send invitation");
+			toast.error(result.error.message || "Einladung konnte nicht gesendet werden");
 			return;
 		}
 
@@ -75,7 +75,7 @@ export function InviteMemberDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogPopup>
 				<DialogHeader>
-					<DialogTitle>Invite Team Member</DialogTitle>
+					<DialogTitle>Teammitglied einladen</DialogTitle>
 				</DialogHeader>
 				<DialogPanel>
 					<div className="space-y-4">
@@ -90,7 +90,7 @@ export function InviteMemberDialog({
 							/>
 						</Field>
 						<Field>
-							<FieldLabel>Role</FieldLabel>
+							<FieldLabel>Rolle</FieldLabel>
 							<Select
 								value={role}
 								onValueChange={(value) => value && setRole(value)}

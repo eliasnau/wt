@@ -88,7 +88,7 @@ export function RolePermissionGrid({
 							selected.has(action),
 						);
 						const hasAny = actions.some((action) => selected.has(action));
-						const toggleAllLabel = allSelected ? "Clear" : "Select all";
+						const toggleAllLabel = allSelected ? "Clear" : "Alle auswählen";
 						const showAccessControlInfo = resource === "ac";
 
 						return (
@@ -104,7 +104,7 @@ export function RolePermissionGrid({
 										<div className="text-xs text-muted-foreground">
 											{hasAny
 												? `${selected.size} selected`
-												: "No permissions selected"}
+												: "Keine Berechtigungen ausgewählt"}
 										</div>
 									</div>
 									<Button

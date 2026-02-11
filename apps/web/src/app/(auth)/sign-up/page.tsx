@@ -39,7 +39,7 @@ export default function SignUp() {
 						toast.error(ctx.error.message);
 					},
 					onSuccess: () => {
-						posthog.capture("auth:sign_up", {
+						posthog.capture("auth:registrieren", {
 							auth_method: "email",
 						});
 
@@ -59,12 +59,12 @@ export default function SignUp() {
 						className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
 					>
 						<ArrowLeft className="h-4 w-4" />
-						Back to Home
+						Zur Startseite
 					</Link>
 				</div>
 				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 					<FramePanel>
-						<h1 className="font-heading text-2xl mb-4">Sign Up</h1>
+						<h1 className="font-heading text-2xl mb-4">Registrieren</h1>
 						<form
 							onSubmit={(e) => {
 								e.preventDefault();
@@ -78,16 +78,16 @@ export default function SignUp() {
 									name="firstName"
 									validators={{
 										onBlur: ({ value }) => {
-											if (!value) return "First name is required";
+											if (!value) return "Vorname ist erforderlich";
 											if (value.length < 2)
-												return "First name must be at least 2 characters";
+												return "Vorname muss mindestens 2 Zeichen lang sein";
 											return undefined;
 										},
 									}}
 								>
 									{(field) => (
 										<div className="space-y-2">
-											<Label htmlFor={field.name}>First name</Label>
+											<Label htmlFor={field.name}>Vorname</Label>
 											<Input
 												id={field.name}
 												name={field.name}
@@ -111,16 +111,16 @@ export default function SignUp() {
 									name="lastName"
 									validators={{
 										onBlur: ({ value }) => {
-											if (!value) return "Last name is required";
+											if (!value) return "Nachname ist erforderlich";
 											if (value.length < 2)
-												return "Last name must be at least 2 characters";
+												return "Nachname muss mindestens 2 Zeichen lang sein";
 											return undefined;
 										},
 									}}
 								>
 									{(field) => (
 										<div className="space-y-2">
-											<Label htmlFor={field.name}>Last name</Label>
+											<Label htmlFor={field.name}>Nachname</Label>
 											<Input
 												id={field.name}
 												name={field.name}
@@ -145,16 +145,16 @@ export default function SignUp() {
 								name="email"
 								validators={{
 									onBlur: ({ value }) => {
-										if (!value) return "Email is required";
+										if (!value) return "E-Mail ist erforderlich";
 										if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
-											return "Invalid email address";
+											return "Ungültige E-Mail-Adresse";
 										return undefined;
 									},
 								}}
 							>
 								{(field) => (
 									<div className="space-y-2">
-										<Label htmlFor={field.name}>Email</Label>
+										<Label htmlFor={field.name}>E-Mail</Label>
 										<Input
 											id={field.name}
 											name={field.name}
@@ -179,21 +179,21 @@ export default function SignUp() {
 								name="password"
 								validators={{
 									onBlur: ({ value }) => {
-										if (!value) return "Password is required";
+										if (!value) return "Passwort ist erforderlich";
 										if (value.length < 8)
-											return "Password must be at least 8 characters";
+											return "Das Passwort muss mindestens 8 Zeichen lang sein";
 										return undefined;
 									},
 								}}
 							>
 								{(field) => (
 									<div className="space-y-2">
-										<Label htmlFor={field.name}>Password</Label>
+										<Label htmlFor={field.name}>Passwort</Label>
 										<Input
 											id={field.name}
 											name={field.name}
 											type="password"
-											placeholder="Password"
+											placeholder="Passwort"
 											autoComplete="new-password"
 											value={field.state.value}
 											onBlur={field.handleBlur}
@@ -222,7 +222,7 @@ export default function SignUp() {
 										{isSubmitting ? (
 											<Loader2 size={16} className="animate-spin" />
 										) : (
-											"Create an account"
+											"Konto erstellen"
 										)}
 									</Button>
 								)}

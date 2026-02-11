@@ -71,7 +71,7 @@ export function CustomDomainFrame() {
 					setVerificationRecords([]);
 				}
 			} catch (error) {
-				console.error("Failed to fetch domain status:", error);
+				console.error("Domain-Status konnte nicht abgerufen werden:", error);
 			} finally {
 				setIsLoading(false);
 			}
@@ -89,13 +89,13 @@ export function CustomDomainFrame() {
 		e.preventDefault();
 
 		if (!domain.trim()) {
-			toast.error("Domain cannot be empty");
+			toast.error("Domain darf nicht leer sein");
 			return;
 		}
 
 		const domainRegex = /^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,}$/i;
 		if (!domainRegex.test(domain.trim())) {
-			toast.error("Please enter a valid domain (e.g., members.example.com)");
+			toast.error("Bitte gib eine gültige Domain ein (z. B. members.example.com)");
 			return;
 		}
 
@@ -122,19 +122,19 @@ export function CustomDomainFrame() {
 			}
 
 			if (result.verified) {
-				toast.success("Domain added and verified successfully!");
+				toast.success("Domain erfolgreich hinzugefügt und verifiziert!");
 			} else {
 				const statusMessage =
 					result.status === "Pending Verification"
-						? "Domain added! Please verify ownership by adding the required DNS record."
-						: "Domain added! Please configure your DNS settings.";
+						? "Domain hinzugefügt! Bitte verifiziere den Besitz, indem du den erforderlichen DNS-Eintrag hinzufügst."
+						: "Domain hinzugefügt! Bitte konfiguriere deine DNS-Einstellungen.";
 				toast.warning(statusMessage);
 			}
 
 			setDialogOpen(false);
 			router.refresh();
 		} catch (error: any) {
-			toast.error(error?.message || "Failed to add domain");
+			toast.error(error?.message || "Domain konnte nicht hinzugefügt werden");
 			console.error(error);
 		} finally {
 			setIsAdding(false);
@@ -142,7 +142,7 @@ export function CustomDomainFrame() {
 	};
 
 	const handleRemoveDomain = async () => {
-		if (!confirm("Are you sure you want to remove this custom domain?")) {
+		if (!confirm("Möchtest du diese benutzerdefinierte Domain wirklich entfernen?")) {
 			return;
 		}
 
@@ -151,14 +151,14 @@ export function CustomDomainFrame() {
 		try {
 			await client.organizations.removeDomain();
 
-			toast.success("Domain removed successfully!");
+			toast.success("Domain erfolgreich entfernt!");
 			setCurrentDomain(null);
 			setIsVerified(false);
 			setVerificationRequired(false);
 			setVerificationRecords([]);
 			router.refresh();
 		} catch (error: any) {
-			toast.error(error?.message || "Failed to remove domain");
+			toast.error(error?.message || "Domain konnte nicht entfernt werden");
 			console.error(error);
 		} finally {
 			setIsRemoving(false);
@@ -188,7 +188,7 @@ export function CustomDomainFrame() {
 								<EmptyMedia variant="icon">
 									<Globe />
 								</EmptyMedia>
-								<EmptyTitle>No custom domain configured</EmptyTitle>
+								<EmptyTitle>Keine benutzerdefinierte Domain konfiguriert</EmptyTitle>
 								<EmptyDescription>
 									You haven't set up a custom domain yet. Add one to use your
 									own domain for your organization's member area.
@@ -301,7 +301,7 @@ export function CustomDomainFrame() {
 			<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
 				<DialogPopup>
 					<DialogHeader>
-						<DialogTitle>Add Custom Domain</DialogTitle>
+						<DialogTitle>Benutzerdefinierte Domain hinzufügen</DialogTitle>
 						<DialogDescription>
 							Enter the domain you want to use for your organization
 						</DialogDescription>
@@ -309,7 +309,7 @@ export function CustomDomainFrame() {
 					<form className="contents" onSubmit={handleSubmit}>
 						<DialogPanel>
 							<Field>
-								<FieldLabel>Domain Name</FieldLabel>
+								<FieldLabel>Domainname</FieldLabel>
 								<Input
 									value={domain}
 									onChange={(e) =>
@@ -340,7 +340,7 @@ export function CustomDomainFrame() {
 										Adding...
 									</>
 								) : (
-									"Add Domain"
+									"Domain hinzufügen"
 								)}
 							</Button>
 						</DialogFooter>

@@ -92,7 +92,7 @@ export default async function DashboardPage() {
 								<div className="text-xs font-medium uppercase text-muted-foreground">
 									Statistics
 								</div>
-								<div className="mt-2 text-2xl font-semibold">This month</div>
+								<div className="mt-2 text-2xl font-semibold">Diesen Monat</div>
 								<p className="text-xs text-muted-foreground">
 									Attendance and revenue trends
 								</p>
@@ -122,7 +122,7 @@ export default async function DashboardPage() {
 
 				<Card className="min-h-[360px]">
 					<CardHeader>
-						<CardTitle>Quick Actions</CardTitle>
+						<CardTitle>Schnellaktionen</CardTitle>
 						<CardDescription>
 							Move fast with a few high-impact shortcuts.
 						</CardDescription>

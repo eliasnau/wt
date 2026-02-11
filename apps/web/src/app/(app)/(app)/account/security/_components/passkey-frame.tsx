@@ -79,7 +79,7 @@ export function PasskeyFrame({
 		queryFn: async () => {
 			const { data, error } = await authClient.passkey.listUserPasskeys();
 			if (error) {
-				throw new Error(error.message || "Failed to load passkeys");
+				throw new Error(error.message || "Passkeys konnten nicht geladen werden");
 			}
 			return data;
 		},
@@ -91,13 +91,13 @@ export function PasskeyFrame({
 		try {
 			const { error } = await authClient.passkey.addPasskey();
 			if (error) {
-				toast.error("Failed to add passkey");
+				toast.error("Passkey konnte nicht hinzugefügt werden");
 			} else {
-				toast.success("Passkey added successfully");
+				toast.success("Passkey erfolgreich hinzugefügt");
 				await refetch();
 			}
 		} catch {
-			toast.error("Failed to add passkey");
+			toast.error("Passkey konnte nicht hinzugefügt werden");
 		} finally {
 			setIsAddingPasskey(false);
 		}
@@ -110,13 +110,13 @@ export function PasskeyFrame({
 					id: passkeyId,
 				});
 				if (error) {
-					toast.error("Failed to delete passkey");
+					toast.error("Passkey konnte nicht gelöscht werden");
 				} else {
-					toast.success("Passkey deleted successfully");
+					toast.success("Passkey erfolgreich gelöscht");
 					refetch();
 				}
 			} catch {
-				toast.error("Failed to delete passkey");
+				toast.error("Passkey konnte nicht gelöscht werden");
 			}
 		},
 		[refetch],
@@ -124,7 +124,7 @@ export function PasskeyFrame({
 
 	const handleUpdatePasskeyName = useCallback(async () => {
 		if (!editingPasskey || !newPasskeyName.trim()) {
-			toast.error("Please enter a passkey name");
+			toast.error("Bitte gib einen Passkey-Namen ein");
 			return;
 		}
 		setIsUpdatingName(true);
@@ -134,15 +134,15 @@ export function PasskeyFrame({
 				name: newPasskeyName.trim(),
 			});
 			if (error) {
-				toast.error("Failed to update passkey name");
+				toast.error("Passkey-Name konnte nicht aktualisiert werden");
 			} else {
-				toast.success("Passkey name updated successfully");
+				toast.success("Passkey-Name erfolgreich aktualisiert");
 				await refetch();
 				setEditingPasskey(null);
 				setNewPasskeyName("");
 			}
 		} catch {
-			toast.error("Failed to update passkey name");
+			toast.error("Passkey-Name konnte nicht aktualisiert werden");
 		} finally {
 			setIsUpdatingName(false);
 		}
@@ -164,7 +164,7 @@ export function PasskeyFrame({
 						Passkeys
 					</h2>
 					<p className="text-sm text-muted-foreground mb-6">
-						Use your fingerprint, face, or device PIN for secure passwordless
+						Nutze deinen Fingerabdruck, dein Gesicht oder die Geräte-PIN für eine sichere passwortlose
 						authentication.
 					</p>
 					<div className="flex items-center justify-center py-12">
@@ -187,11 +187,11 @@ export function PasskeyFrame({
 							<EmptyMedia variant="icon">
 								<Fingerprint />
 							</EmptyMedia>
-							<EmptyTitle>Failed to load passkeys</EmptyTitle>
+							<EmptyTitle>Passkeys konnten nicht geladen werden</EmptyTitle>
 							<EmptyDescription>
 								{error instanceof Error
 									? error.message
-									: "Something went wrong. Please try again."}
+									: "Etwas ist schiefgelaufen. Bitte versuche es erneut."}
 							</EmptyDescription>
 						</EmptyHeader>
 						<EmptyContent>
@@ -235,7 +235,7 @@ export function PasskeyFrame({
 								}
 							>
 								<Info className="size-3.5" />
-								<span>What are passkeys?</span>
+								<span>Was sind Passkeys?</span>
 							</TooltipTrigger>
 							<TooltipContent>
 								<p className="text-xs max-w-xs">
@@ -280,7 +280,7 @@ export function PasskeyFrame({
 						Passkeys
 					</h2>
 					<p className="text-sm text-muted-foreground mb-6">
-						Use your fingerprint, face, or device PIN for secure passwordless
+						Nutze deinen Fingerabdruck, dein Gesicht oder die Geräte-PIN für eine sichere passwortlose
 						authentication.
 					</p>
 
@@ -294,7 +294,7 @@ export function PasskeyFrame({
 									<PasskeyIcon aaguid={passkey.aaguid} />
 									<div>
 										<p className="text-sm font-medium">
-											{passkey.name || "Unnamed Passkey"}
+											{passkey.name || "Unbenannter Passkey"}
 										</p>
 										<p className="text-xs text-muted-foreground">
 											Added{" "}
@@ -337,7 +337,7 @@ export function PasskeyFrame({
 										</AnimateIcon>
 										<AlertDialogPopup>
 											<AlertDialogHeader>
-												<AlertDialogTitle>Delete Passkey</AlertDialogTitle>
+												<AlertDialogTitle>Passkey löschen</AlertDialogTitle>
 												<AlertDialogDescription>
 													Are you sure you want to delete this passkey? You
 													won't be able to use it to sign in anymore.
@@ -373,7 +373,7 @@ export function PasskeyFrame({
 							}
 						>
 							<Info className="size-3.5" />
-							<span>What are passkeys?</span>
+							<span>Was sind Passkeys?</span>
 						</TooltipTrigger>
 						<TooltipContent>
 							<p className="text-xs max-w-xs">
@@ -411,15 +411,15 @@ export function PasskeyFrame({
 			>
 				<DialogPopup>
 					<DialogHeader>
-						<DialogTitle>Edit Passkey Name</DialogTitle>
+						<DialogTitle>Passkey-Namen bearbeiten</DialogTitle>
 					</DialogHeader>
 					<DialogPanel>
 						<Field>
-							<FieldLabel>Passkey Name</FieldLabel>
+							<FieldLabel>Passkey-Name</FieldLabel>
 							<Input
 								value={newPasskeyName}
 								onChange={(e) => setNewPasskeyName(e.target.value)}
-								placeholder="e.g., My iPhone, Work Laptop"
+								placeholder="z. B. Mein iPhone, Arbeitslaptop"
 								autoFocus
 							/>
 						</Field>

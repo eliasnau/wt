@@ -27,7 +27,7 @@ export function OrganizationInfoFrame({
 		e.preventDefault();
 
 		if (!orgName.trim()) {
-			toast.error("Organization name cannot be empty");
+			toast.error("Organisationsname darf nicht leer sein");
 			return;
 		}
 
@@ -46,7 +46,7 @@ export function OrganizationInfoFrame({
 			});
 
 			if (error) {
-				toast.error(error.message || "Failed to update organization name");
+				toast.error(error.message || "Organisationsname konnte nicht aktualisiert werden");
 				return;
 			}
 			router.refresh();
@@ -54,7 +54,7 @@ export function OrganizationInfoFrame({
 			if (error instanceof APIError) {
 				toast.error(error.message);
 			} else {
-				toast.error("Something went wrong");
+				toast.error("Etwas ist schiefgelaufen");
 			}
 			console.error(error);
 		} finally {
@@ -73,7 +73,7 @@ export function OrganizationInfoFrame({
 					Organization Information
 				</h2>
 				<p className="mb-6 text-muted-foreground text-sm">
-					Update your organization details and public information
+					Aktualisiere die Details deiner Organisation und öffentliche Informationen
 				</p>
 				<form id="org-info-form" onSubmit={handleSubmit} className="space-y-4">
 					<Field>

@@ -115,7 +115,7 @@ function BatchActions({
 					disabled={isExporting}
 				>
 					{isExporting ? <Loader2 className="animate-spin" /> : <Download />}
-					{isExporting ? "Preparing..." : "Download"}
+					{isExporting ? "Preparing..." : "Herunterladen"}
 				</Button>
 			) : null}
 			<Menu>
@@ -151,7 +151,7 @@ export const createColumns = (
 ): ColumnDef<BatchRow>[] => [
 	{
 		accessorKey: "billingMonth",
-		header: "Billing Month",
+		header: "Abrechnungsmonat",
 		cell: ({ row }) => (
 			<span className="font-medium">
 				{formatDate(row.original.billingMonth)}
@@ -177,11 +177,11 @@ export const createColumns = (
 	},
 	{
 		accessorKey: "transactionCount",
-		header: "Transactions",
+		header: "Transaktionen",
 	},
 	{
 		accessorKey: "createdAt",
-		header: "Created",
+		header: "Erstellt",
 		cell: ({ row }) => (
 			<span className="text-muted-foreground text-sm">
 				{new Date(row.original.createdAt).toLocaleDateString()}
@@ -274,7 +274,7 @@ export default function PaymentBatchesTable({
 							<EmptyMedia variant="icon">
 								<Download />
 							</EmptyMedia>
-							<EmptyTitle>No payment batches yet</EmptyTitle>
+							<EmptyTitle>Noch keine Zahlungsläufe</EmptyTitle>
 							<EmptyDescription>
 								Get started by creating your first batch.
 							</EmptyDescription>

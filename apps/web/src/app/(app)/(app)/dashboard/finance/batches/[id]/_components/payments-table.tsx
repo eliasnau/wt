@@ -42,7 +42,7 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
 			<Frame>
 				<FramePanel>
 					<div className="py-12 text-center">
-						<p className="text-muted-foreground">No payments in this batch.</p>
+						<p className="text-muted-foreground">Keine Zahlungen in diesem Lauf.</p>
 					</div>
 				</FramePanel>
 			</Frame>
@@ -55,11 +55,11 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
 				<Table>
 					<TableHeader>
 						<TableRow>
-							<TableHead>Member</TableHead>
-							<TableHead>Email</TableHead>
-							<TableHead className="text-right">Membership</TableHead>
-							<TableHead className="text-right">Joining Fee</TableHead>
-							<TableHead className="text-right">Yearly Fee</TableHead>
+							<TableHead>Mitglied</TableHead>
+							<TableHead>E-Mail</TableHead>
+							<TableHead className="text-right">Mitgliedschaft</TableHead>
+							<TableHead className="text-right">Aufnahmegebühr</TableHead>
+							<TableHead className="text-right">Jahresbeitrag</TableHead>
 							<TableHead className="text-right">Total</TableHead>
 							<TableHead>Status</TableHead>
 						</TableRow>

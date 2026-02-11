@@ -36,9 +36,9 @@ export default function OrganizationsPage () {
       <div className='flex flex-col gap-6'>
         <Header>
           <HeaderContent>
-            <HeaderTitle>Orgnization</HeaderTitle>
+            <HeaderTitle>Organisation</HeaderTitle>
             <HeaderDescription>
-              Manage your Organization
+              Verwalte deine Organisation
             </HeaderDescription>
           </HeaderContent>
           <HeaderActions></HeaderActions>

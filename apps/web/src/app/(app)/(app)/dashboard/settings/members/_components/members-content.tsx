@@ -28,7 +28,7 @@ export function MembersContent() {
 			});
 
 			if (result.error) {
-				throw new Error(result.error.message || "Failed to load members");
+				throw new Error(result.error.message || "Mitglieder konnten nicht geladen werden");
 			}
 
 			return result.data;
@@ -51,7 +51,7 @@ export function MembersContent() {
 					<EmptyMedia variant="icon">
 						<RouteIcon />
 					</EmptyMedia>
-					<EmptyTitle>No active Organization</EmptyTitle>
+					<EmptyTitle>Keine aktive Organisation</EmptyTitle>
 					<EmptyDescription>
 						Select an Organization to view Members
 					</EmptyDescription>
@@ -72,7 +72,7 @@ export function MembersContent() {
 					<EmptyMedia variant="icon">
 						<Ban />
 					</EmptyMedia>
-					<EmptyTitle>Failed to Load Members</EmptyTitle>
+					<EmptyTitle>Mitglieder konnten nicht geladen werden</EmptyTitle>
 					<EmptyDescription>{error.message}</EmptyDescription>
 				</EmptyHeader>
 				<EmptyContent>

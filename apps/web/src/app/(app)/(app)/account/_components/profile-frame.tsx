@@ -108,7 +108,7 @@ import { Spinner } from "@/components/ui/spinner";
 					<FramePanel>
 						<h2 className="font-heading text-xl mb-2 text-foreground">Profilinformationen</h2>
 						<p className="text-sm text-muted-foreground mb-6">
-							Update your personal information and email address.
+							Aktualisiere deine persönlichen Informationen und deine E-Mail-Adresse.
 						</p>
 						<div className="space-y-6">
 							<div className="flex items-center justify-between">

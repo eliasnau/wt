@@ -74,7 +74,7 @@ type GroupRow = GroupsList[number];
 
 const groupFormSchema = z.object({
 	name: z.string().min(3, {
-		message: "Name must be at least 3 characters.",
+		message: "Name muss mindestens 3 Zeichen lang sein.",
 	}),
 	description: z.string().optional(),
 	defaultMembershipPrice: z
@@ -125,7 +125,7 @@ function EnrollMemberDialog({
 	const enrollMutation = useMutation({
 		mutationFn: async () => {
 			if (!selectedMemberId) {
-				throw new Error("Please select a member");
+				throw new Error("Bitte wähle ein Mitglied");
 			}
 			return client.members.assignGroup({
 				memberId: selectedMemberId,
@@ -150,13 +150,13 @@ function EnrollMemberDialog({
 			setMembershipPrice("");
 		},
 		onError: (error) => {
-			toast.error(error.message ?? "Failed to enroll member");
+			toast.error(error.message ?? "Mitglied konnte nicht aufgenommen werden");
 		},
 	});
 
 	const handleSubmit = () => {
 		if (membershipPrice && !priceRegex.test(membershipPrice)) {
-			setPriceError("Invalid price format");
+			setPriceError("Ungültiges Preisformat");
 			return;
 		}
 		setPriceError(null);
@@ -167,7 +167,7 @@ function EnrollMemberDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Enroll Member</DialogTitle>
+					<DialogTitle>Mitglied aufnehmen</DialogTitle>
 					<DialogDescription>
 						Add a member to "{group.name}".
 					</DialogDescription>
@@ -181,11 +181,11 @@ function EnrollMemberDialog({
 							id="member-search"
 							value={search}
 							onChange={(event) => setSearch(event.target.value)}
-							placeholder="Search by name or email"
+							placeholder="Nach Name oder E-Mail suchen"
 						/>
 					</div>
 					<div className="space-y-2">
-						<p className="font-medium text-sm">Select a Member</p>
+						<p className="font-medium text-sm">Ein Mitglied auswählen</p>
 						<div className="rounded-lg border">
 							<ScrollArea className="max-h-56">
 								<div className="flex flex-col p-2">
@@ -233,7 +233,7 @@ function EnrollMemberDialog({
 							placeholder={
 								group.defaultMembershipPrice
 									? `Default: ${group.defaultMembershipPrice}`
-									: "Leave empty to use default"
+									: "Leer lassen, um den Standard zu verwenden"
 							}
 						/>
 						{group.defaultMembershipPrice && (
@@ -254,7 +254,7 @@ function EnrollMemberDialog({
 						onClick={handleSubmit}
 						disabled={enrollMutation.isPending || !selectedMemberId}
 					>
-						{enrollMutation.isPending ? "Enrolling..." : "Enroll Member"}
+						{enrollMutation.isPending ? "Enrolling..." : "Mitglied aufnehmen"}
 					</Button>
 				</DialogFooter>
 			</DialogContent>
@@ -295,7 +295,7 @@ export function EditGroupSheet({
 			onOpenChange(false);
 		},
 		onError: (error) => {
-			toast.error(error.message ?? "Failed to update group");
+			toast.error(error.message ?? "Gruppe konnte nicht aktualisiert werden");
 		},
 	});
 
@@ -330,7 +330,7 @@ export function EditGroupSheet({
 						className="flex h-full flex-col"
 					>
 						<SheetHeader>
-							<SheetTitle>Edit Group</SheetTitle>
+							<SheetTitle>Gruppe bearbeiten</SheetTitle>
 							<SheetDescription>
 								Update the group name, description, and default price.
 							</SheetDescription>
@@ -384,7 +384,7 @@ export function EditGroupSheet({
 								name="defaultMembershipPrice"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Default Membership Price</FormLabel>
+										<FormLabel>Standard-Mitgliedsbeitrag</FormLabel>
 										<FormControl>
 											<InputGroup>
 												<InputGroupInput
@@ -490,7 +490,7 @@ export function GroupMembersSheet({
 							</SheetDescription>
 						</div>
 						<Button size="sm" onClick={() => setEnrollOpen(true)}>
-							Enroll Member
+							Mitglied aufnehmen
 						</Button>
 					</div>
 				</SheetHeader>
@@ -501,7 +501,7 @@ export function GroupMembersSheet({
 						</InputGroupAddon>
 						<InputGroupInput
 							type="text"
-							placeholder="Search members..."
+							placeholder="Mitglieder suchen..."
 							value={search}
 							onChange={(event) => {
 								setSearch(event.target.value);
@@ -527,11 +527,11 @@ export function GroupMembersSheet({
 										<EmptyMedia variant="icon">
 											<AlertCircle />
 										</EmptyMedia>
-										<EmptyTitle>Failed to load members</EmptyTitle>
+										<EmptyTitle>Mitglieder konnten nicht geladen werden</EmptyTitle>
 										<EmptyDescription>
 											{error instanceof Error
 												? error.message
-												: "Something went wrong. Please try again."}
+												: "Etwas ist schiefgelaufen. Bitte versuche es erneut."}
 										</EmptyDescription>
 									</EmptyHeader>
 									<EmptyContent>
@@ -547,7 +547,7 @@ export function GroupMembersSheet({
 									<TableHeader>
 										<TableRow className="hover:bg-transparent">
 											<TableHead>Name</TableHead>
-											<TableHead>Email</TableHead>
+											<TableHead>E-Mail</TableHead>
 											<TableHead>Phone</TableHead>
 											<TableHead className="text-right">Actions</TableHead>
 										</TableRow>

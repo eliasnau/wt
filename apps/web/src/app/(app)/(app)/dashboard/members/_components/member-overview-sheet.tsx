@@ -135,7 +135,7 @@ export function MemberOverviewSheet({
 						<Separator />
 
 						<div className="space-y-3">
-							<h4 className="font-medium text-foreground text-sm">Groups</h4>
+							<h4 className="font-medium text-foreground text-sm">Gruppen</h4>
 							{groupMembers.length === 0 ? (
 								<p className="text-muted-foreground text-sm">
 									No groups assigned
@@ -177,7 +177,7 @@ export function MemberOverviewSheet({
 										{member.contract.joiningFeeAmount && (
 											<div className="flex justify-between">
 												<span className="text-muted-foreground">
-													Joining Fee
+													Aufnahmegebühr
 												</span>
 												<span className="text-foreground">
 													€{member.contract.joiningFeeAmount}
@@ -187,7 +187,7 @@ export function MemberOverviewSheet({
 										{member.contract.yearlyFeeAmount && (
 											<div className="flex justify-between">
 												<span className="text-muted-foreground">
-													Yearly Fee
+													Jahresbeitrag
 												</span>
 												<span className="text-foreground">
 													€{member.contract.yearlyFeeAmount}

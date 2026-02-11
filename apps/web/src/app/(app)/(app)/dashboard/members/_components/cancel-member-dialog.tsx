@@ -66,9 +66,9 @@ function getMinimumAllowedMonth(initialPeriodEndDate?: string | null): string {
 }
 
 function formatEffectiveDate(monthValue: string): string {
-	if (!monthValue) return "the selected month";
+	if (!monthValue) return "der ausgewählte Monat";
 	const [year, month] = monthValue.split("-").map((part) => Number(part));
-	if (!year || !month) return "the selected month";
+	if (!year || !month) return "der ausgewählte Monat";
 	return new Date(year, month - 1, 1).toLocaleDateString("en-US", {
 		year: "numeric",
 		month: "long",
@@ -120,7 +120,7 @@ export function CancelMemberDialog({
 	const cancelMutation = useMutation(
 		orpc.members.cancelContract.mutationOptions({
 			onSuccess: () => {
-				toast.success("Membership cancelled", {
+				toast.success("Mitgliedschaft gekündigt", {
 					description: `${memberName} will stay active until ${formatEffectiveDate(effectiveMonth)}.`,
 				});
 				queryClient.invalidateQueries();
@@ -129,7 +129,7 @@ export function CancelMemberDialog({
 			},
 			onError: (error) => {
 				toast.error(
-					error instanceof Error ? error.message : "Failed to cancel membership",
+					error instanceof Error ? error.message : "Mitgliedschaft konnte nicht gekündigt werden",
 				);
 			},
 		}),
@@ -156,12 +156,12 @@ export function CancelMemberDialog({
 
 		setMonthError(
 			!effectiveMonth
-				? "Select an effective month."
+				? "Wähle einen Wirksamkeitsmonat."
 				: !hasValidMonth
-					? "Effective month must be after the current commitment period."
+					? "Der Wirksamkeitsmonat muss nach dem aktuellen Bindungszeitraum liegen."
 					: null,
 		);
-		setReasonError(!trimmedReason ? "Cancellation reason is required." : null);
+		setReasonError(!trimmedReason ? "Kündigungsgrund ist erforderlich." : null);
 
 		if (!trimmedReason || !hasValidMonth) {
 			return;
@@ -203,7 +203,7 @@ export function CancelMemberDialog({
 
 					<Field>
 						<FieldLabel htmlFor="cancel-effective-month">
-							Effective Month
+							Wirksamkeitsmonat
 						</FieldLabel>
 						<Input
 							id="cancel-effective-month"
@@ -233,7 +233,7 @@ export function CancelMemberDialog({
 							}}
 							maxLength={1000}
 							rows={4}
-							placeholder="Why is this membership being cancelled?"
+							placeholder="Warum wird diese Mitgliedschaft gekündigt?"
 						/>
 						<FieldDescription>
 							This will be stored on the contract for audit and reporting.
@@ -251,7 +251,7 @@ export function CancelMemberDialog({
 						onClick={handleSubmit}
 						disabled={cancelMutation.isPending}
 					>
-						{cancelMutation.isPending ? "Cancelling..." : "Cancel Membership"}
+						{cancelMutation.isPending ? "Kündigung läuft..." : "Mitgliedschaft kündigen"}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

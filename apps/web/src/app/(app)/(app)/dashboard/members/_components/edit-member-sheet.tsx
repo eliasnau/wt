@@ -42,18 +42,18 @@ export function EditMemberSheet({
 							<FieldLabel>Vorname</FieldLabel>
 							<Input
 								defaultValue={member?.firstName}
-								placeholder="Enter first name"
+								placeholder="Vorname eingeben"
 							/>
 						</Field>
 						<Field>
 							<FieldLabel>Nachname</FieldLabel>
 							<Input
 								defaultValue={member?.lastName}
-								placeholder="Enter last name"
+								placeholder="Nachname eingeben"
 							/>
 						</Field>
 						<Field>
-							<FieldLabel>Email</FieldLabel>
+							<FieldLabel>E-Mail</FieldLabel>
 							<Input
 								type="email"
 								defaultValue={member?.email}
@@ -70,14 +70,14 @@ export function EditMemberSheet({
 						</Field>
 
 						<Field>
-							<FieldLabel>Guardian Name</FieldLabel>
+							<FieldLabel>Name des Erziehungsberechtigten</FieldLabel>
 							<Input
 								defaultValue={member?.guardianName || ""}
-								placeholder="Guardian Name"
+								placeholder="Name des Erziehungsberechtigten"
 							/>
 						</Field>
 						<Field>
-							<FieldLabel>Guardian Email</FieldLabel>
+							<FieldLabel>E-Mail des Erziehungsberechtigten</FieldLabel>
 							<Input
 								type="email"
 								defaultValue={member?.guardianEmail || ""}
@@ -85,7 +85,7 @@ export function EditMemberSheet({
 							/>
 						</Field>
 						<Field>
-							<FieldLabel>Guardian Phone</FieldLabel>
+							<FieldLabel>Telefon des Erziehungsberechtigten</FieldLabel>
 							<Input
 								type="tel"
 								defaultValue={member?.guardianPhone || ""}
@@ -94,7 +94,7 @@ export function EditMemberSheet({
 						</Field>
 
 						<Field>
-							<FieldLabel>Groups</FieldLabel>
+							<FieldLabel>Gruppen</FieldLabel>
 							<Input
 								defaultValue={
 									member?.groupMembers?.map((gm) => gm.group.name).join(", ") ??
@@ -109,7 +109,7 @@ export function EditMemberSheet({
 					<Button variant="ghost" onClick={() => onOpenChange(false)}>
 						Cancel
 					</Button>
-					<Button onClick={() => onOpenChange(false)}>Save Changes</Button>
+					<Button onClick={() => onOpenChange(false)}>Änderungen speichern</Button>
 				</SheetFooter>
 			</SheetPopup>
 		</Sheet>

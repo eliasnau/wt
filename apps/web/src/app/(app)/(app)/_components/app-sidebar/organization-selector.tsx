@@ -48,7 +48,7 @@ export const OrganizationSelector = () => {
 			toast.error(
 				error instanceof Error
 					? error.message
-					: "Failed to switch organization",
+					: "Organisation konnte nicht gewechselt werden",
 			);
 		}
 	};

@@ -13,7 +13,7 @@ export default async function AccountPage() {
 				<HeaderContent>
 					<HeaderTitle>Profil</HeaderTitle>
 					<HeaderDescription>
-						Manage your Profile Information
+						Verwalte deine Profilinformationen
 					</HeaderDescription>
 				</HeaderContent>
 				<HeaderActions>

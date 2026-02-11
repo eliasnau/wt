@@ -123,7 +123,7 @@ function EditPriceDialog({
       });
     },
     onSuccess: () => {
-      toast.success("Membership price updated");
+      toast.success("Mitgliedsbeitrag aktualisiert");
       queryClient.invalidateQueries({
         queryKey: orpc.members.get.queryKey({ input: { memberId } }),
       });
@@ -134,14 +134,14 @@ function EditPriceDialog({
       toast.error(
         mutationError instanceof Error
           ? mutationError.message
-          : "Failed to update membership price",
+          : "Mitgliedsbeitrag konnte nicht aktualisiert werden",
       );
     },
   });
 
   const handleSubmit = () => {
     if (price && !priceRegex.test(price)) {
-      setError("Invalid price format");
+      setError("Ungültiges Preisformat");
       return;
     }
 
@@ -162,9 +162,9 @@ function EditPriceDialog({
     >
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Edit Membership Price</DialogTitle>
+          <DialogTitle>Mitgliedsbeitrag bearbeiten</DialogTitle>
           <DialogDescription>
-            Update the monthly price for this member in "{group.group.name}".
+            Aktualisiere den monatlichen Preis für dieses Mitglied in "{group.group.name}".
           </DialogDescription>
         </DialogHeader>
         <DialogPanel className="space-y-2">
@@ -179,7 +179,7 @@ function EditPriceDialog({
               placeholder={
                 group.group.defaultMembershipPrice
                   ? `Default: ${group.group.defaultMembershipPrice}`
-                  : "Leave empty to use default"
+                  : "Leer lassen, um den Standard zu verwenden"
               }
             />
             {group.group.defaultMembershipPrice && (
@@ -191,9 +191,9 @@ function EditPriceDialog({
           </div>
         </DialogPanel>
         <DialogFooter>
-          <DialogClose render={<Button variant="outline" />}>Cancel</DialogClose>
+          <DialogClose render={<Button variant="outline" />}>Abbrechen</DialogClose>
           <Button onClick={handleSubmit} disabled={updateMutation.isPending}>
-            {updateMutation.isPending ? "Saving..." : "Änderungen speichern"}
+            {updateMutation.isPending ? "Speichern..." : "Änderungen speichern"}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -234,7 +234,7 @@ function RemoveFromGroupDialog({
       toast.error(
         mutationError instanceof Error
           ? mutationError.message
-          : "Failed to remove member from group",
+          : "Mitglied konnte nicht aus der Gruppe entfernt werden",
       );
     },
   });
@@ -243,7 +243,7 @@ function RemoveFromGroupDialog({
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogPopup>
         <AlertDialogHeader>
-          <AlertDialogTitle>Remove from Group</AlertDialogTitle>
+          <AlertDialogTitle>Aus Gruppe entfernen</AlertDialogTitle>
           <AlertDialogDescription>
             Remove this member from "{group.group.name}"? This won't delete the
             member, only their group membership.
@@ -307,7 +307,7 @@ function GroupActionsCell({
             <MenuSeparator />
             <MenuItem variant="destructive" onClick={() => setRemoveOpen(true)}>
               <TrashIcon />
-              Remove from Group
+              Aus Gruppe entfernen
             </MenuItem>
           </MenuPopup>
         </Menu>
@@ -331,7 +331,7 @@ export function MemberGroupsTable({
   const columns: ColumnDef<MemberGroup>[] = [
     {
       accessorKey: "group.name",
-      header: "Group Name",
+      header: "Gruppenname",
       cell: ({ row }) => {
         const gm = row.original;
         const isDefaultPrice =
@@ -419,7 +419,7 @@ export function MemberGroupsTable({
               <EmptyMedia variant="icon">
                 <Users />
               </EmptyMedia>
-              <EmptyTitle>Not a member of any groups</EmptyTitle>
+              <EmptyTitle>Keiner Gruppe zugewiesen</EmptyTitle>
               <EmptyDescription>
                 Assign this member to a group to get started.
               </EmptyDescription>
@@ -437,7 +437,11 @@ export function MemberGroupsTable({
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow className="hover:bg-transparent" key={headerGroup.id}>
               {headerGroup.headers.map((header, idx) => {
-                const isLast = idx === headerGroup.headers.length - 1;
+                const isLast = idx 
+                
+                
+                
+                headerGroup.headers.length - 1;
                 return (
                   <TableHead
                     key={header.id}

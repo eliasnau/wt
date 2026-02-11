@@ -40,7 +40,7 @@ export default function SignIn() {
 						toast.error(ctx.error.message);
 					},
 					onSuccess: (ctx) => {
-						posthog.capture("auth:sign_in", {
+						posthog.capture("auth:anmelden", {
 							auth_method: "email",
 							has_two_factor: !!ctx.data.twoFactorRedirect,
 						});
@@ -65,7 +65,7 @@ export default function SignIn() {
 					toast.error(ctx.error.message || "Passkey authentication failed");
 				},
 				onSuccess: () => {
-					posthog.capture("auth:sign_in", {
+					posthog.capture("auth:anmelden", {
 						auth_method: "passkey",
 					});
 
@@ -84,12 +84,12 @@ export default function SignIn() {
 						className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
 					>
 						<ArrowLeft className="h-4 w-4" />
-						Back to Home
+						Zur Startseite
 					</Link>
 				</div>
 				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 					<FramePanel>
-						<h1 className="font-heading text-2xl mb-4">Sign In</h1>
+						<h1 className="font-heading text-2xl mb-4">Anmelden</h1>
 						<form
 							onSubmit={(e) => {
 								e.preventDefault();
@@ -102,16 +102,16 @@ export default function SignIn() {
 								name="email"
 								validators={{
 									onBlur: ({ value }) => {
-										if (!value) return "Email is required";
+										if (!value) return "E-Mail ist erforderlich";
 										if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
-											return "Invalid email address";
+											return "Ungültige E-Mail-Adresse";
 										return undefined;
 									},
 								}}
 							>
 								{(field) => (
 									<div className="space-y-2">
-										<Label htmlFor={field.name}>Email</Label>
+										<Label htmlFor={field.name}>E-Mail</Label>
 										<Input
 											id={field.name}
 											name={field.name}
@@ -136,9 +136,9 @@ export default function SignIn() {
 								name="password"
 								validators={{
 									onBlur: ({ value }) => {
-										if (!value) return "Password is required";
+										if (!value) return "Passwort ist erforderlich";
 										if (value.length < 8)
-											return "Password must be at least 8 characters";
+											return "Das Passwort muss mindestens 8 Zeichen lang sein";
 										return undefined;
 									},
 								}}
@@ -146,14 +146,14 @@ export default function SignIn() {
 								{(field) => (
 									<div className="space-y-2">
 										<div className="flex items-center">
-											<Label htmlFor={field.name}>Password</Label>
+											<Label htmlFor={field.name}>Passwort</Label>
 											<Link
 												href={
 													`/forgot-password${form.state.values.email ? `?email=${encodeURIComponent(form.state.values.email)}` : ""}` as Route
 												}
 												className="ml-auto inline-block text-sm underline"
 											>
-												Forgot your password?
+												Passwort vergessen?
 											</Link>
 										</div>
 										<Input
@@ -187,7 +187,7 @@ export default function SignIn() {
 												field.handleChange(checked as boolean)
 											}
 										/>
-										<Label htmlFor={field.name}>Remember me</Label>
+										<Label htmlFor={field.name}>Angemeldet bleiben</Label>
 									</div>
 								)}
 							</form.Field>
@@ -204,7 +204,7 @@ export default function SignIn() {
 										{isSubmitting ? (
 											<Loader2 size={16} className="animate-spin" />
 										) : (
-											"Login"
+											"Anmelden"
 										)}
 									</Button>
 								)}
@@ -216,7 +216,7 @@ export default function SignIn() {
 								</div>
 								<div className="relative flex justify-center text-xs uppercase">
 									<span className="bg-background px-2 text-muted-foreground">
-										Or continue with
+										Oder fortfahren mit
 									</span>
 								</div>
 							</div>

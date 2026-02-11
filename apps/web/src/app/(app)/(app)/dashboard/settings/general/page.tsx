@@ -42,7 +42,7 @@ export default function GeneralSettingsPage() {
 				<HeaderContent>
 					<HeaderTitle>Allgemeine Einstellungen</HeaderTitle>
 					<HeaderDescription>
-						Manage your general Organization settings
+						Verwalte die allgemeinen Einstellungen deiner Organisation
 					</HeaderDescription>
 				</HeaderContent>
 				<HeaderActions>

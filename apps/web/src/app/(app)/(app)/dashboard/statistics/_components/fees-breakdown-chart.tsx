@@ -15,11 +15,11 @@ const chartConfig = {
 		color: "var(--chart-1)",
 	},
 	joining: {
-		label: "Joining Fee",
+		label: "Aufnahmegebühr",
 		color: "var(--chart-2)",
 	},
 	yearly: {
-		label: "Yearly Fee",
+		label: "Jahresbeitrag",
 		color: "var(--chart-3)",
 	},
 } satisfies ChartConfig;
@@ -39,8 +39,8 @@ export function FeesBreakdownChart({
 }) {
 	const data = [
 		{ name: "Membership", value: membership, fill: "var(--color-membership)" },
-		{ name: "Joining Fee", value: joining, fill: "var(--color-joining)" },
-		{ name: "Yearly Fee", value: yearly, fill: "var(--color-yearly)" },
+		{ name: "Aufnahmegebühr", value: joining, fill: "var(--color-joining)" },
+		{ name: "Jahresbeitrag", value: yearly, fill: "var(--color-yearly)" },
 	];
 
 	const barData = [

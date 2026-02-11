@@ -60,7 +60,7 @@ export default function BatchDetailsPage({
 							<ArrowLeft className="size-4" />
 						</Button>
 					</Link>
-					<h1 className="font-bold text-2xl">Payment Batch</h1>
+					<h1 className="font-bold text-2xl">Zahlungslauf</h1>
 				</div>
 				<Frame>
 					<FramePanel>
@@ -69,11 +69,11 @@ export default function BatchDetailsPage({
 								<EmptyMedia variant="icon">
 									<AlertCircle />
 								</EmptyMedia>
-								<EmptyTitle>Failed to load batch</EmptyTitle>
+								<EmptyTitle>Lauf konnte nicht geladen werden</EmptyTitle>
 								<EmptyDescription>
 									{error instanceof Error
 										? error.message
-										: "Something went wrong. Please try again."}
+										: "Etwas ist schiefgelaufen. Bitte versuche es erneut."}
 								</EmptyDescription>
 							</EmptyHeader>
 							<EmptyContent>
@@ -115,7 +115,7 @@ export default function BatchDetailsPage({
 			<BatchInfoCard batch={(data.batch as any)} />
 
 			<div>
-				<h2 className="mb-4 font-semibold text-xl">Payments</h2>
+				<h2 className="mb-4 font-semibold text-xl">Zahlungen</h2>
 				<PaymentsTable payments={data.payments} />
 			</div>
 		</div>

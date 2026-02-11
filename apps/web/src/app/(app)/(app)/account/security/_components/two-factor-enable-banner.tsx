@@ -21,9 +21,9 @@ export function TwoFactorEnableBanner() {
 	return (
 		<Alert variant="error">
 			<Shield />
-			<AlertTitle>Enable Two-Factor Authentication</AlertTitle>
+			<AlertTitle>Zwei-Faktor-Authentifizierung aktivieren</AlertTitle>
 			<AlertDescription>
-				Add an extra layer of security to your account by enabling two-factor
+				Füge deinem Konto eine zusätzliche Sicherheitsebene hinzu, indem du die Zwei-Faktor-
 				authentication.
 			</AlertDescription>
 			<AlertAction>

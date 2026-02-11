@@ -15,9 +15,9 @@ export default function NewMemberPage() {
 		<div className="flex flex-col gap-8">
 			<Header>
 				<HeaderContent>
-					<HeaderTitle>Create New Member</HeaderTitle>
+					<HeaderTitle>Neues Mitglied erstellen</HeaderTitle>
 					<HeaderDescription>
-						Add a new member to your organization
+						Füge deiner Organisation ein neues Mitglied hinzu
 					</HeaderDescription>
 				</HeaderContent>
 			</Header>

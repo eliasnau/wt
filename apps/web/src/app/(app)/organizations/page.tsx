@@ -49,7 +49,7 @@ export default function OrganizationsPage() {
 
 	const handleCreateOrganization = async () => {
 		if (!orgName.trim() || !orgSlug.trim()) {
-			toast.error("Please fill in all fields");
+			toast.error("Bitte fülle alle Felder aus");
 			return;
 		}
 
@@ -57,7 +57,7 @@ export default function OrganizationsPage() {
 		const slugRegex = /^[a-z0-9-]+$/;
 		if (!slugRegex.test(orgSlug)) {
 			toast.error(
-				"Slug must contain only lowercase letters, numbers, and hyphens",
+				"Slug darf nur Kleinbuchstaben, Zahlen und Bindestriche enthalten",
 			);
 			return;
 		}
@@ -71,17 +71,17 @@ export default function OrganizationsPage() {
 			});
 
 			if (error) {
-				toast.error(error.message || "Failed to create organization");
+				toast.error(error.message || "Organisation konnte nicht erstellt werden");
 				return;
 			}
 
-			toast.success("Organization created successfully");
+			toast.success("Organisation erfolgreich erstellt");
 			setIsCreateDialogOpen(false);
 			setOrgName("");
 			setOrgSlug("");
 			refetch();
 		} catch (error) {
-			toast.error("Failed to create organization");
+			toast.error("Organisation konnte nicht erstellt werden");
 			console.error(error);
 		} finally {
 			setIsCreating(false);
@@ -97,7 +97,7 @@ export default function OrganizationsPage() {
 			toast.error(
 				error instanceof ORPCError
 					? error.message
-					: "Failed to set active organization",
+					: "Aktive Organisation konnte nicht gesetzt werden",
 			);
 		} finally {
 			setIsSwitching(false);
@@ -131,9 +131,9 @@ export default function OrganizationsPage() {
 				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 					<FramePanel>
 						<div className="mb-6">
-							<h1 className="font-heading text-2xl">Select Organization</h1>
+							<h1 className="font-heading text-2xl">Organisation auswählen</h1>
 							<p className="text-sm text-muted-foreground">
-								Select an organization to continue
+								Wähle eine Organisation, um fortzufahren
 							</p>
 						</div>
 
@@ -143,15 +143,15 @@ export default function OrganizationsPage() {
 									<EmptyMedia variant="icon">
 										<Building2 />
 									</EmptyMedia>
-									<EmptyTitle>No organizations yet</EmptyTitle>
+									<EmptyTitle>Noch keine Organisationen</EmptyTitle>
 									<EmptyDescription>
-										Get started by creating your first organization
+										Lege los, indem du deine erste Organisation erstellst
 									</EmptyDescription>
 								</EmptyHeader>
 								<EmptyContent>
 									<Button onClick={() => setIsCreateDialogOpen(true)}>
 										<Plus className="size-4" />
-										<span className="ml-2">Create Organization</span>
+										<span className="ml-2">Organisation erstellen</span>
 									</Button>
 								</EmptyContent>
 							</Empty>
@@ -206,11 +206,11 @@ export default function OrganizationsPage() {
 						<FrameFooter className="flex-row justify-between">
 							<Button variant="ghost" onClick={() => router.push("/account")}>
 								<Settings className="size-4" />
-								<span className="ml-2">Manage Account</span>
+								<span className="ml-2">Konto verwalten</span>
 							</Button>
 							<Button onClick={() => setIsCreateDialogOpen(true)}>
 								<Plus className="size-4" />
-								<span className="ml-2">Create Organization</span>
+								<span className="ml-2">Organisation erstellen</span>
 							</Button>
 						</FrameFooter>
 					)}
@@ -219,7 +219,7 @@ export default function OrganizationsPage() {
 			<Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
 				<DialogPopup>
 					<DialogHeader>
-						<DialogTitle>Create Organization</DialogTitle>
+						<DialogTitle>Organisation erstellen</DialogTitle>
 					</DialogHeader>
 					<DialogPanel className="space-y-4">
 						<Field>
@@ -232,7 +232,7 @@ export default function OrganizationsPage() {
 							/>
 						</Field>
 						<Field>
-							<FieldLabel>Organization Slug</FieldLabel>
+							<FieldLabel>Organisations-Slug</FieldLabel>
 							<Input
 								value={orgSlug}
 								onChange={(e) =>
@@ -268,7 +268,7 @@ export default function OrganizationsPage() {
 									Creating...
 								</>
 							) : (
-								"Create Organization"
+								"Organisation erstellen"
 							)}
 						</Button>
 					</DialogFooter>

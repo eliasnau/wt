@@ -56,7 +56,7 @@ export function BatchInfoCard({ batch }: { batch: Batch }) {
 			<Card>
 				<CardHeader className="pb-3">
 					<CardTitle className="font-medium text-muted-foreground text-sm">
-						Joining Fees
+						Aufnahmegebührs
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
@@ -69,7 +69,7 @@ export function BatchInfoCard({ batch }: { batch: Batch }) {
 			<Card>
 				<CardHeader className="pb-3">
 					<CardTitle className="font-medium text-muted-foreground text-sm">
-						Yearly Fees
+						Jahresbeitrags
 					</CardTitle>
 				</CardHeader>
 				<CardContent>

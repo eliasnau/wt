@@ -81,7 +81,7 @@ export default function SepaSettingsPage() {
 	const updateMutation = useMutation(
 		orpc.organizations.updateSettings.mutationOptions({
 			onSuccess: (result) => {
-				toast.success("SEPA settings updated");
+				toast.success("SEPA-Einstellungen aktualisiert");
 				const settings = result.settings;
 				const nextState = {
 					creditorName: settings.creditorName ?? "",
@@ -100,7 +100,7 @@ export default function SepaSettingsPage() {
 				setInitialState(nextState);
 			},
 			onError: (error: any) => {
-				toast.error("Failed to update SEPA settings", {
+				toast.error("SEPA-Einstellungen konnten nicht aktualisiert werden", {
 					description:
 						error instanceof Error ? error.message : "Please try again.",
 				});
@@ -181,7 +181,7 @@ export default function SepaSettingsPage() {
 							<Field>
 							<FieldLabel>Gläubigername</FieldLabel>
 							<Input
-								placeholder={isLoading ? "Loading..." : "Example LLC"}
+								placeholder={isLoading ? "Lädt..." : "Beispiel GmbH"}
 								type="text"
 								value={isLoading ? "" : formState.creditorName}
 								disabled={isLoading}
@@ -197,7 +197,7 @@ export default function SepaSettingsPage() {
 							<FieldLabel>IBAN</FieldLabel>
 							<Input
 								placeholder={
-									isLoading ? "Loading..." : "DE89370400440532013000"
+									isLoading ? "Lädt..." : "DE89370400440532013000"
 								}
 								type="text"
 								maxLength={34}
@@ -214,7 +214,7 @@ export default function SepaSettingsPage() {
 							<Field>
 							<FieldLabel>BIC</FieldLabel>
 							<Input
-								placeholder={isLoading ? "Loading..." : "COBADEFFXXX"}
+								placeholder={isLoading ? "Lädt..." : "COBADEFFXXX"}
 								type="text"
 								maxLength={11}
 								value={isLoading ? "" : formState.creditorBic}
@@ -230,7 +230,7 @@ export default function SepaSettingsPage() {
 							<Field>
 							<FieldLabel>Gläubiger-ID</FieldLabel>
 							<Input
-								placeholder={isLoading ? "Loading..." : "DE98ZZZ09999999999"}
+								placeholder={isLoading ? "Lädt..." : "DE98ZZZ09999999999"}
 								type="text"
 								value={isLoading ? "" : formState.creditorId}
 								disabled={isLoading}
@@ -243,9 +243,9 @@ export default function SepaSettingsPage() {
 								/>
 							</Field>
 							<Field>
-								<FieldLabel>Initiator Name (Optional)</FieldLabel>
+								<FieldLabel>Name des Initiators (optional)</FieldLabel>
 								<Input
-									placeholder={isLoading ? "Loading..." : "Example LLC"}
+									placeholder={isLoading ? "Lädt..." : "Beispiel GmbH"}
 									type="text"
 									value={isLoading ? "" : formState.initiatorName}
 									disabled={isLoading}
@@ -292,7 +292,7 @@ export default function SepaSettingsPage() {
 							form="sepa-bank-form"
 							disabled={updateMutation.isPending || isLoading}
 						>
-							{updateMutation.isPending ? "Saving..." : "Änderungen speichern"}
+							{updateMutation.isPending ? "Speichern..." : "Änderungen speichern"}
 						</Button>
 					</FrameFooter>
 				</Frame>
@@ -315,8 +315,8 @@ export default function SepaSettingsPage() {
 							<Input
 								placeholder={
 									isLoading
-										? "Loading..."
-										: "Monthly membership fee for %MONTH% %YEAR%"
+										? "Lädt..."
+										: "Monatlicher Mitgliedsbeitrag für %MONTH% %YEAR%"
 								}
 								type="text"
 								maxLength={140}
@@ -338,7 +338,7 @@ export default function SepaSettingsPage() {
 							<FieldLabel>Aufnahmegebühr</FieldLabel>
 							<Input
 								placeholder={
-									isLoading ? "Loading..." : "One-time membership registration fee"
+									isLoading ? "Lädt..." : "Einmalige Aufnahmegebühr"
 								}
 								type="text"
 								maxLength={140}
@@ -361,7 +361,7 @@ export default function SepaSettingsPage() {
 							<FieldLabel>Jahresbeitrag</FieldLabel>
 							<Input
 								placeholder={
-									isLoading ? "Loading..." : "Annual membership fee for %YEAR%"
+									isLoading ? "Lädt..." : "Annual membership fee for %YEAR%"
 								}
 								type="text"
 								maxLength={140}
@@ -386,7 +386,7 @@ export default function SepaSettingsPage() {
 							form="sepa-transaction-form"
 							disabled={updateMutation.isPending || isLoading}
 						>
-							{updateMutation.isPending ? "Saving..." : "Änderungen speichern"}
+							{updateMutation.isPending ? "Speichern..." : "Änderungen speichern"}
 						</Button>
 						<TooltipProvider>
 							<Tooltip>

@@ -30,10 +30,10 @@ import {
 import { client, orpc } from "@/utils/orpc";
 
 const assignGroupSchema = z.object({
-	groupId: z.string().min(1, "Please select a group"),
+	groupId: z.string().min(1, "Bitte wähle eine Gruppe"),
 	membershipPrice: z
 		.string()
-		.regex(/^\d+(\.\d{1,2})?$/, "Invalid price format")
+		.regex(/^\d+(\.\d{1,2})?$/, "Ungültiges Preisformat")
 		.optional()
 		.or(z.literal("")),
 });
@@ -63,7 +63,7 @@ export function AssignGroupDialog({
 			});
 		},
 		onSuccess: () => {
-			toast.success("Member assigned to group successfully");
+			toast.success("Mitglied erfolgreich einer Gruppe zugewiesen");
 			queryClient.invalidateQueries({
 				queryKey: orpc.members.get.queryKey({ input: { memberId } }),
 			});
@@ -72,7 +72,7 @@ export function AssignGroupDialog({
 		},
 		onError: (error) => {
 			toast.error(
-				error instanceof Error ? error.message : "Failed to assign group",
+				error instanceof Error ? error.message : "Gruppe konnte nicht zugewiesen werden",
 			);
 		},
 	});
@@ -108,7 +108,7 @@ export function AssignGroupDialog({
 			</DialogTrigger>
 			<DialogContent>
 				<DialogHeader>
-					<DialogTitle>Assign to Group</DialogTitle>
+					<DialogTitle>Zur Gruppe zuweisen</DialogTitle>
 					<DialogDescription>
 						Add this member to a group. You can override the default membership
 						price.
@@ -130,7 +130,7 @@ export function AssignGroupDialog({
 									field.state.meta.isTouched && !field.state.meta.isValid;
 								return (
 									<Field data-invalid={isInvalid}>
-										<FieldLabel htmlFor="groupId">Group *</FieldLabel>
+										<FieldLabel htmlFor="groupId">Gruppe *</FieldLabel>
 										<Select
 											name={field.name}
 											value={field.state.value}
@@ -138,7 +138,7 @@ export function AssignGroupDialog({
 											disabled={isLoadingGroups}
 										>
 											<SelectTrigger id="groupId" aria-invalid={isInvalid}>
-												<SelectValue placeholder="Select a group" />
+												<SelectValue placeholder="Eine Gruppe auswählen" />
 											</SelectTrigger>
 											<SelectContent>
 												{groups?.map((group) => (
@@ -148,7 +148,7 @@ export function AssignGroupDialog({
 												))}
 												{groups?.length === 0 && (
 													<div className="p-2 text-center text-muted-foreground text-sm">
-														No groups found
+														Keine Gruppen gefunden
 													</div>
 												)}
 											</SelectContent>
@@ -186,7 +186,7 @@ export function AssignGroupDialog({
 														placeholder={
 															selectedGroup?.defaultMembershipPrice
 																? `Default: ${selectedGroup.defaultMembershipPrice}`
-																: "Leave empty to use default"
+																: "Leer lassen, um den Standard zu verwenden"
 														}
 													/>
 													{isInvalid && (
@@ -217,7 +217,7 @@ export function AssignGroupDialog({
 						form="assign-group-form"
 						disabled={assignGroupMutation.isPending}
 					>
-						{assignGroupMutation.isPending ? "Assigning..." : "Assign Group"}
+						{assignGroupMutation.isPending ? "Wird zugewiesen..." : "Gruppe zuweisen"}
 					</Button>
 				</DialogFooter>
 			</DialogContent>
