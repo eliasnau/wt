@@ -48,7 +48,7 @@ export const OrganizationSelector = () => {
 			toast.error(
 				error instanceof Error
 					? error.message
-					: "Failed to switch organization",
+					: "Organisation konnte nicht gewechselt werden",
 			);
 		}
 	};
@@ -65,7 +65,7 @@ export const OrganizationSelector = () => {
 							<Building2 className="size-4" />
 						</div>
 						<div className="grid flex-1 text-left text-sm leading-tight">
-							<span className="truncate font-semibold">No Organization</span>
+							<span className="truncate font-semibold">Keine Organisation</span>
 							<span className="truncate text-xs text-muted-foreground">
 								Select an organization
 							</span>
@@ -111,7 +111,7 @@ export const OrganizationSelector = () => {
 						sideOffset={4}
 					>
 						<DropdownMenuLabel className="flex items-center justify-between text-xs text-muted-foreground">
-							<span>Organizations</span>
+							<span>Organisationen</span>
 							<span className="font-normal opacity-70">⌘⇧O</span>
 						</DropdownMenuLabel>
 						{organizations?.map((org) => {

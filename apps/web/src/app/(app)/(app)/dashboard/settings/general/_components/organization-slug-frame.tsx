@@ -57,14 +57,14 @@ export function OrganizationSlugFrame({
 		e.preventDefault();
 
 		if (!pendingSlug.trim()) {
-			toast.error("Slug cannot be empty");
+			toast.error("Slug darf nicht leer sein");
 			return;
 		}
 
 		const slugRegex = /^[a-z0-9-]+$/;
 		if (!slugRegex.test(pendingSlug)) {
 			toast.error(
-				"Slug must contain only lowercase letters, numbers, and hyphens",
+				"Slug darf nur Kleinbuchstaben, Zahlen und Bindestriche enthalten",
 			);
 			return;
 		}
@@ -89,7 +89,7 @@ export function OrganizationSlugFrame({
 			});
 
 			if (error) {
-				toast.error(error.message || "Failed to update organization slug");
+				toast.error(error.message || "Organisations-Slug konnte nicht aktualisiert werden");
 				return;
 			}
 
@@ -101,7 +101,7 @@ export function OrganizationSlugFrame({
 			if (error instanceof APIError) {
 				toast.error(error.message);
 			} else {
-				toast.error("Something went wrong");
+				toast.error("Etwas ist schiefgelaufen");
 			}
 			console.error(error);
 		} finally {
@@ -121,7 +121,7 @@ export function OrganizationSlugFrame({
 					</p>
 
 					<Field>
-						<FieldLabel>Member Area URL</FieldLabel>
+						<FieldLabel>Mitgliederbereich-URL</FieldLabel>
 						<div className="flex items-center gap-2">
 							<InputGroup>
 								<InputGroupInput value={slug} readOnly />
@@ -163,12 +163,12 @@ export function OrganizationSlugFrame({
 			<Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
 				<DialogPopup>
 					<DialogHeader>
-						<DialogTitle>Change Organization Slug</DialogTitle>
+						<DialogTitle>Organisations-Slug ändern</DialogTitle>
 					</DialogHeader>
 					<form className="contents" onSubmit={handleEditSubmit}>
 						<DialogPanel>
 							<Field>
-								<FieldLabel>Organization Slug</FieldLabel>
+								<FieldLabel>Organisations-Slug</FieldLabel>
 								<InputGroup>
 									<InputGroupInput
 										value={pendingSlug}
@@ -212,7 +212,7 @@ export function OrganizationSlugFrame({
 				>
 					<AlertDialogPopup>
 						<AlertDialogHeader>
-							<AlertDialogTitle>Change Organization Slug?</AlertDialogTitle>
+							<AlertDialogTitle>Organisations-Slug ändern?</AlertDialogTitle>
 							<AlertDialogDescription className="space-y-3">
 								<p>
 									Changing your organization slug will update your member area
@@ -247,7 +247,7 @@ export function OrganizationSlugFrame({
 										Saving...
 									</>
 								) : (
-									"Change Slug"
+									"Slug ändern"
 								)}
 							</Button>
 						</AlertDialogFooter>

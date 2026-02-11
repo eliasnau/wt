@@ -28,9 +28,9 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { client, orpc } from "@/utils/orpc";
 
-const firstNameSchema = z.string().min(1, "First name is required").max(255);
-const lastNameSchema = z.string().min(1, "Last name is required").max(255);
-const emailSchema = z.string().email("Invalid email address");
+const firstNameSchema = z.string().min(1, "Vorname ist erforderlich").max(255);
+const lastNameSchema = z.string().min(1, "Nachname ist erforderlich").max(255);
+const emailSchema = z.string().email("Ungültige E-Mail-Adresse");
 const phoneSchema = z.string().min(1, "Phone is required");
 const streetSchema = z.string().min(1, "Street is required");
 const citySchema = z.string().min(1, "City is required");
@@ -39,22 +39,22 @@ const postalCodeSchema = z.string().min(1, "Postal code is required");
 const countrySchema = z.string().min(1, "Country is required");
 const ibanSchema = z.string().min(1, "IBAN is required");
 const bicSchema = z.string().min(1, "BIC is required");
-const cardHolderSchema = z.string().min(1, "Card holder name is required");
+const cardHolderSchema = z.string().min(1, "Name des Kontoinhabers ist erforderlich");
 const contractStartDateSchema = z
 	.string()
-	.regex(/^\d{4}-\d{2}$/, "Please select a month and year");
-const contractMonthSchema = z.string().min(1, "Please select a month");
-const contractYearSchema = z.string().min(1, "Please select a year");
+	.regex(/^\d{4}-\d{2}$/, "Bitte wähle Monat und Jahr");
+const contractMonthSchema = z.string().min(1, "Bitte wähle einen Monat");
+const contractYearSchema = z.string().min(1, "Bitte wähle ein Jahr");
 const amountSchema = z
 	.string()
 	.refine(
 		(val) => val === "" || /^\d+(\.\d{1,2})?$/.test(val),
-		"Invalid amount format",
+		"Ungültiges Betragsformat",
 	);
 const guardianNameSchema = z.string().optional();
 const guardianEmailSchema = z
 	.string()
-	.email("Invalid email address")
+	.email("Ungültige E-Mail-Adresse")
 	.optional()
 	.or(z.literal(""));
 const guardianPhoneSchema = z.string().optional();
@@ -105,7 +105,7 @@ export function NewMemberForm() {
 			(errors, groupId) => {
 				const value = groupPrices[groupId];
 				if (value && !groupPriceSchema.test(value)) {
-					errors[groupId] = "Invalid price format";
+					errors[groupId] = "Ungültiges Preisformat";
 				}
 				return errors;
 			},
@@ -159,7 +159,7 @@ export function NewMemberForm() {
 			return { result, failedAssignments };
 		},
 		onSuccess: ({ failedAssignments }) => {
-			toast.success("Member created successfully");
+			toast.success("Mitglied erfolgreich erstellt");
 			if (failedAssignments.length > 0) {
 				toast.error(
 					`Member created, but ${failedAssignments.length} group assignment${
@@ -170,7 +170,7 @@ export function NewMemberForm() {
 		},
 		onError: (error) => {
 			toast.error(
-				error instanceof Error ? error.message : "Failed to create member",
+				error instanceof Error ? error.message : "Mitglied konnte nicht erstellt werden",
 			);
 		},
 	});
@@ -236,7 +236,7 @@ export function NewMemberForm() {
 				contractNotes: value.contractNotes,
 			};
 			if (hasInvalidGroupPrice) {
-				toast.error("Please fix group price errors before submitting.");
+				toast.error("Bitte behebe die Fehler bei den Gruppenpreisen vor dem Absenden.");
 				return;
 			}
 
@@ -268,9 +268,9 @@ export function NewMemberForm() {
 						<div className="mb-4 flex size-16 items-center justify-center rounded-full border-2 border-green-500 bg-green-50 dark:bg-green-950">
 							<Check className="size-8 text-green-500" />
 						</div>
-						<h2 className="mb-2 font-bold text-2xl">Member Created</h2>
+						<h2 className="mb-2 font-bold text-2xl">Mitglied erstellt</h2>
 						<p className="mb-6 text-lg text-muted-foreground">
-							The member has been successfully added to your organization
+							Das Mitglied wurde deiner Organisation erfolgreich hinzugefügt
 						</p>
 						<div className="flex gap-2">
 							<Button
@@ -346,7 +346,7 @@ export function NewMemberForm() {
 											field.state.meta.isTouched && !field.state.meta.isValid;
 										return (
 											<Field data-invalid={isInvalid}>
-												<FieldLabel htmlFor="lastName">Last Name *</FieldLabel>
+												<FieldLabel htmlFor="lastName">Nachname *</FieldLabel>
 												<Input
 													id="lastName"
 													name={field.name}
@@ -371,7 +371,7 @@ export function NewMemberForm() {
 											field.state.meta.isTouched && !field.state.meta.isValid;
 										return (
 											<Field data-invalid={isInvalid}>
-												<FieldLabel htmlFor="email">Email *</FieldLabel>
+												<FieldLabel htmlFor="email">E-Mail *</FieldLabel>
 												<Input
 													id="email"
 													name={field.name}
@@ -396,7 +396,7 @@ export function NewMemberForm() {
 											field.state.meta.isTouched && !field.state.meta.isValid;
 										return (
 											<Field data-invalid={isInvalid}>
-												<FieldLabel htmlFor="phone">Phone *</FieldLabel>
+												<FieldLabel htmlFor="phone">Telefon *</FieldLabel>
 												<Input
 													id="phone"
 													name={field.name}
@@ -437,7 +437,7 @@ export function NewMemberForm() {
 														onBlur={field.handleBlur}
 														onChange={(e) => field.handleChange(e.target.value)}
 														aria-invalid={isInvalid}
-														placeholder="Guardian Name"
+														placeholder="Name des Erziehungsberechtigten"
 														type="text"
 													/>
 													{isInvalid && (
@@ -453,7 +453,7 @@ export function NewMemberForm() {
 												field.state.meta.isTouched && !field.state.meta.isValid;
 											return (
 												<Field data-invalid={isInvalid}>
-													<FieldLabel htmlFor="guardianEmail">Email</FieldLabel>
+													<FieldLabel htmlFor="guardianEmail">E-Mail</FieldLabel>
 													<Input
 														id="guardianEmail"
 														name={field.name}
@@ -529,7 +529,7 @@ export function NewMemberForm() {
 						<FieldSeparator />
 
 						<div className="space-y-4">
-							<h3 className="font-semibold text-foreground text-sm">Address</h3>
+							<h3 className="font-semibold text-foreground text-sm">Adresse</h3>
 							<div className="grid gap-4">
 								<form.Field name="street">
 									{(field) => {
@@ -565,7 +565,7 @@ export function NewMemberForm() {
 												field.state.meta.isTouched && !field.state.meta.isValid;
 											return (
 												<Field data-invalid={isInvalid}>
-													<FieldLabel htmlFor="city">City *</FieldLabel>
+													<FieldLabel htmlFor="city">Stadt *</FieldLabel>
 													<Input
 														id="city"
 														name={field.name}
@@ -590,7 +590,7 @@ export function NewMemberForm() {
 												field.state.meta.isTouched && !field.state.meta.isValid;
 											return (
 												<Field data-invalid={isInvalid}>
-													<FieldLabel htmlFor="state">State *</FieldLabel>
+													<FieldLabel htmlFor="state">Bundesland *</FieldLabel>
 													<Input
 														id="state"
 														name={field.name}
@@ -642,7 +642,7 @@ export function NewMemberForm() {
 												field.state.meta.isTouched && !field.state.meta.isValid;
 											return (
 												<Field data-invalid={isInvalid}>
-													<FieldLabel htmlFor="country">Country *</FieldLabel>
+													<FieldLabel htmlFor="country">Land *</FieldLabel>
 													<Input
 														id="country"
 														name={field.name}
@@ -678,10 +678,10 @@ export function NewMemberForm() {
 							</div>
 
 							{isLoadingGroups ? (
-								<p className="text-muted-foreground text-sm">Loading groups...</p>
+								<p className="text-muted-foreground text-sm">Gruppen werden geladen...</p>
 							) : groups.length === 0 ? (
 								<p className="text-muted-foreground text-sm">
-									No groups found. Create a group to assign members.
+									Keine Gruppen gefunden. Erstelle eine Gruppe, um Mitglieder zuzuweisen.
 								</p>
 							) : (
 								<div className="space-y-3">
@@ -750,7 +750,7 @@ export function NewMemberForm() {
 																placeholder={
 																	group.defaultMembershipPrice
 																		? `Default: ${group.defaultMembershipPrice}`
-																		: "Leave empty to use default"
+																		: "Leer lassen, um den Standard zu verwenden"
 																}
 																aria-invalid={!!priceError}
 															/>
@@ -865,7 +865,7 @@ export function NewMemberForm() {
 							</h3>
 							<div className="grid gap-4 md:grid-cols-2">
 								<div className="space-y-2">
-									<FieldLabel>Start Date *</FieldLabel>
+									<FieldLabel>Startdatum *</FieldLabel>
 									<div className="flex gap-2">
 										<form.Field name="contractStartMonth">
 											{(field) => {
@@ -885,7 +885,7 @@ export function NewMemberForm() {
 																id="contractStartMonth"
 																aria-invalid={isInvalid}
 															>
-																<SelectValue placeholder="Month" />
+																<SelectValue placeholder="Monat" />
 															</SelectTrigger>
 															<SelectContent>
 																<SelectItem value="01">January</SelectItem>
@@ -978,10 +978,10 @@ export function NewMemberForm() {
 														id="initialPeriod"
 														aria-invalid={isInvalid}
 													>
-														<SelectValue placeholder="Select period" />
+														<SelectValue placeholder="Zeitraum wählen" />
 													</SelectTrigger>
 													<SelectContent>
-														<SelectItem value="monthly">Monthly</SelectItem>
+														<SelectItem value="monthly">Monatlich</SelectItem>
 														<SelectItem value="half_yearly">
 															Half Yearly
 														</SelectItem>
@@ -1003,7 +1003,7 @@ export function NewMemberForm() {
 										return (
 											<Field data-invalid={isInvalid}>
 												<FieldLabel htmlFor="joiningFeeAmount">
-													Joining Fee Amount
+													Aufnahmegebühr Amount
 												</FieldLabel>
 												<Input
 													id="joiningFeeAmount"
@@ -1030,7 +1030,7 @@ export function NewMemberForm() {
 										return (
 											<Field data-invalid={isInvalid}>
 												<FieldLabel htmlFor="yearlyFeeAmount">
-													Yearly Fee Amount
+													Jahresbeitrag Amount
 												</FieldLabel>
 												<Input
 													id="yearlyFeeAmount"
@@ -1093,7 +1093,7 @@ export function NewMemberForm() {
 						Cancel
 					</Button>
 					<Button disabled={isLoading} type="submit" form="new-member-form">
-						{isLoading ? "Creating..." : "Create Member"}
+						{isLoading ? "Creating..." : "Mitglied erstellen"}
 					</Button>
 				</FrameFooter>
 			</form>

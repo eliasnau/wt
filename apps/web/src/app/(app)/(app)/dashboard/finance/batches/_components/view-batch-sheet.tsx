@@ -76,7 +76,7 @@ function CopyButton({
 			) : (
 				<Copy className="h-3 w-3" />
 			)}
-			<span className="sr-only">Copy</span>
+			<span className="sr-only">Kopieren</span>
 		</Button>
 	);
 }
@@ -157,7 +157,7 @@ export function ViewBatchSheet({
 											</div>
 											<div className="flex flex-col">
 												<span className="font-medium text-sm">
-													Joining Fees
+													Aufnahmegebührs
 												</span>
 											</div>
 										</div>
@@ -174,7 +174,7 @@ export function ViewBatchSheet({
 												<Calendar className="h-4 w-4" />
 											</div>
 											<div className="flex flex-col">
-												<span className="font-medium text-sm">Yearly Fees</span>
+												<span className="font-medium text-sm">Jahresbeitrags</span>
 											</div>
 										</div>
 										<span className="font-semibold tabular-nums">

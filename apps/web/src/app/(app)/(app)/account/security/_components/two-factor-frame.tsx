@@ -90,7 +90,7 @@ export function TwoFactorFrame({
 
 	const handleGetQrCode = async () => {
 		if (!password.trim()) {
-			toast.error("Password is required");
+			toast.error("Passwort ist erforderlich");
 			return;
 		}
 
@@ -102,7 +102,7 @@ export function TwoFactorFrame({
 			});
 
 			if (error) {
-				toast.error(error.message || "Failed to get QR code");
+				toast.error(error.message || "QR-Code konnte nicht geladen werden");
 				console.error(error);
 			} else if (data) {
 				setTotpUri(data.totpURI);
@@ -114,7 +114,7 @@ export function TwoFactorFrame({
 				setPassword("");
 			}
 		} catch (error) {
-			toast.error("Failed to get QR code");
+			toast.error("QR-Code konnte nicht geladen werden");
 			console.error(error);
 		} finally {
 			setIsLoadingQr(false);
@@ -129,7 +129,7 @@ export function TwoFactorFrame({
 				toast.success("Secret key copied to clipboard");
 				setTimeout(() => setCopiedSecret(false), 2000);
 			} catch (error) {
-				toast.error("Failed to copy secret key");
+				toast.error("Geheimschlüssel konnte nicht kopiert werden");
 				console.error(error);
 			}
 		}
@@ -137,7 +137,7 @@ export function TwoFactorFrame({
 
 	const handleEnableTwoFactor = async () => {
 		if (!password.trim()) {
-			toast.error("Password is required");
+			toast.error("Passwort ist erforderlich");
 			return;
 		}
 
@@ -149,7 +149,7 @@ export function TwoFactorFrame({
 			});
 
 			if (error) {
-				toast.error(error.message || "Failed to enable 2FA");
+				toast.error(error.message || "2FA konnte nicht aktiviert werden");
 				console.error(error);
 			} else if (data) {
 				setTotpUri(data.totpURI);
@@ -161,7 +161,7 @@ export function TwoFactorFrame({
 				}
 			}
 		} catch (error) {
-			toast.error("Failed to enable 2FA");
+			toast.error("2FA konnte nicht aktiviert werden");
 			console.error(error);
 		} finally {
 			setIsEnabling(false);
@@ -187,7 +187,7 @@ export function TwoFactorFrame({
 			});
 
 			if (error) {
-				toast.error(error.message || "Invalid verification code");
+				toast.error(error.message || "Ungültiger Verifizierungscode");
 				console.error(error);
 			} else {
 				toast.success("2FA enabled successfully!");
@@ -196,7 +196,7 @@ export function TwoFactorFrame({
 				resetEnableForm();
 			}
 		} catch (error) {
-			toast.error("Failed to verify code");
+			toast.error("Code konnte nicht verifiziert werden");
 			console.error(error);
 		} finally {
 			setIsVerifying(false);
@@ -205,7 +205,7 @@ export function TwoFactorFrame({
 
 	const handleDisableTwoFactor = async () => {
 		if (!password.trim()) {
-			toast.error("Password is required");
+			toast.error("Passwort ist erforderlich");
 			return;
 		}
 
@@ -217,7 +217,7 @@ export function TwoFactorFrame({
 			});
 
 			if (error) {
-				toast.error(error.message || "Failed to disable 2FA");
+				toast.error(error.message || "2FA konnte nicht deaktiviert werden");
 				console.error(error);
 			} else {
 				toast.success("2FA disabled successfully");
@@ -226,7 +226,7 @@ export function TwoFactorFrame({
 				resetDisableForm();
 			}
 		} catch (error) {
-			toast.error("Failed to disable 2FA");
+			toast.error("2FA konnte nicht deaktiviert werden");
 			console.error(error);
 		} finally {
 			setIsDisabling(false);
@@ -235,7 +235,7 @@ export function TwoFactorFrame({
 
 	const handleGenerateBackupCodes = async () => {
 		if (!password.trim()) {
-			toast.error("Password is required");
+			toast.error("Passwort ist erforderlich");
 			return;
 		}
 
@@ -247,7 +247,7 @@ export function TwoFactorFrame({
 			});
 
 			if (error) {
-				toast.error(error.message || "Failed to generate backup codes");
+				toast.error(error.message || "Backup-Codes konnten nicht erstellt werden");
 				console.error(error);
 			} else if (data) {
 				setBackupCodes(data.backupCodes || []);
@@ -255,7 +255,7 @@ export function TwoFactorFrame({
 				toast.success("New backup codes generated");
 			}
 		} catch (error) {
-			toast.error("Failed to generate backup codes");
+			toast.error("Backup-Codes konnten nicht erstellt werden");
 			console.error(error);
 		} finally {
 			setIsGeneratingCodes(false);
@@ -267,10 +267,10 @@ export function TwoFactorFrame({
 		try {
 			await navigator.clipboard.writeText(codesText);
 			setCopiedCodes(true);
-			toast.success("Backup codes copied to clipboard");
+			toast.success("Backup-Codes in die Zwischenablage kopiert");
 			setTimeout(() => setCopiedCodes(false), 2000);
 		} catch (error) {
-			toast.error("Failed to copy backup codes");
+			toast.error("Backup-Codes konnten nicht kopiert werden");
 			console.error(error);
 		}
 	};
@@ -286,7 +286,7 @@ export function TwoFactorFrame({
 		link.click();
 		document.body.removeChild(link);
 		URL.revokeObjectURL(url);
-		toast.success("Backup codes downloaded");
+		toast.success("Backup-Codes heruntergeladen");
 	};
 
 	return (
@@ -302,15 +302,15 @@ export function TwoFactorFrame({
 								Two-Factor Authentication
 							</h2>
 							<p className="text-sm text-muted-foreground mb-6">
-								Manage your two-factor authentication settings.
+								Verwalte deine Zwei-Faktor-Authentifizierungseinstellungen.
 							</p>
 
 							<div className="space-y-4">
 								<div className="flex items-center justify-between p-4 rounded-lg border">
 									<div>
-										<p className="text-sm font-medium">Authenticator App</p>
+										<p className="text-sm font-medium">Authenticator-App</p>
 										<p className="text-xs text-muted-foreground">
-											Use your authenticator app to generate verification codes
+											Nutze deine Authenticator-App, um Verifizierungscodes zu generieren
 										</p>
 									</div>
 									<Button
@@ -321,15 +321,15 @@ export function TwoFactorFrame({
 											setQrCodeDialogOpen(true);
 										}}
 									>
-										View QR Code
+										QR-Code anzeigen
 									</Button>
 								</div>
 
 								<div className="flex items-center justify-between p-4 rounded-lg border">
 									<div>
-										<p className="text-sm font-medium">Backup Codes</p>
+										<p className="text-sm font-medium">Backup-Codes</p>
 										<p className="text-xs text-muted-foreground">
-											Regenerate backup codes for account recovery
+											Backup-Codes für die Kontowiederherstellung neu erzeugen
 										</p>
 									</div>
 									<Button
@@ -337,7 +337,7 @@ export function TwoFactorFrame({
 										size="sm"
 										onClick={() => setBackupCodesDialogOpen(true)}
 									>
-										Regenerate
+										Neu erzeugen
 									</Button>
 								</div>
 							</div>
@@ -359,18 +359,18 @@ export function TwoFactorFrame({
 											Disable Two-Factor Authentication
 										</AlertDialogTitle>
 										<AlertDialogDescription>
-											This will remove the extra layer of security from your
-											account. Enter your password to confirm.
+											Dadurch wird die zusätzliche Sicherheitsebene von deinem
+											Konto. Gib dein Passwort zur Bestätigung ein.
 										</AlertDialogDescription>
 									</AlertDialogHeader>
 									<div className="px-6 py-4">
 										<Field>
-											<FieldLabel>Password</FieldLabel>
+											<FieldLabel>Passwort</FieldLabel>
 											<Input
 												type="password"
 												value={password}
 												onChange={(e) => setPassword(e.target.value)}
-												placeholder="Enter your password"
+												placeholder="Gib dein Passwort ein"
 											/>
 										</Field>
 									</div>
@@ -406,23 +406,23 @@ export function TwoFactorFrame({
 						>
 							<DialogPopup>
 								<DialogHeader>
-									<DialogTitle>Regenerate Backup Codes</DialogTitle>
+									<DialogTitle>Backup-Codes neu erzeugen</DialogTitle>
 								</DialogHeader>
 								<DialogPanel className="space-y-4">
 									{backupCodes.length === 0 ? (
 										<>
 											<p className="text-sm text-muted-foreground">
-												Backup codes can be used to access your account if you
-												lose access to your authenticator app. Regenerating will
+												Backup-Codes können verwendet werden, um auf dein Konto zuzugreifen, wenn du
+												den Zugriff auf deine Authenticator-App verlierst. Eine Neuerzeugung wird
 												replace any existing codes.
 											</p>
 											<Field>
-												<FieldLabel>Password</FieldLabel>
+												<FieldLabel>Passwort</FieldLabel>
 												<Input
 													type="password"
 													value={password}
 													onChange={(e) => setPassword(e.target.value)}
-													placeholder="Enter your password"
+													placeholder="Gib dein Passwort ein"
 												/>
 											</Field>
 										</>
@@ -464,7 +464,7 @@ export function TwoFactorFrame({
 														Regenerating...
 													</>
 												) : (
-													"Regenerate Codes"
+													"Neu erzeugen Codes"
 												)}
 											</Button>
 										</>
@@ -497,7 +497,7 @@ export function TwoFactorFrame({
 													setPassword("");
 												}}
 											>
-												Done
+												Fertig
 											</DialogClose>
 										</>
 									)}
@@ -521,23 +521,23 @@ export function TwoFactorFrame({
 								<DialogHeader>
 									<DialogTitle>
 										Authenticator QR Code
-										<Badge variant={"info"}>Recommended</Badge>
+										<Badge variant={"info"}>Empfohlen</Badge>
 									</DialogTitle>
 								</DialogHeader>
 								<DialogPanel className="space-y-4">
 									{!totpUri ? (
 										<>
 											<p className="text-sm text-muted-foreground">
-												Enter your password to view the QR code for your
+												Gib dein Passwort ein, um den QR-Code für dein
 												authenticator app.
 											</p>
 											<Field>
-												<FieldLabel>Password</FieldLabel>
+												<FieldLabel>Passwort</FieldLabel>
 												<Input
 													type="password"
 													value={password}
 													onChange={(e) => setPassword(e.target.value)}
-													placeholder="Enter your password"
+													placeholder="Gib dein Passwort ein"
 												/>
 											</Field>
 										</>
@@ -549,7 +549,7 @@ export function TwoFactorFrame({
 														Scan QR Code
 													</p>
 													<p className="text-xs text-muted-foreground mb-4">
-														Scan this QR code with your authenticator app.
+														Scanne diesen QR-Code mit deiner Authenticator-App.
 													</p>
 													<div className="flex justify-center p-4 bg-white rounded-lg">
 														<QRCode value={totpUri} size={200} />
@@ -562,8 +562,8 @@ export function TwoFactorFrame({
 															Or enter manually
 														</p>
 														<p className="text-xs text-muted-foreground mb-2">
-															If you can't scan the QR code, enter this secret
-															key manually in your authenticator app:
+															Wenn du den QR-Code nicht scannen kannst, gib diesen geheimen
+															Schlüssel manuell in deiner Authenticator-App ein:
 														</p>
 														<div className="flex items-center gap-2">
 															<div className="flex-1 p-3 rounded-lg bg-muted font-mono text-sm overflow-x-auto whitespace-nowrap">
@@ -604,7 +604,7 @@ export function TwoFactorFrame({
 												{isLoadingQr ? (
 													<>
 														<Loader2 className="mr-2 size-4 animate-spin" />
-														Loading...
+														Lädt...
 													</>
 												) : (
 													"Show QR Code"
@@ -612,7 +612,7 @@ export function TwoFactorFrame({
 											</Button>
 										</>
 									) : (
-										<DialogClose render={<Button />}>Done</DialogClose>
+										<DialogClose render={<Button />}>Fertig</DialogClose>
 									)}
 								</DialogFooter>
 							</DialogPopup>
@@ -627,11 +627,11 @@ export function TwoFactorFrame({
 										<Shield />
 									</EmptyMedia>
 									<Badge variant={"info"} className="mb-2">
-										Recommended
+										Empfohlen
 									</Badge>
-									<EmptyTitle>Two-Factor Authentication</EmptyTitle>
+									<EmptyTitle>Zwei-Faktor-Authentifizierung</EmptyTitle>
 									<EmptyDescription>
-										Add an extra layer of security to your account with 2FA
+										Füge deinem Konto mit 2FA eine zusätzliche Sicherheitsebene hinzu
 									</EmptyDescription>
 								</EmptyHeader>
 							</Empty>
@@ -648,13 +648,13 @@ export function TwoFactorFrame({
 									}
 								>
 									<Info className="size-3.5" />
-									<span>What is 2FA?</span>
+									<span>Was ist 2FA?</span>
 								</TooltipTrigger>
 								<TooltipContent className="max-w-xs">
 									<p className="text-xs">
 										Two-factor authentication adds an extra security step when
-										signing in. You'll need to provide a code from your
-										authenticator app in addition to your password.
+										bei der Anmeldung. Du musst einen Code aus deiner
+										Authenticator-App zusätzlich zu deinem Passwort eingeben.
 									</p>
 								</TooltipContent>
 							</Tooltip>
@@ -672,22 +672,22 @@ export function TwoFactorFrame({
 								</DialogTrigger>
 								<DialogPopup>
 									<DialogHeader>
-										<DialogTitle>Enable Two-Factor Authentication</DialogTitle>
+										<DialogTitle>Zwei-Faktor-Authentifizierung aktivieren</DialogTitle>
 									</DialogHeader>
 									<DialogPanel className="space-y-4">
 										{!totpUri ? (
 											<>
 												<p className="text-sm text-muted-foreground">
-													Enter your password to generate a QR code for your
+													Gib dein Passwort ein, um einen QR-Code für dein
 													authenticator app.
 												</p>
 												<Field>
-													<FieldLabel>Password</FieldLabel>
+													<FieldLabel>Passwort</FieldLabel>
 													<Input
 														type="password"
 														value={password}
 														onChange={(e) => setPassword(e.target.value)}
-														placeholder="Enter your password"
+														placeholder="Gib dein Passwort ein"
 													/>
 												</Field>
 											</>
@@ -713,7 +713,7 @@ export function TwoFactorFrame({
 																Or enter manually
 															</p>
 															<p className="text-xs text-muted-foreground mb-2">
-																If you can't scan the QR code, enter this secret
+																Wenn du den QR-Code nicht scannen kannst, gib diesen geheimen
 																key manually:
 															</p>
 															<div className="flex items-center gap-2">
@@ -792,7 +792,7 @@ export function TwoFactorFrame({
 															Step 2: Enter Verification Code
 														</p>
 														<Field>
-															<FieldLabel>6-digit code</FieldLabel>
+															<FieldLabel>6-stelliger Code</FieldLabel>
 															<InputOTP
 																maxLength={6}
 																value={verificationCode}
@@ -832,7 +832,7 @@ export function TwoFactorFrame({
 															Generating...
 														</>
 													) : (
-														"Continue"
+														"Weiter"
 													)}
 												</Button>
 											</>
@@ -856,7 +856,7 @@ export function TwoFactorFrame({
 															Verifying...
 														</>
 													) : (
-														"Verify & Enable"
+														"Verifizieren & aktivieren"
 													)}
 												</Button>
 											</>

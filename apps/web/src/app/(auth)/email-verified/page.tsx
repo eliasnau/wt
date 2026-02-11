@@ -39,12 +39,12 @@ export default function VerifyEmailPage() {
 									)}
 								</EmptyMedia>
 								<EmptyTitle>
-									{hasError ? "Verification failed" : "Email verified"}
+									{hasError ? "Verifizierung fehlgeschlagen" : "E-Mail verifiziert"}
 								</EmptyTitle>
 								<EmptyDescription>
 									{hasError
-										? "Failed to verify email."
-										: "Your email has been successfully verified! You can now access all features of your account."}
+										? "E-Mail-Verifizierung fehlgeschlagen."
+										: "Deine E-Mail wurde erfolgreich verifiziert! Du kannst jetzt auf alle Funktionen deines Kontos zugreifen."}
 								</EmptyDescription>
 							</EmptyHeader>
 							<EmptyContent>
@@ -61,7 +61,7 @@ export default function VerifyEmailPage() {
 								href={"/support" as Route}
 								className="text-foreground hover:underline"
 							>
-								Contact Support
+								Support kontaktieren
 							</Link>
 						</p>
 					</FrameFooter>

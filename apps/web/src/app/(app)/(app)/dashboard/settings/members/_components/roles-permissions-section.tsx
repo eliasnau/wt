@@ -82,19 +82,19 @@ export function RolesPermissionsSection() {
 				organizationId: activeOrg?.id,
 			});
 			if (result.error) {
-				throw new Error(result.error.message || "Failed to delete role");
+				throw new Error(result.error.message || "Rolle konnte nicht gelöscht werden");
 			}
 			return result.data;
 		},
 		onSuccess: () => {
-			toast.success("Role deleted");
+			toast.success("Rolle gelöscht");
 			refetch();
 			setDeleteOpen(false);
 			setDeletingRole(null);
 		},
 		onError: (error) => {
 			toast.error(
-				error instanceof Error ? error.message : "Failed to delete role",
+				error instanceof Error ? error.message : "Rolle konnte nicht gelöscht werden",
 			);
 			setDeleteOpen(false);
 			setDeletingRole(null);
@@ -223,7 +223,7 @@ export function RolesPermissionsSection() {
 										<EmptyMedia variant="icon">
 											<Settings2 />
 										</EmptyMedia>
-										<EmptyTitle>Roles unavailable</EmptyTitle>
+										<EmptyTitle>Rollen nicht verfügbar</EmptyTitle>
 										<EmptyDescription>
 											We couldn't load custom roles right now.
 										</EmptyDescription>
@@ -242,7 +242,7 @@ export function RolesPermissionsSection() {
 										<EmptyMedia variant="icon">
 											<Settings2 />
 										</EmptyMedia>
-										<EmptyTitle>Roles unavailable</EmptyTitle>
+										<EmptyTitle>Rollen nicht verfügbar</EmptyTitle>
 										<EmptyDescription>
 											You don't have permission to view custom roles.
 										</EmptyDescription>
@@ -256,7 +256,7 @@ export function RolesPermissionsSection() {
 										<EmptyMedia variant="icon">
 											<Settings2 />
 										</EmptyMedia>
-										<EmptyTitle>No custom roles</EmptyTitle>
+										<EmptyTitle>Keine benutzerdefinierten Rollen</EmptyTitle>
 										<EmptyDescription>
 											Create a new role to start assigning tailored
 											permissions.

@@ -106,12 +106,12 @@ function DeleteGroupDialog({
 			return client.groups.delete({ id });
 		},
 		onSuccess: () => {
-			toast.success("Group deleted successfully");
+			toast.success("Gruppe erfolgreich gelöscht");
 			onOpenChange(false);
 			onSuccess?.();
 		},
 		onError: (error) => {
-			toast.error(error.message ?? "Failed to delete group");
+			toast.error(error.message ?? "Gruppe konnte nicht gelöscht werden");
 		},
 	});
 
@@ -125,7 +125,7 @@ function DeleteGroupDialog({
 		<AlertDialog open={open} onOpenChange={onOpenChange}>
 			<AlertDialogPopup>
 				<AlertDialogHeader>
-					<AlertDialogTitle>Delete Group</AlertDialogTitle>
+					<AlertDialogTitle>Gruppe löschen</AlertDialogTitle>
 					<AlertDialogDescription>
 						Are you sure you want to delete "{group?.name}"? This action cannot
 						be undone.
@@ -149,7 +149,7 @@ function DeleteGroupDialog({
 								Deleting...
 							</>
 						) : (
-							"Delete"
+							"Löschen"
 						)}
 					</Button>
 				</AlertDialogFooter>
@@ -171,7 +171,7 @@ export const columns: ColumnDef<GroupRow>[] = [
 	},
 	{
 		accessorKey: "defaultMembershipPrice",
-		header: "Membership Price",
+		header: "Mitgliedsbeitrag",
 	},
 	{
 		id: "actions",
@@ -300,7 +300,7 @@ export default function GroupTable({
 							<EmptyMedia variant="icon">
 								<UserIcon />
 							</EmptyMedia>
-							<EmptyTitle>No groups yet</EmptyTitle>
+							<EmptyTitle>Noch keine Gruppen</EmptyTitle>
 							<EmptyDescription>
 								Get started by creating your first group.
 							</EmptyDescription>
@@ -320,7 +320,7 @@ export default function GroupTable({
 					</InputGroupAddon>
 					<InputGroupInput
 						type="text"
-						placeholder="Search name..."
+						placeholder="Name suchen..."
 						value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
 						onChange={(event) =>
 							table.getColumn("name")?.setFilterValue(event.target.value)

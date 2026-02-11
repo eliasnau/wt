@@ -61,7 +61,7 @@ export function MembersSection() {
 			});
 
 			if (result.error) {
-				throw new Error(result.error.message || "Failed to load members");
+				throw new Error(result.error.message || "Mitglieder konnten nicht geladen werden");
 			}
 
 			return result.data;
@@ -84,12 +84,12 @@ export function MembersSection() {
 				role,
 			});
 			if (result.error) {
-				throw new Error(result.error.message || "Failed to update role");
+				throw new Error(result.error.message || "Rolle konnte nicht aktualisiert werden");
 			}
 			return result.data;
 		},
 		onSuccess: () => {
-			toast.success("Role updated");
+			toast.success("Rolle aktualisiert");
 			refetch();
 			setRoleConfirmOpen(false);
 			setSelectedMember(null);
@@ -97,7 +97,7 @@ export function MembersSection() {
 		},
 		onError: (error) => {
 			toast.error(
-				error instanceof Error ? error.message : "Failed to update role",
+				error instanceof Error ? error.message : "Rolle konnte nicht aktualisiert werden",
 			);
 			setRoleConfirmOpen(false);
 			setSelectedMember(null);
@@ -111,7 +111,7 @@ export function MembersSection() {
 				memberIdOrEmail: memberId,
 			});
 			if (result.error) {
-				throw new Error(result.error.message || "Failed to remove member");
+				throw new Error(result.error.message || "Mitglied konnte nicht entfernt werden");
 			}
 			return result.data;
 		},
@@ -123,7 +123,7 @@ export function MembersSection() {
 		},
 		onError: (error) => {
 			toast.error(
-				error instanceof Error ? error.message : "Failed to remove member",
+				error instanceof Error ? error.message : "Mitglied konnte nicht entfernt werden",
 			);
 			setRemoveConfirmOpen(false);
 			setSelectedMember(null);
@@ -163,7 +163,7 @@ export function MembersSection() {
 					<EmptyMedia variant="icon">
 						<User />
 					</EmptyMedia>
-					<EmptyTitle>No members yet</EmptyTitle>
+					<EmptyTitle>Noch keine Mitglieder</EmptyTitle>
 					<EmptyDescription>
 						Invite members to your organization to get started.
 					</EmptyDescription>
@@ -178,9 +178,9 @@ export function MembersSection() {
 				<Table>
 					<TableHeader>
 						<TableRow className="hover:bg-transparent">
-							<TableHead>Member</TableHead>
-							<TableHead>Email</TableHead>
-							<TableHead>Role</TableHead>
+							<TableHead>Mitglied</TableHead>
+							<TableHead>E-Mail</TableHead>
+							<TableHead>Rolle</TableHead>
 							<TableHead className="text-right">Actions</TableHead>
 						</TableRow>
 					</TableHeader>

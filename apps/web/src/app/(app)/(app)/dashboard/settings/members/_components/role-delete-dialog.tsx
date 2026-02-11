@@ -32,7 +32,7 @@ export function RoleDeleteDialog({
 		<AlertDialog open={open} onOpenChange={onOpenChange}>
 			<AlertDialogPopup>
 				<AlertDialogHeader>
-					<AlertDialogTitle>Delete role</AlertDialogTitle>
+					<AlertDialogTitle>Rolle löschen</AlertDialogTitle>
 					<AlertDialogDescription>
 						Delete the {roleName ? formatRoleLabel(roleName) : "selected"} role?
 						Members assigned to it will lose access tied to those permissions.
@@ -56,7 +56,7 @@ export function RoleDeleteDialog({
 								Deleting...
 							</>
 						) : (
-							"Delete role"
+							"Rolle löschen"
 						)}
 					</Button>
 				</AlertDialogFooter>

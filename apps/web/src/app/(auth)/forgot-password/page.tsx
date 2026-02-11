@@ -36,7 +36,7 @@ export default function ForgotPassword() {
 		});
 		setLoading(false);
 		setSent(true);
-		toast.success("Password reset email sent!");
+		toast.success("E-Mail zum Zurücksetzen des Passworts gesendet!");
 	};
 
 	if (sent) {
@@ -45,12 +45,12 @@ export default function ForgotPassword() {
 				<div className="w-full max-w-md">
 					<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 						<FramePanel>
-							<h1 className="font-heading text-2xl mb-4">Check your email</h1>
+							<h1 className="font-heading text-2xl mb-4">Prüfe deine E-Mails</h1>
 							<p className="text-sm text-muted-foreground mb-6">
 								We've sent a password reset link to <strong>{email}</strong>
 							</p>
 							<Button
-								render={<Link href="/sign-in">Back to Sign In</Link>}
+								render={<Link href="/sign-in">Zurück zur Anmeldung</Link>}
 								className="w-full"
 							/>
 						</FramePanel>
@@ -69,19 +69,19 @@ export default function ForgotPassword() {
 						className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
 					>
 						<ArrowLeft className="h-4 w-4" />
-						Back to Sign In
+						Zurück zur Anmeldung
 					</Link>
 				</div>
 				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 					<FramePanel>
-						<h1 className="font-heading text-2xl mb-4">Reset your password</h1>
+						<h1 className="font-heading text-2xl mb-4">Setze dein Passwort zurück</h1>
 						<p className="text-sm text-muted-foreground mb-6">
-							Enter your email address and we'll send you a link to reset your
-							password.
+							Gib deine E-Mail-Adresse ein und wir senden dir einen Link zum Zurücksetzen deines
+							Passworts.
 						</p>
 						<form onSubmit={handleSubmit} className="space-y-4">
 							<div className="space-y-2">
-								<Label htmlFor="email">Email</Label>
+								<Label htmlFor="email">E-Mail</Label>
 								<Input
 									id="email"
 									type="email"
@@ -96,7 +96,7 @@ export default function ForgotPassword() {
 								{loading ? (
 									<Loader2 size={16} className="animate-spin" />
 								) : (
-									"Send reset link"
+									"Link zum Zurücksetzen senden"
 								)}
 							</Button>
 						</form>
@@ -104,7 +104,7 @@ export default function ForgotPassword() {
 
 					<FrameFooter className="flex-row items-center justify-center">
 						<p className="text-sm text-muted-foreground">
-							Remember your password?{" "}
+							Erinnerst du dich an dein Passwort?{" "}
 							<Link
 								href={"/sign-in" as Route}
 								className="text-foreground hover:underline"

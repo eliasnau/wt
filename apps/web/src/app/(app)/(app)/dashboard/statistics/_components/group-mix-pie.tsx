@@ -10,7 +10,7 @@ import {
 
 const chartConfig = {
 	value: {
-		label: "Members",
+		label: "Mitglieder",
 	},
 } satisfies ChartConfig;
 

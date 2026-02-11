@@ -60,7 +60,7 @@ const routes: NavRoute[] = [
   },
   {
     id: 'security',
-    title: 'Security',
+    title: 'Sicherheit',
     icon: <Shield className='size-4' size={16} />,
     link: '/account/security'
   },
@@ -98,7 +98,7 @@ export function AccountSidebar () {
                 <ChevronLeft />
                 {!isCollapsed && (
                   <span className='ml-2 text-sm font-medium'>
-                    Back to Dashboard
+                    Zurück zum Dashboard
                   </span>
                 )}
               </Link>

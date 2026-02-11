@@ -25,14 +25,14 @@ export function EmailVerificationBanner({ email }: { email: string }) {
 
 			if (result.error) {
 				toast.error(
-					result.error.message || "Failed to send verification email",
+					result.error.message || "Bestätigungs-E-Mail konnte nicht gesendet werden",
 				);
 				return;
 			}
 
-			toast.success("Verification email sent! Please check your inbox.");
+			toast.success("Bestätigungs-E-Mail gesendet! Bitte prüfe deinen Posteingang.");
 		} catch (error) {
-			toast.error("Failed to send verification email");
+			toast.error("Bestätigungs-E-Mail konnte nicht gesendet werden");
 			console.error(error);
 		} finally {
 			setIsSending(false);
@@ -42,10 +42,10 @@ export function EmailVerificationBanner({ email }: { email: string }) {
 	return (
 		<Alert variant="warning">
 			<MailWarning />
-			<AlertTitle>Email not verified</AlertTitle>
+			<AlertTitle>E-Mail nicht verifiziert</AlertTitle>
 			<AlertDescription>
-				Your email address hasn't been verified yet. Please check your inbox for
-				a verification link.
+				Deine E-Mail-Adresse wurde noch nicht verifiziert. Bitte prüfe deinen Posteingang auf
+				einen Bestätigungslink.
 			</AlertDescription>
 			<AlertAction>
 				<Button
@@ -60,7 +60,7 @@ export function EmailVerificationBanner({ email }: { email: string }) {
 							Sending...
 						</>
 					) : (
-						"Resend Email"
+						"E-Mail erneut senden"
 					)}
 				</Button>
 			</AlertAction>

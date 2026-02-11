@@ -54,7 +54,7 @@ export function RoleSummaryCard({
 					</div>
 					<div className="text-sm text-muted-foreground">
 						{permissionCount === 0
-							? "No permissions assigned"
+							? "Keine Berechtigungen zugewiesen"
 							: `${permissionCount} permission${
 									permissionCount === 1 ? "" : "s"
 								}`}

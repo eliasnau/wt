@@ -20,7 +20,7 @@ export default function PrivacyPage() {
 				<Section className="mt-20 md:mt-32">
 					<SectionContent>
 						<BlurFade inView>
-							<PageHeading>Privacy Policy</PageHeading>
+							<PageHeading>Datenschutzerklärung</PageHeading>
 							<div className="mt-8">
 								<CardWrapper className="p-8 md:p-12">
 									<div className="space-y-8">
@@ -29,7 +29,7 @@ export default function PrivacyPage() {
 										</Paragraph>
 
 										<div className="space-y-4">
-											<Subheading>1. Introduction</Subheading>
+											<Subheading>1. Einleitung</Subheading>
 											<Paragraph>
 												Welcome to Martial Arts Manager. We respect your privacy
 												and are committed to protecting your personal data. This
@@ -41,7 +41,7 @@ export default function PrivacyPage() {
 										</div>
 
 										<div className="space-y-4">
-											<Subheading>2. Data We Collect</Subheading>
+											<Subheading>2. Welche Daten wir erfassen</Subheading>
 											<Paragraph>
 												We may collect, use, store and transfer different kinds
 												of personal data about you which we have grouped
@@ -74,7 +74,7 @@ export default function PrivacyPage() {
 										</div>
 
 										<div className="space-y-4">
-											<Subheading>3. How We Use Your Data</Subheading>
+											<Subheading>3. Wie wir deine Daten verwenden</Subheading>
 											<Paragraph>
 												We will only use your personal data when the law allows
 												us to. Most commonly, we will use your personal data in
@@ -103,7 +103,7 @@ export default function PrivacyPage() {
 										</div>
 
 										<div className="space-y-4">
-											<Subheading>4. Data Security</Subheading>
+											<Subheading>4. Datensicherheit</Subheading>
 											<Paragraph>
 												We have put in place appropriate security measures to
 												prevent your personal data from being accidentally lost,
@@ -115,7 +115,7 @@ export default function PrivacyPage() {
 										</div>
 
 										<div className="space-y-4">
-											<Subheading>5. Contact Us</Subheading>
+											<Subheading>5. Kontakt</Subheading>
 											<Paragraph>
 												If you have any questions about this privacy policy or
 												our privacy practices, please contact us at:

@@ -14,7 +14,7 @@ const chartConfig = {
 		color: "var(--chart-1)",
 	},
 	cancellations: {
-		label: "Cancellations",
+		label: "Kündigungen",
 		color: "var(--chart-2)",
 	},
 } satisfies ChartConfig;
@@ -33,7 +33,7 @@ export function EnrollmentCancellationPieChart({
 			fill: "var(--color-enrollments)",
 		},
 		{
-			name: "Cancellations",
+			name: "Kündigungen",
 			value: cancellations,
 			fill: "var(--color-cancellations)",
 		},

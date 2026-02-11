@@ -56,8 +56,8 @@ export function GenerateQRSheet({ open, onOpenChange }: GenerateQRSheetProps) {
 			await navigator.clipboard.writeText(registrationUrl);
 			toast.success("Registration link copied");
 		} catch (error) {
-			console.error("Failed to copy registration link", error);
-			toast.error("Failed to copy registration link");
+			console.error("Registrierungslink konnte nicht kopiert werden", error);
+			toast.error("Registrierungslink konnte nicht kopiert werden");
 		}
 	};
 
@@ -74,7 +74,7 @@ export function GenerateQRSheet({ open, onOpenChange }: GenerateQRSheetProps) {
 		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetPopup inset side={isMobile ? "bottom" : "right"}>
 				<SheetHeader>
-					<SheetTitle>Member Registration</SheetTitle>
+					<SheetTitle>Mitgliederregistrierung</SheetTitle>
 					<SheetDescription>
 						Share this with the new member to complete their registration.
 					</SheetDescription>
@@ -108,7 +108,7 @@ export function GenerateQRSheet({ open, onOpenChange }: GenerateQRSheetProps) {
 									{typeof window !== "undefined" ? window.location.origin : ""}
 									/register-membership
 								</p>
-								<p className="text-base">and enter this code</p>
+								<p className="text-base">und gib diesen Code ein</p>
 							</div>
 
 							<div className="flex items-center justify-center gap-2">
@@ -147,7 +147,7 @@ export function GenerateQRSheet({ open, onOpenChange }: GenerateQRSheetProps) {
 					<Button variant="destructive" onClick={handleRevokeCode}>
 						Revoke Code
 					</Button>
-					<Button onClick={() => onOpenChange(false)}>Close</Button>
+					<Button onClick={() => onOpenChange(false)}>Schließen</Button>
 				</SheetFooter>
 			</SheetPopup>
 		</Sheet>

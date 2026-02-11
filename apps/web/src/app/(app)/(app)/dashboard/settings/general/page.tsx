@@ -40,9 +40,9 @@ export default function GeneralSettingsPage() {
 		<div className="flex flex-col gap-8">
 			<Header>
 				<HeaderContent>
-					<HeaderTitle>General Settings</HeaderTitle>
+					<HeaderTitle>Allgemeine Einstellungen</HeaderTitle>
 					<HeaderDescription>
-						Manage your general Organization settings
+						Verwalte die allgemeinen Einstellungen deiner Organisation
 					</HeaderDescription>
 				</HeaderContent>
 				<HeaderActions>

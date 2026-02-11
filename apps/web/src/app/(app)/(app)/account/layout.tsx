@@ -13,7 +13,7 @@ const accountNavItems = [
     icon: User
   },
   {
-    title: 'Security',
+    title: 'Sicherheit',
     href: '/account/security',
     icon: Shield
   },

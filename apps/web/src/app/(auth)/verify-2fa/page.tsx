@@ -46,7 +46,7 @@ export default function Verify2FA() {
 		setLoading(false);
 
 		if (error) {
-			toast.error(error.message || "Invalid verification code");
+			toast.error(error.message || "Ungültiger Verifizierungscode");
 			return;
 		}
 
@@ -65,7 +65,7 @@ export default function Verify2FA() {
 		setLoading(false);
 
 		if (error) {
-			toast.error(error.message || "Invalid backup code");
+			toast.error(error.message || "Ungültiger Backup-Code");
 			return;
 		}
 
@@ -89,7 +89,7 @@ export default function Verify2FA() {
 			case "totp":
 				return "Enter 6-digit code from authenticator app";
 			case "backup":
-				return "Enter backup code";
+				return "Backup-Code eingeben";
 			default:
 				return "Enter verification code";
 		}
@@ -98,9 +98,9 @@ export default function Verify2FA() {
 	const getDescription = () => {
 		switch (method) {
 			case "totp":
-				return "Enter the 6-digit code from your authenticator app to continue.";
+				return "Gib den 6-stelligen Code aus deiner Authenticator-App ein, um fortzufahren.";
 			case "backup":
-				return "Enter one of your backup codes to access your account.";
+				return "Gib einen deiner Backup-Codes ein, um auf dein Konto zuzugreifen.";
 			default:
 				return "";
 		}
@@ -178,7 +178,7 @@ export default function Verify2FA() {
 						className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
 					>
 						<ArrowLeft className="h-4 w-4" />
-						Back to Sign In
+						Zurück zur Anmeldung
 					</Link>
 				</div>
 				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
@@ -197,7 +197,7 @@ export default function Verify2FA() {
 						<form onSubmit={handleSubmit} className="space-y-4">
 							<div className="space-y-2">
 								<Label htmlFor="code">
-									{method === "backup" ? "Backup Code" : "Verification Code"}
+									{method === "backup" ? "Backup-Code" : "Verification Code"}
 								</Label>
 								{method === "totp" ? (
 									<div className="flex justify-center py-2">
@@ -246,7 +246,7 @@ export default function Verify2FA() {
 								{loading ? (
 									<Loader2 size={16} className="animate-spin" />
 								) : (
-									"Verify"
+									"Verifizieren"
 								)}
 							</Button>
 						</form>

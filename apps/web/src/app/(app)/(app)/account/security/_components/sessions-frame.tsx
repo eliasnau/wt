@@ -88,7 +88,7 @@ export function SessionsFrame({
     queryFn: async () => {
       const listRes = await authClient.listSessions();
       if (listRes?.error) {
-        throw new Error(listRes.error.message || "Failed to load sessions");
+        throw new Error(listRes.error.message || "Sitzungen konnten nicht geladen werden");
       }
       const raw = (listRes?.data ?? []) as RawSession[];
       return raw.map(normalizeSession);
@@ -130,14 +130,14 @@ export function SessionsFrame({
           if (error instanceof APIError) {
             toast.error(error.message)
           } else {
-            toast.error("Something went wrong");
+            toast.error("Etwas ist schiefgelaufen");
           }
           return;
         }
-        toast.success("Session revoked!");
+        toast.success("Sitzung widerrufen!");
         await refetch();
       } catch {
-        toast.error("Something went wrong");
+        toast.error("Etwas ist schiefgelaufen");
       }
     },
     [refetch],
@@ -150,11 +150,11 @@ export function SessionsFrame({
         await authClient.revokeSessions({
           fetchOptions: {
             onSuccess: () => {
-              toast.success("All sessions revoked. Signing out...");
+              toast.success("Alle Sitzungen widerrufen. Abmeldung läuft...");
               router.push("/sign-in" as Route);
             },
             onError: () => {
-              toast.error("Failed to revoke sessions");
+              toast.error("Sitzungen konnten nicht widerrufen werden");
             },
           },
         });
@@ -162,17 +162,17 @@ export function SessionsFrame({
         await authClient.revokeOtherSessions({
           fetchOptions: {
             onSuccess: () => {
-              toast.success("All other sessions revoked successfully");
+              toast.success("Alle anderen Sitzungen erfolgreich widerrufen");
               refetch();
             },
             onError: () => {
-              toast.error("Failed to revoke sessions");
+              toast.error("Sitzungen konnten nicht widerrufen werden");
             },
           },
         });
       }
     } catch {
-      toast.error("Failed to revoke sessions");
+      toast.error("Sitzungen konnten nicht widerrufen werden");
     } finally {
       if (!includeCurrentDevice) setIsRevokingAll(false);
       setIncludeCurrentDevice(false);
@@ -216,10 +216,10 @@ export function SessionsFrame({
       <Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
         <FramePanel>
           <h2 className="font-heading text-xl mb-2 text-foreground">
-            Active Sessions
+            Aktive Sitzungen
           </h2>
           <p className="text-sm text-muted-foreground mb-6">
-            Manage your active sessions across different devices. Revoke access
+            Verwalte deine aktiven Sitzungen auf verschiedenen Geräten. Widerrufe den Zugriff
             from any device.
           </p>
           <div className="flex items-center justify-center py-12">
@@ -239,15 +239,15 @@ export function SessionsFrame({
               <EmptyMedia variant="icon">
                 <AlertCircle />
               </EmptyMedia>
-              <EmptyTitle>Failed to load sessions</EmptyTitle>
+              <EmptyTitle>Sitzungen konnten nicht geladen werden</EmptyTitle>
               <EmptyDescription>
                 {error instanceof Error
                   ? error.message
-                  : "Something went wrong. Please try again."}
+                  : "Etwas ist schiefgelaufen. Bitte versuche es erneut."}
               </EmptyDescription>
             </EmptyHeader>
             <EmptyContent>
-              <Button onClick={() => refetch()}>Try Again</Button>
+              <Button onClick={() => refetch()}>Erneut versuchen</Button>
             </EmptyContent>
           </Empty>
         </FramePanel>
@@ -259,10 +259,10 @@ export function SessionsFrame({
     <Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
       <FramePanel>
         <h2 className="font-heading text-xl mb-2 text-foreground">
-          Active Sessions
+          Aktive Sitzungen
         </h2>
         <p className="text-sm text-muted-foreground mb-6">
-          Manage your active sessions across different devices. Revoke access
+          Verwalte deine aktiven Sitzungen auf verschiedenen Geräten. Widerrufe den Zugriff
           from any device.
         </p>
 
@@ -306,7 +306,7 @@ export function SessionsFrame({
                         <div className="space-y-2 text-xs">
                           <div>
                             <p className="font-semibold mb-1">
-                              Session Details
+                              Sitzungsdetails
                             </p>
                           </div>
                           <div className="space-y-1">
@@ -335,7 +335,7 @@ export function SessionsFrame({
                               </p>
                             </div>
                             <div>
-                              <p className="text-muted-foreground">Created</p>
+                              <p className="text-muted-foreground">Erstellt</p>
                               <p className="font-medium">
                                 {sessionItem.createdAt
                                   ? new Date(
@@ -362,7 +362,7 @@ export function SessionsFrame({
                       <p className="text-xs text-muted-foreground">
                         {ipDisplay} •{" "}
                         {isCurrent ? (
-                          <span className="font-medium">Active now</span>
+                          <span className="font-medium">Jetzt aktiv</span>
                         ) : (
                           <>
                             Last active{" "}
@@ -391,7 +391,7 @@ export function SessionsFrame({
                       </AlertDialogTrigger>
                       <AlertDialogPopup>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Revoke Session</AlertDialogTitle>
+                          <AlertDialogTitle>Sitzung widerrufen</AlertDialogTitle>
                           <AlertDialogDescription>
                             Are you sure you want to revoke this session? This
                             device will need to sign in again.
@@ -435,7 +435,7 @@ export function SessionsFrame({
           </AnimateIcon>
           <AlertDialogPopup>
             <AlertDialogHeader>
-              <AlertDialogTitle>Revoke All Sessions</AlertDialogTitle>
+              <AlertDialogTitle>Alle Sitzungen widerrufen</AlertDialogTitle>
               <AlertDialogDescription>
                 Choose whether to sign out from all devices or only other
                 devices.
@@ -458,7 +458,7 @@ export function SessionsFrame({
                     Include this device
                   </label>
                   <p className="text-xs text-muted-foreground">
-                    If checked, you will be signed out from this device as well.
+                    Wenn aktiviert, wirst du auch von diesem Gerät abgemeldet.
                   </p>
                 </div>
               </div>
@@ -472,8 +472,8 @@ export function SessionsFrame({
                 onClick={handleRevokeAllSessions}
               >
                 {includeCurrentDevice
-                  ? "Revoke All & Sign Out"
-                  : "Revoke Other Sessions"}
+                  ? "Alle widerrufen & abmelden"
+                  : "Andere Sitzungen widerrufen"}
               </AlertDialogClose>
             </AlertDialogFooter>
           </AlertDialogPopup>

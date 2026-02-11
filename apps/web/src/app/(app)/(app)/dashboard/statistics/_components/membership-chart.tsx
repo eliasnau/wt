@@ -44,11 +44,11 @@ const chartData = [
 
 const chartConfig = {
 	newMembers: {
-		label: "New Members",
+		label: "Neue Mitglieder",
 		color: "var(--chart-1)",
 	},
 	cancellations: {
-		label: "Cancellations",
+		label: "Kündigungen",
 		color: "var(--chart-2)",
 	},
 } satisfies ChartConfig;

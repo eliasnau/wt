@@ -56,7 +56,7 @@ export function InvitationsSection() {
 			});
 
 			if (result.error) {
-				throw new Error(result.error.message || "Failed to load invitations");
+				throw new Error(result.error.message || "Einladungen konnten nicht geladen werden");
 			}
 
 			return result.data;
@@ -79,19 +79,19 @@ export function InvitationsSection() {
 				invitationId,
 			});
 			if (result.error) {
-				throw new Error(result.error.message || "Failed to cancel invitation");
+				throw new Error(result.error.message || "Einladung konnte nicht abgebrochen werden");
 			}
 			return result.data;
 		},
 		onSuccess: () => {
-			toast.success("Invitation cancelled");
+			toast.success("Einladung abgebrochen");
 			refetchInvitations();
 			setCancelInviteOpen(false);
 			setSelectedInvitation(null);
 		},
 		onError: (error) => {
 			toast.error(
-				error instanceof Error ? error.message : "Failed to cancel invitation",
+				error instanceof Error ? error.message : "Einladung konnte nicht abgebrochen werden",
 			);
 			setCancelInviteOpen(false);
 			setSelectedInvitation(null);
@@ -134,7 +134,7 @@ export function InvitationsSection() {
 										<EmptyMedia variant="icon">
 											<Mail />
 										</EmptyMedia>
-										<EmptyTitle>No pending invitations</EmptyTitle>
+										<EmptyTitle>Keine ausstehenden Einladungen</EmptyTitle>
 										<EmptyDescription>
 											Invite members to see pending invitations here.
 										</EmptyDescription>
@@ -145,8 +145,8 @@ export function InvitationsSection() {
 							<Table>
 								<TableHeader>
 									<TableRow className="hover:bg-transparent">
-										<TableHead>Email</TableHead>
-										<TableHead>Role</TableHead>
+										<TableHead>E-Mail</TableHead>
+										<TableHead>Rolle</TableHead>
 										<TableHead>Status</TableHead>
 										<TableHead className="text-right">Actions</TableHead>
 									</TableRow>

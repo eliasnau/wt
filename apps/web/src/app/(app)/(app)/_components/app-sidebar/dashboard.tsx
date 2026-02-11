@@ -50,41 +50,41 @@ export type NavRoute = {
 const routes: NavRoute[] = [
   {
     id: 'home',
-    title: 'Home',
+    title: 'Startseite',
     icon: <LayoutDashboard className='size-4' />,
     link: '/dashboard'
   },
   {
     id: 'Members',
-    title: 'Members',
+    title: 'Mitglieder',
     icon: <Users className='size-4' size={16} />,
     link: '/dashboard/members'
   },
   {
     id: 'groups',
-    title: 'Groups',
+    title: 'Gruppen',
     icon: <Blocks className='size-4' />,
     link: '/dashboard/groups'
   },
   {
     id: 'ai',
-    title: 'AI Assistant',
+    title: 'KI-Assistent',
     icon: <Sparkles className='size-4' />,
     link: '/dashboard/ai'
   },
   {
     id: 'statistics',
-    title: 'Statistics',
+    title: 'Statistiken',
     icon: <ChartLine className='size-4' />,
     link: '/dashboard/statistics/overview',
     subs: [
       {
-        title: 'Overview',
+        title: 'Übersicht',
         link: '/dashboard/statistics/overview',
         icon: <PieChart className='size-4' />
       },
       {
-        title: 'Compare Months',
+        title: 'Monate vergleichen',
         link: '/dashboard/statistics/range',
         icon: <PieChart className='size-4' />
       }
@@ -92,22 +92,22 @@ const routes: NavRoute[] = [
   },
   {
     id: 'finance',
-    title: 'Finance',
+    title: 'Finanzen',
     icon: <DollarSign className='size-4' />,
     link: '/dashboard/finance/batches',
     subs: [
-      { title: 'Payment Batches', link: '/dashboard/finance/batches' },
-      { title: 'Generate SEPA', link: '/dashboard/finance/sepa' },
+      { title: 'Zahlungsläufe', link: '/dashboard/finance/batches' },
+      { title: 'SEPA erstellen', link: '/dashboard/finance/sepa' },
     ]
   },
   {
     id: 'settings',
-    title: 'Settings',
+    title: 'Einstellungen',
     icon: <SlidersHorizontal className='size-4' />,
     link: '/dashboard/settings',
     subs: [
-      { title: 'General', link: '/dashboard/settings/general' },
-      { title: 'Users', link: '/dashboard/settings/members' },
+      { title: 'Allgemein', link: '/dashboard/settings/general' },
+      { title: 'Benutzer', link: '/dashboard/settings/members' },
       { title: 'SEPA', link: '/dashboard/settings/sepa' }
     ]
   }

@@ -39,7 +39,7 @@ export default function RangeComparisonPage() {
 	);
 
 	const getRangeText = (start: Date | undefined, end: Date | undefined) => {
-		if (!start || !end) return "Select date range";
+		if (!start || !end) return "Datumsbereich wählen";
 		return `${format(start, "MMM d, yyyy")} - ${format(end, "MMM d, yyyy")}`;
 	};
 
@@ -93,7 +93,7 @@ export default function RangeComparisonPage() {
 						<PopoverContent className="w-auto p-0" align="end">
 							<div className="flex flex-col gap-2 p-3">
 								<div className="space-y-2">
-									<p className="text-sm font-medium">Start Date</p>
+									<p className="text-sm font-medium">Startdatum</p>
 									<CalendarComponent
 										mode="single"
 										selected={startDate}
@@ -102,7 +102,7 @@ export default function RangeComparisonPage() {
 									/>
 								</div>
 								<div className="space-y-2">
-									<p className="text-sm font-medium">End Date</p>
+									<p className="text-sm font-medium">Enddatum</p>
 									<CalendarComponent
 										mode="single"
 										selected={endDate}

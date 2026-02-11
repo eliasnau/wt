@@ -11,11 +11,11 @@ export function OrganizationInfoSkeleton() {
 					Organization Information
 				</h2>
 				<p className="mb-6 text-muted-foreground text-sm">
-					Update your organization details and public information
+					Aktualisiere die Details deiner Organisation und öffentliche Informationen
 				</p>
 				<div className="space-y-4">
 					<Field>
-						<FieldLabel>Organization Name</FieldLabel>
+						<FieldLabel>Organisationsname</FieldLabel>
 						<Skeleton className="h-8 w-full rounded-lg" />
 					</Field>
 				</div>
@@ -25,7 +25,7 @@ export function OrganizationInfoSkeleton() {
 					Reset
 				</Button>
 				<Button type="button" disabled>
-					Save Changes
+					Änderungen speichern
 				</Button>
 			</FrameFooter>
 		</Frame>
@@ -44,7 +44,7 @@ export function OrganizationSlugSkeleton() {
 				</p>
 
 				<Field>
-					<FieldLabel>Member Area URL</FieldLabel>
+					<FieldLabel>Mitgliederbereich-URL</FieldLabel>
 					<div className="flex items-center gap-2">
 						<Skeleton className="h-8 w-full rounded-lg" />
 						<Skeleton className="size-8 shrink-0 rounded-lg" />

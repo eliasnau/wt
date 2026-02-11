@@ -63,14 +63,14 @@ export function OrganizationsFrame() {
 
   const handleCreateOrganization = async () => {
     if (!orgName.trim() || !orgSlug.trim()) {
-      toast.error("Please fill in all fields");
+      toast.error("Bitte fülle alle Felder aus");
       return;
     }
 
     const slugRegex = /^[a-z0-9-]+$/;
     if (!slugRegex.test(orgSlug)) {
       toast.error(
-        "Slug must contain only lowercase letters, numbers, and hyphens",
+        "Slug darf nur Kleinbuchstaben, Zahlen und Bindestriche enthalten",
       );
       return;
     }
@@ -84,17 +84,17 @@ export function OrganizationsFrame() {
       });
 
       if (error) {
-        toast.error(error.message || "Failed to create organization");
+        toast.error(error.message || "Organisation konnte nicht erstellt werden");
         return;
       }
 
-      toast.success("Organization created successfully");
+      toast.success("Organisation erfolgreich erstellt");
       setIsCreateDialogOpen(false);
       setOrgName("");
       setOrgSlug("");
       refetch();
     } catch (error) {
-      toast.error("Failed to create organization");
+      toast.error("Organisation konnte nicht erstellt werden");
       console.error(error);
     } finally {
       setIsCreating(false);
@@ -108,7 +108,7 @@ export function OrganizationsFrame() {
       toast.error(
         error instanceof ORPCError
           ? error.message
-          : "Failed to set active organization",
+          : "Aktive Organisation konnte nicht gesetzt werden",
       );
     }
   };
@@ -122,14 +122,14 @@ export function OrganizationsFrame() {
       });
 
       if (error) {
-        toast.error(error.message || "Failed to delete organization");
+        toast.error(error.message || "Organisation konnte nicht gelöscht werden");
         return;
       }
 
-      toast.success("Organization deleted successfully");
+      toast.success("Organisation erfolgreich gelöscht");
       refetch();
     } catch (error) {
-      toast.error("Failed to delete organization");
+      toast.error("Organisation konnte nicht gelöscht werden");
       console.error(error);
     } finally {
       setDeletingOrgId(null);
@@ -161,7 +161,7 @@ export function OrganizationsFrame() {
             Organizations
           </h2>
           <p className="text-sm text-muted-foreground mb-6">
-            Manage your organizations and collaborate with your team
+            Verwalte deine Organisationen und arbeite mit deinem Team zusammen
           </p>
           <div className="flex items-center justify-center py-12">
             <Loader2 className="size-6 animate-spin text-muted-foreground" />
@@ -181,9 +181,9 @@ export function OrganizationsFrame() {
                 <EmptyMedia variant="icon">
                   <Building2 />
                 </EmptyMedia>
-                <EmptyTitle>Organizations</EmptyTitle>
+                <EmptyTitle>Organisationen</EmptyTitle>
                 <EmptyDescription>
-                  Create an organization to collaborate with your team
+                  Erstelle eine Organisation, um mit deinem Team zusammenzuarbeiten
                 </EmptyDescription>
               </EmptyHeader>
             </Empty>
@@ -192,7 +192,7 @@ export function OrganizationsFrame() {
           <FrameFooter className="flex-row justify-end">
             <Button onClick={() => setIsCreateDialogOpen(true)} size="sm">
               <Plus className="mr-2 size-4" />
-              Create Organization
+              Organisation erstellen
             </Button>
           </FrameFooter>
         </Frame>
@@ -200,11 +200,11 @@ export function OrganizationsFrame() {
         <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
           <DialogPopup>
             <DialogHeader>
-              <DialogTitle>Create Organization</DialogTitle>
+              <DialogTitle>Organisation erstellen</DialogTitle>
             </DialogHeader>
             <DialogPanel className="space-y-4">
               <Field>
-                <FieldLabel>Organization Name</FieldLabel>
+                <FieldLabel>Organisationsname</FieldLabel>
                 <Input
                   value={orgName}
                   onChange={(e) => handleNameChange(e.target.value)}
@@ -213,7 +213,7 @@ export function OrganizationsFrame() {
                 />
               </Field>
               <Field>
-                <FieldLabel>Organization Slug</FieldLabel>
+                <FieldLabel>Organisations-Slug</FieldLabel>
                 <Input
                   value={orgSlug}
                   onChange={(e) =>
@@ -249,7 +249,7 @@ export function OrganizationsFrame() {
                     Creating...
                   </>
                 ) : (
-                  "Create Organization"
+                  "Organisation erstellen"
                 )}
               </Button>
             </DialogFooter>
@@ -267,7 +267,7 @@ export function OrganizationsFrame() {
             Organizations
           </h2>
           <p className="text-sm text-muted-foreground mb-6">
-            Manage your organizations and collaborate with your team
+            Verwalte deine Organisationen und arbeite mit deinem Team zusammen
           </p>
 
           <div className="space-y-3">
@@ -356,7 +356,7 @@ export function OrganizationsFrame() {
         <FrameFooter className="flex-row justify-end">
           <Button onClick={() => setIsCreateDialogOpen(true)} size="sm">
             <Plus className="mr-2 size-4" />
-            Create Organization
+            Organisation erstellen
           </Button>
         </FrameFooter>
       </Frame>
@@ -364,11 +364,11 @@ export function OrganizationsFrame() {
       <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
         <DialogPopup>
           <DialogHeader>
-            <DialogTitle>Create Organization</DialogTitle>
+            <DialogTitle>Organisation erstellen</DialogTitle>
           </DialogHeader>
           <DialogPanel className="space-y-4">
             <Field>
-              <FieldLabel>Organization Name</FieldLabel>
+              <FieldLabel>Organisationsname</FieldLabel>
               <Input
                 value={orgName}
                 onChange={(e) => handleNameChange(e.target.value)}
@@ -377,7 +377,7 @@ export function OrganizationsFrame() {
               />
             </Field>
             <Field>
-              <FieldLabel>Organization Slug</FieldLabel>
+              <FieldLabel>Organisations-Slug</FieldLabel>
               <Input
                 value={orgSlug}
                 onChange={(e) =>
@@ -413,7 +413,7 @@ export function OrganizationsFrame() {
                   Creating...
                 </>
               ) : (
-                "Create Organization"
+                "Organisation erstellen"
               )}
             </Button>
           </DialogFooter>

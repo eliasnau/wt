@@ -60,19 +60,19 @@ export function RoleEditorDialog({
 	}, [open, mode, role]);
 
 	const isEditing = mode === "edit";
-	const title = isEditing ? `Edit ${formatRoleLabel(roleName || "Role")}` : "Create Role";
+	const title = isEditing ? `Edit ${formatRoleLabel(roleName || "Rolle")}` : "Rolle erstellen";
 	const description = isEditing
-		? "Update the role name and fine-tune permissions for this team role."
-		: "Create a custom role with just the permissions your team needs.";
+		? "Aktualisiere den Rollennamen und passe die Berechtigungen für diese Teamrolle fein an."
+		: "Erstelle eine benutzerdefinierte Rolle mit genau den Berechtigungen, die dein Team benötigt.";
 
 	const mutation = useMutation({
 		mutationFn: async () => {
 			const trimmedName = roleName.trim();
 			if (!trimmedName) {
-				throw new Error("Role name is required");
+				throw new Error("Rollenname ist erforderlich");
 			}
 			if (defaultRoleNames.includes(trimmedName)) {
-				throw new Error("Role name is reserved");
+				throw new Error("Rollenname ist reserviert");
 			}
 			const normalized = normalizePermissions(permissions);
 			if (isEditing) {
@@ -86,7 +86,7 @@ export function RoleEditorDialog({
 					},
 				});
 				if (result.error) {
-					throw new Error(result.error.message || "Failed to update role");
+					throw new Error(result.error.message || "Rolle konnte nicht aktualisiert werden");
 				}
 				return result.data;
 			}
@@ -97,12 +97,12 @@ export function RoleEditorDialog({
 				organizationId: activeOrg?.id,
 			});
 			if (result.error) {
-				throw new Error(result.error.message || "Failed to create role");
+				throw new Error(result.error.message || "Rolle konnte nicht erstellt werden");
 			}
 			return result.data;
 		},
 		onSuccess: () => {
-			toast.success(isEditing ? "Role updated" : "Role created");
+			toast.success(isEditing ? "Rolle aktualisiert" : "Rolle erstellt");
 			queryClient.invalidateQueries({
 				queryKey: ["organization-roles", activeOrg?.id],
 			});
@@ -110,16 +110,16 @@ export function RoleEditorDialog({
 		},
 		onError: (error) => {
 			toast.error(
-				error instanceof Error ? error.message : "Something went wrong",
+				error instanceof Error ? error.message : "Etwas ist schiefgelaufen",
 			);
 		},
 	});
 
 	const actionLabel = useMemo(() => {
 		if (mutation.isPending) {
-			return isEditing ? "Saving..." : "Creating...";
+			return isEditing ? "Speichern..." : "Creating...";
 		}
-		return isEditing ? "Save changes" : "Create role";
+		return isEditing ? "Änderungen speichern" : "Rolle erstellen";
 	}, [mutation.isPending, isEditing]);
 
 	const isSubmitDisabled = mutation.isPending || !roleName.trim();
@@ -134,7 +134,7 @@ export function RoleEditorDialog({
 				<DialogPanel>
 					<div className="space-y-6">
 						<Field>
-							<FieldLabel>Role name</FieldLabel>
+							<FieldLabel>Rollenname</FieldLabel>
 							<Input
 								value={roleName}
 								onChange={(event) => setRoleName(event.target.value)}

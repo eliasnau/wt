@@ -113,7 +113,7 @@ const createColumns = (
 ): ColumnDef<MemberRow>[] => [
 	{
 		accessorKey: "firstName",
-		header: "First Name",
+		header: "Vorname",
 		cell: ({ row }) => {
 			const isCancelled = row.original.contract?.cancelledAt !== null;
 			const cancellationEffectiveDate =
@@ -151,13 +151,13 @@ const createColumns = (
 											: "size-1.5 rounded-full bg-red-500"
 									}
 								/>
-								{isCancellationEffective ? "Ended" : "Cancelled"}
+								{isCancellationEffective ? "Ended" : "Gekündigt"}
 							</TooltipTrigger>
 							<TooltipContent>
 								<p className="text-sm">
 									{isCancellationEffective
-										? "Membership ended on "
-										: "Membership ends on "}
+										? "Mitgliedschaft endete am "
+										: "Mitgliedschaft endet am "}
 									{cancellationEffectiveDate
 										? new Date(cancellationEffectiveDate).toLocaleDateString()
 										: "N/A"}
@@ -171,11 +171,11 @@ const createColumns = (
 	},
 	{
 		accessorKey: "lastName",
-		header: "Last Name",
+		header: "Nachname",
 	},
 	{
 		accessorKey: "email",
-		header: "Email",
+		header: "E-Mail",
 		cell: ({ row }) => {
 			return <CopyableTableCell value={row.original.email} />;
 		},
@@ -189,7 +189,7 @@ const createColumns = (
 	},
 	{
 		accessorKey: "groups",
-		header: "Groups",
+		header: "Gruppen",
 		cell: ({ row }) => {
 			const memberRow = row.original;
 			const groupMembers: NonNullable<typeof memberRow.groupMembers> =
@@ -246,7 +246,7 @@ const createColumns = (
 								onClick={() => onCancelMember(member)}
 							>
 								<UserXIcon />
-								{isCancelled ? "Already Cancelled" : "Cancel Membership"}
+								{isCancelled ? "Bereits gekündigt" : "Mitgliedschaft kündigen"}
 							</MenuItem>
 						</MenuPopup>
 					</Menu>
@@ -349,9 +349,9 @@ export default function MembersTable({
 							<EmptyMedia variant="icon">
 								<UserIcon />
 							</EmptyMedia>
-							<EmptyTitle>No Members yet</EmptyTitle>
+							<EmptyTitle>Noch keine Mitglieder</EmptyTitle>
 							<EmptyDescription>
-								Get started by creating your first member.
+								Lege los, indem du dein erstes Mitglied erstellst.
 							</EmptyDescription>
 						</EmptyHeader>
 					</Empty>
@@ -370,7 +370,7 @@ export default function MembersTable({
 						</InputGroupAddon>
 						<InputGroupInput
 							type="text"
-							placeholder="Search by name or email..."
+							placeholder="Nach Name oder E-Mail suchen..."
 							value={localSearch}
 							onChange={(event) => {
 								const newValue = event.target.value;
@@ -394,7 +394,7 @@ export default function MembersTable({
 
 					{/* Group Filter */}
 					<DataTableFacetedFilter
-						title="Groups"
+						title="Gruppen"
 						options={groups.map((g) => ({ label: g.name, value: g.id }))}
 						selectedValues={groupIds}
 						onValueChange={onGroupFilterChange}
@@ -504,7 +504,7 @@ export default function MembersTable({
 								<div className="flex flex-col items-center justify-center gap-2">
 									<p className="text-muted-foreground">
 										{search || groupIds.length > 0
-											? "No members found matching your filters."
+											? "Keine Mitglieder gefunden, die den Filtern entsprechen."
 											: "No results found."}
 									</p>
 									{(search || groupIds.length > 0) && (

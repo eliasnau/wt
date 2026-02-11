@@ -93,11 +93,11 @@ export default function StatisticsOverviewPage() {
 
 	const flowChartConfig = {
 		enrollments: { label: "Enrollments", color: "var(--chart-1)" },
-		cancellations: { label: "Cancellations", color: "var(--chart-2)" },
+		cancellations: { label: "Kündigungen", color: "var(--chart-2)" },
 	} satisfies ChartConfig;
 
 	const groupChartConfig = {
-		value: { label: "Members", color: "var(--chart-3)" },
+		value: { label: "Mitglieder", color: "var(--chart-3)" },
 	} satisfies ChartConfig;
 
 
@@ -105,7 +105,7 @@ export default function StatisticsOverviewPage() {
 		<div className="flex flex-col gap-8">
 			<Header>
 				<HeaderContent>
-					<HeaderTitle>Monthly Overview</HeaderTitle>
+					<HeaderTitle>Monatliche Übersicht</HeaderTitle>
 					<HeaderDescription>
 						A snapshot of performance for a single month. Future months are
 						disabled.
@@ -125,7 +125,7 @@ export default function StatisticsOverviewPage() {
 							}}
 						>
 							<SelectTrigger className="w-[220px]" size="sm">
-								<SelectValue placeholder="Select month" />
+								<SelectValue placeholder="Monat auswählen" />
 							</SelectTrigger>
 							<SelectPopup>
 								{monthOptions.map((month) => {
@@ -155,15 +155,15 @@ export default function StatisticsOverviewPage() {
 								<EmptyMedia variant="icon">
 									<AlertCircle />
 								</EmptyMedia>
-								<EmptyTitle>Failed to load statistics</EmptyTitle>
+								<EmptyTitle>Statistiken konnten nicht geladen werden</EmptyTitle>
 								<EmptyDescription>
 									{error instanceof Error
 										? error.message
-										: "Something went wrong. Please try again."}
+										: "Etwas ist schiefgelaufen. Bitte versuche es erneut."}
 								</EmptyDescription>
 							</EmptyHeader>
 							<EmptyContent>
-								<Button onClick={() => refetch()}>Try Again</Button>
+								<Button onClick={() => refetch()}>Erneut versuchen</Button>
 							</EmptyContent>
 						</Empty>
 					</FramePanel>
@@ -318,7 +318,7 @@ export default function StatisticsOverviewPage() {
 								<Frame>
 									<FrameHeader className="flex-row items-center justify-between">
 										<div>
-											<p className="text-sm font-medium">Members per Group</p>
+											<p className="text-sm font-medium">Mitglieder pro Gruppe</p>
 											<p className="text-muted-foreground text-xs">
 												{selectedMonthLabel}
 											</p>
@@ -399,7 +399,7 @@ export default function StatisticsOverviewPage() {
 								<Frame>
 									<FrameHeader className="flex-row items-center justify-between">
 										<div>
-											<p className="text-sm font-medium">Membership Revenue</p>
+											<p className="text-sm font-medium">Mitgliedsbeiträge</p>
 											<p className="text-muted-foreground text-xs">
 												By group for {selectedMonthLabel}
 											</p>

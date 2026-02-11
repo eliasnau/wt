@@ -34,7 +34,7 @@ export default function GroupsPage() {
 		<div className="flex flex-col gap-8">
 			<Header>
 				<HeaderContent>
-					<HeaderTitle>Groups</HeaderTitle>
+					<HeaderTitle>Gruppen</HeaderTitle>
 					<HeaderDescription>
 						Manage member groups and permissions
 					</HeaderDescription>
@@ -52,15 +52,15 @@ export default function GroupsPage() {
 								<EmptyMedia variant="icon">
 									<AlertCircle />
 								</EmptyMedia>
-								<EmptyTitle>Failed to load groups</EmptyTitle>
+								<EmptyTitle>Gruppen konnten nicht geladen werden</EmptyTitle>
 								<EmptyDescription>
 									{error instanceof Error
 										? error.message
-										: "Something went wrong. Please try again."}
+										: "Etwas ist schiefgelaufen. Bitte versuche es erneut."}
 								</EmptyDescription>
 							</EmptyHeader>
 							<EmptyContent>
-								<Button onClick={() => refetch()}>Try Again</Button>
+								<Button onClick={() => refetch()}>Erneut versuchen</Button>
 							</EmptyContent>
 						</Empty>
 					</FramePanel>

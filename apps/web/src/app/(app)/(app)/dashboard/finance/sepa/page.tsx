@@ -51,7 +51,7 @@ export default function SepaExportPage() {
 				description: `Downloaded ${result.fileName}`,
 			});
 		} catch (err) {
-			toast.error("Failed to export SEPA file", {
+			toast.error("SEPA-Datei konnte nicht exportiert werden", {
 				description: err instanceof Error ? err.message : "Please try again.",
 			});
 		} finally {
@@ -63,7 +63,7 @@ export default function SepaExportPage() {
 		<div className="flex flex-col gap-8">
 			<Header>
 				<HeaderContent>
-					<HeaderTitle>SEPA Exports</HeaderTitle>
+					<HeaderTitle>SEPA-Exporte</HeaderTitle>
 					<HeaderDescription>
 						Download SEPA XML files for your payment batches
 					</HeaderDescription>
@@ -83,15 +83,15 @@ export default function SepaExportPage() {
 								<EmptyMedia variant="icon">
 									<AlertCircle />
 								</EmptyMedia>
-								<EmptyTitle>Failed to load payment batches</EmptyTitle>
+								<EmptyTitle>Zahlungsläufe konnten nicht geladen werden</EmptyTitle>
 								<EmptyDescription>
 									{error instanceof Error
 										? error.message
-										: "Something went wrong. Please try again."}
+										: "Etwas ist schiefgelaufen. Bitte versuche es erneut."}
 								</EmptyDescription>
 							</EmptyHeader>
 							<EmptyContent>
-								<Button onClick={() => refetch()}>Try Again</Button>
+								<Button onClick={() => refetch()}>Erneut versuchen</Button>
 							</EmptyContent>
 						</Empty>
 					</FramePanel>

@@ -29,13 +29,13 @@ export default function Unauthorized() {
 								<EmptyMedia variant="icon">
 									<LogIn />
 								</EmptyMedia>
-								<EmptyTitle>Sign in required</EmptyTitle>
+								<EmptyTitle>Anmeldung erforderlich</EmptyTitle>
 								<EmptyDescription>
 									You need to be signed in to access this page
 								</EmptyDescription>
 							</EmptyHeader>
 						<EmptyContent>
-							<Button render={<Link href={signInUrl as Route}>Sign In</Link>} />
+							<Button render={<Link href={signInUrl as Route}>Anmelden</Link>} />
 						</EmptyContent>
 						</Empty>
 					</FramePanel>

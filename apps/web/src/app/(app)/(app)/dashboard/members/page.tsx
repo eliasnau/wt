@@ -105,9 +105,9 @@ export function MembersPageContent() {
 		<div className="flex flex-col gap-8">
 			<Header>
 				<HeaderContent>
-					<HeaderTitle>Members</HeaderTitle>
+					<HeaderTitle>Mitglieder</HeaderTitle>
 					<HeaderDescription>
-						Manage your club members and their information
+						Verwalte deine Vereinsmitglieder und ihre Informationen
 					</HeaderDescription>
 				</HeaderContent>
 				<HeaderActions>
@@ -123,15 +123,15 @@ export function MembersPageContent() {
 								<EmptyMedia variant="icon">
 									<AlertCircle />
 								</EmptyMedia>
-								<EmptyTitle>Failed to load Members</EmptyTitle>
+								<EmptyTitle>Mitglieder konnten nicht geladen werden</EmptyTitle>
 								<EmptyDescription>
 									{error instanceof Error
 										? error.message
-										: "Something went wrong. Please try again."}
+										: "Etwas ist schiefgelaufen. Bitte versuche es erneut."}
 								</EmptyDescription>
 							</EmptyHeader>
 							<EmptyContent>
-								<Button onClick={() => refetch()}>Try Again</Button>
+								<Button onClick={() => refetch()}>Erneut versuchen</Button>
 							</EmptyContent>
 						</Empty>
 					</FramePanel>

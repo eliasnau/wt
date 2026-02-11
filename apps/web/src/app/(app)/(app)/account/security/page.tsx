@@ -21,9 +21,9 @@ export default async function SecurityPage() {
 		<div className="flex flex-col gap-6">
 			<Header>
 				<HeaderContent>
-					<HeaderTitle>Security</HeaderTitle>
+					<HeaderTitle>Sicherheit</HeaderTitle>
 					<HeaderDescription>
-						Manage your login methods and sessions
+						Verwalte deine Anmeldemethoden und Sitzungen
 					</HeaderDescription>
 				</HeaderContent>
 				<HeaderActions>
