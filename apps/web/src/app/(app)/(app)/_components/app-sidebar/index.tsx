@@ -50,6 +50,7 @@ export function AppSidebar() {
 	const pathname = usePathname();
 	const [isSidebarHovered, setIsSidebarHovered] = useState(false);
 	const [transitionDirection, setTransitionDirection] = useState(1);
+	const [hasMounted, setHasMounted] = useState(false);
 	const previousSection = useRef<"dashboard" | "account" | "other">("other");
 
 	let section: "dashboard" | "account" | "other" = "other";
@@ -61,6 +62,10 @@ export function AppSidebar() {
 		section = "account";
 		Content = <AccountSidebar />;
 	}
+
+	useEffect(() => {
+		setHasMounted(true);
+	}, []);
 
 	useEffect(() => {
 		const prev = previousSection.current;
@@ -87,11 +92,15 @@ export function AppSidebar() {
 					<div className="relative min-h-0 flex-1 overflow-hidden">
 						<motion.div
 							key={section}
-							initial={{
-								opacity: 0,
-								x: transitionDirection * 10,
-								filter: "blur(2.5px)",
-							}}
+							initial={
+								hasMounted
+									? {
+											opacity: 0,
+											x: transitionDirection * 10,
+											filter: "blur(2.5px)",
+										}
+									: false
+							}
 							animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
 							transition={{ duration: 0.09, ease: "easeOut" }}
 							className="absolute inset-0"
