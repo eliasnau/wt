@@ -1,6 +1,7 @@
 import { passkeyClient } from "@better-auth/passkey/client";
 import { APIError } from "better-auth";
 import {
+	inferAdditionalFields,
 	organizationClient,
 	twoFactorClient,
 } from "better-auth/client/plugins";
@@ -25,6 +26,16 @@ export const authClient = createAuthClient({
 			},
 		}),
 		manageSessionsClient(),
+		inferAdditionalFields({
+			user: {
+				hideSensitiveInformatoin: {
+					type: "boolean",
+					required: false,
+					defaultValue: false,
+					input: true,
+				},
+			},
+		}),
 	],
 });
 

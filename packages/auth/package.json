@@ -11,12 +11,13 @@
 	},
 	"scripts": {
 		"check-types": "tsc --noEmit",
-		"generate": "pnpx @better-auth/cli@latest generate --config \"./src/server.ts\" --output \"../db/src/schema/auth.ts\""
+		"generate": "pnpx dotenv-cli -e ../../apps/web/.env -- pnpx @better-auth/cli@latest generate --config \"./src/server.ts\" --output \"../db/src/schema/auth.ts\""
 	},
 	"dependencies": {
 		"@better-auth/passkey": "^1.4.18",
 		"@repo/db": "workspace:*",
 		"better-auth": "^1.4.18",
+		"dotenv": "catalog:",
 		"zod": "catalog:"
 	},
 	"devDependencies": {
