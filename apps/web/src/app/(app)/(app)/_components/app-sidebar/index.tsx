@@ -1,7 +1,7 @@
 import { ChevronLeft } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Sidebar, useSidebar } from "@/components/ui/sidebar";
 import { AccountSidebar } from "./account";
@@ -49,15 +49,30 @@ function EdgeCollapseButton({
 export function AppSidebar() {
 	const pathname = usePathname();
 	const [isSidebarHovered, setIsSidebarHovered] = useState(false);
+	const [transitionDirection, setTransitionDirection] = useState(1);
+	const previousSection = useRef<"dashboard" | "account" | "other">("other");
 
+	let section: "dashboard" | "account" | "other" = "other";
 	let Content = null;
 	if (pathname?.startsWith("/dashboard")) {
+		section = "dashboard";
 		Content = <DashboardLayout />;
 	} else if (pathname?.startsWith("/account")) {
+		section = "account";
 		Content = <AccountSidebar />;
-	} else {
-		Content = null;
 	}
+
+	useEffect(() => {
+		const prev = previousSection.current;
+		if (prev !== section) {
+			if (prev === "dashboard" && section === "account") {
+				setTransitionDirection(1);
+			} else if (prev === "account" && section === "dashboard") {
+				setTransitionDirection(-1);
+			}
+			previousSection.current = section;
+		}
+	}, [section]);
 
 	return (
 		<>
@@ -69,7 +84,21 @@ export function AppSidebar() {
 			>
 				<div className="relative flex h-full flex-col">
 					<SidebarHeader />
-					{Content}
+					<div className="relative min-h-0 flex-1 overflow-hidden">
+						<motion.div
+							key={section}
+							initial={{
+								opacity: 0,
+								x: transitionDirection * 10,
+								filter: "blur(2.5px)",
+							}}
+							animate={{ opacity: 1, x: 0, filter: "blur(0px)" }}
+							transition={{ duration: 0.09, ease: "easeOut" }}
+							className="absolute inset-0"
+						>
+							{Content}
+						</motion.div>
+					</div>
 					<SidebarFooter />
 					<EdgeCollapseButton isSidebarHovered={isSidebarHovered} />
 				</div>
