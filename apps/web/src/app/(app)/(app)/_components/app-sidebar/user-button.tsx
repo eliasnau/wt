@@ -104,7 +104,7 @@ export const UserButton = () => {
 									alt={session.user.name || "User"}
 								/>
 								<AvatarFallback className="rounded-lg">
-									<User className="size-4" />
+									<Skeleton className="h-6 w-6 rounded-md" />
 								</AvatarFallback>
 							</Avatar>
 							<div className="grid flex-1 text-left text-sm leading-tight">

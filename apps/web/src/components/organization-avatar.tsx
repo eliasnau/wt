@@ -3,6 +3,7 @@
 import { Building2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "./ui/skeleton";
 
 type OrganizationAvatarProps = {
 	id: string;
@@ -29,7 +30,7 @@ export function OrganizationAvatar({
 				className={cn("!rounded-md", imageClassName)}
 			/>
 			<AvatarFallback className={cn("!rounded-md", fallbackClassName)}>
-				<Building2 className="size-3.5" />
+				<Skeleton className="h-6 w-6 rounded-md" />
 			</AvatarFallback>
 		</Avatar>
 	);
