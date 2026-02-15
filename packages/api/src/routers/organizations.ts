@@ -2,14 +2,8 @@ import { protectedProcedure } from "../index";
 import { requirePermission } from "../middleware/permissions";
 import { rateLimitMiddleware } from "../middleware/ratelimit";
 import { z } from "zod";
-import { ORPCError } from "@orpc/server";
 import { db, eq } from "@repo/db";
-import { organization, organizationSettings } from "@repo/db/schema";
-import { logger } from "../lib/logger";
-import { after } from "next/server";
-import { addDomain, getDomainStatus } from "../lib/add-custom-domain";
-import { projectsRemoveProjectDomain } from "@vercel/sdk/funcs/projectsRemoveProjectDomain.js";
-import { vercel, projectId, teamId } from "../lib/vercel";
+import { organizationSettings } from "@repo/db/schema";
 import {
 	mapSepaRowToSettings,
 	sepaSettingsSchema,
@@ -27,15 +21,30 @@ const addDomainSchema = z.object({
 });
 
 const updateOrganizationSettingsSchema = sepaSettingsSchema;
+type DomainDnsRecord = {
+	type:
+		| "A"
+		| "AAAA"
+		| "CNAME"
+		| "MX"
+		| "NS"
+		| "SOA"
+		| "PTR"
+		| "SRV"
+		| "TXT"
+		| "CAA";
+	name: string;
+	value: string;
+};
 
 export const organizationsRouter = {
 	addDomain: protectedProcedure
 		.use(rateLimitMiddleware(5))
 		.use(requirePermission({ organization: ["update"] }))
 		.input(addDomainSchema)
+		/*
 		.handler(async ({ context, input }) => {
 			const organizationId = context.session.activeOrganizationId!;
-
 			try {
 				const [currentOrg] = await db
 					.select({ domain: organization.domain })
@@ -101,21 +110,27 @@ export const organizationsRouter = {
 					});
 				});
 
-				if (error instanceof ORPCError) {
-					throw error;
-				}
-
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message: "Failed to add domain",
-				});
+				if (error instanceof ORPCError) throw error;
+				throw new ORPCError("INTERNAL_SERVER_ERROR", { message: "Failed to add domain" });
 			}
+		}),
+		*/
+		.handler(async () => {
+			return {
+				success: false,
+				domain: null,
+				verified: false,
+				verificationRequired: false,
+				status: "Domain support is currently disabled",
+				dnsRecordsToSet: null as DomainDnsRecord | null,
+			};
 		}),
 
 	getDomainStatus: protectedProcedure
 		.use(rateLimitMiddleware(10))
+		/*
 		.handler(async ({ context }) => {
 			const organizationId = context.session.activeOrganizationId!;
-
 			try {
 				const [org] = await db
 					.select({ domain: organization.domain })
@@ -148,7 +163,6 @@ export const organizationsRouter = {
 				try {
 					const domainStatus = await getDomainStatus(org.domain);
 					const isVerified = domainStatus.status === "Valid Configuration";
-
 					return {
 						domain: org.domain,
 						verified: isVerified,
@@ -194,13 +208,24 @@ export const organizationsRouter = {
 				});
 			}
 		}),
+		*/
+		.handler(async () => {
+			return {
+				domain: null,
+				verified: false,
+				verificationRequired: false,
+				vercelConfigured: false,
+				status: "Domain support is currently disabled",
+				dnsRecordsToSet: null as DomainDnsRecord | null,
+			};
+		}),
 
 	removeDomain: protectedProcedure
 		.use(rateLimitMiddleware(5))
 		.use(requirePermission({ organization: ["update"] }))
+		/*
 		.handler(async ({ context }) => {
 			const organizationId = context.session.activeOrganizationId!;
-
 			try {
 				const [currentOrg] = await db
 					.select({ domain: organization.domain })
@@ -255,14 +280,16 @@ export const organizationsRouter = {
 					});
 				});
 
-				if (error instanceof ORPCError) {
-					throw error;
-				}
-
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message: "Failed to remove domain",
-				});
+				if (error instanceof ORPCError) throw error;
+				throw new ORPCError("INTERNAL_SERVER_ERROR", { message: "Failed to remove domain" });
 			}
+		}),
+		*/
+		.handler(async () => {
+			return {
+				success: true,
+				message: "Domain support is currently disabled",
+			};
 		}),
 
 	getSettings: protectedProcedure
