@@ -21,6 +21,7 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
 
 type Organization = {
@@ -36,11 +37,29 @@ export const OrganizationSelector = () => {
 	const { isMobile } = useSidebar();
 	const router = useRouter();
 	const { session, switchOrganization } = useAuth();
-	const { data: organizationsData } = authClient.useListOrganizations();
+	const { data: organizationsData, isPending: isOrganizationsPending } =
+		authClient.useListOrganizations();
+	const { isPending: isSessionPending } = authClient.useSession();
 	const organizations = organizationsData as Organization[] | undefined;
 
 	const activeOrgId = session?.session?.activeOrganizationId;
 	const activeOrg = organizations?.find((org) => org.id === activeOrgId);
+
+	if (isSessionPending || isOrganizationsPending) {
+		return (
+			<SidebarMenu>
+				<SidebarMenuItem>
+					<SidebarMenuButton size="default" disabled>
+						<Skeleton className="h-6 w-6 rounded-md" />
+						<div className="grid flex-1 text-left text-sm leading-tight">
+							<Skeleton className="h-4 w-32 rounded-md" />
+						</div>
+						<Skeleton className="h-4 w-4 rounded-sm" />
+					</SidebarMenuButton>
+				</SidebarMenuItem>
+			</SidebarMenu>
+		);
+	}
 
 	const handleSelectOrg = async (orgId: string) => {
 		try {

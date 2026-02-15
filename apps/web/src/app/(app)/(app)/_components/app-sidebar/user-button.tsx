@@ -32,12 +32,14 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from "@/components/ui/sidebar";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
 
 export const UserButton = () => {
 	const { isMobile } = useSidebar();
 	const { session } = useAuth();
+	const { isPending: isSessionPending } = authClient.useSession();
 	const router = useRouter();
 	const { setTheme } = useTheme();
 	const hideSensitiveInformatoin = Boolean(
@@ -60,6 +62,22 @@ export const UserButton = () => {
 			},
 		});
 	};
+
+	if (isSessionPending) {
+		return (
+			<SidebarMenu>
+				<SidebarMenuItem>
+					<SidebarMenuButton size="default" disabled>
+						<Skeleton className="h-6 w-6 rounded-full" />
+						<div className="grid flex-1 text-left text-sm leading-tight">
+							<Skeleton className="h-4 w-24 rounded-md" />
+						</div>
+						<Skeleton className="h-4 w-4 rounded-sm" />
+					</SidebarMenuButton>
+				</SidebarMenuItem>
+			</SidebarMenu>
+		);
+	}
 
 	if (!session?.user) return null;
 
