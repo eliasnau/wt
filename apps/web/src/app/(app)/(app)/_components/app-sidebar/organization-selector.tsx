@@ -1,5 +1,12 @@
 "use client";
 
+import { authClient } from "@repo/auth/client";
+import { Building2, ChevronsUpDown, Plus } from "lucide-react";
+import type { Route } from "next";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { OrganizationAvatar } from "@/components/organization-avatar";
+import { Badge } from "@/components/ui/badge";
 import {
 	DropdownMenu,
 	DropdownMenuContent,
@@ -14,13 +21,7 @@ import {
 	SidebarMenuItem,
 	useSidebar,
 } from "@/components/ui/sidebar";
-import { Badge } from "@/components/ui/badge";
-import { ChevronsUpDown, Plus, Building2 } from "lucide-react";
-import { authClient } from "@repo/auth/client";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { useAuth } from "@/hooks/use-auth";
-import type { Route } from "next";
 
 type Organization = {
 	id: string;
@@ -28,7 +29,7 @@ type Organization = {
 	slug: string;
 	logo?: string | null;
 	createdAt: Date | string;
-	members?: any[];
+	members?: unknown[];
 };
 
 export const OrganizationSelector = () => {
@@ -66,7 +67,7 @@ export const OrganizationSelector = () => {
 						</div>
 						<div className="grid flex-1 text-left text-sm leading-tight">
 							<span className="truncate font-semibold">Keine Organisation</span>
-							<span className="truncate text-xs text-muted-foreground">
+							<span className="truncate text-muted-foreground text-xs">
 								Select an organization
 							</span>
 						</div>
@@ -85,19 +86,12 @@ export const OrganizationSelector = () => {
 							size="default"
 							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
 						>
-							<div className="flex aspect-square size-6 items-center justify-center rounded-sm bg-sidebar-primary text-sidebar-primary-foreground">
-								{activeOrg.logo ? (
-									<img
-										src={activeOrg.logo}
-										alt={activeOrg.name}
-										className="size-4 rounded-lg object-cover"
-									/>
-								) : (
-									<span className="text-lg font-semibold">
-										{activeOrg.name.charAt(0).toUpperCase()}
-									</span>
-								)}
-							</div>
+							<OrganizationAvatar
+								id={activeOrg.id}
+								name={activeOrg.name}
+								logo={activeOrg.logo}
+								className="size-6"
+							/>
 							<div className="grid flex-1 text-left text-sm leading-tight">
 								<span className="truncate text-primary">{activeOrg.name}</span>
 							</div>
@@ -110,7 +104,7 @@ export const OrganizationSelector = () => {
 						side={isMobile ? "bottom" : "right"}
 						sideOffset={4}
 					>
-						<DropdownMenuLabel className="flex items-center justify-between text-xs text-muted-foreground">
+						<DropdownMenuLabel className="flex items-center justify-between text-muted-foreground text-xs">
 							<span>Organisationen</span>
 							<span className="font-normal opacity-70">⌘⇧O</span>
 						</DropdownMenuLabel>
@@ -122,19 +116,12 @@ export const OrganizationSelector = () => {
 									onClick={() => handleSelectOrg(org.id)}
 									className="gap-2 p-2"
 								>
-									<div className="flex size-6 items-center justify-center rounded-sm border">
-										{org.logo ? (
-											<img
-												src={org.logo}
-												alt={org.name}
-												className="size-6 rounded-sm object-cover"
-											/>
-										) : (
-											<span className="text-xs font-semibold">
-												{org.name.charAt(0).toUpperCase()}
-											</span>
-										)}
-									</div>
+									<OrganizationAvatar
+										id={org.id}
+										name={org.name}
+										logo={org.logo}
+										className="size-6 border"
+									/>
 									<span className="flex-1">{org.name}</span>
 									{isActive && (
 										<Badge variant="secondary" className="text-xs">

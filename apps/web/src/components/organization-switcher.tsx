@@ -1,21 +1,20 @@
 "use client";
 
+import { ORPCError } from "@orpc/client";
 import { authClient } from "@repo/auth/client";
 import { useMutation } from "@tanstack/react-query";
 import {
 	ArrowDownIcon,
 	ArrowUpIcon,
-	Building2,
 	Check,
 	CornerDownLeftIcon,
 	Loader2,
 	Plus,
 } from "lucide-react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
-import { useAuth } from "@/hooks/use-auth";
+import { OrganizationAvatar } from "@/components/organization-avatar";
 import {
 	Command,
 	CommandCollection,
@@ -32,7 +31,7 @@ import {
 	CommandSeparator,
 } from "@/components/ui/command";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
-import { ORPCError } from "@orpc/client";
+import { useAuth } from "@/hooks/use-auth";
 
 type Organization = {
 	id: string;
@@ -42,11 +41,9 @@ type Organization = {
 };
 
 let setGlobalOpen: ((open: boolean) => void) | null = null;
-let globalOpenState = false;
 
 export function openOrganizationSwitcher() {
 	if (setGlobalOpen) {
-		globalOpenState = true;
 		setGlobalOpen(true);
 	}
 }
@@ -72,7 +69,6 @@ export function OrganizationSwitcher() {
 
 	React.useEffect(() => {
 		setGlobalOpen = setOpen;
-		globalOpenState = open;
 		return () => {
 			setGlobalOpen = null;
 		};
@@ -199,19 +195,12 @@ export function OrganizationSwitcher() {
 																	</>
 																) : (
 																	<>
-																		{item.logo ? (
-																			<Image
-																				src={item.logo}
-																				alt={item.label}
-																				width={32}
-																				height={32}
-																				className="size-8 shrink-0 rounded-md object-cover"
-																			/>
-																		) : (
-																			<div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/10">
-																				<Building2 className="size-4 text-primary" />
-																			</div>
-																		)}
+																		<OrganizationAvatar
+																			id={item.value}
+																			name={item.label}
+																			logo={item.logo}
+																			className="size-8 shrink-0"
+																		/>
 																		<div className="min-w-0 flex-1">
 																			<p className="truncate font-medium">
 																				{item.label}
