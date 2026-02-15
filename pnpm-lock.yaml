@@ -22,7 +22,7 @@ catalogs:
       specifier: ^1.31.7
       version: 1.31.7
     dotenv:
-      specifier: ^17.2.3
+      specifier: 17.2.3
       version: 17.2.3
     typescript:
       specifier: ^5.9.3
@@ -460,6 +460,9 @@ importers:
       better-auth:
         specifier: ^1.4.18
         version: 1.4.18(drizzle-kit@0.31.8)(drizzle-orm@0.45.1(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.16.0)(@upstash/redis@1.36.2)(kysely@0.28.11)(pg@8.18.0))(next@16.1.6(@opentelemetry/api@1.9.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(pg@8.18.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      dotenv:
+        specifier: 'catalog:'
+        version: 17.2.3
       zod:
         specifier: 'catalog:'
         version: 4.3.6

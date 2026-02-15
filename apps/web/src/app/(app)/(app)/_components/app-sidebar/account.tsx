@@ -20,22 +20,15 @@ import {
 import { cn } from '@/lib/utils'
 import {
   Building2,
-  Calendar,
   ChevronDown,
   ChevronUp,
-  DollarSign,
-  PieChart,
   Shield
 } from 'lucide-react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import type React from 'react'
 import { useState } from 'react'
-import { Blocks } from '@/components/animate-ui/icons/blocks'
-import { ChartLine } from '@/components/animate-ui/icons/chart-line'
 import { SlidersHorizontal } from '@/components/animate-ui/icons/sliders-horizontal'
-import { LayoutDashboard } from '@/components/animate-ui/icons/layout-dashboard'
-import { Users } from '@/components/animate-ui/icons/users'
 import { User } from '@/components/animate-ui/icons/user'
 import { ChevronLeft } from '@/components/animate-ui/icons/chevron-left'
 
@@ -57,6 +50,12 @@ const routes: NavRoute[] = [
     title: 'General',
     icon: <User className='size-4' />,
     link: '/account'
+  },
+  {
+    id: 'customization',
+    title: 'Customization',
+    icon: <SlidersHorizontal className='size-4' />,
+    link: '/account/customization'
   },
   {
     id: 'security',
