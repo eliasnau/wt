@@ -1,7 +1,7 @@
 {
-	"title": "API Reference",
+	"title": "API-Referenz",
 	"root": true,
-	"description": "Use our API to manage your Org",
+	"description": "Verwenden Sie unsere API, um Ihre Organisation zu verwalten",
 	"pages": ["index", "authentication"],
 	"icon": "Braces"
 }

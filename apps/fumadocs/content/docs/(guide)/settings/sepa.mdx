@@ -1,41 +1,41 @@
 ---
-title: SEPA Configuration
-description: Configure SEPA Direct Debit settings for your organization.
+title: SEPA-Konfiguration
+description: Konfigurieren Sie die SEPA-Lastschrifteinstellungen für Ihre Organisation.
 ---
 
-Navigate to **Settings > SEPA** to configure your banking details and transaction descriptions for SEPA Direct Debit payments.
+Navigieren Sie zu **Einstellungen > SEPA**, um Ihre Bankdaten und Transaktionsbeschreibungen für SEPA-Lastschriften zu konfigurieren.
 
-## Bank Account Details
+## Bankverbindung
 
-Enter your bank account information to enable SEPA exports. All fields are required unless marked optional.
+Geben Sie Ihre Bankdaten ein, um SEPA-Exporte zu ermöglichen. Alle Felder sind erforderlich, sofern nicht als optional gekennzeichnet.
 
-- **Creditor Name**: The name of the creditor (your organization) as it appears on the bank account.
-- **IBAN**: The International Bank Account Number of your organization.
-- **BIC**: The Bank Identifier Code (SWIFT code) of your bank.
-- **Creditor ID**: Your unique Creditor Identifier (Gläubiger-Identifikationsnummer) for collecting SEPA Direct Debits.
-- **Initiator Name** (Optional): The name of the party initiating the transaction, if different from the creditor.
-- **Batch Booking**: Enable this option to group transactions into a single entry on your bank statement. This can simplify your bank reconciliation process.
+- **Gläubigername**: Der Name des Gläubigers (Ihrer Organisation), wie er auf dem Bankkonto erscheint.
+- **IBAN**: Die internationale Bankkontonummer Ihrer Organisation.
+- **BIC**: Der Bank Identifier Code (SWIFT-Code) Ihrer Bank.
+- **Gläubiger-ID**: Ihre eindeutige Gläubiger-Identifikationsnummer zum Einzug von SEPA-Lastschriften.
+- **Name des Initiators** (Optional): Der Name der Partei, die die Transaktion initiiert, falls abweichend vom Gläubiger.
+- **Sammelbuchung**: Aktivieren Sie diese Option, um Transaktionen zu einem einzigen Eintrag auf Ihrem Kontoauszug zusammenzufassen. Dies kann den Bankabgleich vereinfachen.
 
-## Transaction Details
+## Transaktionsdetails
 
-Customize the remittance information (Verwendungszweck) that will appear on your members' bank statements for different types of transactions.
+Passen Sie den Verwendungszweck an, der auf den Kontoauszügen Ihrer Mitglieder für verschiedene Transaktionsarten erscheint.
 
-You can configure templates for:
-- **Monatsbeitrag**: Description for recurring monthly membership fees.
-- **Aufnahmegebühr**: Description for the one-time joining fee charged upon registration.
-- **Jahresbeitrag**: Description for annual membership payments.
+Sie können Vorlagen konfigurieren für:
+- **Monatsbeitrag**: Beschreibung für wiederkehrende monatliche Mitgliedsbeiträge.
+- **Aufnahmegebühr**: Beschreibung für die einmalige Aufnahmegebühr bei der Registrierung.
+- **Jahresbeitrag**: Beschreibung für jährliche Mitgliedsbeiträge.
 
-### Available Variables
+### Verfügbare Variablen
 
-You can use the following placeholders in your transaction descriptions to dynamically insert relevant information:
+Sie können die folgenden Platzhalter in Ihren Transaktionsbeschreibungen verwenden, um dynamisch relevante Informationen einzufügen:
 
-| Variable | Description |
+| Variable | Beschreibung |
 | :--- | :--- |
-| `%MONTH%` | The month name (e.g., January) |
-| `%YEAR%` | The year (e.g., 2025) |
-| `%MEMBER_NAME%` | The member's full name |
-| `%MEMBER_ID%` | The member's unique ID number |
-| `%JOIN_DATE%` | The date the member joined |
+| `%MONTH%` | Der Monatsname (z. B. Januar) |
+| `%YEAR%` | Das Jahr (z. B. 2025) |
+| `%MEMBER_NAME%` | Der vollständige Name des Mitglieds |
+| `%MEMBER_ID%` | Die eindeutige ID-Nummer des Mitglieds |
+| `%JOIN_DATE%` | Das Beitrittsdatum |
 
-**Example:**
-A template like `Monthly fee for %MEMBER_NAME% (%MONTH% %YEAR%)` would appear as `Monthly fee for John Doe (January 2025)`.
+**Beispiel:**
+Eine Vorlage wie `Monatsbeitrag für %MEMBER_NAME% (%MONTH% %YEAR%)` würde als `Monatsbeitrag für Max Mustermann (Januar 2025)` erscheinen.

@@ -1,18 +1,18 @@
 {
-	"title": "Documentation",
+	"title": "Dokumentation",
 	"root": true,
 	"icon": "Book",
 	"pages": [
 		"index",
-		"---School Management---",
+		"---Schulverwaltung---",
 		"...school",
-		"---Member Portal---",
+		"---Mitgliederportal---",
 		"...portal",
-		"---Finance---",
+		"---Finanzen---",
 		"...finance",
-		"---Settings---",
+		"---Einstellungen---",
 		"...settings",
-		"---Account---",
+		"---Konto---",
 		"...account"
 	]
 }

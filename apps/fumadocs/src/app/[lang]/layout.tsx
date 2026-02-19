@@ -5,34 +5,31 @@ import "../global.css";
 import { Inter } from "next/font/google";
 
 const inter = Inter({
-	subsets: ["latin"],
+  subsets: ["latin"],
 });
 
 const { provider } = defineI18nUI(i18n, {
-	translations: {
-		en: {
-			displayName: "English",
-		},
-		de: {
-			displayName: "German",
-		},
-	},
+  translations: {
+    de: {
+      displayName: "Deutsch",
+    },
+  },
 });
 
 export default async function RootLayout({
-	params,
-	children,
+  params,
+  children,
 }: {
-	params: Promise<{ lang: string }>;
-	children: React.ReactNode;
+  params: Promise<{ lang: string }>;
+  children: React.ReactNode;
 }) {
-	const lang = (await params).lang;
+  const lang = (await params).lang;
 
-	return (
-		<html lang={lang} className={inter.className} suppressHydrationWarning>
-			<body className="flex min-h-screen flex-col">
-				<RootProvider i18n={provider(lang)}>{children}</RootProvider>
-			</body>
-		</html>
-	);
+  return (
+    <html lang={lang} className={inter.className} suppressHydrationWarning>
+      <body className="flex min-h-screen flex-col">
+        <RootProvider i18n={provider(lang)}>{children}</RootProvider>
+      </body>
+    </html>
+  );
 }
