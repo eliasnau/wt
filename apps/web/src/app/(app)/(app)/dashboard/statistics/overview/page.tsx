@@ -63,6 +63,14 @@ function getMonthOptions() {
 
 export default function StatisticsOverviewPage() {
 	const monthOptions = useMemo(() => getMonthOptions(), []);
+	const monthSelectItems = useMemo(
+		() =>
+			monthOptions.map((month) => ({
+				value: format(month, "yyyy-MM"),
+				label: format(month, "MMMM yyyy"),
+			})),
+		[monthOptions],
+	);
 	const currentMonth = startOfMonth(new Date());
 	const [selectedMonth, setSelectedMonth] = useState(currentMonth);
 	const [feeChartType, setFeeChartType] = useState<"pie" | "bar">("pie");
@@ -100,7 +108,6 @@ export default function StatisticsOverviewPage() {
 		value: { label: "Mitglieder", color: "var(--chart-3)" },
 	} satisfies ChartConfig;
 
-
 	return (
 		<div className="flex flex-col gap-8">
 			<Header>
@@ -115,6 +122,7 @@ export default function StatisticsOverviewPage() {
 					<div className="flex items-center gap-2">
 						<Select
 							value={format(selectedMonth, "yyyy-MM")}
+							items={monthSelectItems}
 							onValueChange={(value) => {
 								const match = monthOptions.find(
 									(month) => format(month, "yyyy-MM") === value,
@@ -155,7 +163,9 @@ export default function StatisticsOverviewPage() {
 								<EmptyMedia variant="icon">
 									<AlertCircle />
 								</EmptyMedia>
-								<EmptyTitle>Statistiken konnten nicht geladen werden</EmptyTitle>
+								<EmptyTitle>
+									Statistiken konnten nicht geladen werden
+								</EmptyTitle>
 								<EmptyDescription>
 									{error instanceof Error
 										? error.message
@@ -177,7 +187,7 @@ export default function StatisticsOverviewPage() {
 									Active Members
 								</p>
 								<p className="text-2xl font-semibold">
-									{isPending ? "—" : data?.kpis.activeMembers ?? 0}
+									{isPending ? "—" : (data?.kpis.activeMembers ?? 0)}
 								</p>
 								<p className="text-muted-foreground text-xs">
 									As of {selectedMonthLabel}
@@ -193,7 +203,7 @@ export default function StatisticsOverviewPage() {
 									New Enrollments
 								</p>
 								<p className="text-2xl font-semibold">
-									{isPending ? "—" : data?.kpis.newEnrollments ?? 0}
+									{isPending ? "—" : (data?.kpis.newEnrollments ?? 0)}
 								</p>
 								<p className="text-muted-foreground text-xs">
 									Total for {selectedMonthLabel}
@@ -227,7 +237,7 @@ export default function StatisticsOverviewPage() {
 									Cancellations
 								</p>
 								<p className="text-2xl font-semibold">
-									{isPending ? "—" : data?.membership.cancellations ?? 0}
+									{isPending ? "—" : (data?.membership.cancellations ?? 0)}
 								</p>
 								<p className="text-muted-foreground text-xs">
 									Total for {selectedMonthLabel}
@@ -318,7 +328,9 @@ export default function StatisticsOverviewPage() {
 								<Frame>
 									<FrameHeader className="flex-row items-center justify-between">
 										<div>
-											<p className="text-sm font-medium">Mitglieder pro Gruppe</p>
+											<p className="text-sm font-medium">
+												Mitglieder pro Gruppe
+											</p>
 											<p className="text-muted-foreground text-xs">
 												{selectedMonthLabel}
 											</p>
@@ -466,7 +478,6 @@ export default function StatisticsOverviewPage() {
 						</CollapsiblePanel>
 					</Collapsible>
 				</Frame>
-
 			</div>
 		</div>
 	);

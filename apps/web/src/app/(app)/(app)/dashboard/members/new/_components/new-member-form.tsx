@@ -39,7 +39,9 @@ const postalCodeSchema = z.string().min(1, "Postal code is required");
 const countrySchema = z.string().min(1, "Country is required");
 const ibanSchema = z.string().min(1, "IBAN is required");
 const bicSchema = z.string().min(1, "BIC is required");
-const cardHolderSchema = z.string().min(1, "Name des Kontoinhabers ist erforderlich");
+const cardHolderSchema = z
+	.string()
+	.min(1, "Name des Kontoinhabers ist erforderlich");
 const contractStartDateSchema = z
 	.string()
 	.regex(/^\d{4}-\d{2}$/, "Bitte wähle Monat und Jahr");
@@ -90,6 +92,27 @@ type GroupAssignment = {
 	groupId: string;
 	membershipPrice?: string;
 };
+
+const CONTRACT_START_MONTH_ITEMS = [
+	{ value: "01", label: "January" },
+	{ value: "02", label: "February" },
+	{ value: "03", label: "March" },
+	{ value: "04", label: "April" },
+	{ value: "05", label: "May" },
+	{ value: "06", label: "June" },
+	{ value: "07", label: "July" },
+	{ value: "08", label: "August" },
+	{ value: "09", label: "September" },
+	{ value: "10", label: "October" },
+	{ value: "11", label: "November" },
+	{ value: "12", label: "December" },
+] as const;
+
+const INITIAL_PERIOD_ITEMS = [
+	{ value: "monthly", label: "Monatlich" },
+	{ value: "half_yearly", label: "Half Yearly" },
+	{ value: "yearly", label: "Yearly" },
+] as const;
 
 export function NewMemberForm() {
 	const router = useRouter();
@@ -170,7 +193,9 @@ export function NewMemberForm() {
 		},
 		onError: (error) => {
 			toast.error(
-				error instanceof Error ? error.message : "Mitglied konnte nicht erstellt werden",
+				error instanceof Error
+					? error.message
+					: "Mitglied konnte nicht erstellt werden",
 			);
 		},
 	});
@@ -236,7 +261,9 @@ export function NewMemberForm() {
 				contractNotes: value.contractNotes,
 			};
 			if (hasInvalidGroupPrice) {
-				toast.error("Bitte behebe die Fehler bei den Gruppenpreisen vor dem Absenden.");
+				toast.error(
+					"Bitte behebe die Fehler bei den Gruppenpreisen vor dem Absenden.",
+				);
 				return;
 			}
 
@@ -453,7 +480,9 @@ export function NewMemberForm() {
 												field.state.meta.isTouched && !field.state.meta.isValid;
 											return (
 												<Field data-invalid={isInvalid}>
-													<FieldLabel htmlFor="guardianEmail">E-Mail</FieldLabel>
+													<FieldLabel htmlFor="guardianEmail">
+														E-Mail
+													</FieldLabel>
 													<Input
 														id="guardianEmail"
 														name={field.name}
@@ -678,10 +707,13 @@ export function NewMemberForm() {
 							</div>
 
 							{isLoadingGroups ? (
-								<p className="text-muted-foreground text-sm">Gruppen werden geladen...</p>
+								<p className="text-muted-foreground text-sm">
+									Gruppen werden geladen...
+								</p>
 							) : groups.length === 0 ? (
 								<p className="text-muted-foreground text-sm">
-									Keine Gruppen gefunden. Erstelle eine Gruppe, um Mitglieder zuzuweisen.
+									Keine Gruppen gefunden. Erstelle eine Gruppe, um Mitglieder
+									zuzuweisen.
 								</p>
 							) : (
 								<div className="space-y-3">
@@ -877,6 +909,7 @@ export function NewMemberForm() {
 														<Select
 															name={field.name}
 															value={field.state.value}
+															items={CONTRACT_START_MONTH_ITEMS}
 															onValueChange={(value) =>
 																field.handleChange(value || "")
 															}
@@ -925,6 +958,10 @@ export function NewMemberForm() {
 														<Select
 															name={field.name}
 															value={field.state.value}
+															items={years.map((year) => ({
+																value: year.toString(),
+																label: year.toString(),
+															}))}
 															onValueChange={(value) =>
 																field.handleChange(value || "")
 															}
@@ -968,6 +1005,7 @@ export function NewMemberForm() {
 												<Select
 													name={field.name}
 													value={field.state.value}
+													items={INITIAL_PERIOD_ITEMS}
 													onValueChange={(value) =>
 														field.handleChange(
 															value as "monthly" | "half_yearly" | "yearly",
