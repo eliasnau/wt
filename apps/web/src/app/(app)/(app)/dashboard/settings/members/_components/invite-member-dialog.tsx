@@ -1,11 +1,11 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Loader2 } from "lucide-react";
 import { authClient } from "@repo/auth/client";
-import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogClose,
@@ -57,7 +57,9 @@ export function InviteMemberDialog({
 		setLoading(false);
 
 		if (result.error) {
-			toast.error(result.error.message || "Einladung konnte nicht gesendet werden");
+			toast.error(
+				result.error.message || "Einladung konnte nicht gesendet werden",
+			);
 			return;
 		}
 

@@ -1,13 +1,13 @@
 "use client";
 
 import { Fingerprint } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
 	Alert,
 	AlertAction,
 	AlertDescription,
 	AlertTitle,
 } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 export function PasskeyEnableBanner() {
 	const handleEnableClick = () => {

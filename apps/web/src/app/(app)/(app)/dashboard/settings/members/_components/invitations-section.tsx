@@ -1,13 +1,24 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Mail, X, ChevronDownIcon } from "lucide-react";
+import { authClient } from "@repo/auth/client";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { ChevronDownIcon, Mail, X } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
 	Collapsible,
 	CollapsiblePanel,
 	CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+	Empty,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@/components/ui/empty";
 import { Frame, FrameHeader, FramePanel } from "@/components/ui/frame";
 import {
 	Table,
@@ -17,17 +28,6 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
-import {
-	Empty,
-	EmptyMedia,
-	EmptyTitle,
-	EmptyDescription,
-	EmptyHeader,
-} from "@/components/ui/empty";
-import { authClient } from "@repo/auth/client";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useState } from "react";
-import { toast } from "sonner";
 import { CancelInvitationDialog } from "./confirm-dialogs";
 
 type Invitation = {
@@ -56,7 +56,9 @@ export function InvitationsSection() {
 			});
 
 			if (result.error) {
-				throw new Error(result.error.message || "Einladungen konnten nicht geladen werden");
+				throw new Error(
+					result.error.message || "Einladungen konnten nicht geladen werden",
+				);
 			}
 
 			return result.data;
@@ -79,7 +81,9 @@ export function InvitationsSection() {
 				invitationId,
 			});
 			if (result.error) {
-				throw new Error(result.error.message || "Einladung konnte nicht abgebrochen werden");
+				throw new Error(
+					result.error.message || "Einladung konnte nicht abgebrochen werden",
+				);
 			}
 			return result.data;
 		},
@@ -91,7 +95,9 @@ export function InvitationsSection() {
 		},
 		onError: (error) => {
 			toast.error(
-				error instanceof Error ? error.message : "Einladung konnte nicht abgebrochen werden",
+				error instanceof Error
+					? error.message
+					: "Einladung konnte nicht abgebrochen werden",
 			);
 			setCancelInviteOpen(false);
 			setSelectedInvitation(null);
@@ -156,7 +162,7 @@ export function InvitationsSection() {
 										<TableRow key={invitation.id}>
 											<TableCell>
 												<div className="flex items-center gap-3">
-													<div className="size-10 rounded-full bg-muted flex items-center justify-center">
+													<div className="flex size-10 items-center justify-center rounded-full bg-muted">
 														<Mail className="size-4 text-muted-foreground" />
 													</div>
 													<span className="font-medium">

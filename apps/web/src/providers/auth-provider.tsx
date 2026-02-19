@@ -1,8 +1,8 @@
 "use client";
 
 import { authClient } from "@repo/auth/client";
-import { createContext, type ReactNode, useEffect } from "react";
 import posthog from "posthog-js";
+import { createContext, type ReactNode, useEffect } from "react";
 
 type Session = Awaited<ReturnType<typeof authClient.useSession>>["data"];
 type Organization = Awaited<

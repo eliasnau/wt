@@ -1,14 +1,14 @@
-import { 
-	Google, 
-	Apple, 
-	Windows, 
-	Chrome, 
-	Edge, 
-	Microsoft, 
-	Firefox, 
-	Safari,
+import {
+	Apple,
+	Bitwarden,
+	Chrome,
+	Edge,
+	Firefox,
+	Google,
+	Microsoft,
 	OnePassword,
-	Bitwarden
+	Safari,
+	Windows,
 } from "@/components/ui/icons/passkey";
 
 /**
@@ -18,7 +18,10 @@ import {
 
 export interface AAGUIDInfo {
 	name: string;
-	iconComponent: React.ComponentType<{ className?: string; theme?: "light" | "dark" }> | null;
+	iconComponent: React.ComponentType<{
+		className?: string;
+		theme?: "light" | "dark";
+	}> | null;
 }
 
 // Fallback for unknown authenticators
@@ -72,7 +75,7 @@ export const AAGUID_MAPPINGS: Record<string, AAGUIDInfo> = {
 	// Chrome (on Mac)
 	"adce0002-35bc-c60a-648b-0b25f1f05503": {
 		name: "Chrome on Mac",
-		iconComponent: Chrome,    
+		iconComponent: Chrome,
 	},
 
 	// Chromium Browser

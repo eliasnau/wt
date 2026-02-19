@@ -1,13 +1,13 @@
 "use client";
 
 import { Shield } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
 	Alert,
 	AlertAction,
 	AlertDescription,
 	AlertTitle,
 } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 export function TwoFactorEnableBanner() {
 	const handleEnableClick = () => {
@@ -23,8 +23,8 @@ export function TwoFactorEnableBanner() {
 			<Shield />
 			<AlertTitle>Zwei-Faktor-Authentifizierung aktivieren</AlertTitle>
 			<AlertDescription>
-				Füge deinem Konto eine zusätzliche Sicherheitsebene hinzu, indem du die Zwei-Faktor-
-				authentication.
+				Füge deinem Konto eine zusätzliche Sicherheitsebene hinzu, indem du die
+				Zwei-Faktor- authentication.
 			</AlertDescription>
 			<AlertAction>
 				<Button variant="outline" size="sm" onClick={handleEnableClick}>

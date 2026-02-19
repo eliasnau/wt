@@ -19,7 +19,7 @@ import {
 	UserXIcon,
 	XIcon,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { CopyableTableCell } from "@/components/table/copyable-table-cell";
 import { DataTableFacetedFilter } from "@/components/table/data-table-faceted-filter";
 import { Badge } from "@/components/ui/badge";
@@ -140,7 +140,9 @@ const createColumns = (
 						<Tooltip>
 							<TooltipTrigger
 								render={
-									<Badge variant={isCancellationEffective ? "secondary" : "outline"} />
+									<Badge
+										variant={isCancellationEffective ? "secondary" : "outline"}
+									/>
 								}
 							>
 								<span
@@ -270,6 +272,7 @@ export default function MembersTable({
 	onIncludeCancelledChange,
 	loading = false,
 }: MembersTableProps) {
+	"use no memo";
 	const [sorting, setSorting] = useState<SortingState>([]);
 	const [localSearch, setLocalSearch] = useState(search);
 	const [selectedMember, setSelectedMember] = useState<MemberRow | null>(null);
@@ -314,10 +317,11 @@ export default function MembersTable({
 		[columns],
 	);
 
-	// Sync localSearch with prop changes (e.g., from URL)
-	useEffect(() => {
+	const prevSearchRef = useRef(search);
+	if (prevSearchRef.current !== search) {
+		prevSearchRef.current = search;
 		setLocalSearch(search);
-	}, [search]);
+	}
 
 	const table = useReactTable({
 		data: data || [],

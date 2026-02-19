@@ -1,18 +1,18 @@
 {
-  "name": "@repo/env",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "exports": {
-    "./web": "./src/web.ts"
-  },
-  "dependencies": {
-    "@t3-oss/env-nextjs": "^0.13.10",
-    "dotenv": "catalog:",
-    "zod": "catalog:"
-  },
-  "devDependencies": {
-    "@repo/config": "workspace:*",
-    "typescript": "catalog:"
-  }
+	"name": "@repo/env",
+	"version": "0.0.0",
+	"private": true,
+	"type": "module",
+	"exports": {
+		"./web": "./src/web.ts"
+	},
+	"dependencies": {
+		"@t3-oss/env-nextjs": "^0.13.10",
+		"dotenv": "catalog:",
+		"zod": "catalog:"
+	},
+	"devDependencies": {
+		"@repo/config": "workspace:*",
+		"typescript": "catalog:"
+	}
 }

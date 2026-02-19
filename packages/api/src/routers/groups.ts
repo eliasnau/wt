@@ -1,11 +1,11 @@
-import { protectedProcedure } from "../index";
-import { requirePermission } from "../middleware/permissions";
-import { rateLimitMiddleware } from "../middleware/ratelimit";
-import { z } from "zod";
 import { ORPCError } from "@orpc/server";
 import { DB } from "@repo/db/functions";
-import { logger } from "../lib/logger";
 import { after } from "next/server";
+import { z } from "zod";
+import { protectedProcedure } from "../index";
+import { logger } from "../lib/logger";
+import { requirePermission } from "../middleware/permissions";
+import { rateLimitMiddleware } from "../middleware/ratelimit";
 
 const createGroupSchema = z.object({
 	name: z.string().min(1, "Name is required").max(255),
@@ -94,7 +94,7 @@ export const groupsRouter = {
 					});
 				});
 
-				throw error
+				throw error;
 			}
 		})
 		.route({ method: "GET", path: "/groups/:id" }),
@@ -128,7 +128,7 @@ export const groupsRouter = {
 					});
 				});
 
-				throw error
+				throw error;
 			}
 		})
 		.route({ method: "POST", path: "/groups" }),
@@ -186,7 +186,7 @@ export const groupsRouter = {
 					});
 				});
 
-				throw error
+				throw error;
 			}
 		})
 		.route({ method: "PATCH", path: "/groups/:id" }),
@@ -209,7 +209,9 @@ export const groupsRouter = {
 					});
 				}
 				//TODO: 1 query
-				const groupMembers = await DB.query.groups.getGroupMemberCount({groupId: existingGroup.id});
+				const groupMembers = await DB.query.groups.getGroupMemberCount({
+					groupId: existingGroup.id,
+				});
 
 				if (groupMembers > 0) {
 					throw new ORPCError("FORBIDDEN", {
@@ -241,7 +243,7 @@ export const groupsRouter = {
 					});
 				});
 
-				throw error
+				throw error;
 			}
 		})
 		.route({ method: "DELETE", path: "/groups/:id" }),

@@ -1,7 +1,7 @@
 import {
+	CartesianGrid,
 	Line,
 	LineChart as RechartsLineChart,
-	CartesianGrid,
 	XAxis,
 } from "recharts";
 import type { ChartConfig } from "@/components/ui/chart";

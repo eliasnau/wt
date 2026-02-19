@@ -71,11 +71,7 @@ function CopyButton({
 			)}
 			onClick={handleCopy}
 		>
-			{isCopied ? (
-				<Check className="h-3 w-3" />
-			) : (
-				<Copy className="h-3 w-3" />
-			)}
+			{isCopied ? <Check className="h-3 w-3" /> : <Copy className="h-3 w-3" />}
 			<span className="sr-only">Kopieren</span>
 		</Button>
 	);
@@ -174,7 +170,9 @@ export function ViewBatchSheet({
 												<Calendar className="h-4 w-4" />
 											</div>
 											<div className="flex flex-col">
-												<span className="font-medium text-sm">Jahresbeitrags</span>
+												<span className="font-medium text-sm">
+													Jahresbeitrags
+												</span>
 											</div>
 										</div>
 										<span className="font-semibold tabular-nums">

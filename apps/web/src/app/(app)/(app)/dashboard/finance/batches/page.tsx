@@ -51,7 +51,9 @@ export default function PaymentBatchesPage() {
 								<EmptyMedia variant="icon">
 									<AlertCircle />
 								</EmptyMedia>
-								<EmptyTitle>Zahlungsläufe konnten nicht geladen werden</EmptyTitle>
+								<EmptyTitle>
+									Zahlungsläufe konnten nicht geladen werden
+								</EmptyTitle>
 								<EmptyDescription>
 									{error instanceof Error
 										? error.message

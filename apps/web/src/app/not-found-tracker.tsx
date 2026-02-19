@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
-import posthog from "posthog-js";
 import { usePathname } from "next/navigation";
+import posthog from "posthog-js";
+import { useEffect } from "react";
 
 export function NotFoundTracker() {
 	const pathname = usePathname();

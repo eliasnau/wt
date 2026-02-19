@@ -3,10 +3,9 @@ import { db } from "@repo/db";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
 import { nextCookies } from "better-auth/next-js";
-import { organization, twoFactor } from "better-auth/plugins";
+import { haveIBeenPwned, organization, twoFactor } from "better-auth/plugins";
 import { ac, admin, member, owner } from "./permissions";
 import { manageSessions } from "./plugins/manageSessions";
-import { haveIBeenPwned } from "better-auth/plugins"
 
 export const auth = betterAuth({
 	database: drizzleAdapter(db, {
@@ -27,7 +26,7 @@ export const auth = betterAuth({
 	// rateLimit: {
 	// 	storage: "secondary-storage",
 	// 	window: 60,
-    //     max: 100,
+	//     max: 100,
 	// },
 	emailAndPassword: {
 		enabled: true,
@@ -47,7 +46,10 @@ export const auth = betterAuth({
 			maxAge: 3 * 60,
 		},
 	},
-	baseURL: process.env.BETTER_AUTH_URL || process.env.VERCEL_URL || "http://localhost:3001",
+	baseURL:
+		process.env.BETTER_AUTH_URL ||
+		process.env.VERCEL_URL ||
+		"http://localhost:3001",
 	trustedOrigins: [process.env.VERCEL_URL!, process.env.BETTER_AUTH_URL!],
 	secret: process.env.BETTER_AUTH_SECRET!,
 	emailVerification: {
@@ -75,7 +77,8 @@ export const auth = betterAuth({
 		}),
 		manageSessions(),
 		haveIBeenPwned({
-			customPasswordCompromisedMessage: "This password has been found in a Data breach. Please choose a more secure one"
+			customPasswordCompromisedMessage:
+				"This password has been found in a Data breach. Please choose a more secure one",
 		}),
 		nextCookies(), //! has to be last plugin in array
 	],

@@ -15,7 +15,12 @@ import {
 	DialogPanel,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field";
+import {
+	Field,
+	FieldDescription,
+	FieldError,
+	FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { orpc } from "@/utils/orpc";
@@ -129,26 +134,33 @@ export function CancelMemberDialog({
 			},
 			onError: (error) => {
 				toast.error(
-					error instanceof Error ? error.message : "Mitgliedschaft konnte nicht gekündigt werden",
+					error instanceof Error
+						? error.message
+						: "Mitgliedschaft konnte nicht gekündigt werden",
 				);
 			},
 		}),
 	);
 
-	useEffect(() => {
-		if (open) {
-			setEffectiveMonth(minMonth);
-			setMonthError(null);
-			setReasonError(null);
-			return;
-		}
+	const [prevOpen, setPrevOpen] = useState(open);
+	const [prevMinMonth, setPrevMinMonth] = useState(minMonth);
 
+	if (open !== prevOpen || minMonth !== prevMinMonth) {
+		setPrevOpen(open);
+		setPrevMinMonth(minMonth);
 		setEffectiveMonth(minMonth);
-		setCancelReason("");
 		setMonthError(null);
 		setReasonError(null);
-		cancelMutation.reset();
-	}, [open, cancelMutation, minMonth]);
+		if (!open) {
+			setCancelReason("");
+		}
+	}
+
+	useEffect(() => {
+		if (!open) {
+			cancelMutation.reset();
+		}
+	}, [open, cancelMutation]);
 
 	const handleSubmit = () => {
 		const trimmedReason = cancelReason.trim();
@@ -251,7 +263,9 @@ export function CancelMemberDialog({
 						onClick={handleSubmit}
 						disabled={cancelMutation.isPending}
 					>
-						{cancelMutation.isPending ? "Kündigung läuft..." : "Mitgliedschaft kündigen"}
+						{cancelMutation.isPending
+							? "Kündigung läuft..."
+							: "Mitgliedschaft kündigen"}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

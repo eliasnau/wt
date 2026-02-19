@@ -1,13 +1,8 @@
-import { Button } from "@/components/ui/button";
-import {
-	Sheet,
-	SheetPopup,
-	SheetHeader,
-	SheetTitle,
-	SheetDescription,
-	SheetPanel,
-	SheetFooter,
-} from "@/components/ui/sheet";
+import { authClient } from "@repo/auth/client";
+import { ArrowRight, Building2, Calendar, LogOut, Users } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 import {
 	AlertDialog,
 	AlertDialogClose,
@@ -19,12 +14,17 @@ import {
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Building2, Calendar, Users, ArrowRight, LogOut } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { authClient } from "@repo/auth/client";
-import { toast } from "sonner";
-import { useState } from "react";
+import {
+	Sheet,
+	SheetDescription,
+	SheetFooter,
+	SheetHeader,
+	SheetPanel,
+	SheetPopup,
+	SheetTitle,
+} from "@/components/ui/sheet";
 
 interface OrganizationSettingsSheetProps {
 	open: boolean;
@@ -67,17 +67,24 @@ export function OrganizationSettingsSheet({
 			});
 
 			if (error) {
-				toast.error(error.message || "Organisation konnte nicht verlassen werden");
+				let errorMessage = "Organisation konnte nicht verlassen werden";
+				if (error.message) {
+					errorMessage = error.message;
+				}
+				toast.error(errorMessage);
+				setIsLeaving(false);
 				return;
 			}
 
 			toast.success(`Left ${organization.name}`);
 			onOpenChange(false);
-			onLeave?.();
+			if (onLeave) {
+				onLeave();
+			}
+			setIsLeaving(false);
 		} catch (error) {
 			toast.error("Organisation konnte nicht verlassen werden");
 			console.error(error);
-		} finally {
 			setIsLeaving(false);
 		}
 	};
@@ -102,11 +109,11 @@ export function OrganizationSettingsSheet({
 								className="size-12 rounded-lg object-cover"
 							/>
 						) : (
-							<div className="size-12 rounded-lg bg-primary/10 flex items-center justify-center">
+							<div className="flex size-12 items-center justify-center rounded-lg bg-primary/10">
 								<Building2 className="size-6 text-primary" />
 							</div>
 						)}
-						<div className="flex-1 min-w-0">
+						<div className="min-w-0 flex-1">
 							<SheetTitle className="truncate">{organization.name}</SheetTitle>
 							<SheetDescription className="truncate">
 								{organization.slug}
@@ -118,16 +125,20 @@ export function OrganizationSettingsSheet({
 					<div className="space-y-6">
 						{/* Your Membership Section */}
 						<div>
-							<h3 className="font-semibold text-sm mb-3">Deine Mitgliedschaft</h3>
+							<h3 className="mb-3 font-semibold text-sm">
+								Deine Mitgliedschaft
+							</h3>
 							<div className="space-y-3">
 								<div className="flex items-center justify-between">
-									<span className="text-sm text-muted-foreground">Rolle</span>
+									<span className="text-muted-foreground text-sm">Rolle</span>
 									<Badge variant="secondary" className="capitalize">
 										{userRole}
 									</Badge>
 								</div>
 								<div className="flex items-center justify-between">
-									<span className="text-sm text-muted-foreground">Mitglied seit</span>
+									<span className="text-muted-foreground text-sm">
+										Mitglied seit
+									</span>
 									<span className="text-sm">
 										{formatDate(organization.createdAt)}
 									</span>
@@ -139,32 +150,34 @@ export function OrganizationSettingsSheet({
 
 						{/* Organization Overview */}
 						<div>
-							<h3 className="font-semibold text-sm mb-3">Organisationsübersicht</h3>
+							<h3 className="mb-3 font-semibold text-sm">
+								Organisationsübersicht
+							</h3>
 							<div className="space-y-3">
 								<div className="flex items-center justify-between">
-									<div className="flex items-center gap-2 text-sm text-muted-foreground">
+									<div className="flex items-center gap-2 text-muted-foreground text-sm">
 										<Users className="size-4" />
 										<span>Mitglieder gesamt</span>
 									</div>
-									<span className="text-sm font-medium">
+									<span className="font-medium text-sm">
 										{organization.members?.length || 0}
 									</span>
 								</div>
 								<div className="flex items-center justify-between">
-									<div className="flex items-center gap-2 text-sm text-muted-foreground">
+									<div className="flex items-center gap-2 text-muted-foreground text-sm">
 										<Calendar className="size-4" />
 										<span>Erstellt</span>
 									</div>
-									<span className="text-sm font-medium">
+									<span className="font-medium text-sm">
 										{formatDate(organization.createdAt)}
 									</span>
 								</div>
 								<div className="flex items-center justify-between">
-									<div className="flex items-center gap-2 text-sm text-muted-foreground">
+									<div className="flex items-center gap-2 text-muted-foreground text-sm">
 										<Building2 className="size-4" />
 										<span>Organisations-ID</span>
 									</div>
-									<span className="text-sm font-mono text-muted-foreground truncate max-w-[200px]">
+									<span className="max-w-[200px] truncate font-mono text-muted-foreground text-sm">
 										{organization.id.substring(0, 12)}...
 									</span>
 								</div>
@@ -175,7 +188,7 @@ export function OrganizationSettingsSheet({
 
 						{/* Quick Actions */}
 						<div>
-							<h3 className="font-semibold text-sm mb-3">Schnellaktionen</h3>
+							<h3 className="mb-3 font-semibold text-sm">Schnellaktionen</h3>
 							<div className="space-y-2">
 								<Button
 									variant="outline"
@@ -206,13 +219,15 @@ export function OrganizationSettingsSheet({
 
 						{/* Danger Zone */}
 						<div>
-							<h3 className="font-semibold text-sm mb-3 text-destructive">Gefahrenbereich</h3>
+							<h3 className="mb-3 font-semibold text-destructive text-sm">
+								Gefahrenbereich
+							</h3>
 							<AlertDialog>
 								<AlertDialogTrigger
 									render={
 										<Button
 											variant="outline"
-											className="w-full justify-start text-destructive hover:bg-destructive/10 hover:text-destructive border-destructive/20"
+											className="w-full justify-start border-destructive/20 text-destructive hover:bg-destructive/10 hover:text-destructive"
 											disabled={false} // Temporarily disabled owner check for testing
 										>
 											<LogOut className="mr-2 size-4" />
@@ -224,7 +239,9 @@ export function OrganizationSettingsSheet({
 									<AlertDialogHeader>
 										<AlertDialogTitle>Organisation verlassen</AlertDialogTitle>
 										<AlertDialogDescription>
-											Möchtest du <strong>{organization.name}</strong> wirklich verlassen? Du verlierst den Zugriff auf alle Ressourcen und musst erneut eingeladen werden, um wieder beizutreten.
+											Möchtest du <strong>{organization.name}</strong> wirklich
+											verlassen? Du verlierst den Zugriff auf alle Ressourcen
+											und musst erneut eingeladen werden, um wieder beizutreten.
 										</AlertDialogDescription>
 									</AlertDialogHeader>
 									<AlertDialogFooter>
@@ -243,8 +260,9 @@ export function OrganizationSettingsSheet({
 							</AlertDialog>
 							{/* Temporarily hidden for testing */}
 							{false && userRole === "owner" && (
-								<p className="text-xs text-muted-foreground mt-2">
-									Owners cannot leave the organization. Transfer ownership first or delete the organization.
+								<p className="mt-2 text-muted-foreground text-xs">
+									Owners cannot leave the organization. Transfer ownership first
+									or delete the organization.
 								</p>
 							)}
 						</div>

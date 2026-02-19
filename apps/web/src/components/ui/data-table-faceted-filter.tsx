@@ -1,13 +1,12 @@
-import * as React from "react";
 import type { Column } from "@tanstack/react-table";
 import { Check, PlusCircle } from "lucide-react";
-
-import { cn } from "@/lib/utils";
+import type * as React from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
-import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
 
 interface DataTableFacetedFilterProps<TData, TValue> {
 	column?: Column<TData, TValue>;
@@ -96,18 +95,18 @@ export function DataTableFacetedFilter<TData, TValue>({
 										className={cn(
 											"flex size-4 items-center justify-center rounded-[4px] border",
 											isSelected
-												? "bg-primary border-primary text-primary-foreground"
+												? "border-primary bg-primary text-primary-foreground"
 												: "border-input [&_svg]:invisible",
 										)}
 									>
-										<Check className="text-primary-foreground size-3.5" />
+										<Check className="size-3.5 text-primary-foreground" />
 									</div>
 									{option.icon && (
-										<option.icon className="text-muted-foreground size-4" />
+										<option.icon className="size-4 text-muted-foreground" />
 									)}
 									<span>{option.label}</span>
 									{facets?.get(option.value) && (
-										<span className="text-muted-foreground ml-auto flex size-4 items-center justify-center font-mono text-xs">
+										<span className="ml-auto flex size-4 items-center justify-center font-mono text-muted-foreground text-xs">
 											{facets.get(option.value)}
 										</span>
 									)}

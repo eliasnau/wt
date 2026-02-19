@@ -2,8 +2,8 @@
 
 import { Dialog as SheetPrimitive } from "@base-ui-components/react/dialog";
 import { XIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { cn } from "@/lib/utils";
 
 const Sheet = SheetPrimitive.Root;
 
@@ -77,9 +77,9 @@ function SheetPopup({
 						side === "bottom" &&
 							"row-start-2 border-t data-ending-style:translate-y-8 data-starting-style:translate-y-8",
 						side === "top" &&
-							"data-ending-style:-translate-y-8 data-starting-style:-translate-y-8 border-b",
+							"border-b data-ending-style:-translate-y-8 data-starting-style:-translate-y-8",
 						side === "left" &&
-							"data-ending-style:-translate-x-8 data-starting-style:-translate-x-8 w-[calc(100%-(--spacing(12)))] max-w-md border-e",
+							"w-[calc(100%-(--spacing(12)))] max-w-md border-e data-ending-style:-translate-x-8 data-starting-style:-translate-x-8",
 						side === "right" &&
 							"col-start-2 w-[calc(100%-(--spacing(12)))] max-w-md border-s data-ending-style:translate-x-8 data-starting-style:translate-x-8",
 						inset &&
@@ -125,7 +125,7 @@ function SheetFooter({
 	return (
 		<div
 			className={cn(
-				"flex flex-row gap-2 px-6 justify-end",
+				"flex flex-row justify-end gap-2 px-6",
 				variant === "default" && "border-t bg-muted/50 py-4",
 				variant === "bare" &&
 					"in-[[data-slot=sheet-popup]:has([data-slot=sheet-panel])]:pt-3 pt-4 pb-6",

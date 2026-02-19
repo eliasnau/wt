@@ -39,7 +39,7 @@ function HeaderTitle({
 	return (
 		<h1
 			className={cn(
-				"text-2xl font-heading tracking-tight sm:text-3xl",
+				"font-heading text-2xl tracking-tight sm:text-3xl",
 				className,
 			)}
 			{...props}

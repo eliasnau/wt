@@ -1,11 +1,11 @@
 "use client";
 
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
-	permissionResources,
-	permissionResourceGroups,
 	type PermissionMap,
+	permissionResourceGroups,
+	permissionResources,
 } from "./role-utils";
 
 function toggleAction(
@@ -72,36 +72,29 @@ export function RolePermissionGrid({
 				<div key={group.id} className="grid gap-4">
 					{group.title && (
 						<div className="flex flex-col gap-1">
-							<div className="text-sm font-semibold">{group.title}</div>
+							<div className="font-semibold text-sm">{group.title}</div>
 							{group.description && (
-								<div className="text-xs text-muted-foreground">
+								<div className="text-muted-foreground text-xs">
 									{group.description}
 								</div>
 							)}
 						</div>
 					)}
 					{group.resources.map(({ resource, actions }) => {
-						const selected = new Set(
-							value[resource] ?? [],
-						);
-						const allSelected = actions.every((action) =>
-							selected.has(action),
-						);
+						const selected = new Set(value[resource] ?? []);
+						const allSelected = actions.every((action) => selected.has(action));
 						const hasAny = actions.some((action) => selected.has(action));
 						const toggleAllLabel = allSelected ? "Clear" : "Alle auswählen";
 						const showAccessControlInfo = resource === "ac";
 
 						return (
-							<div
-								key={resource}
-								className="rounded-xl border bg-muted/30 p-4"
-							>
+							<div key={resource} className="rounded-xl border bg-muted/30 p-4">
 								<div className="flex items-center justify-between gap-2">
 									<div>
-										<div className="text-sm font-semibold capitalize">
+										<div className="font-semibold text-sm capitalize">
 											{resource}
 										</div>
-										<div className="text-xs text-muted-foreground">
+										<div className="text-muted-foreground text-xs">
 											{hasAny
 												? `${selected.size} selected`
 												: "Keine Berechtigungen ausgewählt"}
@@ -121,9 +114,9 @@ export function RolePermissionGrid({
 									</Button>
 								</div>
 								{showAccessControlInfo && (
-									<div className="mt-3 rounded-lg border border-dashed border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
-										Access control (AC) permissions govern who can create,
-										edit, and manage roles and access rules.
+									<div className="mt-3 rounded-lg border border-border border-dashed bg-muted/40 px-3 py-2 text-muted-foreground text-xs">
+										Access control (AC) permissions govern who can create, edit,
+										and manage roles and access rules.
 									</div>
 								)}
 								<div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
@@ -132,18 +125,16 @@ export function RolePermissionGrid({
 										return (
 											<label
 												key={`${resource}-${action}`}
-												className="flex items-center gap-2 rounded-md border border-transparent px-2 py-1 text-sm text-muted-foreground hover:border-border"
+												className="flex items-center gap-2 rounded-md border border-transparent px-2 py-1 text-muted-foreground text-sm hover:border-border"
 											>
 												<Checkbox
 													checked={checked}
 													disabled={disabled}
 													onCheckedChange={(nextChecked) => {
-														onChange(
-															toggleAction(value, resource, action),
-														);
+														onChange(toggleAction(value, resource, action));
 													}}
 												/>
-												<span className="capitalize text-foreground">
+												<span className="text-foreground capitalize">
 													{action.replace(/_/g, " ")}
 												</span>
 											</label>

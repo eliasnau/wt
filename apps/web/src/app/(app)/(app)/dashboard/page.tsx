@@ -1,13 +1,13 @@
-import Link from "next/link";
 import {
 	ArrowRight,
 	BadgeCheck,
 	BarChart3,
 	CreditCard,
 	Settings,
-	Users,
 	UserPlus,
+	Users,
 } from "lucide-react";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,8 +38,7 @@ export default async function DashboardPage() {
 			<Header>
 				<HeaderContent>
 					<HeaderTitle>{organization.name}</HeaderTitle>
-					<HeaderDescription>
-					</HeaderDescription>
+					<HeaderDescription></HeaderDescription>
 				</HeaderContent>
 				<HeaderActions>
 					<Button
@@ -64,7 +63,7 @@ export default async function DashboardPage() {
 
 			<section className="grid gap-6 lg:grid-cols-[1.3fr_0.7fr]">
 				<Card className="relative min-h-[360px] overflow-hidden">
-					<div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-amber-200/40 blur-3xl dark:bg-amber-500/10" />
+					<div className="pointer-events-none absolute -top-20 -right-20 h-64 w-64 rounded-full bg-amber-200/40 blur-3xl dark:bg-amber-500/10" />
 					<div className="pointer-events-none absolute -bottom-32 -left-16 h-72 w-72 rounded-full bg-emerald-200/40 blur-3xl dark:bg-emerald-500/10" />
 					<CardHeader className="relative space-y-3">
 						<CardTitle className="text-2xl md:text-3xl">
@@ -78,22 +77,20 @@ export default async function DashboardPage() {
 					<CardContent className="relative">
 						<div className="grid gap-4 sm:grid-cols-2">
 							<div className="rounded-lg border bg-background/80 p-4 shadow-sm backdrop-blur">
-								<div className="text-xs font-medium uppercase text-muted-foreground">
+								<div className="font-medium text-muted-foreground text-xs uppercase">
 									Active Members
 								</div>
-								<div className="mt-2 text-2xl font-semibold">
-									{memberCount}
-								</div>
-								<p className="text-xs text-muted-foreground">
+								<div className="mt-2 font-semibold text-2xl">{memberCount}</div>
+								<p className="text-muted-foreground text-xs">
 									People training this month
 								</p>
 							</div>
 							<div className="rounded-lg border bg-background/80 p-4 shadow-sm backdrop-blur">
-								<div className="text-xs font-medium uppercase text-muted-foreground">
+								<div className="font-medium text-muted-foreground text-xs uppercase">
 									Statistics
 								</div>
-								<div className="mt-2 text-2xl font-semibold">Diesen Monat</div>
-								<p className="text-xs text-muted-foreground">
+								<div className="mt-2 font-semibold text-2xl">Diesen Monat</div>
+								<p className="text-muted-foreground text-xs">
 									Attendance and revenue trends
 								</p>
 							</div>
@@ -179,7 +176,6 @@ export default async function DashboardPage() {
 					</CardContent>
 				</Card>
 			</section>
-
 		</div>
 	);
 }

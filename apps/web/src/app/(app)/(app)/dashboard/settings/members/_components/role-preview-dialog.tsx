@@ -4,15 +4,15 @@ import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogClose,
+	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogPanel,
 	DialogPopup,
 	DialogTitle,
-	DialogDescription,
 } from "@/components/ui/dialog";
-import { formatRoleLabel, type PermissionMap } from "./role-utils";
 import { RolePermissionGrid } from "./role-permission-grid";
+import { formatRoleLabel, type PermissionMap } from "./role-utils";
 
 export type RolePreviewDialogProps = {
 	open: boolean;
@@ -47,7 +47,9 @@ export function RolePreviewDialog({
 					/>
 				</DialogPanel>
 				<DialogFooter variant="bare">
-					<DialogClose render={<Button variant="outline" />}>Schließen</DialogClose>
+					<DialogClose render={<Button variant="outline" />}>
+						Schließen
+					</DialogClose>
 				</DialogFooter>
 			</DialogPopup>
 		</Dialog>

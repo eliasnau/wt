@@ -1,32 +1,32 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { toast } from "sonner";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { authClient } from "@repo/auth/client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { Info, Loader2 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { toast } from "sonner";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogClose,
+	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogPanel,
 	DialogPopup,
 	DialogTitle,
-	DialogDescription,
 } from "@/components/ui/dialog";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Info, Loader2 } from "lucide-react";
+import { RolePermissionGrid } from "./role-permission-grid";
 import {
 	defaultRoleNames,
 	formatRoleLabel,
 	normalizePermissions,
 	type PermissionMap,
 } from "./role-utils";
-import { RolePermissionGrid } from "./role-permission-grid";
 import type { OrganizationRole } from "./use-org-roles";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const EMPTY_PERMISSIONS: PermissionMap = {};
 
@@ -48,19 +48,29 @@ export function RoleEditorDialog({
 	const [roleName, setRoleName] = useState("");
 	const [permissions, setPermissions] = useState<PermissionMap>({});
 
-	useEffect(() => {
-		if (!open) return;
-		if (mode === "edit" && role) {
-			setRoleName(role.role ?? "");
-			setPermissions((role.permission ?? {}) as PermissionMap);
-			return;
+	const [prevDeps, setPrevDeps] = useState(() => ({ open: false, mode, role }));
+
+	if (
+		open !== prevDeps.open ||
+		mode !== prevDeps.mode ||
+		role !== prevDeps.role
+	) {
+		setPrevDeps({ open, mode, role });
+		if (open) {
+			if (mode === "edit" && role) {
+				setRoleName(role.role ?? "");
+				setPermissions((role.permission ?? {}) as PermissionMap);
+			} else {
+				setRoleName("");
+				setPermissions(EMPTY_PERMISSIONS);
+			}
 		}
-		setRoleName("");
-		setPermissions(EMPTY_PERMISSIONS);
-	}, [open, mode, role]);
+	}
 
 	const isEditing = mode === "edit";
-	const title = isEditing ? `Edit ${formatRoleLabel(roleName || "Rolle")}` : "Rolle erstellen";
+	const title = isEditing
+		? `Edit ${formatRoleLabel(roleName || "Rolle")}`
+		: "Rolle erstellen";
 	const description = isEditing
 		? "Aktualisiere den Rollennamen und passe die Berechtigungen für diese Teamrolle fein an."
 		: "Erstelle eine benutzerdefinierte Rolle mit genau den Berechtigungen, die dein Team benötigt.";
@@ -86,7 +96,9 @@ export function RoleEditorDialog({
 					},
 				});
 				if (result.error) {
-					throw new Error(result.error.message || "Rolle konnte nicht aktualisiert werden");
+					throw new Error(
+						result.error.message || "Rolle konnte nicht aktualisiert werden",
+					);
 				}
 				return result.data;
 			}
@@ -97,7 +109,9 @@ export function RoleEditorDialog({
 				organizationId: activeOrg?.id,
 			});
 			if (result.error) {
-				throw new Error(result.error.message || "Rolle konnte nicht erstellt werden");
+				throw new Error(
+					result.error.message || "Rolle konnte nicht erstellt werden",
+				);
 			}
 			return result.data;
 		},
@@ -141,7 +155,7 @@ export function RoleEditorDialog({
 								placeholder="e.g. Billing Manager"
 								autoFocus
 							/>
-							<p className="text-xs text-muted-foreground">
+							<p className="text-muted-foreground text-xs">
 								Use a unique name. Built-in roles are reserved.
 							</p>
 						</Field>
@@ -155,9 +169,7 @@ export function RoleEditorDialog({
 						</Alert>
 
 						<div>
-							<div className="mb-3 text-sm font-semibold">
-								Permissions
-							</div>
+							<div className="mb-3 font-semibold text-sm">Permissions</div>
 							<RolePermissionGrid
 								value={permissions}
 								onChange={setPermissions}
@@ -174,13 +186,8 @@ export function RoleEditorDialog({
 					>
 						Cancel
 					</DialogClose>
-					<Button
-						onClick={() => mutation.mutate()}
-						disabled={isSubmitDisabled}
-					>
-						{mutation.isPending && (
-							<Loader2 className="size-4 animate-spin" />
-						)}
+					<Button onClick={() => mutation.mutate()} disabled={isSubmitDisabled}>
+						{mutation.isPending && <Loader2 className="size-4 animate-spin" />}
 						{actionLabel}
 					</Button>
 				</DialogFooter>

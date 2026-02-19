@@ -30,9 +30,7 @@ export default function SepaExportPage() {
 			input: {},
 		}),
 	);
-	const [exportingBatchId, setExportingBatchId] = useState<string | null>(
-		null,
-	);
+	const [exportingBatchId, setExportingBatchId] = useState<string | null>(null);
 
 	const handleExport = useCallback(async (batchId: string) => {
 		setExportingBatchId(batchId);
@@ -50,11 +48,11 @@ export default function SepaExportPage() {
 			toast.success("SEPA file ready", {
 				description: `Downloaded ${result.fileName}`,
 			});
+			setExportingBatchId(null);
 		} catch (err) {
 			toast.error("SEPA-Datei konnte nicht exportiert werden", {
 				description: err instanceof Error ? err.message : "Please try again.",
 			});
-		} finally {
 			setExportingBatchId(null);
 		}
 	}, []);
@@ -83,7 +81,9 @@ export default function SepaExportPage() {
 								<EmptyMedia variant="icon">
 									<AlertCircle />
 								</EmptyMedia>
-								<EmptyTitle>Zahlungsläufe konnten nicht geladen werden</EmptyTitle>
+								<EmptyTitle>
+									Zahlungsläufe konnten nicht geladen werden
+								</EmptyTitle>
 								<EmptyDescription>
 									{error instanceof Error
 										? error.message

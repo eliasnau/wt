@@ -1,18 +1,24 @@
 import { auth } from "@repo/auth/server";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
+import { getServerSession, protectPage } from "@/lib/auth";
+import {
+	Header,
+	HeaderActions,
+	HeaderContent,
+	HeaderDescription,
+	HeaderTitle,
+} from "../../_components/page-header";
 import { ChangePasswordFrame } from "./_components/change-password-frame";
-import { TwoFactorFrame } from "./_components/two-factor-frame";
+import { PasskeyEnableBanner } from "./_components/passkey-enable-banner";
 import { PasskeyFrame } from "./_components/passkey-frame";
 import { SessionsFrame } from "./_components/sessions-frame";
 import { TwoFactorEnableBanner } from "./_components/two-factor-enable-banner";
-import { PasskeyEnableBanner } from "./_components/passkey-enable-banner";
-import { redirect } from "next/navigation";
-import { headers } from "next/headers";
-import { getServerSession, protectPage } from "@/lib/auth";
-import { Header, HeaderActions, HeaderContent, HeaderDescription, HeaderTitle, } from "../../_components/page-header";
+import { TwoFactorFrame } from "./_components/two-factor-frame";
 
 export default async function SecurityPage() {
 	const session = await protectPage();
-	const passkeys = await auth.api.listPasskeys({headers: await headers()});
+	const passkeys = await auth.api.listPasskeys({ headers: await headers() });
 
 	const twoFactorEnabled = session.user.twoFactorEnabled ?? false;
 	const currentSessionId = session.session.id;
@@ -26,14 +32,16 @@ export default async function SecurityPage() {
 						Verwalte deine Anmeldemethoden und Sitzungen
 					</HeaderDescription>
 				</HeaderContent>
-				<HeaderActions>
-				</HeaderActions>
+				<HeaderActions></HeaderActions>
 			</Header>
 
 			{!twoFactorEnabled && <TwoFactorEnableBanner />}
 			{passkeys.length === 0 && <PasskeyEnableBanner />}
 			<ChangePasswordFrame />
-			<PasskeyFrame currentSessionId={currentSessionId} initalPasskeys={passkeys}/>
+			<PasskeyFrame
+				currentSessionId={currentSessionId}
+				initalPasskeys={passkeys}
+			/>
 			<TwoFactorFrame twoFactorEnabled={twoFactorEnabled} />
 			<SessionsFrame currentSessionId={currentSessionId} />
 		</div>

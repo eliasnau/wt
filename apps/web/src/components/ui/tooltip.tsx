@@ -1,8 +1,7 @@
 "use client";
 
-import * as TooltipPrimitive from "../animate-ui/primitives/base/tooltip";
-
 import { cn } from "@/lib/utils";
+import * as TooltipPrimitive from "../animate-ui/primitives/base/tooltip";
 
 const TooltipProvider = TooltipPrimitive.TooltipProvider;
 
@@ -53,7 +52,7 @@ function TooltipPopup({
 			>
 				<TooltipPrimitive.TooltipPopup
 					className={cn(
-						"rounded-md border bg-popover px-3 py-1.5 text-xs text-popover-foreground shadow-md",
+						"rounded-md border bg-popover px-3 py-1.5 text-popover-foreground text-xs shadow-md",
 						className,
 					)}
 					{...props}

@@ -1,8 +1,8 @@
 /// <reference path="../types/sepa.d.ts" />
 import { ORPCError } from "@orpc/server";
-import { z } from "zod";
 import type { InferSelectModel } from "@repo/db";
 import type { organizationSettings } from "@repo/db/schema";
+import { z } from "zod";
 
 export const sepaSettingsSchema = z.object({
 	creditorName: z.string().min(1).max(140).optional(),

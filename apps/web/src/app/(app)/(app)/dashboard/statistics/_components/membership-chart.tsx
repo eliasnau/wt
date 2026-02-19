@@ -1,31 +1,31 @@
 "use client";
 
-import { useState } from "react";
 import {
-	Frame,
-	FramePanel,
-	FrameHeader,
-	FrameTitle,
-	FrameDescription,
-} from "@/components/ui/frame";
-import type { ChartConfig } from "@/components/ui/chart";
-import { Badge } from "@/components/ui/badge";
-import {
-	TrendingDown,
-	TrendingUp,
 	AreaChartIcon,
 	BarChartIcon,
 	InfoIcon,
+	TrendingDown,
+	TrendingUp,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-	Tooltip,
-	TooltipTrigger,
-	TooltipContent,
-} from "@/components/ui/tooltip";
-import { cn } from "@/lib/utils";
+import { useState } from "react";
 import { AreaChart } from "@/components/charts/area-chart";
 import { BarChart } from "@/components/charts/bar-chart";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import type { ChartConfig } from "@/components/ui/chart";
+import {
+	Frame,
+	FrameDescription,
+	FrameHeader,
+	FramePanel,
+	FrameTitle,
+} from "@/components/ui/frame";
+import {
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 const chartData = [
 	{ month: "January", newMembers: 45, cancellations: 12 },
@@ -67,7 +67,7 @@ export function MembershipChart() {
 		((netChange - previousNetChange) / previousNetChange) *
 		100
 	).toFixed(1);
-	const isPositive = parseFloat(changePercent) >= 0;
+	const isPositive = Number.parseFloat(changePercent) >= 0;
 
 	return (
 		<Frame>
@@ -80,8 +80,8 @@ export function MembershipChart() {
 								variant="outline"
 								className={
 									isPositive
-										? "text-green-500 bg-green-500/10 border-none ml-2"
-										: "text-red-500 bg-red-500/10 border-none ml-2"
+										? "ml-2 border-none bg-green-500/10 text-green-500"
+										: "ml-2 border-none bg-red-500/10 text-red-500"
 								}
 							>
 								{isPositive ? (
@@ -114,7 +114,7 @@ export function MembershipChart() {
 						New members and cancellations over the selected period
 					</FrameDescription>
 				</div>
-				<div className="flex gap-1 border rounded-lg p-1">
+				<div className="flex gap-1 rounded-lg border p-1">
 					<Button
 						variant="ghost"
 						size="sm"

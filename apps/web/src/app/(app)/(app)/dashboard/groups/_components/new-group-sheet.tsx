@@ -1,20 +1,24 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { Loader2, Plus } from "lucide-react";
 import * as React from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import z from "zod";
 import { Button } from "@/components/ui/button";
-import { FieldLabel } from "@/components/ui/field";
-import { Field } from "@/components/ui/field";
+import { Field, FieldLabel } from "@/components/ui/field";
 import {
 	Form,
-	FormLabel,
-	FormItem,
-	FormDescription,
 	FormControl,
+	FormDescription,
 	FormField,
+	FormItem,
+	FormLabel,
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
 	InputGroup,
 	InputGroupAddon,
@@ -23,23 +27,18 @@ import {
 } from "@/components/ui/input-group";
 import {
 	Sheet,
-	SheetDescription,
-	SheetHeader,
-	SheetTitle,
-	SheetFooter,
-	SheetPopup,
-	SheetTrigger,
-	SheetPanel,
 	SheetClose,
+	SheetDescription,
+	SheetFooter,
+	SheetHeader,
+	SheetPanel,
+	SheetPopup,
+	SheetTitle,
+	SheetTrigger,
 } from "@/components/ui/sheet";
-import { Plus, Loader2 } from "lucide-react";
-import { client, orpc } from "@/utils/orpc";
-import { useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import z from "zod";
 import { Spinner } from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import { client, orpc } from "@/utils/orpc";
 
 interface NewGroupSheetProps {
 	onGroupCreated?: () => void;
@@ -116,7 +115,7 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 								Create a new group with name, description, and membership price
 							</SheetDescription>
 						</SheetHeader>
-						<SheetPanel className="flex-1 grid gap-4">
+						<SheetPanel className="grid flex-1 gap-4">
 							<FormField
 								control={form.control}
 								name="name"

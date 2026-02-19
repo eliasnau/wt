@@ -1,17 +1,20 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { authClient } from "@repo/auth/client";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { User } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Frame } from "@/components/ui/frame";
+import { Button } from "@/components/ui/button";
 import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
+	Empty,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@/components/ui/empty";
+import { Frame } from "@/components/ui/frame";
 import {
 	Select,
 	SelectContent,
@@ -20,17 +23,14 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import {
-	Empty,
-	EmptyMedia,
-	EmptyTitle,
-	EmptyDescription,
-	EmptyHeader,
-} from "@/components/ui/empty";
-import { authClient } from "@repo/auth/client";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { useState } from "react";
-import { toast } from "sonner";
-import { RoleChangeDialog, RemoveMemberDialog } from "./confirm-dialogs";
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
+import { RemoveMemberDialog, RoleChangeDialog } from "./confirm-dialogs";
 import { formatRoleLabel } from "./role-utils";
 import { useOrgRoles } from "./use-org-roles";
 
@@ -61,7 +61,9 @@ export function MembersSection() {
 			});
 
 			if (result.error) {
-				throw new Error(result.error.message || "Mitglieder konnten nicht geladen werden");
+				throw new Error(
+					result.error.message || "Mitglieder konnten nicht geladen werden",
+				);
 			}
 
 			return result.data;
@@ -84,7 +86,9 @@ export function MembersSection() {
 				role,
 			});
 			if (result.error) {
-				throw new Error(result.error.message || "Rolle konnte nicht aktualisiert werden");
+				throw new Error(
+					result.error.message || "Rolle konnte nicht aktualisiert werden",
+				);
 			}
 			return result.data;
 		},
@@ -97,7 +101,9 @@ export function MembersSection() {
 		},
 		onError: (error) => {
 			toast.error(
-				error instanceof Error ? error.message : "Rolle konnte nicht aktualisiert werden",
+				error instanceof Error
+					? error.message
+					: "Rolle konnte nicht aktualisiert werden",
 			);
 			setRoleConfirmOpen(false);
 			setSelectedMember(null);
@@ -111,7 +117,9 @@ export function MembersSection() {
 				memberIdOrEmail: memberId,
 			});
 			if (result.error) {
-				throw new Error(result.error.message || "Mitglied konnte nicht entfernt werden");
+				throw new Error(
+					result.error.message || "Mitglied konnte nicht entfernt werden",
+				);
 			}
 			return result.data;
 		},
@@ -123,7 +131,9 @@ export function MembersSection() {
 		},
 		onError: (error) => {
 			toast.error(
-				error instanceof Error ? error.message : "Mitglied konnte nicht entfernt werden",
+				error instanceof Error
+					? error.message
+					: "Mitglied konnte nicht entfernt werden",
 			);
 			setRemoveConfirmOpen(false);
 			setSelectedMember(null);
@@ -192,7 +202,11 @@ export function MembersSection() {
 										<Avatar>
 											<AvatarImage
 												alt={member.user.name || "User"}
-												src={member.user.image || `https://avatar.vercel.sh/${member.user.id}` || undefined}
+												src={
+													member.user.image ||
+													`https://avatar.vercel.sh/${member.user.id}` ||
+													undefined
+												}
 											/>
 											<AvatarFallback>
 												<User className="size-4" />
@@ -214,9 +228,7 @@ export function MembersSection() {
 										}
 									>
 										<SelectTrigger className="w-[170px]">
-											<SelectValue
-												placeholder={formatRoleLabel(member.role)}
-											/>
+											<SelectValue placeholder={formatRoleLabel(member.role)} />
 										</SelectTrigger>
 										<SelectContent>
 											{roleOptions.map((roleOption) => (

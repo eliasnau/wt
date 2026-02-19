@@ -1,10 +1,23 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
-import { useTheme } from "next-themes";
+import type { Passkey } from "@repo/auth";
 import { authClient } from "@repo/auth/client";
-import { Button } from "@/components/ui/button";
-import { Frame, FramePanel, FrameFooter } from "@/components/ui/frame";
+import { useQuery } from "@tanstack/react-query";
+import { formatDistanceToNow } from "date-fns";
+import {
+	AlertCircle,
+	Edit,
+	Fingerprint,
+	Info,
+	Loader2,
+	Plus,
+} from "lucide-react";
+import { useTheme } from "next-themes";
+import { useCallback, useEffect, useState } from "react";
+import { toast } from "sonner";
+import { FingerprintIcon } from "@/components/animate-ui/icons/fingerprint";
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
+import { Trash2 } from "@/components/animate-ui/icons/trash-2";
 import {
 	AlertDialog,
 	AlertDialogClose,
@@ -15,6 +28,7 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogClose,
@@ -25,13 +39,6 @@ import {
 	DialogTitle,
 } from "@/components/ui/dialog";
 import {
-	Tooltip,
-	TooltipContent,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import {
 	Empty,
 	EmptyContent,
 	EmptyDescription,
@@ -39,22 +46,15 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
-import { toast } from "sonner";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Frame, FrameFooter, FramePanel } from "@/components/ui/frame";
+import { Input } from "@/components/ui/input";
 import {
-	Edit,
-	Fingerprint,
-	Info,
-	Loader2,
-	Plus,
-	AlertCircle,
-} from "lucide-react";
+	Tooltip,
+	TooltipContent,
+	TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { getAAGUIDInfo } from "@/lib/aaguid-data";
-import { useQuery } from "@tanstack/react-query";
-import { AnimateIcon } from "@/components/animate-ui/icons/icon";
-import { FingerprintIcon } from "@/components/animate-ui/icons/fingerprint";
-import { Trash2 } from "@/components/animate-ui/icons/trash-2";
-import type { Passkey } from "@repo/auth";
-import { formatDistanceToNow } from "date-fns";
 
 export function PasskeyFrame({
 	currentSessionId,
@@ -79,7 +79,9 @@ export function PasskeyFrame({
 		queryFn: async () => {
 			const { data, error } = await authClient.passkey.listUserPasskeys();
 			if (error) {
-				throw new Error(error.message || "Passkeys konnten nicht geladen werden");
+				throw new Error(
+					error.message || "Passkeys konnten nicht geladen werden",
+				);
 			}
 			return data;
 		},
@@ -96,9 +98,9 @@ export function PasskeyFrame({
 				toast.success("Passkey erfolgreich hinzugefügt");
 				await refetch();
 			}
+			setIsAddingPasskey(false);
 		} catch {
 			toast.error("Passkey konnte nicht hinzugefügt werden");
-		} finally {
 			setIsAddingPasskey(false);
 		}
 	}, [refetch]);
@@ -141,9 +143,9 @@ export function PasskeyFrame({
 				setEditingPasskey(null);
 				setNewPasskeyName("");
 			}
+			setIsUpdatingName(false);
 		} catch {
 			toast.error("Passkey-Name konnte nicht aktualisiert werden");
-		} finally {
 			setIsUpdatingName(false);
 		}
 	}, [editingPasskey, newPasskeyName, refetch]);
@@ -157,15 +159,15 @@ export function PasskeyFrame({
 		return (
 			<Frame
 				data-passkey-frame
-				className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72"
+				className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72"
 			>
 				<FramePanel>
-					<h2 className="font-heading text-xl mb-2 text-foreground">
+					<h2 className="mb-2 font-heading text-foreground text-xl">
 						Passkeys
 					</h2>
-					<p className="text-sm text-muted-foreground mb-6">
-						Nutze deinen Fingerabdruck, dein Gesicht oder die Geräte-PIN für eine sichere passwortlose
-						authentication.
+					<p className="mb-6 text-muted-foreground text-sm">
+						Nutze deinen Fingerabdruck, dein Gesicht oder die Geräte-PIN für
+						eine sichere passwortlose authentication.
 					</p>
 					<div className="flex items-center justify-center py-12">
 						<Loader2 className="size-6 animate-spin text-muted-foreground" />
@@ -179,7 +181,7 @@ export function PasskeyFrame({
 		return (
 			<Frame
 				data-passkey-frame
-				className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72"
+				className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72"
 			>
 				<FramePanel>
 					<Empty>
@@ -208,7 +210,7 @@ export function PasskeyFrame({
 			<>
 				<Frame
 					data-passkey-frame
-					className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72"
+					className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72"
 				>
 					<FramePanel>
 						<Empty>
@@ -224,13 +226,13 @@ export function PasskeyFrame({
 						</Empty>
 					</FramePanel>
 
-					<FrameFooter className="flex-row justify-between items-center">
+					<FrameFooter className="flex-row items-center justify-between">
 						<Tooltip>
 							<TooltipTrigger
 								render={
 									<button
 										type="button"
-										className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+										className="flex items-center gap-1.5 text-muted-foreground text-xs transition-colors hover:text-foreground"
 									/>
 								}
 							>
@@ -238,7 +240,7 @@ export function PasskeyFrame({
 								<span>Was sind Passkeys?</span>
 							</TooltipTrigger>
 							<TooltipContent>
-								<p className="text-xs max-w-xs">
+								<p className="max-w-xs text-xs">
 									Passkeys use your device's biometric authentication
 									(fingerprint, face ID) for secure, passwordless sign-in
 								</p>
@@ -273,35 +275,35 @@ export function PasskeyFrame({
 		<>
 			<Frame
 				data-passkey-frame
-				className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72"
+				className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72"
 			>
 				<FramePanel>
-					<h2 className="font-heading text-xl mb-2 text-foreground">
+					<h2 className="mb-2 font-heading text-foreground text-xl">
 						Passkeys
 					</h2>
-					<p className="text-sm text-muted-foreground mb-6">
-						Nutze deinen Fingerabdruck, dein Gesicht oder die Geräte-PIN für eine sichere passwortlose
-						authentication.
+					<p className="mb-6 text-muted-foreground text-sm">
+						Nutze deinen Fingerabdruck, dein Gesicht oder die Geräte-PIN für
+						eine sichere passwortlose authentication.
 					</p>
 
 					<div className="space-y-2">
 						{passkeys.map((passkey) => (
 							<div
 								key={passkey.id}
-								className="flex items-center justify-between p-4 rounded-lg border hover:bg-accent/50 transition-colors"
+								className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-accent/50"
 							>
 								<div className="flex items-center gap-4">
 									<PasskeyIcon aaguid={passkey.aaguid} />
 									<div>
-										<p className="text-sm font-medium">
+										<p className="font-medium text-sm">
 											{passkey.name || "Unbenannter Passkey"}
 										</p>
-										<p className="text-xs text-muted-foreground">
+										<p className="text-muted-foreground text-xs">
 											Added{" "}
 											{passkey.createdAt
 												? formatDistanceToNow(new Date(passkey.createdAt), {
 														addSuffix: true,
-														locale: undefined
+														locale: undefined,
 													})
 												: "recently"}
 										</p>
@@ -362,13 +364,13 @@ export function PasskeyFrame({
 					</div>
 				</FramePanel>
 
-				<FrameFooter className="flex-row justify-between items-center">
+				<FrameFooter className="flex-row items-center justify-between">
 					<Tooltip>
 						<TooltipTrigger
 							render={
 								<button
 									type="button"
-									className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+									className="flex items-center gap-1.5 text-muted-foreground text-xs transition-colors hover:text-foreground"
 								/>
 							}
 						>
@@ -376,7 +378,7 @@ export function PasskeyFrame({
 							<span>Was sind Passkeys?</span>
 						</TooltipTrigger>
 						<TooltipContent>
-							<p className="text-xs max-w-xs">
+							<p className="max-w-xs text-xs">
 								Passkeys use your device's biometric authentication
 								(fingerprint, face ID) for secure, passwordless sign-in
 							</p>
@@ -458,7 +460,7 @@ function PasskeyIcon({ aaguid }: { aaguid?: string | null }) {
 	return (
 		<Tooltip>
 			<TooltipTrigger>
-				<div className="p-3 rounded-lg bg-primary/10 cursor-help">
+				<div className="cursor-help rounded-lg bg-primary/10 p-3">
 					{IconComponent ? (
 						<IconComponent
 							className="size-8"

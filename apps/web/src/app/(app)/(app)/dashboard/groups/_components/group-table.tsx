@@ -1,36 +1,30 @@
 "use client";
+import type { InferClientOutputs } from "@orpc/client";
+import { useMutation } from "@tanstack/react-query";
 import {
-	Table,
-	TableBody,
-	TableCell,
-	TableFooter,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
-import { client } from "@/utils/orpc";
-import {
-	getFilteredRowModel,
 	type ColumnDef,
 	type ColumnFiltersState,
-	type PaginationState,
-	type SortingState,
-} from "@tanstack/react-table";
-import {
 	flexRender,
 	getCoreRowModel,
+	getFilteredRowModel,
 	getPaginationRowModel,
 	getSortedRowModel,
+	type PaginationState,
+	type SortingState,
 	useReactTable,
 } from "@tanstack/react-table";
-import { Button } from "@/components/ui/button";
 import {
-	Menu,
-	MenuTrigger,
-	MenuSeparator,
-	MenuItem,
-	MenuPopup,
-} from "@/components/ui/menu";
+	ChevronDownIcon,
+	ChevronUpIcon,
+	EditIcon,
+	MoreVerticalIcon,
+	SearchIcon,
+	TrashIcon,
+	UserIcon,
+	XIcon,
+} from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import {
 	AlertDialog,
 	AlertDialogClose,
@@ -40,17 +34,29 @@ import {
 	AlertDialogPopup,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import {
-	EditIcon,
-	MoreVerticalIcon,
-	TrashIcon,
-	UserIcon,
-	ChevronUpIcon,
-	ChevronDownIcon,
-	SearchIcon,
-	XIcon,
-} from "lucide-react";
+	Empty,
+	EmptyContent,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@/components/ui/empty";
+import { Frame, FramePanel } from "@/components/ui/frame";
+import { Input } from "@/components/ui/input";
+import {
+	InputGroup,
+	InputGroupAddon,
+	InputGroupInput,
+} from "@/components/ui/input-group";
+import {
+	Menu,
+	MenuItem,
+	MenuPopup,
+	MenuSeparator,
+	MenuTrigger,
+} from "@/components/ui/menu";
 import {
 	Pagination,
 	PaginationContent,
@@ -65,26 +71,18 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
-import {
-	Empty,
-	EmptyContent,
-	EmptyDescription,
-	EmptyHeader,
-	EmptyMedia,
-	EmptyTitle,
-} from "@/components/ui/empty";
-import { Input } from "@/components/ui/input";
-import {
-	InputGroup,
-	InputGroupAddon,
-	InputGroupInput,
-} from "@/components/ui/input-group";
-import { Frame, FramePanel } from "@/components/ui/frame";
-import type { InferClientOutputs } from "@orpc/client";
-import { useMutation } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableFooter,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
+import { client } from "@/utils/orpc";
 import { EditGroupSheet, GroupMembersSheet } from "./group-sheets";
 
 type GroupsList = InferClientOutputs<typeof client>["groups"]["list"];
@@ -158,7 +156,6 @@ function DeleteGroupDialog({
 	);
 }
 
-
 export const columns: ColumnDef<GroupRow>[] = [
 	{
 		accessorKey: "name",
@@ -188,7 +185,11 @@ export const columns: ColumnDef<GroupRow>[] = [
 
 			return (
 				<div className="flex items-center justify-end gap-2">
-					<Button size="sm" variant="outline" onClick={() => onViewMembers(group)}>
+					<Button
+						size="sm"
+						variant="outline"
+						onClick={() => onViewMembers(group)}
+					>
 						<UserIcon />
 						Members
 					</Button>
@@ -230,6 +231,7 @@ export default function GroupTable({
 	loading?: boolean;
 	onRefetch?: () => void;
 }) {
+	"use no memo";
 	const pageSize = 10;
 
 	const [pagination, setPagination] = useState<PaginationState>({
@@ -293,7 +295,7 @@ export default function GroupTable({
 	// If there are no groups at all, show empty state
 	if (!loading && !data?.length) {
 		return (
-			<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+			<Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 				<FramePanel className="py-12">
 					<Empty>
 						<EmptyHeader>

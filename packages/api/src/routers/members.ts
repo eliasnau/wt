@@ -252,8 +252,7 @@ export const membersRouter = {
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
 			const { page, limit } = input;
-			const includeCancelled =
-				input.options?.includeCancelledMembers ?? false;
+			const includeCancelled = input.options?.includeCancelledMembers ?? false;
 
 			const rawSearch = input.search?.trim();
 			const search = rawSearch && rawSearch.length > 0 ? rawSearch : undefined;

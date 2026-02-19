@@ -24,9 +24,17 @@ function formatDateUTC(date: Date) {
 
 function getMonthRange(monthInput?: string) {
 	const now = new Date();
-	const currentMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+	const currentMonth = new Date(
+		Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1),
+	);
 	const targetMonth = monthInput
-		? new Date(Date.UTC(Number(monthInput.split("-")[0]), Number(monthInput.split("-")[1]) - 1, 1))
+		? new Date(
+				Date.UTC(
+					Number(monthInput.split("-")[0]),
+					Number(monthInput.split("-")[1]) - 1,
+					1,
+				),
+			)
 		: currentMonth;
 
 	if (targetMonth > currentMonth) {

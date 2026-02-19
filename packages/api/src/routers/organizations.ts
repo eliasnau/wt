@@ -1,21 +1,21 @@
-import { protectedProcedure } from "../index";
-import { requirePermission } from "../middleware/permissions";
-import { rateLimitMiddleware } from "../middleware/ratelimit";
-import { z } from "zod";
 import { db, eq } from "@repo/db";
 import { organizationSettings } from "@repo/db/schema";
+import { z } from "zod";
+import { protectedProcedure } from "../index";
 import {
+	loadSepaModule,
 	mapSepaRowToSettings,
 	sepaSettingsSchema,
-	loadSepaModule,
 	validateCreditorDetailsIfPresent,
 } from "../lib/sepa";
+import { requirePermission } from "../middleware/permissions";
+import { rateLimitMiddleware } from "../middleware/ratelimit";
 
 const addDomainSchema = z.object({
 	domain: z
 		.string()
 		.regex(
-			/^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,}$/i,
+			/^[a-z0-9]+([-.]{1}[a-z0-9]+)*\.[a-z]{2,}$/i,
 			"Invalid domain format",
 		),
 });
@@ -320,8 +320,7 @@ export const organizationsRouter = {
 				...input,
 				creditorName: input.creditorName?.trim() || undefined,
 				creditorIban:
-					input.creditorIban?.replace(/\s+/g, "").toUpperCase() ||
-					undefined,
+					input.creditorIban?.replace(/\s+/g, "").toUpperCase() || undefined,
 				creditorBic:
 					input.creditorBic?.replace(/\s+/g, "").toUpperCase() || undefined,
 				creditorId:
@@ -333,7 +332,8 @@ export const organizationsRouter = {
 								input.remittanceTemplates.membership?.trim() || undefined,
 							joiningFee:
 								input.remittanceTemplates.joiningFee?.trim() || undefined,
-							yearlyFee: input.remittanceTemplates.yearlyFee?.trim() || undefined,
+							yearlyFee:
+								input.remittanceTemplates.yearlyFee?.trim() || undefined,
 						}
 					: undefined,
 			};
@@ -359,8 +359,7 @@ export const organizationsRouter = {
 					normalized.remittanceTemplates?.membership ?? null,
 				remittanceJoiningFee:
 					normalized.remittanceTemplates?.joiningFee ?? null,
-				remittanceYearlyFee:
-					normalized.remittanceTemplates?.yearlyFee ?? null,
+				remittanceYearlyFee: normalized.remittanceTemplates?.yearlyFee ?? null,
 			};
 
 			if (existing.length === 0) {

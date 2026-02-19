@@ -8,6 +8,7 @@ import {
 	parseAsString,
 	useQueryStates,
 } from "nuqs";
+import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import {
 	Empty,
@@ -28,10 +29,13 @@ import {
 } from "../_components/page-header";
 import { CreateMemberButton } from "./_components/create-member-button";
 import MembersTable from "./_components/members-table";
-import { Suspense } from "react";
 
 export default function MembersPage() {
-	return <Suspense><MembersPageContent /></Suspense>
+	return (
+		<Suspense>
+			<MembersPageContent />
+		</Suspense>
+	);
 }
 
 export function MembersPageContent() {
@@ -63,7 +67,7 @@ export function MembersPageContent() {
 				limit,
 				search: search || undefined,
 				groupIds: validGroupIds.length > 0 ? validGroupIds : undefined,
-				options: { includeCancelledMembers }
+				options: { includeCancelledMembers },
 			},
 		}),
 	);

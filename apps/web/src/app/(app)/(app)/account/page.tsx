@@ -1,8 +1,14 @@
 import { protectPage } from "@/lib/auth";
-import { ProfileFrame } from "./_components/profile-frame";
+import {
+	Header,
+	HeaderActions,
+	HeaderContent,
+	HeaderDescription,
+	HeaderTitle,
+} from "../_components/page-header";
 import { DeleteAccountFrame } from "./_components/delete-account-frame";
 import { EmailVerificationBanner } from "./_components/email-verification-banner";
-import { Header, HeaderActions, HeaderContent, HeaderDescription, HeaderTitle, } from "../_components/page-header";
+import { ProfileFrame } from "./_components/profile-frame";
 
 export default async function AccountPage() {
 	const { user } = await protectPage();
@@ -16,10 +22,9 @@ export default async function AccountPage() {
 						Verwalte deine Profilinformationen
 					</HeaderDescription>
 				</HeaderContent>
-				<HeaderActions>
-				</HeaderActions>
+				<HeaderActions></HeaderActions>
 			</Header>
-			
+
 			{!user.emailVerified && <EmailVerificationBanner email={user.email} />}
 			<ProfileFrame
 				initialName={user?.name || ""}

@@ -236,7 +236,9 @@ export const organizationSettings = pgTable(
 			.$onUpdate(() => new Date())
 			.notNull(),
 	},
-	(table) => [index("organization_settings_org_id_idx").on(table.organizationId)],
+	(table) => [
+		index("organization_settings_org_id_idx").on(table.organizationId),
+	],
 );
 
 export const payment = pgTable(

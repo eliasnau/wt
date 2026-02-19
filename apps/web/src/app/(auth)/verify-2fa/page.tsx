@@ -1,26 +1,26 @@
 "use client";
 
+import { authClient } from "@repo/auth/client";
+import { ArrowLeft, ChevronRight, Loader2, Shield } from "lucide-react";
+import type { Route } from "next";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useQueryState } from "nuqs";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Binary } from "@/components/animate-ui/icons/binary";
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
+import { Key } from "@/components/animate-ui/icons/key";
 import { Button } from "@/components/ui/button";
-import { Frame, FramePanel, FrameFooter } from "@/components/ui/frame";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Frame, FrameFooter, FramePanel } from "@/components/ui/frame";
+import { Input } from "@/components/ui/input";
 import {
 	InputOTP,
 	InputOTPGroup,
 	InputOTPSlot,
 } from "@/components/ui/input-otp";
-import { useState } from "react";
-import { Loader2, ArrowLeft, Shield, ChevronRight } from "lucide-react";
-import { authClient } from "@repo/auth/client";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import type { Route } from "next";
-import { useQueryState } from "nuqs";
-import { Key } from "@/components/animate-ui/icons/key";
-import { Binary } from "@/components/animate-ui/icons/binary";
-import { AnimateIcon } from "@/components/animate-ui/icons/icon";
+import { Label } from "@/components/ui/label";
 
 type VerificationMethod = "totp" | "backup";
 type View = "verify" | "method-selection";
@@ -119,13 +119,13 @@ export default function Verify2FA() {
 					<div className="mb-4">
 						<button
 							onClick={() => setView("verify")}
-							className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+							className="inline-flex items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground"
 						>
 							<ArrowLeft className="h-4 w-4" />
 							Back
 						</button>
 					</div>
-					<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+					<Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 						<FramePanel>
 							<div className="mb-6">
 								<h1 className="font-heading text-2xl">
@@ -133,18 +133,18 @@ export default function Verify2FA() {
 								</h1>
 							</div>
 
-							<div className="space-y-0 border border-border rounded-lg overflow-hidden">
+							<div className="space-y-0 overflow-hidden rounded-lg border border-border">
 								<AnimateIcon animateOnHover asChild>
 									<button
 										type="button"
 										onClick={() => handleMethodSelect("totp")}
-										className="w-full px-4 py-4 flex items-center gap-3 hover:bg-accent transition-colors border-b border-border"
+										className="flex w-full items-center gap-3 border-border border-b px-4 py-4 transition-colors hover:bg-accent"
 									>
 										<Key className="h-5 w-5 flex-shrink-0" />
 										<span className="flex-1 text-left font-normal">
 											Authenticator App
 										</span>
-										<ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+										<ChevronRight className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
 									</button>
 								</AnimateIcon>
 
@@ -152,13 +152,13 @@ export default function Verify2FA() {
 									<button
 										type="button"
 										onClick={() => handleMethodSelect("backup")}
-										className="w-full px-4 py-4 flex items-center gap-3 hover:bg-accent transition-colors"
+										className="flex w-full items-center gap-3 px-4 py-4 transition-colors hover:bg-accent"
 									>
 										<Binary className="h-5 w-5 flex-shrink-0" />
 										<span className="flex-1 text-left font-normal">
 											Backup Code
 										</span>
-										<ChevronRight className="h-5 w-5 text-muted-foreground flex-shrink-0" />
+										<ChevronRight className="h-5 w-5 flex-shrink-0 text-muted-foreground" />
 									</button>
 								</AnimateIcon>
 							</div>
@@ -175,22 +175,22 @@ export default function Verify2FA() {
 				<div className="mb-4">
 					<Link
 						href={"/sign-in" as Route}
-						className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+						className="inline-flex items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground"
 					>
 						<ArrowLeft className="h-4 w-4" />
 						Zurück zur Anmeldung
 					</Link>
 				</div>
-				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+				<Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 					<FramePanel>
-						<div className="flex items-center gap-2 mb-4">
+						<div className="mb-4 flex items-center gap-2">
 							<Shield className="h-6 w-6 text-primary" />
 							<h1 className="font-heading text-2xl">
 								Two-Factor Authentication
 							</h1>
 						</div>
 
-						<p className="text-sm text-muted-foreground mb-6">
+						<p className="mb-6 text-muted-foreground text-sm">
 							{getDescription()}
 						</p>
 
@@ -253,7 +253,7 @@ export default function Verify2FA() {
 					</FramePanel>
 
 					<FrameFooter className="flex-row items-center justify-center">
-						<p className="text-sm text-muted-foreground">
+						<p className="text-muted-foreground text-sm">
 							<button
 								type="button"
 								onClick={() => setView("method-selection")}

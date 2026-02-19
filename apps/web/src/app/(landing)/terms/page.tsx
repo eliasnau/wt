@@ -51,7 +51,9 @@ export default function TermsPage() {
 											</Paragraph>
 											<ul className="list-disc space-y-2 pl-5">
 												<li>
-													<Paragraph>die Materialien zu verändern oder zu kopieren;</Paragraph>
+													<Paragraph>
+														die Materialien zu verändern oder zu kopieren;
+													</Paragraph>
 												</li>
 												<li>
 													<Paragraph>

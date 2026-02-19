@@ -3,9 +3,9 @@
 import { authClient } from "@repo/auth/client";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
+import posthog from "posthog-js";
 import { use } from "react";
 import { AuthContext } from "@/providers/auth-provider";
-import posthog from "posthog-js";
 
 export function useAuth() {
 	const context = use(AuthContext);

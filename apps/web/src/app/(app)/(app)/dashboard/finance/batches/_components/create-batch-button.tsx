@@ -43,7 +43,7 @@ export function CreateBatchButton() {
 						error instanceof Error ? error.message : "Etwas ist schiefgelaufen",
 				});
 			},
-		})
+		}),
 	);
 
 	const handleSubmit = () => {
@@ -64,8 +64,8 @@ export function CreateBatchButton() {
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger render={<Button />}>
-					<Plus className="mr-2 size-4" />
-					Create Batch
+				<Plus className="mr-2 size-4" />
+				Create Batch
 			</DialogTrigger>
 			<DialogContent>
 				<DialogHeader>

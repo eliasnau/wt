@@ -40,14 +40,13 @@ export const requirePermission = async (permissions: PermissionCheck) => {
 	if (!result.success) return forbidden();
 };
 
-
 export const requireActiveOrg = async () => {
-	const session = await getServerSession()
+	const session = await getServerSession();
 
-	if (!session?.user) return unauthorized()
-	if(!session.session.activeOrganizationId) return redirect("/organizations")
-	
-		const data = await getOrganization();
+	if (!session?.user) return unauthorized();
+	if (!session.session.activeOrganizationId) return redirect("/organizations");
+
+	const data = await getOrganization();
 
 	if (!data) {
 		redirect("/account/organizations");

@@ -1,10 +1,10 @@
-import * as React from "react";
+import type * as React from "react";
 import {
-	Dialog as DialogPrimitive,
 	DialogContent as DialogContentPrimitive,
-	DialogTrigger as DialogTriggerPrimitive,
-	DialogTitle as DialogTitlePrimitive,
 	DialogDescription as DialogDescriptionPrimitive,
+	Dialog as DialogPrimitive,
+	DialogTitle as DialogTitlePrimitive,
+	DialogTrigger as DialogTriggerPrimitive,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +37,7 @@ function DialogHeader({
 }: React.ComponentProps<"div">) {
 	return (
 		<div className={cn("p-6 pb-4", className)} {...props}>
-			<div className="flex justify-between items-start">{children}</div>
+			<div className="flex items-start justify-between">{children}</div>
 		</div>
 	);
 }
@@ -48,7 +48,7 @@ function DialogTitle({
 }: React.ComponentProps<typeof DialogTitlePrimitive>) {
 	return (
 		<DialogTitlePrimitive
-			className={cn("text-lg font-medium", className)}
+			className={cn("font-medium text-lg", className)}
 			{...props}
 		/>
 	);
@@ -60,7 +60,7 @@ function DialogDescription({
 }: React.ComponentProps<typeof DialogDescriptionPrimitive>) {
 	return (
 		<DialogDescriptionPrimitive
-			className={cn("text-sm mt-1", className)}
+			className={cn("mt-1 text-sm", className)}
 			{...props}
 		/>
 	);
@@ -89,7 +89,7 @@ function DialogFooter({
 	return (
 		<div
 			className={cn(
-				"px-6 py-3 border-t bg-muted/50 dark:bg-muted/30 rounded-b-lg flex justify-between items-center",
+				"flex items-center justify-between rounded-b-lg border-t bg-muted/50 px-6 py-3 dark:bg-muted/30",
 				className,
 			)}
 			{...props}

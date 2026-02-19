@@ -1,18 +1,18 @@
 import * as React from "react";
 
 import {
-	TooltipProvider as TooltipProviderPrimitive,
-	Tooltip as TooltipPrimitive,
-	TooltipTrigger as TooltipTriggerPrimitive,
-	TooltipPositioner as TooltipPositionerPrimitive,
-	TooltipPopup as TooltipPopupPrimitive,
 	TooltipArrow as TooltipArrowPrimitive,
-	TooltipPortal as TooltipPortalPrimitive,
-	type TooltipProviderProps as TooltipProviderPrimitiveProps,
-	type TooltipProps as TooltipPrimitiveProps,
-	type TooltipTriggerProps as TooltipTriggerPrimitiveProps,
-	type TooltipPositionerProps as TooltipPositionerPrimitiveProps,
+	TooltipPopup as TooltipPopupPrimitive,
 	type TooltipPopupProps as TooltipPopupPrimitiveProps,
+	TooltipPortal as TooltipPortalPrimitive,
+	TooltipPositioner as TooltipPositionerPrimitive,
+	type TooltipPositionerProps as TooltipPositionerPrimitiveProps,
+	Tooltip as TooltipPrimitive,
+	type TooltipProps as TooltipPrimitiveProps,
+	TooltipProvider as TooltipProviderPrimitive,
+	type TooltipProviderProps as TooltipProviderPrimitiveProps,
+	TooltipTrigger as TooltipTriggerPrimitive,
+	type TooltipTriggerProps as TooltipTriggerPrimitiveProps,
 } from "@/components/animate-ui/primitives/base/tooltip";
 import { cn } from "@/lib/utils";
 
@@ -59,13 +59,13 @@ function TooltipPanel({
 			>
 				<TooltipPopupPrimitive
 					className={cn(
-						"bg-primary text-primary-foreground w-fit origin-(--transform-origin) rounded-md px-3 py-1.5 text-xs text-balance",
+						"w-fit origin-(--transform-origin) text-balance rounded-md bg-primary px-3 py-1.5 text-primary-foreground text-xs",
 						className,
 					)}
 					style={style}
 				>
 					{children}
-					<TooltipArrowPrimitive className="bg-primary fill-primary z-50 size-2.5 data-[side='bottom']:-top-[4px] data-[side='right']:-left-[4px] data-[side='left']:-right-[4px] data-[side='inline-start']:-right-[4px] data-[side='inline-end']:-left-[4px] rotate-45 rounded-[2px]" />
+					<TooltipArrowPrimitive className="z-50 size-2.5 rotate-45 rounded-[2px] bg-primary fill-primary data-[side='bottom']:-top-[4px] data-[side='inline-start']:-right-[4px] data-[side='left']:-right-[4px] data-[side='inline-end']:-left-[4px] data-[side='right']:-left-[4px]" />
 				</TooltipPopupPrimitive>
 			</TooltipPositionerPrimitive>
 		</TooltipPortalPrimitive>

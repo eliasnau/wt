@@ -1,6 +1,6 @@
-import { Axiom } from '@axiomhq/js';
-import { Logger, AxiomJSTransport } from '@axiomhq/logging';
-import { nextJsFormatters } from '@axiomhq/nextjs';
+import { Axiom } from "@axiomhq/js";
+import { AxiomJSTransport, Logger } from "@axiomhq/logging";
+import { nextJsFormatters } from "@axiomhq/nextjs";
 import { env } from "@repo/env/web";
 
 const axiomClient = new Axiom({
@@ -9,9 +9,9 @@ const axiomClient = new Axiom({
 
 export const logger = new Logger({
 	transports: [
-		new AxiomJSTransport({ 
-			axiom: axiomClient, 
-			dataset: env.AXIOM_DATASET!
+		new AxiomJSTransport({
+			axiom: axiomClient,
+			dataset: env.AXIOM_DATASET!,
 		}),
 	],
 	formatters: nextJsFormatters,

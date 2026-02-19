@@ -1,13 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { authClient } from "@repo/auth/client";
-import { Button } from "@/components/ui/button";
-import {
-	Frame,
-	FramePanel,
-	FrameFooter,
-} from "@/components/ui/frame";
+import { Loader2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import {
 	AlertDialog,
 	AlertDialogClose,
@@ -18,8 +14,8 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Frame, FrameFooter, FramePanel } from "@/components/ui/frame";
 
 export function DeleteAccountFrame() {
 	const [isDeleting, setIsDeleting] = useState(false);
@@ -46,12 +42,15 @@ export function DeleteAccountFrame() {
 	};
 
 	return (
-		<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72 border-destructive/50">
+		<Frame className="relative flex min-w-0 flex-1 flex-col border-destructive/50 bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 			<FramePanel>
-				<h2 className="font-heading text-xl text-destructive mb-2">Gefahrenbereich</h2>
-				<p className="text-sm text-muted-foreground">
+				<h2 className="mb-2 font-heading text-destructive text-xl">
+					Gefahrenbereich
+				</h2>
+				<p className="text-muted-foreground text-sm">
 					Lösche dein Konto und alle zugehörigen Daten dauerhaft. Diese Aktion
-					kann nicht rückgängig gemacht werden und du verlierst den Zugriff auf alle deine Daten.
+					kann nicht rückgängig gemacht werden und du verlierst den Zugriff auf
+					alle deine Daten.
 				</p>
 			</FramePanel>
 			<FrameFooter className="flex-row justify-end gap-2">
@@ -73,9 +72,10 @@ export function DeleteAccountFrame() {
 						<AlertDialogHeader>
 							<AlertDialogTitle>Bist du dir absolut sicher?</AlertDialogTitle>
 							<AlertDialogDescription>
-								Diese Aktion kann nicht rückgängig gemacht werden. Dadurch wird dein
-								Konto dauerhaft gelöscht und alle deine Daten von unseren Servern entfernt, einschließlich:
-								<ul className="list-disc list-inside mt-2 space-y-1">
+								Diese Aktion kann nicht rückgängig gemacht werden. Dadurch wird
+								dein Konto dauerhaft gelöscht und alle deine Daten von unseren
+								Servern entfernt, einschließlich:
+								<ul className="mt-2 list-inside list-disc space-y-1">
 									<li>Dein Profil und persönliche Informationen</li>
 									<li>Alle Organisationen, die dir gehören</li>
 									<li>Alle Projekte und zugehörigen Daten</li>

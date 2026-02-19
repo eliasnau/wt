@@ -1,8 +1,8 @@
 "use client";
 
+import { Eye, Pencil, Trash2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Trash2 } from "lucide-react";
 import {
 	countPermissions,
 	flattenPermissions,
@@ -45,14 +45,14 @@ export function RoleSummaryCard({
 			<div className="flex flex-wrap items-start justify-between gap-3">
 				<div>
 					<div className="flex items-center gap-2">
-						<div className="text-base font-semibold">
+						<div className="font-semibold text-base">
 							{formatRoleLabel(roleName)}
 						</div>
 						<Badge variant={isSystem ? "secondary" : "outline"}>
 							{isSystem ? "Built-in" : "Custom"}
 						</Badge>
 					</div>
-					<div className="text-sm text-muted-foreground">
+					<div className="text-muted-foreground text-sm">
 						{permissionCount === 0
 							? "Keine Berechtigungen zugewiesen"
 							: `${permissionCount} permission${

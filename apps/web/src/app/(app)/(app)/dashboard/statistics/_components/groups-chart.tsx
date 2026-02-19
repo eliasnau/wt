@@ -1,30 +1,30 @@
 "use client";
 
-import { useState } from "react";
 import {
-	Frame,
-	FramePanel,
-	FrameHeader,
-	FrameTitle,
-	FrameDescription,
-} from "@/components/ui/frame";
-import type { ChartConfig } from "@/components/ui/chart";
-import { Badge } from "@/components/ui/badge";
-import {
-	TrendingUp,
-	LineChartIcon,
 	BarChartIcon,
 	InfoIcon,
+	LineChartIcon,
+	TrendingUp,
 } from "lucide-react";
+import { useState } from "react";
+import { BarChart } from "@/components/charts/bar-chart";
+import { LineChart } from "@/components/charts/line-chart";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import type { ChartConfig } from "@/components/ui/chart";
+import {
+	Frame,
+	FrameDescription,
+	FrameHeader,
+	FramePanel,
+	FrameTitle,
+} from "@/components/ui/frame";
 import {
 	Tooltip,
-	TooltipTrigger,
 	TooltipContent,
+	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { LineChart } from "@/components/charts/line-chart";
-import { BarChart } from "@/components/charts/bar-chart";
 
 const chartData = [
 	{
@@ -162,7 +162,7 @@ export function GroupsChart() {
 							Members per Group
 							<Badge
 								variant="outline"
-								className="text-green-500 bg-green-500/10 border-none ml-2"
+								className="ml-2 border-none bg-green-500/10 text-green-500"
 							>
 								<TrendingUp className="h-4 w-4" />
 								<span>+8.4%</span>
@@ -187,7 +187,7 @@ export function GroupsChart() {
 						Member count across different activity groups
 					</FrameDescription>
 				</div>
-				<div className="flex gap-1 border rounded-lg p-1">
+				<div className="flex gap-1 rounded-lg border p-1">
 					<Button
 						variant="ghost"
 						size="sm"

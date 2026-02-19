@@ -1,9 +1,9 @@
 import { createAccessControl } from "better-auth/plugins/access";
 import {
-	defaultStatements,
 	adminAc,
-	ownerAc,
+	defaultStatements,
 	memberAc,
+	ownerAc,
 } from "better-auth/plugins/organization/access";
 
 const customStatement = {
@@ -26,7 +26,9 @@ export const statement = {
 	...customStatement,
 } as const;
 
-export const customResources = Object.keys(customStatement) as PermissionResource[];
+export const customResources = Object.keys(
+	customStatement,
+) as PermissionResource[];
 
 export const ac = createAccessControl(statement);
 

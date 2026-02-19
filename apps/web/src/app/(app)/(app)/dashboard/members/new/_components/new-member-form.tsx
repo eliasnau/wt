@@ -289,7 +289,7 @@ export function NewMemberForm() {
 
 	if (hasSucceeded) {
 		return (
-			<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+			<Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 				<FramePanel>
 					<div className="flex flex-col items-center justify-center py-12 text-center">
 						<div className="mb-4 flex size-16 items-center justify-center rounded-full border-2 border-green-500 bg-green-50 dark:bg-green-950">
@@ -317,7 +317,7 @@ export function NewMemberForm() {
 	}
 
 	return (
-		<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+		<Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 			<form
 				id="new-member-form"
 				onSubmit={(e) => {
@@ -738,8 +738,11 @@ export function NewMemberForm() {
 															const next = prev.filter((id) => id !== group.id);
 															setGroupPrices((prices) => {
 																if (!(group.id in prices)) return prices;
-																const { [group.id]: _, ...rest } = prices;
-																return rest;
+																return Object.fromEntries(
+																	Object.entries(prices).filter(
+																		([key]) => key !== group.id,
+																	),
+																);
 															});
 															return next;
 														});

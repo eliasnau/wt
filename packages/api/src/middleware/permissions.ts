@@ -1,9 +1,9 @@
 import { ORPCError, os } from "@orpc/server";
+import { auth, type PermissionCheck } from "@repo/auth";
+import { geolocation, ipAddress } from "@vercel/functions";
+import { after } from "next/server";
 import type { Context } from "../context";
 import { logger } from "../lib/logger";
-import { ipAddress, geolocation } from "@vercel/functions";
-import { after } from "next/server";
-import { auth, type PermissionCheck } from "@repo/auth";
 
 /**
  * @param permissions - Better Auth permission object to check

@@ -109,7 +109,9 @@ export function EditMemberSheet({
 					<Button variant="ghost" onClick={() => onOpenChange(false)}>
 						Cancel
 					</Button>
-					<Button onClick={() => onOpenChange(false)}>Änderungen speichern</Button>
+					<Button onClick={() => onOpenChange(false)}>
+						Änderungen speichern
+					</Button>
 				</SheetFooter>
 			</SheetPopup>
 		</Sheet>

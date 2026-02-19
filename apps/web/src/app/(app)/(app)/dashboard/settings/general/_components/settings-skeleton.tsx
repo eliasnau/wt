@@ -5,13 +5,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export function OrganizationInfoSkeleton() {
 	return (
-		<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+		<Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 			<FramePanel>
 				<h2 className="mb-2 font-heading text-foreground text-xl">
 					Organization Information
 				</h2>
 				<p className="mb-6 text-muted-foreground text-sm">
-					Aktualisiere die Details deiner Organisation und öffentliche Informationen
+					Aktualisiere die Details deiner Organisation und öffentliche
+					Informationen
 				</p>
 				<div className="space-y-4">
 					<Field>
@@ -34,7 +35,7 @@ export function OrganizationInfoSkeleton() {
 
 export function OrganizationSlugSkeleton() {
 	return (
-		<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+		<Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 			<FramePanel>
 				<h2 className="mb-2 font-heading text-foreground text-xl">
 					Organization Slug
@@ -62,7 +63,7 @@ export function OrganizationSlugSkeleton() {
 
 export function CustomDomainSkeleton() {
 	return (
-		<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+		<Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 			<FramePanel>
 				<h2 className="mb-2 font-heading text-foreground text-xl">
 					Custom Domain

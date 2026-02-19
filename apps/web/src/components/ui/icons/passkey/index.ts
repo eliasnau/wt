@@ -1,10 +1,10 @@
-export { OnePassword } from "./1password";
-export { Apple } from "./apple";
-export { Google } from "./google";
-export { Microsoft } from "./microsoft";
-export { Windows } from "./windows";
-export { Bitwarden } from "./bitwarden";
 export { Chrome } from "../browser/chrome";
 export { Edge } from "../browser/edge";
 export { Firefox } from "../browser/firefox";
 export { Safari } from "../browser/safari";
+export { OnePassword } from "./1password";
+export { Apple } from "./apple";
+export { Bitwarden } from "./bitwarden";
+export { Google } from "./google";
+export { Microsoft } from "./microsoft";
+export { Windows } from "./windows";

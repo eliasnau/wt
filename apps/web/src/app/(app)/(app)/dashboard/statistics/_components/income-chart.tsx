@@ -1,32 +1,32 @@
 "use client";
 
+import {
+	AreaChartIcon,
+	BarChartIcon,
+	InfoIcon,
+	TrendingUp,
+} from "lucide-react";
 import { useState } from "react";
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, XAxis } from "recharts";
-import {
-	Frame,
-	FramePanel,
-	FrameHeader,
-	FrameTitle,
-	FrameDescription,
-} from "@/components/ui/frame";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import type { ChartConfig } from "@/components/ui/chart";
 import {
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,
 } from "@/components/ui/chart";
-import { Badge } from "@/components/ui/badge";
 import {
-	TrendingUp,
-	AreaChartIcon,
-	BarChartIcon,
-	InfoIcon,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+	Frame,
+	FrameDescription,
+	FrameHeader,
+	FramePanel,
+	FrameTitle,
+} from "@/components/ui/frame";
 import {
 	Tooltip,
-	TooltipTrigger,
 	TooltipContent,
+	TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
@@ -66,7 +66,7 @@ export function TotalRevenueChart() {
 							Total Revenue
 							<Badge
 								variant="outline"
-								className="text-green-500 bg-green-500/10 border-none ml-2"
+								className="ml-2 border-none bg-green-500/10 text-green-500"
 							>
 								<TrendingUp className="h-4 w-4" />
 								<span>+38.1%</span>
@@ -89,7 +89,7 @@ export function TotalRevenueChart() {
 					</div>
 					<FrameDescription>Total revenue generated over time</FrameDescription>
 				</div>
-				<div className="flex gap-1 border rounded-lg p-1">
+				<div className="flex gap-1 rounded-lg border p-1">
 					<Button
 						variant="ghost"
 						size="sm"

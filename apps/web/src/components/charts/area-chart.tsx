@@ -1,7 +1,7 @@
 import {
 	Area,
-	AreaChart as RechartsAreaChart,
 	CartesianGrid,
+	AreaChart as RechartsAreaChart,
 	XAxis,
 } from "recharts";
 import type { ChartConfig } from "@/components/ui/chart";

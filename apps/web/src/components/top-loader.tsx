@@ -1,20 +1,21 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import NextTopLoader from "nextjs-toploader";
+import { useSyncExternalStore } from "react";
+
+function getColorSnapshot() {
+	const primaryColor = getComputedStyle(document.documentElement)
+		.getPropertyValue("--primary")
+		.trim();
+	return primaryColor || "#000000";
+}
 
 export function TopLoader() {
-	const [color, setColor] = useState("#000000");
-
-	useEffect(() => {
-		const root = document.documentElement;
-		const computedStyle = getComputedStyle(root);
-		const primaryColor = computedStyle.getPropertyValue("--primary").trim();
-
-		if (primaryColor) {
-			setColor(primaryColor);
-		}
-	}, []);
+	const color = useSyncExternalStore(
+		() => () => {},
+		getColorSnapshot,
+		() => "#000000",
+	);
 
 	return (
 		<NextTopLoader

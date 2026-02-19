@@ -1,16 +1,15 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import type { InferClientOutputs } from "@orpc/client";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { AlertCircle, SearchIcon, XIcon } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
-import {
-	Sheet,
-	SheetClose,
-	SheetDescription,
-	SheetFooter,
-	SheetHeader,
-	SheetPanel,
-	SheetPopup,
-	SheetTitle,
-} from "@/components/ui/sheet";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import z from "zod";
+import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogClose,
@@ -21,10 +20,6 @@ import {
 	DialogPanel,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Frame, FramePanel } from "@/components/ui/frame";
 import {
 	Empty,
 	EmptyContent,
@@ -34,16 +29,6 @@ import {
 	EmptyTitle,
 } from "@/components/ui/empty";
 import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
-import { Spinner } from "@/components/ui/spinner";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
 	Form,
 	FormControl,
 	FormDescription,
@@ -52,22 +37,37 @@ import {
 	FormLabel,
 	FormMessage,
 } from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
+import { Frame, FramePanel } from "@/components/ui/frame";
+import { Input } from "@/components/ui/input";
 import {
 	InputGroup,
 	InputGroupAddon,
 	InputGroupInput,
 	InputGroupText,
 } from "@/components/ui/input-group";
-import { AlertCircle, SearchIcon, XIcon } from "lucide-react";
-import Link from "next/link";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import z from "zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+	Sheet,
+	SheetClose,
+	SheetDescription,
+	SheetFooter,
+	SheetHeader,
+	SheetPanel,
+	SheetPopup,
+	SheetTitle,
+} from "@/components/ui/sheet";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Spinner } from "@/components/ui/spinner";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
+import { Textarea } from "@/components/ui/textarea";
 import { client, orpc } from "@/utils/orpc";
-import type { InferClientOutputs } from "@orpc/client";
 
 type GroupsList = InferClientOutputs<typeof client>["groups"]["list"];
 type GroupRow = GroupsList[number];
@@ -168,9 +168,7 @@ function EnrollMemberDialog({
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>Mitglied aufnehmen</DialogTitle>
-					<DialogDescription>
-						Add a member to "{group.name}".
-					</DialogDescription>
+					<DialogDescription>Add a member to "{group.name}".</DialogDescription>
 				</DialogHeader>
 				<DialogPanel className="space-y-4">
 					<div className="space-y-2">
@@ -335,7 +333,7 @@ export function EditGroupSheet({
 								Update the group name, description, and default price.
 							</SheetDescription>
 						</SheetHeader>
-						<SheetPanel className="flex-1 grid gap-4">
+						<SheetPanel className="grid flex-1 gap-4">
 							<FormField
 								control={form.control}
 								name="name"
@@ -527,7 +525,9 @@ export function GroupMembersSheet({
 										<EmptyMedia variant="icon">
 											<AlertCircle />
 										</EmptyMedia>
-										<EmptyTitle>Mitglieder konnten nicht geladen werden</EmptyTitle>
+										<EmptyTitle>
+											Mitglieder konnten nicht geladen werden
+										</EmptyTitle>
 										<EmptyDescription>
 											{error instanceof Error
 												? error.message
@@ -618,7 +618,9 @@ export function GroupMembersSheet({
 								size="sm"
 								variant="outline"
 								disabled={page >= totalPages}
-								onClick={() => setPage((prev) => Math.min(totalPages, prev + 1))}
+								onClick={() =>
+									setPage((prev) => Math.min(totalPages, prev + 1))
+								}
 							>
 								Next
 							</Button>

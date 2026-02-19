@@ -1,6 +1,6 @@
 import {
-	customResources,
 	roles as builtinRoles,
+	customResources,
 	statement,
 } from "@repo/auth/permissions";
 
@@ -22,7 +22,9 @@ export type PermissionResourceItem = {
 	actions: string[];
 };
 
-const allPermissionResources: PermissionResourceItem[] = Object.entries(statement)
+const allPermissionResources: PermissionResourceItem[] = Object.entries(
+	statement,
+)
 	.filter(([resource]) => !hiddenResources.has(resource))
 	.map(([resource, actions]) => ({
 		resource,
@@ -46,7 +48,8 @@ export const permissionResourceGroups = [
 	{
 		id: "built-in",
 		title: "Core permissions",
-		description: "Foundation permissions used across accounts and access control.",
+		description:
+			"Foundation permissions used across accounts and access control.",
 		resources: allPermissionResources.filter(
 			({ resource }) => !customResourceSet.has(resource),
 		),

@@ -1,49 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { authClient } from "@repo/auth/client";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { ChevronDownIcon, Lock, Settings2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	Collapsible,
 	CollapsiblePanel,
 	CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Frame, FrameHeader, FramePanel } from "@/components/ui/frame";
 import {
 	Empty,
-	EmptyMedia,
-	EmptyTitle,
+	EmptyContent,
 	EmptyDescription,
 	EmptyHeader,
-	EmptyContent,
+	EmptyMedia,
+	EmptyTitle,
 } from "@/components/ui/empty";
-import { Badge } from "@/components/ui/badge";
-import { authClient } from "@repo/auth/client";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { Frame, FrameHeader, FramePanel } from "@/components/ui/frame";
+import { RoleDeleteDialog } from "./role-delete-dialog";
+import { RoleEditorDialog } from "./role-editor-dialog";
+import { RolePreviewDialog } from "./role-preview-dialog";
+import { RoleSummaryCard } from "./role-summary-card";
 import {
 	builtinRolePermissions,
 	defaultRoleNames,
 	type PermissionMap,
 } from "./role-utils";
-import { useOrgRoles, type OrganizationRole } from "./use-org-roles";
-import { RoleSummaryCard } from "./role-summary-card";
-import { RoleEditorDialog } from "./role-editor-dialog";
-import { RoleDeleteDialog } from "./role-delete-dialog";
-import { RolePreviewDialog } from "./role-preview-dialog";
+import { type OrganizationRole, useOrgRoles } from "./use-org-roles";
 
 export function RolesPermissionsSection() {
 	const { data: activeOrg } = authClient.useActiveOrganization();
-	const {
-		dynamicRoles,
-		isPending,
-		error,
-		refetch,
-	} = useOrgRoles();
+	const { dynamicRoles, isPending, error, refetch } = useOrgRoles();
 	const [editorOpen, setEditorOpen] = useState(false);
 	const [editingRole, setEditingRole] = useState<OrganizationRole | null>(null);
 	const [deleteOpen, setDeleteOpen] = useState(false);
-	const [deletingRole, setDeletingRole] = useState<OrganizationRole | null>(null);
+	const [deletingRole, setDeletingRole] = useState<OrganizationRole | null>(
+		null,
+	);
 	const [previewOpen, setPreviewOpen] = useState(false);
 	const [previewRole, setPreviewRole] = useState<{
 		roleName: string;
@@ -82,7 +79,9 @@ export function RolesPermissionsSection() {
 				organizationId: activeOrg?.id,
 			});
 			if (result.error) {
-				throw new Error(result.error.message || "Rolle konnte nicht gelöscht werden");
+				throw new Error(
+					result.error.message || "Rolle konnte nicht gelöscht werden",
+				);
 			}
 			return result.data;
 		},
@@ -94,7 +93,9 @@ export function RolesPermissionsSection() {
 		},
 		onError: (error) => {
 			toast.error(
-				error instanceof Error ? error.message : "Rolle konnte nicht gelöscht werden",
+				error instanceof Error
+					? error.message
+					: "Rolle konnte nicht gelöscht werden",
 			);
 			setDeleteOpen(false);
 			setDeletingRole(null);
@@ -163,7 +164,8 @@ export function RolesPermissionsSection() {
 		/>
 	));
 
-	const showCustomEmpty = !isPending && !error && canRead && customRoleCards.length === 0;
+	const showCustomEmpty =
+		!isPending && !error && canRead && customRoleCards.length === 0;
 
 	return (
 		<Frame className="w-full">
@@ -187,32 +189,27 @@ export function RolesPermissionsSection() {
 						<div className="flex flex-col gap-6">
 							<div className="flex flex-wrap items-start justify-between gap-4">
 								<div>
-									<div className="text-sm font-semibold">
-										Roles
-									</div>
-									<div className="text-sm text-muted-foreground">
+									<div className="font-semibold text-sm">Roles</div>
+									<div className="text-muted-foreground text-sm">
 										Create roles with tailored permissions and review built-in
 										access.
 									</div>
 								</div>
-								<Button
-									onClick={openCreateDialog}
-									disabled={!canCreate}
-								>
+								<Button onClick={openCreateDialog} disabled={!canCreate}>
 									New role
 								</Button>
 							</div>
 
 							{!canCreate && (
-								<div className="flex items-center gap-2 rounded-xl border border-dashed border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
+								<div className="flex items-center gap-2 rounded-xl border border-border border-dashed bg-muted/40 px-3 py-2 text-muted-foreground text-xs">
 									<Lock className="size-3" />
-									Only admins with role management permissions can create
-									custom roles.
+									Only admins with role management permissions can create custom
+									roles.
 								</div>
 							)}
 
 							{isPending && (
-								<div className="flex items-center justify-center py-10 text-sm text-muted-foreground">
+								<div className="flex items-center justify-center py-10 text-muted-foreground text-sm">
 									Loading roles...
 								</div>
 							)}
@@ -258,8 +255,7 @@ export function RolesPermissionsSection() {
 										</EmptyMedia>
 										<EmptyTitle>Keine benutzerdefinierten Rollen</EmptyTitle>
 										<EmptyDescription>
-											Create a new role to start assigning tailored
-											permissions.
+											Create a new role to start assigning tailored permissions.
 										</EmptyDescription>
 									</EmptyHeader>
 								</Empty>

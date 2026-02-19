@@ -1,17 +1,17 @@
 "use client";
 
 import { CopyIcon, ExternalLinkIcon, QrCodeIcon } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
 	Sheet,
-	SheetPopup,
-	SheetHeader,
-	SheetTitle,
 	SheetDescription,
-	SheetPanel,
 	SheetFooter,
+	SheetHeader,
+	SheetPanel,
+	SheetPopup,
+	SheetTitle,
 } from "@/components/ui/sheet";
 
 const CHARSET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -27,27 +27,28 @@ interface GenerateQRSheetProps {
 	onOpenChange: (open: boolean) => void;
 }
 
+function subscribeToResize(callback: () => void) {
+	window.addEventListener("resize", callback);
+	return () => window.removeEventListener("resize", callback);
+}
+
 export function GenerateQRSheet({ open, onOpenChange }: GenerateQRSheetProps) {
-	const [isMobile, setIsMobile] = useState(false);
+	const isMobile = useSyncExternalStore(
+		subscribeToResize,
+		() => window.innerWidth < 640,
+		() => false,
+	);
 	const [registrationCode, setRegistrationCode] = useState(() =>
 		generateRegistrationCode(),
 	);
+	const [prevOpen, setPrevOpen] = useState(false);
 
-	useEffect(() => {
-		const checkMobile = () => {
-			setIsMobile(window.innerWidth < 640);
-		};
-
-		checkMobile();
-		window.addEventListener("resize", checkMobile);
-		return () => window.removeEventListener("resize", checkMobile);
-	}, []);
-
-	useEffect(() => {
+	if (open !== prevOpen) {
+		setPrevOpen(open);
 		if (open) {
 			setRegistrationCode(generateRegistrationCode());
 		}
-	}, [open]);
+	}
 
 	const registrationUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/register-membership?code=${registrationCode}`;
 
@@ -102,7 +103,7 @@ export function GenerateQRSheet({ open, onOpenChange }: GenerateQRSheetProps) {
 						</div>
 
 						<div className="space-y-6">
-							<div className="text-center space-y-2">
+							<div className="space-y-2 text-center">
 								<p className="text-base">Visit</p>
 								<p className="font-semibold text-foreground text-lg">
 									{typeof window !== "undefined" ? window.location.origin : ""}
@@ -115,7 +116,7 @@ export function GenerateQRSheet({ open, onOpenChange }: GenerateQRSheetProps) {
 								{registrationCode.split("").map((digit, index) => (
 									<div
 										key={index}
-										className="flex size-14 items-center justify-center rounded-lg border-2 bg-muted font-mono text-2xl font-bold"
+										className="flex size-14 items-center justify-center rounded-lg border-2 bg-muted font-bold font-mono text-2xl"
 									>
 										{digit}
 									</div>

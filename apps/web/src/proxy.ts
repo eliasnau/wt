@@ -1,5 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
 import { getSessionCookie } from "@repo/auth";
+import { type NextRequest, NextResponse } from "next/server";
 
 export default function proxy(req: NextRequest) {
 	const sessionCookie = getSessionCookie(req);

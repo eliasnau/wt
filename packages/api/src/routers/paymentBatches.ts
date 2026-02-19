@@ -43,7 +43,7 @@ function clampText(value: string, max: number): string {
 
 function normalizeSepaId(value: string, maxLength: number): string {
 	const normalized = value
-		.replace(/[^A-Za-z0-9+?\/\-:().,' ]+/g, "")
+		.replace(/[^A-Za-z0-9+?/\-:().,' ]+/g, "")
 		.replace(/^\/+/, "");
 	return normalized.length <= maxLength
 		? normalized

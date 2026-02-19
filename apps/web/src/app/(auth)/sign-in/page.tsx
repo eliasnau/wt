@@ -1,21 +1,21 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Frame, FramePanel, FrameFooter } from "@/components/ui/frame";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, ArrowLeft } from "lucide-react";
 import { authClient } from "@repo/auth/client";
+import { useForm } from "@tanstack/react-form";
+import { ArrowLeft, Loader2 } from "lucide-react";
+import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import type { Route } from "next";
 import { useQueryState } from "nuqs";
-import { AnimateIcon } from "@/components/animate-ui/icons/icon";
-import { Fingerprint } from "@/components/animate-ui/icons/fingerprint";
 import posthog from "posthog-js";
-import { useForm } from "@tanstack/react-form";
+import { toast } from "sonner";
+import { Fingerprint } from "@/components/animate-ui/icons/fingerprint";
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Frame, FrameFooter, FramePanel } from "@/components/ui/frame";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export default function SignIn() {
 	const router = useRouter();
@@ -81,15 +81,15 @@ export default function SignIn() {
 				<div className="mb-4">
 					<Link
 						href={"/" as Route}
-						className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+						className="inline-flex items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground"
 					>
 						<ArrowLeft className="h-4 w-4" />
 						Zur Startseite
 					</Link>
 				</div>
-				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+				<Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 					<FramePanel>
-						<h1 className="font-heading text-2xl mb-4">Anmelden</h1>
+						<h1 className="mb-4 font-heading text-2xl">Anmelden</h1>
 						<form
 							onSubmit={(e) => {
 								e.preventDefault();
@@ -124,7 +124,7 @@ export default function SignIn() {
 										{field.state.meta.isTouched &&
 											!field.state.meta.isValidating &&
 											field.state.meta.errors.length > 0 && (
-												<p className="text-xs text-destructive">
+												<p className="text-destructive text-xs">
 													{field.state.meta.errors[0]}
 												</p>
 											)}
@@ -169,7 +169,7 @@ export default function SignIn() {
 										{field.state.meta.isTouched &&
 											!field.state.meta.isValidating &&
 											field.state.meta.errors.length > 0 && (
-												<p className="text-xs text-destructive">
+												<p className="text-destructive text-xs">
 													{field.state.meta.errors[0]}
 												</p>
 											)}
@@ -236,7 +236,7 @@ export default function SignIn() {
 					</FramePanel>
 
 					<FrameFooter className="flex-row items-center justify-center">
-						<p className="text-sm text-muted-foreground">
+						<p className="text-muted-foreground text-sm">
 							Don't have an account?{" "}
 							<Link
 								href={"/sign-up" as Route}

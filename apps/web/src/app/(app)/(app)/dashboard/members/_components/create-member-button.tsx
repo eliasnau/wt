@@ -1,9 +1,9 @@
 "use client";
 
+import { Plus, QrCodeIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Menu, MenuPopup, MenuItem, MenuTrigger } from "@/components/ui/menu";
-import { Plus, QrCodeIcon } from "lucide-react";
+import { Menu, MenuItem, MenuPopup, MenuTrigger } from "@/components/ui/menu";
 
 export function CreateMemberButton() {
 	const router = useRouter();

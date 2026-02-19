@@ -1,11 +1,15 @@
 "use client";
 
+import { ORPCError } from "@orpc/client";
 import { authClient } from "@repo/auth/client";
-import { Loader2, Plus, Building2, Settings, ChevronRight } from "lucide-react";
+import { Building2, ChevronRight, Loader2, Plus, Settings } from "lucide-react";
+import type { Route } from "next";
+import { useRouter } from "next/navigation";
+import { useQueryState } from "nuqs";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { Badge } from "@/components/ui/badge";
-import { Frame, FramePanel, FrameFooter } from "@/components/ui/frame";
+import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogClose,
@@ -15,22 +19,18 @@ import {
 	DialogPopup,
 	DialogTitle,
 } from "@/components/ui/dialog";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-import { useRouter } from "next/navigation";
-import { useQueryState } from "nuqs";
 import {
 	Empty,
+	EmptyContent,
+	EmptyDescription,
 	EmptyHeader,
 	EmptyMedia,
 	EmptyTitle,
-	EmptyDescription,
-	EmptyContent,
 } from "@/components/ui/empty";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Frame, FrameFooter, FramePanel } from "@/components/ui/frame";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/hooks/use-auth";
-import type { Route } from "next";
-import { ORPCError } from "@orpc/client";
 
 export default function OrganizationsPage() {
 	const {
@@ -71,7 +71,12 @@ export default function OrganizationsPage() {
 			});
 
 			if (error) {
-				toast.error(error.message || "Organisation konnte nicht erstellt werden");
+				let errorMessage = "Organisation konnte nicht erstellt werden";
+				if (error.message) {
+					errorMessage = error.message;
+				}
+				toast.error(errorMessage);
+				setIsCreating(false);
 				return;
 			}
 
@@ -80,10 +85,10 @@ export default function OrganizationsPage() {
 			setOrgName("");
 			setOrgSlug("");
 			refetch();
+			setIsCreating(false);
 		} catch (error) {
 			toast.error("Organisation konnte nicht erstellt werden");
 			console.error(error);
-		} finally {
 			setIsCreating(false);
 		}
 	};
@@ -92,14 +97,18 @@ export default function OrganizationsPage() {
 		setIsSwitching(true);
 		try {
 			await switchOrganization(organizationId, "organizations_page");
-			router.push((redirectUrl || "/dashboard") as Route);
+			let targetUrl = "/dashboard";
+			if (redirectUrl) {
+				targetUrl = redirectUrl;
+			}
+			router.push(targetUrl as Route);
+			setIsSwitching(false);
 		} catch (error) {
-			toast.error(
-				error instanceof ORPCError
-					? error.message
-					: "Aktive Organisation konnte nicht gesetzt werden",
-			);
-		} finally {
+			let errorMessage = "Aktive Organisation konnte nicht gesetzt werden";
+			if (error instanceof ORPCError) {
+				errorMessage = error.message;
+			}
+			toast.error(errorMessage);
 			setIsSwitching(false);
 		}
 	};
@@ -119,20 +128,20 @@ export default function OrganizationsPage() {
 
 	if (isPending) {
 		return (
-			<div className="flex min-h-screen items-center justify-center p-4 bg-sidebar">
+			<div className="flex min-h-screen items-center justify-center bg-sidebar p-4">
 				<Loader2 className="size-6 animate-spin text-muted-foreground" />
 			</div>
 		);
 	}
 
 	return (
-		<div className="flex min-h-screen items-center justify-center p-4 bg-sidebar">
+		<div className="flex min-h-screen items-center justify-center bg-sidebar p-4">
 			<div className="w-full max-w-2xl">
-				<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+				<Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 					<FramePanel>
 						<div className="mb-6">
 							<h1 className="font-heading text-2xl">Organisation auswählen</h1>
-							<p className="text-sm text-muted-foreground">
+							<p className="text-muted-foreground text-sm">
 								Wähle eine Organisation, um fortzufahren
 							</p>
 						</div>
@@ -167,34 +176,34 @@ export default function OrganizationsPage() {
 											type="button"
 											onClick={() => handleSetActiveOrg(org.id)}
 											disabled={isSwitching}
-											className="w-full flex items-center gap-3 p-4 rounded-lg border hover:bg-accent/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+											className="flex w-full cursor-pointer items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-accent/50 disabled:cursor-not-allowed disabled:opacity-50"
 										>
 											{org.logo ? (
 												<img
 													src={org.logo}
 													alt={org.name}
-													className="size-10 rounded-md object-cover flex-shrink-0"
+													className="size-10 flex-shrink-0 rounded-md object-cover"
 												/>
 											) : (
-												<div className="size-10 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
+												<div className="flex size-10 flex-shrink-0 items-center justify-center rounded-md bg-primary/10">
 													<Building2 className="size-5 text-primary" />
 												</div>
 											)}
-											<div className="flex-1 text-left min-w-0">
-												<p className="font-medium truncate">{org.name}</p>
-												<p className="text-sm text-muted-foreground truncate">
+											<div className="min-w-0 flex-1 text-left">
+												<p className="truncate font-medium">{org.name}</p>
+												<p className="truncate text-muted-foreground text-sm">
 													{org.slug}
 												</p>
 											</div>
 											{isActive && (
 												<Badge
 													variant="secondary"
-													className="text-xs flex-shrink-0"
+													className="flex-shrink-0 text-xs"
 												>
 													Active
 												</Badge>
 											)}
-											<ChevronRight className="size-5 text-muted-foreground flex-shrink-0" />
+											<ChevronRight className="size-5 flex-shrink-0 text-muted-foreground" />
 										</button>
 									);
 								})}
@@ -245,7 +254,7 @@ export default function OrganizationsPage() {
 								}
 								placeholder="acme-inc"
 							/>
-							<p className="text-xs text-muted-foreground mt-2">
+							<p className="mt-2 text-muted-foreground text-xs">
 								Used in URLs. Only lowercase letters, numbers, and hyphens
 								allowed.
 							</p>

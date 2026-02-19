@@ -22,7 +22,9 @@ declare module "sepa" {
 		end2endId?: string;
 	};
 
-	type SepaDocument = new (format?: string) => {
+	type SepaDocument = new (
+		format?: string,
+	) => {
 		grpHdr: {
 			id: string;
 			created: Date;

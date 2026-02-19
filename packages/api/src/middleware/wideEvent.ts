@@ -1,8 +1,8 @@
 import { os } from "@orpc/server";
+import { geolocation, ipAddress } from "@vercel/functions";
+import { after } from "next/server";
 import type { BaseContext } from "../context";
 import { logger } from "../lib/logger";
-import { after } from "next/server";
-import { geolocation, ipAddress } from "@vercel/functions";
 
 export interface WideEvent {
 	log_type: "wide_event";
@@ -50,7 +50,7 @@ export const wideEventMiddleware = <TContext extends BaseContext>() => {
 		const traceId =
 			context.req.headers.get("x-trace-id") || crypto.randomUUID();
 
-		const action = path.join('.');
+		const action = path.join(".");
 
 		const event: WideEvent = {
 			log_type: "wide_event",

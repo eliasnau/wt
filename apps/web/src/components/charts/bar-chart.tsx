@@ -1,7 +1,7 @@
 import {
 	Bar,
-	BarChart as RechartsBarChart,
 	CartesianGrid,
+	BarChart as RechartsBarChart,
 	XAxis,
 } from "recharts";
 import type { ChartConfig } from "@/components/ui/chart";

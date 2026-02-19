@@ -7,9 +7,7 @@ export default function AuthLayout({
 }) {
 	return (
 		<div className="bg-sidebar">
-			<Suspense>
-				{children}
-			</Suspense>
+			<Suspense>{children}</Suspense>
 		</div>
 	);
 }

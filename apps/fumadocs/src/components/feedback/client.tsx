@@ -1,192 +1,192 @@
-'use client';
-import { cn } from '../../lib/cn';
-import { buttonVariants } from '../ui/button';
-import { MessageSquare, ThumbsDown, ThumbsUp } from 'lucide-react';
+"use client";
+import { cva } from "class-variance-authority";
+import { MessageSquare, ThumbsDown, ThumbsUp } from "lucide-react";
+import { usePathname } from "next/navigation";
 import {
-  ReactNode,
-  type SyntheticEvent,
-  useEffect,
-  useEffectEvent,
-  useState,
-  useTransition,
-} from 'react';
-import { Collapsible, CollapsibleContent } from '../ui/collapsible';
-import { cva } from 'class-variance-authority';
-import { usePathname } from 'next/navigation';
-import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+	ReactNode,
+	type SyntheticEvent,
+	useEffect,
+	useEffectEvent,
+	useState,
+	useTransition,
+} from "react";
+import { z } from "zod/mini";
+import { cn } from "../../lib/cn";
+import { buttonVariants } from "../ui/button";
+import { Collapsible, CollapsibleContent } from "../ui/collapsible";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 // import type { FeedbackBlockProps } from 'fumadocs-core/mdx-plugins/remark-feedback-block';
 import {
-  actionResponse,
-  blockFeedback,
-  pageFeedback,
-  type ActionResponse,
-  type BlockFeedback,
-  type PageFeedback,
-} from './schema';
-import { z } from 'zod/mini';
+	type ActionResponse,
+	actionResponse,
+	type BlockFeedback,
+	blockFeedback,
+	type PageFeedback,
+	pageFeedback,
+} from "./schema";
 
 const rateButtonVariants = cva(
-  'inline-flex items-center gap-2 px-3 py-2 rounded-full font-medium border text-sm [&_svg]:size-4 disabled:cursor-not-allowed',
-  {
-    variants: {
-      active: {
-        true: 'bg-fd-accent text-fd-accent-foreground [&_svg]:fill-current',
-        false: 'text-fd-muted-foreground',
-      },
-    },
-  },
+	"inline-flex items-center gap-2 rounded-full border px-3 py-2 font-medium text-sm disabled:cursor-not-allowed [&_svg]:size-4",
+	{
+		variants: {
+			active: {
+				true: "bg-fd-accent text-fd-accent-foreground [&_svg]:fill-current",
+				false: "text-fd-muted-foreground",
+			},
+		},
+	},
 );
 
 const pageFeedbackResult = z.extend(pageFeedback, {
-  response: actionResponse,
+	response: actionResponse,
 });
 
 const blockFeedbackResult = z.extend(blockFeedback, {
-  response: actionResponse,
+	response: actionResponse,
 });
 
 /**
  * A feedback component to be attached at the end of page
  */
 export function Feedback({
-  onSendAction,
+	onSendAction,
 }: {
-  onSendAction: (feedback: PageFeedback) => Promise<ActionResponse>;
+	onSendAction: (feedback: PageFeedback) => Promise<ActionResponse>;
 }) {
-  const url = usePathname();
-  const { previous, setPrevious } = useSubmissionStorage(url, (v) => {
-    const result = pageFeedbackResult.safeParse(v);
-    return result.success ? result.data : null;
-  });
-  const [opinion, setOpinion] = useState<'good' | 'bad' | null>(null);
-  const [message, setMessage] = useState('');
-  const [isPending, startTransition] = useTransition();
+	const url = usePathname();
+	const { previous, setPrevious } = useSubmissionStorage(url, (v) => {
+		const result = pageFeedbackResult.safeParse(v);
+		return result.success ? result.data : null;
+	});
+	const [opinion, setOpinion] = useState<"good" | "bad" | null>(null);
+	const [message, setMessage] = useState("");
+	const [isPending, startTransition] = useTransition();
 
-  function submit(e?: SyntheticEvent) {
-    if (opinion == null) return;
+	function submit(e?: SyntheticEvent) {
+		if (opinion == null) return;
 
-    startTransition(async () => {
-      const feedback: PageFeedback = {
-        url,
-        opinion,
-        message,
-      };
+		startTransition(async () => {
+			const feedback: PageFeedback = {
+				url,
+				opinion,
+				message,
+			};
 
-      const response = await onSendAction(feedback);
-      setPrevious({
-        response,
-        ...feedback,
-      });
-      setMessage('');
-      setOpinion(null);
-    });
+			const response = await onSendAction(feedback);
+			setPrevious({
+				response,
+				...feedback,
+			});
+			setMessage("");
+			setOpinion(null);
+		});
 
-    e?.preventDefault();
-  }
+		e?.preventDefault();
+	}
 
-  const activeOpinion = previous?.opinion ?? opinion;
+	const activeOpinion = previous?.opinion ?? opinion;
 
-  return (
-    <Collapsible
-      open={opinion !== null || previous !== null}
-      onOpenChange={(v) => {
-        if (!v) setOpinion(null);
-      }}
-      className="border-y py-3"
-    >
-      <div className="flex flex-row items-center gap-2">
-        <p className="text-sm font-medium pe-2">How is this guide?</p>
-        <button
-          disabled={previous !== null}
-          className={cn(
-            rateButtonVariants({
-              active: activeOpinion === 'good',
-            }),
-          )}
-          onClick={() => {
-            setOpinion('good');
-          }}
-        >
-          <ThumbsUp />
-          Good
-        </button>
-        <button
-          disabled={previous !== null}
-          className={cn(
-            rateButtonVariants({
-              active: activeOpinion === 'bad',
-            }),
-          )}
-          onClick={() => {
-            setOpinion('bad');
-          }}
-        >
-          <ThumbsDown />
-          Bad
-        </button>
-      </div>
-      <CollapsibleContent className="mt-3">
-        {previous ? (
-          <div className="px-3 py-6 flex flex-col items-center gap-3 bg-fd-card text-fd-muted-foreground text-sm text-center rounded-xl">
-            <p>Thank you for your feedback!</p>
-            <div className="flex flex-row items-center gap-2">
-              <a
-                href={previous.response?.githubUrl}
-                rel="noreferrer noopener"
-                target="_blank"
-                className={cn(
-                  buttonVariants({
-                    color: 'primary',
-                  }),
-                  'text-xs',
-                )}
-              >
-                View on GitHub
-              </a>
+	return (
+		<Collapsible
+			open={opinion !== null || previous !== null}
+			onOpenChange={(v) => {
+				if (!v) setOpinion(null);
+			}}
+			className="border-y py-3"
+		>
+			<div className="flex flex-row items-center gap-2">
+				<p className="pe-2 font-medium text-sm">How is this guide?</p>
+				<button
+					disabled={previous !== null}
+					className={cn(
+						rateButtonVariants({
+							active: activeOpinion === "good",
+						}),
+					)}
+					onClick={() => {
+						setOpinion("good");
+					}}
+				>
+					<ThumbsUp />
+					Good
+				</button>
+				<button
+					disabled={previous !== null}
+					className={cn(
+						rateButtonVariants({
+							active: activeOpinion === "bad",
+						}),
+					)}
+					onClick={() => {
+						setOpinion("bad");
+					}}
+				>
+					<ThumbsDown />
+					Bad
+				</button>
+			</div>
+			<CollapsibleContent className="mt-3">
+				{previous ? (
+					<div className="flex flex-col items-center gap-3 rounded-xl bg-fd-card px-3 py-6 text-center text-fd-muted-foreground text-sm">
+						<p>Thank you for your feedback!</p>
+						<div className="flex flex-row items-center gap-2">
+							<a
+								href={previous.response?.githubUrl}
+								rel="noreferrer noopener"
+								target="_blank"
+								className={cn(
+									buttonVariants({
+										color: "primary",
+									}),
+									"text-xs",
+								)}
+							>
+								View on GitHub
+							</a>
 
-              <button
-                className={cn(
-                  buttonVariants({
-                    color: 'secondary',
-                  }),
-                  'text-xs',
-                )}
-                onClick={() => {
-                  setOpinion(previous.opinion);
-                  setPrevious(null);
-                }}
-              >
-                Submit Again
-              </button>
-            </div>
-          </div>
-        ) : (
-          <form className="flex flex-col gap-3" onSubmit={submit}>
-            <textarea
-              autoFocus
-              required
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              className="border rounded-lg bg-fd-secondary text-fd-secondary-foreground p-3 resize-none focus-visible:outline-none placeholder:text-fd-muted-foreground"
-              placeholder="Leave your feedback..."
-              onKeyDown={(e) => {
-                if (!e.shiftKey && e.key === 'Enter') {
-                  submit(e);
-                }
-              }}
-            />
-            <button
-              type="submit"
-              className={cn(buttonVariants({ color: 'outline' }), 'w-fit px-3')}
-              disabled={isPending}
-            >
-              Submit
-            </button>
-          </form>
-        )}
-      </CollapsibleContent>
-    </Collapsible>
-  );
+							<button
+								className={cn(
+									buttonVariants({
+										color: "secondary",
+									}),
+									"text-xs",
+								)}
+								onClick={() => {
+									setOpinion(previous.opinion);
+									setPrevious(null);
+								}}
+							>
+								Submit Again
+							</button>
+						</div>
+					</div>
+				) : (
+					<form className="flex flex-col gap-3" onSubmit={submit}>
+						<textarea
+							autoFocus
+							required
+							value={message}
+							onChange={(e) => setMessage(e.target.value)}
+							className="resize-none rounded-lg border bg-fd-secondary p-3 text-fd-secondary-foreground placeholder:text-fd-muted-foreground focus-visible:outline-none"
+							placeholder="Leave your feedback..."
+							onKeyDown={(e) => {
+								if (!e.shiftKey && e.key === "Enter") {
+									submit(e);
+								}
+							}}
+						/>
+						<button
+							type="submit"
+							className={cn(buttonVariants({ color: "outline" }), "w-fit px-3")}
+							disabled={isPending}
+						>
+							Submit
+						</button>
+					</form>
+				)}
+			</CollapsibleContent>
+		</Collapsible>
+	);
 }
 
 /**
@@ -325,26 +325,29 @@ export function Feedback({
 //   );
 // }
 
-function useSubmissionStorage<Result>(blockId: string, validate: (v: unknown) => Result | null) {
-  const storageKey = `docs-feedback-${blockId}`;
-  const [value, setValue] = useState<Result | null>(null);
-  const validateCallback = useEffectEvent(validate);
+function useSubmissionStorage<Result>(
+	blockId: string,
+	validate: (v: unknown) => Result | null,
+) {
+	const storageKey = `docs-feedback-${blockId}`;
+	const [value, setValue] = useState<Result | null>(null);
+	const validateCallback = useEffectEvent(validate);
 
-  useEffect(() => {
-    const item = localStorage.getItem(storageKey);
-    if (item === null) return;
-    const validated = validateCallback(JSON.parse(item));
+	useEffect(() => {
+		const item = localStorage.getItem(storageKey);
+		if (item === null) return;
+		const validated = validateCallback(JSON.parse(item));
 
-    if (validated !== null) setValue(validated);
-  }, [storageKey]);
+		if (validated !== null) setValue(validated);
+	}, [storageKey]);
 
-  return {
-    previous: value,
-    setPrevious(result: Result | null) {
-      if (result) localStorage.setItem(storageKey, JSON.stringify(result));
-      else localStorage.removeItem(storageKey);
+	return {
+		previous: value,
+		setPrevious(result: Result | null) {
+			if (result) localStorage.setItem(storageKey, JSON.stringify(result));
+			else localStorage.removeItem(storageKey);
 
-      setValue(result);
-    },
-  };
+			setValue(result);
+		},
+	};
 }

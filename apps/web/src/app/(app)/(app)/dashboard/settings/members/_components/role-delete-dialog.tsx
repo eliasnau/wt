@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { Loader2 } from "lucide-react";
 import {
 	AlertDialog,
 	AlertDialogClose,
@@ -10,7 +10,7 @@ import {
 	AlertDialogPopup,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { formatRoleLabel } from "./role-utils";
 
 export type RoleDeleteDialogProps = {
@@ -45,11 +45,7 @@ export function RoleDeleteDialog({
 					>
 						Cancel
 					</AlertDialogClose>
-					<Button
-						variant="destructive"
-						onClick={onConfirm}
-						disabled={loading}
-					>
+					<Button variant="destructive" onClick={onConfirm} disabled={loading}>
 						{loading ? (
 							<>
 								<Loader2 className="mr-2 size-4 animate-spin" />

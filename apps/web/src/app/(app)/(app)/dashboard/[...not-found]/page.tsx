@@ -1,12 +1,14 @@
+import { Home, TriangleAlert } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Home, TriangleAlert } from "lucide-react";
 
 export default function DashboardNotFound() {
 	return (
 		<div className="flex min-h-[calc(100vh-8rem)] items-center justify-center">
 			<div className="flex flex-col items-center gap-2 text-center">
-				<h1 className="font-heading text-4xl lg:text-5xl">Seite nicht gefunden</h1>
+				<h1 className="font-heading text-4xl lg:text-5xl">
+					Seite nicht gefunden
+				</h1>
 				<p className="text-muted-foreground lg:text-lg">
 					This page doesn't exist
 				</p>

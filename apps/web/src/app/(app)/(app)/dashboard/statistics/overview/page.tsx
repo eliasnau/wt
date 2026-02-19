@@ -1,24 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { format, startOfMonth, subMonths } from "date-fns";
-import {
-	Header,
-	HeaderActions,
-	HeaderContent,
-	HeaderDescription,
-	HeaderTitle,
-} from "../../_components/page-header";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Frame, FrameHeader, FramePanel } from "@/components/ui/frame";
-import {
-	Select,
-	SelectItem,
-	SelectPopup,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
 import {
 	AlertCircle,
 	AreaChartIcon,
@@ -26,13 +9,16 @@ import {
 	ChevronDownIcon,
 	InfoIcon,
 } from "lucide-react";
+import { useMemo, useState } from "react";
+import { BarChart } from "@/components/charts/bar-chart";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import type { ChartConfig } from "@/components/ui/chart";
 import {
 	Collapsible,
 	CollapsiblePanel,
 	CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { useQuery } from "@tanstack/react-query";
-import { orpc } from "@/utils/orpc";
 import {
 	Empty,
 	EmptyContent,
@@ -41,13 +27,27 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
+import { Frame, FrameHeader, FramePanel } from "@/components/ui/frame";
+import {
+	Select,
+	SelectItem,
+	SelectPopup,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { cn } from "@/lib/utils";
+import { orpc } from "@/utils/orpc";
+import {
+	Header,
+	HeaderActions,
+	HeaderContent,
+	HeaderDescription,
+	HeaderTitle,
+} from "../../_components/page-header";
 import { EnrollmentCancellationPieChart } from "../_components/enrollment-cancellation-pie";
+import { FeesBreakdownChart } from "../_components/fees-breakdown-chart";
 import { GroupMixPieChart } from "../_components/group-mix-pie";
 import { PricingByGroupPieChart } from "../_components/pricing-by-group-pie";
-import { FeesBreakdownChart } from "../_components/fees-breakdown-chart";
-import { cn } from "@/lib/utils";
-import { BarChart } from "@/components/charts/bar-chart";
-import type { ChartConfig } from "@/components/ui/chart";
 
 function getMonthOptions() {
 	const currentMonth = startOfMonth(new Date());
@@ -186,7 +186,7 @@ export default function StatisticsOverviewPage() {
 								<p className="text-muted-foreground text-xs uppercase">
 									Active Members
 								</p>
-								<p className="text-2xl font-semibold">
+								<p className="font-semibold text-2xl">
 									{isPending ? "—" : (data?.kpis.activeMembers ?? 0)}
 								</p>
 								<p className="text-muted-foreground text-xs">
@@ -202,7 +202,7 @@ export default function StatisticsOverviewPage() {
 								<p className="text-muted-foreground text-xs uppercase">
 									New Enrollments
 								</p>
-								<p className="text-2xl font-semibold">
+								<p className="font-semibold text-2xl">
 									{isPending ? "—" : (data?.kpis.newEnrollments ?? 0)}
 								</p>
 								<p className="text-muted-foreground text-xs">
@@ -218,7 +218,7 @@ export default function StatisticsOverviewPage() {
 								<p className="text-muted-foreground text-xs uppercase">
 									Revenue Collected
 								</p>
-								<p className="text-2xl font-semibold">
+								<p className="font-semibold text-2xl">
 									{isPending
 										? "—"
 										: formatCurrency(data?.kpis.revenueCollected)}
@@ -236,7 +236,7 @@ export default function StatisticsOverviewPage() {
 								<p className="text-muted-foreground text-xs uppercase">
 									Cancellations
 								</p>
-								<p className="text-2xl font-semibold">
+								<p className="font-semibold text-2xl">
 									{isPending ? "—" : (data?.membership.cancellations ?? 0)}
 								</p>
 								<p className="text-muted-foreground text-xs">
@@ -270,14 +270,14 @@ export default function StatisticsOverviewPage() {
 								<Frame>
 									<FrameHeader className="flex-row items-center justify-between">
 										<div>
-											<p className="text-sm font-medium">
+											<p className="font-medium text-sm">
 												Enrollments vs Cancellations
 											</p>
 											<p className="text-muted-foreground text-xs">
 												{selectedMonthLabel}
 											</p>
 										</div>
-										<div className="flex gap-1 border rounded-lg p-1">
+										<div className="flex gap-1 rounded-lg border p-1">
 											<Button
 												variant="ghost"
 												size="sm"
@@ -328,14 +328,14 @@ export default function StatisticsOverviewPage() {
 								<Frame>
 									<FrameHeader className="flex-row items-center justify-between">
 										<div>
-											<p className="text-sm font-medium">
+											<p className="font-medium text-sm">
 												Mitglieder pro Gruppe
 											</p>
 											<p className="text-muted-foreground text-xs">
 												{selectedMonthLabel}
 											</p>
 										</div>
-										<div className="flex gap-1 border rounded-lg p-1">
+										<div className="flex gap-1 rounded-lg border p-1">
 											<Button
 												variant="ghost"
 												size="sm"
@@ -411,7 +411,7 @@ export default function StatisticsOverviewPage() {
 								<Frame>
 									<FrameHeader className="flex-row items-center justify-between">
 										<div>
-											<p className="text-sm font-medium">Mitgliedsbeiträge</p>
+											<p className="font-medium text-sm">Mitgliedsbeiträge</p>
 											<p className="text-muted-foreground text-xs">
 												By group for {selectedMonthLabel}
 											</p>
@@ -432,13 +432,13 @@ export default function StatisticsOverviewPage() {
 								<Frame>
 									<FrameHeader className="flex-row items-center justify-between">
 										<div>
-											<p className="text-sm font-medium">Fee Mix</p>
+											<p className="font-medium text-sm">Fee Mix</p>
 											<p className="text-muted-foreground text-xs">
 												Membership vs fees
 											</p>
 										</div>
 										<div className="flex items-center gap-2">
-											<div className="flex gap-1 border rounded-lg p-1">
+											<div className="flex gap-1 rounded-lg border p-1">
 												<Button
 													variant="ghost"
 													size="sm"

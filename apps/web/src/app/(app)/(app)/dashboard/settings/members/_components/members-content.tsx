@@ -1,19 +1,19 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Loader2, RouteIcon, Ban } from "lucide-react";
 import { authClient } from "@repo/auth/client";
+import { useQuery } from "@tanstack/react-query";
+import { Ban, Loader2, RouteIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
 	Empty,
-	EmptyMedia,
-	EmptyTitle,
+	EmptyContent,
 	EmptyDescription,
 	EmptyHeader,
-	EmptyContent,
+	EmptyMedia,
+	EmptyTitle,
 } from "@/components/ui/empty";
-import { useQuery } from "@tanstack/react-query";
-import { MembersSection } from "./members-section";
 import { InvitationsSection } from "./invitations-section";
+import { MembersSection } from "./members-section";
 import { RolesPermissionsSection } from "./roles-permissions-section";
 
 export function MembersContent() {
@@ -28,7 +28,9 @@ export function MembersContent() {
 			});
 
 			if (result.error) {
-				throw new Error(result.error.message || "Mitglieder konnten nicht geladen werden");
+				throw new Error(
+					result.error.message || "Mitglieder konnten nicht geladen werden",
+				);
 			}
 
 			return result.data;

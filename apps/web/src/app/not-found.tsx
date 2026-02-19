@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
+import { IconHouse } from "nucleo-glass";
 import { Button } from "@/components/landing/_components/button";
 import {
 	Section,
@@ -12,11 +13,9 @@ import {
 } from "@/components/landing/_components/typography";
 import { Footer } from "@/components/landing/footer";
 import { NotFoundTracker } from "./not-found-tracker";
-import { IconHouse } from "nucleo-glass";
 
 export const metadata: Metadata = {
-	description:
-		"Die gesuchte Seite existiert nicht oder wurde verschoben.",
+	description: "Die gesuchte Seite existiert nicht oder wurde verschoben.",
 	title: "Page Not Found",
 };
 
@@ -34,8 +33,8 @@ export default function NotFound() {
 								verschoben.
 							</Paragraph>
 							<Button size="lg" variant="primary" asChild>
-								<Link href="/" >
-									<IconHouse className="z-10 size-4"/>
+								<Link href="/">
+									<IconHouse className="z-10 size-4" />
 									<span className="relative z-10">Zur Startseite</span>
 								</Link>
 							</Button>

@@ -1,42 +1,42 @@
-import { Card } from "./card";
 import { cn } from "@/lib/utils";
+import { Card } from "./card";
 
 interface DisplayCardProps {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-  centerContent?: boolean;
-  className?: string;
-  cardHeaderClassName?: string;
+	title: string;
+	description: string;
+	icon: React.ReactNode;
+	children: React.ReactNode;
+	centerContent?: boolean;
+	className?: string;
+	cardHeaderClassName?: string;
 }
 
 export function DisplayCard({
-  title,
-  description,
-  icon,
-  children,
-  centerContent = false,
-  className,
-  cardHeaderClassName,
+	title,
+	description,
+	icon,
+	children,
+	centerContent = false,
+	className,
+	cardHeaderClassName,
 }: DisplayCardProps) {
-  return (
-    <Card
-      title={title}
-      description={description}
-      icon={icon}
-      className={cn("overflow-hidden h-full", className)}
-      variant="extra-rounding"
-      cardHeaderClassName={cardHeaderClassName}
-    >
-      <div
-        className={cn(
-          "border-t border-[#F6F6F6] bg-[#FCFCFC] flex h-full min-h-40",
-          centerContent ? "items-center justify-center" : "items-end",
-        )}
-      >
-        {children}
-      </div>
-    </Card>
-  );
+	return (
+		<Card
+			title={title}
+			description={description}
+			icon={icon}
+			className={cn("h-full overflow-hidden", className)}
+			variant="extra-rounding"
+			cardHeaderClassName={cardHeaderClassName}
+		>
+			<div
+				className={cn(
+					"flex h-full min-h-40 border-[#F6F6F6] border-t bg-[#FCFCFC]",
+					centerContent ? "items-center justify-center" : "items-end",
+				)}
+			>
+				{children}
+			</div>
+		</Card>
+	);
 }

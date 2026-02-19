@@ -1,34 +1,34 @@
 "use client";
 
-import {
-	Header,
-	HeaderContent,
-	HeaderTitle,
-	HeaderDescription,
-	HeaderActions,
-} from "../../_components/page-header";
-import { Button } from "@/components/ui/button";
+import { eachMonthOfInterval, format } from "date-fns";
 import { Calendar, ChevronDownIcon } from "lucide-react";
-import { useState } from "react";
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
+import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import { format, eachMonthOfInterval } from "date-fns";
-import { cn } from "@/lib/utils";
-import { MembershipChart } from "../_components/membership-chart";
-import { GroupsChart } from "../_components/groups-chart";
-import { RevenueChart } from "../_components/revenue-chart";
-import { TotalMembersChart } from "../_components/total-members-chart";
-import { TotalRevenueChart } from "../_components/income-chart";
 import {
 	Collapsible,
 	CollapsiblePanel,
 	CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { Frame, FrameHeader, FramePanel } from "@/components/ui/frame";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import {
+	Header,
+	HeaderActions,
+	HeaderContent,
+	HeaderDescription,
+	HeaderTitle,
+} from "../../_components/page-header";
+import { GroupsChart } from "../_components/groups-chart";
+import { TotalRevenueChart } from "../_components/income-chart";
+import { MembershipChart } from "../_components/membership-chart";
+import { RevenueChart } from "../_components/revenue-chart";
+import { TotalMembersChart } from "../_components/total-members-chart";
 
 export default function RangeComparisonPage() {
 	const [startDate, setStartDate] = useState<Date | undefined>(
@@ -50,19 +50,19 @@ export default function RangeComparisonPage() {
 
 	const monthsInRange = getMonthsInRange();
 
-	const generateMonthData = (month: Date) => {
-		const monthIndex = month.getMonth();
-		return {
-			month: format(month, "MMMM yyyy"),
-			totalMembers: 1200 + monthIndex * 15,
-			newMembers: 50 + Math.floor(Math.random() * 50),
-			cancellations: 10 + Math.floor(Math.random() * 15),
-			totalRevenue: `€${(40000 + monthIndex * 2000).toLocaleString()}.00`,
-			pendingPayments: `€${(3000 + Math.floor(Math.random() * 2000)).toLocaleString()}.00`,
-		};
-	};
-
-	const monthlyData = monthsInRange.map(generateMonthData);
+	const monthlyData = useMemo(() => {
+		return monthsInRange.map((month) => {
+			const monthIndex = month.getMonth();
+			return {
+				month: format(month, "MMMM yyyy"),
+				totalMembers: 1200 + monthIndex * 15,
+				newMembers: 50 + ((monthIndex * 7 + 3) % 50),
+				cancellations: 10 + ((monthIndex * 13 + 5) % 15),
+				totalRevenue: `€${(40000 + monthIndex * 2000).toLocaleString()}.00`,
+				pendingPayments: `€${(3000 + ((monthIndex * 11 + 7) % 2000)).toLocaleString()}.00`,
+			};
+		});
+	}, [monthsInRange]);
 
 	return (
 		<div className="flex flex-col gap-8">
@@ -93,7 +93,7 @@ export default function RangeComparisonPage() {
 						<PopoverContent className="w-auto p-0" align="end">
 							<div className="flex flex-col gap-2 p-3">
 								<div className="space-y-2">
-									<p className="text-sm font-medium">Startdatum</p>
+									<p className="font-medium text-sm">Startdatum</p>
 									<CalendarComponent
 										mode="single"
 										selected={startDate}
@@ -102,7 +102,7 @@ export default function RangeComparisonPage() {
 									/>
 								</div>
 								<div className="space-y-2">
-									<p className="text-sm font-medium">Enddatum</p>
+									<p className="font-medium text-sm">Enddatum</p>
 									<CalendarComponent
 										mode="single"
 										selected={endDate}
@@ -124,7 +124,7 @@ export default function RangeComparisonPage() {
 								className="data-panel-open:[&_svg]:rotate-180"
 								render={(props) => (
 									<Button variant="ghost" {...props}>
-										<ChevronDownIcon className="size-4 mr-2" />
+										<ChevronDownIcon className="mr-2 size-4" />
 										<span className="font-semibold text-sm">
 											Membership Analytics
 										</span>
@@ -151,7 +151,7 @@ export default function RangeComparisonPage() {
 								className="data-panel-open:[&_svg]:rotate-180"
 								render={(props) => (
 									<Button variant="ghost" {...props}>
-										<ChevronDownIcon className="size-4 mr-2" />
+										<ChevronDownIcon className="mr-2 size-4" />
 										<span className="font-semibold text-sm">
 											Financial Analytics
 										</span>

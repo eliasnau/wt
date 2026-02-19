@@ -11,7 +11,7 @@ import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Blocks } from "@/components/animate-ui/icons/blocks";
 import { ChartLine } from "@/components/animate-ui/icons/chart-line";
 import { AnimateIcon } from "@/components/animate-ui/icons/icon";
@@ -118,8 +118,6 @@ export function DashboardLayout() {
 	const { state } = useSidebar();
 	const pathname = usePathname();
 	const isCollapsed = state === "collapsed";
-	const [openCollapsible, setOpenCollapsible] = useState<string | null>(null);
-
 	const activeCollapsibleId = useMemo(() => {
 		const activeParent = routes.find((route) =>
 			route.subs?.some((sub) => pathname?.startsWith(sub.link)),
@@ -127,11 +125,18 @@ export function DashboardLayout() {
 		return activeParent?.id ?? null;
 	}, [pathname]);
 
-	useEffect(() => {
+	const [openCollapsible, setOpenCollapsible] = useState<string | null>(
+		activeCollapsibleId,
+	);
+	const [prevActiveCollapsibleId, setPrevActiveCollapsibleId] =
+		useState(activeCollapsibleId);
+
+	if (activeCollapsibleId !== prevActiveCollapsibleId) {
+		setPrevActiveCollapsibleId(activeCollapsibleId);
 		if (activeCollapsibleId) {
 			setOpenCollapsible(activeCollapsibleId);
 		}
-	}, [activeCollapsibleId]);
+	}
 
 	const isRouteActive = (link: string) =>
 		link === "/dashboard"

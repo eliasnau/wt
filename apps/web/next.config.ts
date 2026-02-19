@@ -1,6 +1,6 @@
-import type { NextConfig } from "next";
 import { withPostHogConfig } from "@posthog/nextjs-config";
 import { env } from "@repo/env/web";
+import type { NextConfig } from "next";
 import "@repo/env/web";
 
 const nextConfig: NextConfig = {
@@ -24,7 +24,7 @@ const nextConfig: NextConfig = {
 	skipTrailingSlashRedirect: true,
 };
 
-export default  nextConfig
+export default nextConfig;
 // withPostHogConfig(nextConfig, {
 // 	personalApiKey: env.POSTHOG_API_KEY,
 // 	envId: env.POSTHOG_ENV_ID,

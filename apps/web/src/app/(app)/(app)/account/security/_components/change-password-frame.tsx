@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import { authClient } from "@repo/auth/client";
+import { Info, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { AnimateIcon } from "@/components/animate-ui/icons/icon";
+import { Key } from "@/components/animate-ui/icons/key";
 import { Button } from "@/components/ui/button";
-import {
-	Frame,
-	FramePanel,
-	FrameFooter,
-} from "@/components/ui/frame";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Dialog,
 	DialogClose,
@@ -18,18 +18,14 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Frame, FrameFooter, FramePanel } from "@/components/ui/frame";
+import { Input } from "@/components/ui/input";
 import {
 	Tooltip,
 	TooltipContent,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Field, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { toast } from "sonner";
-import { Loader2, Info } from "lucide-react";
-import { AnimateIcon } from "@/components/animate-ui/icons/icon";
-import { Key } from "@/components/animate-ui/icons/key";
 
 export function ChangePasswordFrame() {
 	const [open, setOpen] = useState(false);
@@ -84,41 +80,52 @@ export function ChangePasswordFrame() {
 			});
 
 			if (error) {
-				toast.error(error.message || "Passwort konnte nicht geändert werden");
+				let errorMessage = "Passwort konnte nicht geändert werden";
+				if (error.message) {
+					errorMessage = error.message;
+				}
+				toast.error(errorMessage);
 				console.error(error);
 			} else {
-				toast.success(
-					revokeOtherSessions
-						? "Passwort geändert und andere Sitzungen widerrufen"
-						: "Passwort erfolgreich geändert"
-				);
+				let successMessage = "Passwort erfolgreich geändert";
+				if (revokeOtherSessions) {
+					successMessage = "Passwort geändert und andere Sitzungen widerrufen";
+				}
+				toast.success(successMessage);
 				resetForm();
 				setOpen(false);
 			}
+			setIsChangingPassword(false);
 		} catch (error) {
 			toast.error("Passwort konnte nicht geändert werden");
 			console.error(error);
-		} finally {
 			setIsChangingPassword(false);
 		}
 	};
 
 	return (
-		<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+		<Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 			<FramePanel>
-				<h2 className="font-heading text-xl mb-2 text-foreground">Passwort</h2>
-				<p className="text-sm text-muted-foreground">
+				<h2 className="mb-2 font-heading text-foreground text-xl">Passwort</h2>
+				<p className="text-muted-foreground text-sm">
 					Aktualisiere dein Passwort regelmäßig, um dein Konto zu schützen.
 				</p>
 			</FramePanel>
-			<FrameFooter className="flex-row justify-between items-center">
+			<FrameFooter className="flex-row items-center justify-between">
 				<Tooltip>
-					<TooltipTrigger delay={0} render={<button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors" />}>
+					<TooltipTrigger
+						delay={0}
+						render={
+							<button className="flex items-center gap-1.5 text-muted-foreground text-xs transition-colors hover:text-foreground" />
+						}
+					>
 						<Info className="size-3.5" />
 						<span>Passwortanforderungen</span>
 					</TooltipTrigger>
 					<TooltipContent>
-						<p className="text-xs">Das Passwort muss mindestens 8 Zeichen lang sein</p>
+						<p className="text-xs">
+							Das Passwort muss mindestens 8 Zeichen lang sein
+						</p>
 					</TooltipContent>
 				</Tooltip>
 
@@ -175,14 +182,17 @@ export function ChangePasswordFrame() {
 								/>
 								<label
 									htmlFor="revoke-sessions"
-									className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+									className="cursor-pointer font-medium text-sm leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
 								>
 									Sign out from all other devices
 								</label>
 							</div>
 						</DialogPanel>
 						<DialogFooter>
-							<DialogClose render={<Button variant="ghost" />} disabled={isChangingPassword}>
+							<DialogClose
+								render={<Button variant="ghost" />}
+								disabled={isChangingPassword}
+							>
 								Cancel
 							</DialogClose>
 							<Button

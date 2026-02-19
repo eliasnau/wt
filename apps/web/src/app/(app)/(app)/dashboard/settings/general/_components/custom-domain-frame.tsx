@@ -7,20 +7,22 @@ import {
 	Loader2,
 	Trash2,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { type DNSRecord, DNSTable } from "@/components/dns-table";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
 	DialogClose,
+	DialogDescription,
 	DialogFooter,
 	DialogHeader,
 	DialogPanel,
 	DialogPopup,
 	DialogTitle,
-	DialogDescription,
 } from "@/components/ui/dialog";
 import {
 	Empty,
@@ -32,9 +34,7 @@ import {
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Frame, FrameFooter, FramePanel } from "@/components/ui/frame";
 import { Input } from "@/components/ui/input";
-import { type DNSRecord, DNSTable } from "@/components/dns-table";
 import { client } from "@/utils/orpc";
-import { useRouter } from "next/navigation";
 
 export function CustomDomainFrame() {
 	const [dialogOpen, setDialogOpen] = useState(false);
@@ -56,8 +56,16 @@ export function CustomDomainFrame() {
 			try {
 				const status = await client.organizations.getDomainStatus();
 				setCurrentDomain(status.domain);
-				setIsVerified(status.verified || false);
-				setVerificationRequired(status.verificationRequired || false);
+				let verified = false;
+				if (status.verified) {
+					verified = true;
+				}
+				setIsVerified(verified);
+				let verificationReq = false;
+				if (status.verificationRequired) {
+					verificationReq = true;
+				}
+				setVerificationRequired(verificationReq);
 
 				// Convert dnsRecordsToSet to DNSRecord format
 				if (status.dnsRecordsToSet) {
@@ -70,9 +78,9 @@ export function CustomDomainFrame() {
 				} else {
 					setVerificationRecords([]);
 				}
+				setIsLoading(false);
 			} catch (error) {
 				console.error("Domain-Status konnte nicht abgerufen werden:", error);
-			} finally {
 				setIsLoading(false);
 			}
 		};
@@ -93,9 +101,11 @@ export function CustomDomainFrame() {
 			return;
 		}
 
-		const domainRegex = /^[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,}$/i;
+		const domainRegex = /^[a-z0-9]+([-.]{1}[a-z0-9]+)*\.[a-z]{2,}$/i;
 		if (!domainRegex.test(domain.trim())) {
-			toast.error("Bitte gib eine gültige Domain ein (z. B. members.example.com)");
+			toast.error(
+				"Bitte gib eine gültige Domain ein (z. B. members.example.com)",
+			);
 			return;
 		}
 
@@ -124,25 +134,35 @@ export function CustomDomainFrame() {
 			if (result.verified) {
 				toast.success("Domain erfolgreich hinzugefügt und verifiziert!");
 			} else {
-				const statusMessage =
-					result.status === "Pending Verification"
-						? "Domain hinzugefügt! Bitte verifiziere den Besitz, indem du den erforderlichen DNS-Eintrag hinzufügst."
-						: "Domain hinzugefügt! Bitte konfiguriere deine DNS-Einstellungen.";
+				let statusMessage =
+					"Domain hinzugefügt! Bitte konfiguriere deine DNS-Einstellungen.";
+				if (result.status === "Pending Verification") {
+					statusMessage =
+						"Domain hinzugefügt! Bitte verifiziere den Besitz, indem du den erforderlichen DNS-Eintrag hinzufügst.";
+				}
 				toast.warning(statusMessage);
 			}
 
 			setDialogOpen(false);
 			router.refresh();
+			setIsAdding(false);
 		} catch (error: any) {
-			toast.error(error?.message || "Domain konnte nicht hinzugefügt werden");
+			let errorMessage = "Domain konnte nicht hinzugefügt werden";
+			if (error && error.message) {
+				errorMessage = error.message;
+			}
+			toast.error(errorMessage);
 			console.error(error);
-		} finally {
 			setIsAdding(false);
 		}
 	};
 
 	const handleRemoveDomain = async () => {
-		if (!confirm("Möchtest du diese benutzerdefinierte Domain wirklich entfernen?")) {
+		if (
+			!confirm(
+				"Möchtest du diese benutzerdefinierte Domain wirklich entfernen?",
+			)
+		) {
 			return;
 		}
 
@@ -157,10 +177,14 @@ export function CustomDomainFrame() {
 			setVerificationRequired(false);
 			setVerificationRecords([]);
 			router.refresh();
+			setIsRemoving(false);
 		} catch (error: any) {
-			toast.error(error?.message || "Domain konnte nicht entfernt werden");
+			let errorMessage = "Domain konnte nicht entfernt werden";
+			if (error && error.message) {
+				errorMessage = error.message;
+			}
+			toast.error(errorMessage);
 			console.error(error);
-		} finally {
 			setIsRemoving(false);
 		}
 	};
@@ -170,7 +194,7 @@ export function CustomDomainFrame() {
 
 	if (isLoading) {
 		return (
-			<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+			<Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 				<FramePanel className="flex items-center justify-center py-8">
 					<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
 				</FramePanel>
@@ -180,7 +204,7 @@ export function CustomDomainFrame() {
 
 	return (
 		<>
-			<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+			<Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 				<FramePanel>
 					{!currentDomain ? (
 						<Empty>
@@ -188,7 +212,9 @@ export function CustomDomainFrame() {
 								<EmptyMedia variant="icon">
 									<Globe />
 								</EmptyMedia>
-								<EmptyTitle>Keine benutzerdefinierte Domain konfiguriert</EmptyTitle>
+								<EmptyTitle>
+									Keine benutzerdefinierte Domain konfiguriert
+								</EmptyTitle>
 								<EmptyDescription>
 									You haven't set up a custom domain yet. Add one to use your
 									own domain for your organization's member area.

@@ -1,11 +1,11 @@
 "use client";
 
-import { Pie, PieChart, LabelList } from "recharts";
+import { LabelList, Pie, PieChart } from "recharts";
 import {
+	type ChartConfig,
 	ChartContainer,
 	ChartTooltip,
 	ChartTooltipContent,
-	type ChartConfig,
 } from "@/components/ui/chart";
 
 const chartConfig = {
@@ -52,7 +52,7 @@ export function EnrollmentCancellationPieChart({
 	return (
 		<ChartContainer
 			config={chartConfig}
-			className="[&_.recharts-text]:fill-foreground mx-auto aspect-square max-h-[240px]"
+			className="mx-auto aspect-square max-h-[240px] [&_.recharts-text]:fill-foreground"
 		>
 			<PieChart>
 				<ChartTooltip

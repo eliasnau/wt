@@ -217,6 +217,7 @@ export default function PaymentBatchesTable({
 	onExportSepa?: (batchId: string) => void;
 	exportingBatchId?: string | null;
 }) {
+	"use no memo";
 	const pageSize = 10;
 
 	const [pagination, setPagination] = useState<PaginationState>({
@@ -267,7 +268,7 @@ export default function PaymentBatchesTable({
 	// If there are no batches at all, show empty state
 	if (!loading && !data?.length) {
 		return (
-			<Frame className="after:-inset-[5px] after:-z-1 relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
+			<Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
 				<FramePanel className="py-12">
 					<Empty>
 						<EmptyHeader>

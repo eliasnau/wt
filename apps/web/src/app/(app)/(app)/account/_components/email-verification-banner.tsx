@@ -1,16 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { MailWarning, Loader2 } from "lucide-react";
-import { toast } from "sonner";
 import { authClient } from "@repo/auth/client";
-import { Button } from "@/components/ui/button";
+import { Loader2, MailWarning } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
 import {
 	Alert,
 	AlertAction,
 	AlertDescription,
 	AlertTitle,
 } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 export function EmailVerificationBanner({ email }: { email: string }) {
 	const [isSending, setIsSending] = useState(false);
@@ -24,17 +24,22 @@ export function EmailVerificationBanner({ email }: { email: string }) {
 			});
 
 			if (result.error) {
-				toast.error(
-					result.error.message || "Bestätigungs-E-Mail konnte nicht gesendet werden",
-				);
+				let errorMessage = "Bestätigungs-E-Mail konnte nicht gesendet werden";
+				if (result.error.message) {
+					errorMessage = result.error.message;
+				}
+				toast.error(errorMessage);
+				setIsSending(false);
 				return;
 			}
 
-			toast.success("Bestätigungs-E-Mail gesendet! Bitte prüfe deinen Posteingang.");
+			toast.success(
+				"Bestätigungs-E-Mail gesendet! Bitte prüfe deinen Posteingang.",
+			);
+			setIsSending(false);
 		} catch (error) {
 			toast.error("Bestätigungs-E-Mail konnte nicht gesendet werden");
 			console.error(error);
-		} finally {
 			setIsSending(false);
 		}
 	};
@@ -44,8 +49,8 @@ export function EmailVerificationBanner({ email }: { email: string }) {
 			<MailWarning />
 			<AlertTitle>E-Mail nicht verifiziert</AlertTitle>
 			<AlertDescription>
-				Deine E-Mail-Adresse wurde noch nicht verifiziert. Bitte prüfe deinen Posteingang auf
-				einen Bestätigungslink.
+				Deine E-Mail-Adresse wurde noch nicht verifiziert. Bitte prüfe deinen
+				Posteingang auf einen Bestätigungslink.
 			</AlertDescription>
 			<AlertAction>
 				<Button

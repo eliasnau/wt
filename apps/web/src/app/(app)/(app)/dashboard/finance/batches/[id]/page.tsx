@@ -112,7 +112,7 @@ export default function BatchDetailsPage({
 				</div>
 			</div>
 
-			<BatchInfoCard batch={(data.batch as any)} />
+			<BatchInfoCard batch={data.batch as any} />
 
 			<div>
 				<h2 className="mb-4 font-semibold text-xl">Zahlungen</h2>

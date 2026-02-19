@@ -31,9 +31,9 @@ export function SwitchingSection() {
 										size="lg"
 										className="max-w-lg text-left md:text-left"
 									>
-										Don't let the fear of data loss hold you back. We provide
-										a free migration services to move your member data,
-										payments, and history seamlessly.
+										Don't let the fear of data loss hold you back. We provide a
+										free migration services to move your member data, payments,
+										and history seamlessly.
 									</Paragraph>
 								</div>
 								<div className="flex flex-wrap gap-4">

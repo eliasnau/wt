@@ -1,7 +1,7 @@
 import { ChevronLeft } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Button } from "@/components/ui/button";
 import { Sidebar, useSidebar } from "@/components/ui/sidebar";
 import { AccountSidebar } from "./account";
@@ -50,8 +50,11 @@ export function AppSidebar() {
 	const pathname = usePathname();
 	const [isSidebarHovered, setIsSidebarHovered] = useState(false);
 	const [transitionDirection, setTransitionDirection] = useState(1);
-	const [hasMounted, setHasMounted] = useState(false);
-	const previousSection = useRef<"dashboard" | "account" | "other">("other");
+	const mounted = useSyncExternalStore(
+		() => () => {},
+		() => true,
+		() => false,
+	);
 
 	let section: "dashboard" | "account" | "other" = "other";
 	let Content = null;
@@ -63,21 +66,18 @@ export function AppSidebar() {
 		Content = <AccountSidebar />;
 	}
 
-	useEffect(() => {
-		setHasMounted(true);
-	}, []);
+	const [prevSection, setPrevSection] = useState<
+		"dashboard" | "account" | "other"
+	>(section);
 
-	useEffect(() => {
-		const prev = previousSection.current;
-		if (prev !== section) {
-			if (prev === "dashboard" && section === "account") {
-				setTransitionDirection(1);
-			} else if (prev === "account" && section === "dashboard") {
-				setTransitionDirection(-1);
-			}
-			previousSection.current = section;
+	if (prevSection !== section) {
+		if (prevSection === "dashboard" && section === "account") {
+			setTransitionDirection(1);
+		} else if (prevSection === "account" && section === "dashboard") {
+			setTransitionDirection(-1);
 		}
-	}, [section]);
+		setPrevSection(section);
+	}
 
 	return (
 		<>
@@ -93,7 +93,7 @@ export function AppSidebar() {
 						<motion.div
 							key={section}
 							initial={
-								hasMounted
+								mounted
 									? {
 											opacity: 0,
 											x: transitionDirection * 10,

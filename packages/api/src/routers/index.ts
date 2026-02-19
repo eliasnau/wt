@@ -2,8 +2,8 @@ import type { RouterClient } from "@orpc/server";
 import { publicProcedure } from "../index";
 import { groupsRouter } from "./groups";
 import { membersRouter } from "./members";
-import { paymentBatchesRouter } from "./paymentBatches";
 import { organizationsRouter } from "./organizations";
+import { paymentBatchesRouter } from "./paymentBatches";
 import { statisticsRouter } from "./statistics";
 
 export const appRouter = {

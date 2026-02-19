@@ -1,373 +1,385 @@
 "use client";
 
-import type { ComponentProps, ReactNode } from "react";
-
 import { useControllableState } from "@radix-ui/react-use-controllable-state";
+import { ChevronsUpDownIcon } from "lucide-react";
+import type { ComponentProps, ReactNode } from "react";
+import {
+	createContext,
+	useCallback,
+	useContext,
+	useEffect,
+	useMemo,
+	useRef,
+	useState,
+} from "react";
 import { Button } from "@/components/ui/button";
 import {
-  Command,
-  CommandEmpty,
-  CommandInput,
-  CommandItem,
-  CommandList,
+	Command,
+	CommandEmpty,
+	CommandInput,
+	CommandItem,
+	CommandList,
 } from "@/components/ui/command";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-import { ChevronsUpDownIcon } from "lucide-react";
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
 
 const deviceIdRegex = /\(([\da-fA-F]{4}:[\da-fA-F]{4})\)$/;
 
 interface MicSelectorContextType {
-  data: MediaDeviceInfo[];
-  value: string | undefined;
-  onValueChange?: (value: string) => void;
-  open: boolean;
-  onOpenChange?: (open: boolean) => void;
-  width: number;
-  setWidth?: (width: number) => void;
+	data: MediaDeviceInfo[];
+	value: string | undefined;
+	onValueChange?: (value: string) => void;
+	open: boolean;
+	onOpenChange?: (open: boolean) => void;
+	width: number;
+	setWidth?: (width: number) => void;
 }
 
 const MicSelectorContext = createContext<MicSelectorContextType>({
-  data: [],
-  onOpenChange: undefined,
-  onValueChange: undefined,
-  open: false,
-  setWidth: undefined,
-  value: undefined,
-  width: 200,
+	data: [],
+	onOpenChange: undefined,
+	onValueChange: undefined,
+	open: false,
+	setWidth: undefined,
+	value: undefined,
+	width: 200,
 });
 
 export type MicSelectorProps = ComponentProps<typeof Popover> & {
-  defaultValue?: string;
-  value?: string | undefined;
-  onValueChange?: (value: string | undefined) => void;
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
+	defaultValue?: string;
+	value?: string | undefined;
+	onValueChange?: (value: string | undefined) => void;
+	open?: boolean;
+	onOpenChange?: (open: boolean) => void;
 };
 
 export const MicSelector = ({
-  defaultValue,
-  value: controlledValue,
-  onValueChange: controlledOnValueChange,
-  defaultOpen = false,
-  open: controlledOpen,
-  onOpenChange: controlledOnOpenChange,
-  ...props
+	defaultValue,
+	value: controlledValue,
+	onValueChange: controlledOnValueChange,
+	defaultOpen = false,
+	open: controlledOpen,
+	onOpenChange: controlledOnOpenChange,
+	...props
 }: MicSelectorProps) => {
-  const [value, onValueChange] = useControllableState<string | undefined>({
-    defaultProp: defaultValue,
-    onChange: controlledOnValueChange,
-    prop: controlledValue,
-  });
-  const [open, onOpenChange] = useControllableState({
-    defaultProp: defaultOpen,
-    onChange: controlledOnOpenChange,
-    prop: controlledOpen,
-  });
-  const [width, setWidth] = useState(200);
-  const { devices, loading, hasPermission, loadDevices } = useAudioDevices();
+	const [value, onValueChange] = useControllableState<string | undefined>({
+		defaultProp: defaultValue,
+		onChange: controlledOnValueChange,
+		prop: controlledValue,
+	});
+	const [open, onOpenChange] = useControllableState({
+		defaultProp: defaultOpen,
+		onChange: controlledOnOpenChange,
+		prop: controlledOpen,
+	});
+	const [width, setWidth] = useState(200);
+	const { devices, loading, hasPermission, loadDevices } = useAudioDevices();
 
-  useEffect(() => {
-    if (open && !hasPermission && !loading) {
-      loadDevices();
-    }
-  }, [open, hasPermission, loading, loadDevices]);
+	useEffect(() => {
+		if (open && !hasPermission && !loading) {
+			loadDevices();
+		}
+	}, [open, hasPermission, loading, loadDevices]);
 
-  const contextValue = useMemo(
-    () => ({
-      data: devices,
-      onOpenChange,
-      onValueChange,
-      open,
-      setWidth,
-      value,
-      width,
-    }),
-    [devices, onOpenChange, onValueChange, open, setWidth, value, width]
-  );
+	const contextValue = useMemo(
+		() => ({
+			data: devices,
+			onOpenChange,
+			onValueChange,
+			open,
+			setWidth,
+			value,
+			width,
+		}),
+		[devices, onOpenChange, onValueChange, open, setWidth, value, width],
+	);
 
-  return (
-    <MicSelectorContext.Provider value={contextValue}>
-      <Popover {...props} onOpenChange={onOpenChange} open={open} />
-    </MicSelectorContext.Provider>
-  );
+	return (
+		<MicSelectorContext.Provider value={contextValue}>
+			<Popover {...props} onOpenChange={onOpenChange} open={open} />
+		</MicSelectorContext.Provider>
+	);
 };
 
 export type MicSelectorTriggerProps = ComponentProps<typeof Button>;
 
 export const MicSelectorTrigger = ({
-  children,
-  ...props
+	children,
+	...props
 }: MicSelectorTriggerProps) => {
-  const { setWidth } = useContext(MicSelectorContext);
-  const ref = useRef<HTMLButtonElement>(null);
+	const { setWidth } = useContext(MicSelectorContext);
+	const ref = useRef<HTMLButtonElement>(null);
 
-  useEffect(() => {
-    // Create a ResizeObserver to detect width changes
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const newWidth = (entry.target as HTMLElement).offsetWidth;
-        if (newWidth) {
-          setWidth?.(newWidth);
-        }
-      }
-    });
+	useEffect(() => {
+		// Create a ResizeObserver to detect width changes
+		const resizeObserver = new ResizeObserver((entries) => {
+			for (const entry of entries) {
+				const newWidth = (entry.target as HTMLElement).offsetWidth;
+				if (newWidth) {
+					setWidth?.(newWidth);
+				}
+			}
+		});
 
-    if (ref.current) {
-      resizeObserver.observe(ref.current);
-    }
+		if (ref.current) {
+			resizeObserver.observe(ref.current);
+		}
 
-    // Clean up the observer when component unmounts
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [setWidth]);
+		// Clean up the observer when component unmounts
+		return () => {
+			resizeObserver.disconnect();
+		};
+	}, [setWidth]);
 
-  return (
-    <PopoverTrigger render={<Button variant="outline" {...props} ref={ref} />}>{children}<ChevronsUpDownIcon
-                className="shrink-0 text-muted-foreground"
-                size={16}
-              /></PopoverTrigger>
-  );
+	return (
+		<PopoverTrigger render={<Button variant="outline" {...props} ref={ref} />}>
+			{children}
+			<ChevronsUpDownIcon
+				className="shrink-0 text-muted-foreground"
+				size={16}
+			/>
+		</PopoverTrigger>
+	);
 };
 
 export type MicSelectorContentProps = ComponentProps<typeof Command> & {
-  className?: string;
-  popoverOptions?: ComponentProps<typeof PopoverContent>;
+	className?: string;
+	popoverOptions?: ComponentProps<typeof PopoverContent>;
 };
 
 export const MicSelectorContent = ({
-  className,
-  popoverOptions,
-  ...props
+	className,
+	popoverOptions,
+	...props
 }: MicSelectorContentProps) => {
-  const { width, onValueChange, value } = useContext(MicSelectorContext);
+	const { width, onValueChange, value } = useContext(MicSelectorContext);
 
-  return (
-    <PopoverContent
-      className={cn("p-0", className)}
-      style={{ width }}
-      {...popoverOptions}
-    >
-      <Command onValueChange={onValueChange} value={value} {...props} />
-    </PopoverContent>
-  );
+	return (
+		<PopoverContent
+			className={cn("p-0", className)}
+			style={{ width }}
+			{...popoverOptions}
+		>
+			<Command onValueChange={onValueChange} value={value} {...props} />
+		</PopoverContent>
+	);
 };
 
 export type MicSelectorInputProps = ComponentProps<typeof CommandInput> & {
-  value?: string;
-  defaultValue?: string;
-  onValueChange?: (value: string) => void;
+	value?: string;
+	defaultValue?: string;
+	onValueChange?: (value: string) => void;
 };
 
 export const MicSelectorInput = ({ ...props }: MicSelectorInputProps) => (
-  <CommandInput placeholder="Search microphones..." {...props} />
+	<CommandInput placeholder="Search microphones..." {...props} />
 );
 
 export type MicSelectorListProps = Omit<
-  ComponentProps<typeof CommandList>,
-  "children"
+	ComponentProps<typeof CommandList>,
+	"children"
 > & {
-  children: (devices: MediaDeviceInfo[]) => ReactNode;
+	children: (devices: MediaDeviceInfo[]) => ReactNode;
 };
 
 export const MicSelectorList = ({
-  children,
-  ...props
+	children,
+	...props
 }: MicSelectorListProps) => {
-  const { data } = useContext(MicSelectorContext);
+	const { data } = useContext(MicSelectorContext);
 
-  return <CommandList {...props}>{children(data)}</CommandList>;
+	return <CommandList {...props}>{children(data)}</CommandList>;
 };
 
 export type MicSelectorEmptyProps = ComponentProps<typeof CommandEmpty>;
 
 export const MicSelectorEmpty = ({
-  children = "No microphone found.",
-  ...props
+	children = "No microphone found.",
+	...props
 }: MicSelectorEmptyProps) => <CommandEmpty {...props}>{children}</CommandEmpty>;
 
 export type MicSelectorItemProps = ComponentProps<typeof CommandItem>;
 
 export const MicSelectorItem = (props: MicSelectorItemProps) => {
-  const { onValueChange, onOpenChange } = useContext(MicSelectorContext);
+	const { onValueChange, onOpenChange } = useContext(MicSelectorContext);
 
-  const handleSelect = useCallback(
-    () => {
-      const currentValue =
-        typeof props.value === "string" ? props.value : undefined;
-      if (!currentValue) {
-        return;
-      }
-      onValueChange?.(currentValue);
-      onOpenChange?.(false);
-    },
-    [onValueChange, onOpenChange, props.value]
-  );
+	const handleSelect = useCallback(() => {
+		const currentValue =
+			typeof props.value === "string" ? props.value : undefined;
+		if (!currentValue) {
+			return;
+		}
+		onValueChange?.(currentValue);
+		onOpenChange?.(false);
+	}, [onValueChange, onOpenChange, props.value]);
 
-  return <CommandItem onSelect={handleSelect} {...props} />;
+	return <CommandItem onSelect={handleSelect} {...props} />;
 };
 
 export type MicSelectorLabelProps = ComponentProps<"span"> & {
-  device: MediaDeviceInfo;
+	device: MediaDeviceInfo;
 };
 
 export const MicSelectorLabel = ({
-  device,
-  className,
-  ...props
+	device,
+	className,
+	...props
 }: MicSelectorLabelProps) => {
-  const matches = device.label.match(deviceIdRegex);
+	const matches = device.label.match(deviceIdRegex);
 
-  if (!matches) {
-    return (
-      <span className={className} {...props}>
-        {device.label}
-      </span>
-    );
-  }
+	if (!matches) {
+		return (
+			<span className={className} {...props}>
+				{device.label}
+			</span>
+		);
+	}
 
-  const [, deviceId] = matches;
-  const name = device.label.replace(deviceIdRegex, "");
+	const [, deviceId] = matches;
+	const name = device.label.replace(deviceIdRegex, "");
 
-  return (
-    <span className={className} {...props}>
-      <span>{name}</span>
-      <span className="text-muted-foreground"> ({deviceId})</span>
-    </span>
-  );
+	return (
+		<span className={className} {...props}>
+			<span>{name}</span>
+			<span className="text-muted-foreground"> ({deviceId})</span>
+		</span>
+	);
 };
 
 export type MicSelectorValueProps = ComponentProps<"span">;
 
 export const MicSelectorValue = ({
-  className,
-  ...props
+	className,
+	...props
 }: MicSelectorValueProps) => {
-  const { data, value } = useContext(MicSelectorContext);
-  const currentDevice = data.find((d) => d.deviceId === value);
+	const { data, value } = useContext(MicSelectorContext);
+	const currentDevice = data.find((d) => d.deviceId === value);
 
-  if (!currentDevice) {
-    return (
-      <span className={cn("flex-1 text-left", className)} {...props}>
-        Select microphone...
-      </span>
-    );
-  }
+	if (!currentDevice) {
+		return (
+			<span className={cn("flex-1 text-left", className)} {...props}>
+				Select microphone...
+			</span>
+		);
+	}
 
-  return (
-    <MicSelectorLabel
-      className={cn("flex-1 text-left", className)}
-      device={currentDevice}
-      {...props}
-    />
-  );
+	return (
+		<MicSelectorLabel
+			className={cn("flex-1 text-left", className)}
+			device={currentDevice}
+			{...props}
+		/>
+	);
 };
 
+async function fetchAudioDevices() {
+	const deviceList = await navigator.mediaDevices.enumerateDevices();
+	return deviceList.filter((device) => device.kind === "audioinput");
+}
+
+async function fetchAudioDevicesWithPermission() {
+	const tempStream = await navigator.mediaDevices.getUserMedia({
+		audio: true,
+	});
+
+	const tracks = tempStream.getTracks();
+	for (let i = 0; i < tracks.length; i++) {
+		tracks[i].stop();
+	}
+
+	return fetchAudioDevices();
+}
+
+function getErrorMessage(error: unknown) {
+	let message = "Failed to get audio devices";
+	if (error instanceof Error) {
+		message = error.message;
+	}
+	return message;
+}
+
 export const useAudioDevices = () => {
-  const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [hasPermission, setHasPermission] = useState(false);
+	const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState<string | null>(null);
+	const [hasPermission, setHasPermission] = useState(false);
 
-  const loadDevicesWithoutPermission = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
+	const loadDevicesWithoutPermission = useCallback(async () => {
+		try {
+			setError(null);
+			const audioInputs = await fetchAudioDevices();
+			setDevices(audioInputs);
+			setLoading(false);
+		} catch (error) {
+			const message = getErrorMessage(error);
+			setError(message);
+			console.error("Error getting audio devices:", message);
+			setLoading(false);
+		}
+	}, []);
 
-      const deviceList = await navigator.mediaDevices.enumerateDevices();
-      const audioInputs = deviceList.filter(
-        (device) => device.kind === "audioinput"
-      );
+	const loadDevicesWithPermission = useCallback(async () => {
+		if (loading) {
+			return;
+		}
 
-      setDevices(audioInputs);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to get audio devices";
+		try {
+			setLoading(true);
+			setError(null);
+			const audioInputs = await fetchAudioDevicesWithPermission();
+			setDevices(audioInputs);
+			setHasPermission(true);
+			setLoading(false);
+		} catch (error) {
+			const message = getErrorMessage(error);
+			setError(message);
+			console.error("Error getting audio devices:", message);
+			setLoading(false);
+		}
+	}, [loading]);
 
-      setError(message);
-      console.error("Error getting audio devices:", message);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+	useEffect(() => {
+		fetchAudioDevices()
+			.then((audioInputs) => {
+				setDevices(audioInputs);
+				setLoading(false);
+			})
+			.catch((error) => {
+				const message = getErrorMessage(error);
+				setError(message);
+				console.error("Error getting audio devices:", message);
+				setLoading(false);
+			});
+	}, []);
 
-  const loadDevicesWithPermission = useCallback(async () => {
-    if (loading) {
-      return;
-    }
+	useEffect(() => {
+		const handleDeviceChange = () => {
+			if (hasPermission) {
+				loadDevicesWithPermission();
+			} else {
+				loadDevicesWithoutPermission();
+			}
+		};
 
-    try {
-      setLoading(true);
-      setError(null);
+		navigator.mediaDevices.addEventListener("devicechange", handleDeviceChange);
 
-      const tempStream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-      });
+		return () => {
+			navigator.mediaDevices.removeEventListener(
+				"devicechange",
+				handleDeviceChange,
+			);
+		};
+	}, [hasPermission, loadDevicesWithPermission, loadDevicesWithoutPermission]);
 
-      for (const track of tempStream.getTracks()) {
-        track.stop();
-      }
-
-      const deviceList = await navigator.mediaDevices.enumerateDevices();
-      const audioInputs = deviceList.filter(
-        (device) => device.kind === "audioinput"
-      );
-
-      setDevices(audioInputs);
-      setHasPermission(true);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : "Failed to get audio devices";
-
-      setError(message);
-      console.error("Error getting audio devices:", message);
-    } finally {
-      setLoading(false);
-    }
-  }, [loading]);
-
-  useEffect(() => {
-    loadDevicesWithoutPermission();
-  }, [loadDevicesWithoutPermission]);
-
-  useEffect(() => {
-    const handleDeviceChange = () => {
-      if (hasPermission) {
-        loadDevicesWithPermission();
-      } else {
-        loadDevicesWithoutPermission();
-      }
-    };
-
-    navigator.mediaDevices.addEventListener("devicechange", handleDeviceChange);
-
-    return () => {
-      navigator.mediaDevices.removeEventListener(
-        "devicechange",
-        handleDeviceChange
-      );
-    };
-  }, [hasPermission, loadDevicesWithPermission, loadDevicesWithoutPermission]);
-
-  return {
-    devices,
-    error,
-    hasPermission,
-    loadDevices: loadDevicesWithPermission,
-    loading,
-  };
+	return {
+		devices,
+		error,
+		hasPermission,
+		loadDevices: loadDevicesWithPermission,
+		loading,
+	};
 };

@@ -1,26 +1,26 @@
 "use client";
-import {
-	Header,
-	HeaderContent,
-	HeaderTitle,
-	HeaderDescription,
-	HeaderActions,
-} from "../_components/page-header";
-import GroupTable from "./_components/group-table";
-import { NewGroupSheet } from "./_components/new-group-sheet";
-import { orpc } from "@/utils/orpc";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
 	Empty,
+	EmptyContent,
+	EmptyDescription,
 	EmptyHeader,
 	EmptyMedia,
 	EmptyTitle,
-	EmptyDescription,
-	EmptyContent,
 } from "@/components/ui/empty";
-import { Button } from "@/components/ui/button";
 import { Frame, FramePanel } from "@/components/ui/frame";
+import { orpc } from "@/utils/orpc";
+import {
+	Header,
+	HeaderActions,
+	HeaderContent,
+	HeaderDescription,
+	HeaderTitle,
+} from "../_components/page-header";
+import GroupTable from "./_components/group-table";
+import { NewGroupSheet } from "./_components/new-group-sheet";
 
 export default function GroupsPage() {
 	const {

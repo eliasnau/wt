@@ -65,10 +65,10 @@ export function ProfileFrame({ initialName, initialEmail }: ProfileFrameProps) {
 					},
 				},
 			);
+			setIsUpdatingName(false);
 		} catch (error) {
 			toast.error("Aktualisierung des Namens fehlgeschlagen");
 			console.error(error);
-		} finally {
 			setIsUpdatingName(false);
 		}
 	};
@@ -100,10 +100,10 @@ export function ProfileFrame({ initialName, initialEmail }: ProfileFrameProps) {
 					},
 				},
 			);
+			setIsUpdatingEmail(false);
 		} catch (error) {
 			toast.error("Änderung der E-Mail fehlgeschlagen");
 			console.error(error);
-		} finally {
 			setIsUpdatingEmail(false);
 		}
 	};

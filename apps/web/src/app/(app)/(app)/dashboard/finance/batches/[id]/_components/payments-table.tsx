@@ -42,7 +42,9 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
 			<Frame>
 				<FramePanel>
 					<div className="py-12 text-center">
-						<p className="text-muted-foreground">Keine Zahlungen in diesem Lauf.</p>
+						<p className="text-muted-foreground">
+							Keine Zahlungen in diesem Lauf.
+						</p>
 					</div>
 				</FramePanel>
 			</Frame>

@@ -1,105 +1,105 @@
-import { Paragraph } from "./typography";
-import { cn } from "@/lib/utils";
 import { cva } from "class-variance-authority";
+import { cn } from "@/lib/utils";
+import { Paragraph } from "./typography";
 
 interface CardContentProps {
-  children: React.ReactNode;
-  className?: string;
+	children: React.ReactNode;
+	className?: string;
 }
 
 export function CardContent({ children, className }: CardContentProps) {
-  return <div className={cn("p-6", className)}>{children}</div>;
+	return <div className={cn("p-6", className)}>{children}</div>;
 }
 
 interface CardHeaderProps {
-  title?: string;
-  icon?: React.ReactNode;
-  addon?: React.ReactNode;
-  description?: string;
-  className?: string;
+	title?: string;
+	icon?: React.ReactNode;
+	addon?: React.ReactNode;
+	description?: string;
+	className?: string;
 }
 
 export function CardHeader({
-  title,
-  icon,
-  addon,
-  description,
-  className,
+	title,
+	icon,
+	addon,
+	description,
+	className,
 }: CardHeaderProps) {
-  return (
-    <CardContent className={className}>
-      {title || addon ? (
-        <div className="flex items-center justify-between">
-          {icon}
-          {addon}
-        </div>
-      ) : null}
-      {title ? (
-        <h2
-          className={cn(
-            "font-title text-xl leading-6 font-heading",
-            title || addon ? "mt-5" : "",
-          )}
-        >
-          {title}
-        </h2>
-      ) : null}
-      {description ? (
-        <Paragraph size="sm" className="mt-3">
-          {description}
-        </Paragraph>
-      ) : null}
-    </CardContent>
-  );
+	return (
+		<CardContent className={className}>
+			{title || addon ? (
+				<div className="flex items-center justify-between">
+					{icon}
+					{addon}
+				</div>
+			) : null}
+			{title ? (
+				<h2
+					className={cn(
+						"font-heading font-title text-xl leading-6",
+						title || addon ? "mt-5" : "",
+					)}
+				>
+					{title}
+				</h2>
+			) : null}
+			{description ? (
+				<Paragraph size="sm" className="mt-3">
+					{description}
+				</Paragraph>
+			) : null}
+		</CardContent>
+	);
 }
 
 interface CardProps {
-  children: React.ReactNode;
-  variant?: "default" | "extra-rounding" | "circle";
-  icon?: React.ReactNode;
-  addon?: React.ReactNode;
-  title?: string;
-  description?: string;
-  className?: string;
-  cardHeaderClassName?: string;
+	children: React.ReactNode;
+	variant?: "default" | "extra-rounding" | "circle";
+	icon?: React.ReactNode;
+	addon?: React.ReactNode;
+	title?: string;
+	description?: string;
+	className?: string;
+	cardHeaderClassName?: string;
 }
 
 export function Card({
-  children,
-  variant = "default",
-  icon,
-  addon,
-  title,
-  description,
-  className,
-  cardHeaderClassName,
+	children,
+	variant = "default",
+	icon,
+	addon,
+	title,
+	description,
+	className,
+	cardHeaderClassName,
 }: CardProps) {
-  const cardVariants = cva(
-    [
-      "text-left flex flex-col border border-[#E7E7E780] bg-white shadow-[0px_3px_12.9px_0px_#97979714]",
-    ],
-    {
-      variants: {
-        variant: {
-          circle: "rounded-full",
-          "extra-rounding": "rounded-[32px]",
-          default: "rounded-[20px]",
-        },
-      },
-    },
-  );
-  return (
-    <div className={cardVariants({ variant, className })}>
-      {title || icon || addon ? (
-        <CardHeader
-          title={title}
-          icon={icon}
-          addon={addon}
-          description={description}
-          className={cardHeaderClassName}
-        />
-      ) : null}
-      {children}
-    </div>
-  );
+	const cardVariants = cva(
+		[
+			"flex flex-col border border-[#E7E7E780] bg-white text-left shadow-[0px_3px_12.9px_0px_#97979714]",
+		],
+		{
+			variants: {
+				variant: {
+					circle: "rounded-full",
+					"extra-rounding": "rounded-[32px]",
+					default: "rounded-[20px]",
+				},
+			},
+		},
+	);
+	return (
+		<div className={cardVariants({ variant, className })}>
+			{title || icon || addon ? (
+				<CardHeader
+					title={title}
+					icon={icon}
+					addon={addon}
+					description={description}
+					className={cardHeaderClassName}
+				/>
+			) : null}
+			{children}
+		</div>
+	);
 }
