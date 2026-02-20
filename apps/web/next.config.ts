@@ -1,30 +1,31 @@
 import { withPostHogConfig } from "@posthog/nextjs-config";
+import { withBotId } from "botid/next/config";
 import { env } from "@repo/env/web";
 import type { NextConfig } from "next";
 import "@repo/env/web";
 
 const nextConfig: NextConfig = {
-	typedRoutes: true,
-	reactCompiler: true,
-	experimental: {
-		authInterrupts: true,
-	},
-	async rewrites() {
-		return [
-			{
-				source: "/ph/static/:path*",
-				destination: "https://eu-assets.i.posthog.com/static/:path*",
-			},
-			{
-				source: "/ph/:path*",
-				destination: "https://eu.i.posthog.com/:path*",
-			},
-		];
-	},
-	skipTrailingSlashRedirect: true,
+  typedRoutes: true,
+  reactCompiler: true,
+  experimental: {
+    authInterrupts: true,
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/ph/static/:path*",
+        destination: "https://eu-assets.i.posthog.com/static/:path*",
+      },
+      {
+        source: "/ph/:path*",
+        destination: "https://eu.i.posthog.com/:path*",
+      },
+    ];
+  },
+  skipTrailingSlashRedirect: true,
 };
 
-export default nextConfig;
+export default withBotId(nextConfig);
 // withPostHogConfig(nextConfig, {
 // 	personalApiKey: env.POSTHOG_API_KEY,
 // 	envId: env.POSTHOG_ENV_ID,

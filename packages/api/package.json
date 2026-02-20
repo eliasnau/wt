@@ -30,6 +30,7 @@
 		"@repo/env": "workspace:*",
 		"@vercel/functions": "^3.4.0",
 		"@vercel/sdk": "^1.18.10",
+		"botid": "^1.5.10",
 		"dotenv": "catalog:",
 		"next": "16.1.6",
 		"sepa": "^2.1.0",

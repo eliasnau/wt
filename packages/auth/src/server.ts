@@ -4,9 +4,16 @@ import { db } from "@repo/db";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
 import { nextCookies } from "better-auth/next-js";
-import { haveIBeenPwned, organization, twoFactor } from "better-auth/plugins";
+import {
+  createAuthMiddleware,
+  haveIBeenPwned,
+  organization,
+  twoFactor,
+} from "better-auth/plugins";
 import { ac, admin, member, owner } from "./permissions";
 import { manageSessions } from "./plugins/manageSessions";
+import { checkBotId } from "botid/server";
+import { APIError } from "better-auth/api";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -107,6 +114,30 @@ export const auth = betterAuth({
     nextCookies(), //! has to be last plugin in array
   ],
   experimental: { joins: true },
+  hooks: {
+    before: createAuthMiddleware(async (ctx) => {
+      if (!(ctx.path === "/sign-up/email" || ctx.path === "/sign-in/email")) {
+        return;
+      }
+      const checkLevel =
+        ctx.path === "/sign-up/email" ? "deepAnalysis" : "basic";
+
+      const verification = await checkBotId({
+        developmentOptions: {
+          bypass: "HUMAN",
+        },
+        advancedOptions: {
+          checkLevel,
+        },
+      });
+
+      if (verification.isBot) {
+        throw new APIError("BAD_REQUEST", {
+          message: "Captcha verification failed",
+        });
+      }
+    }),
+  },
 });
 
 export type Session = typeof auth.$Infer.Session;
