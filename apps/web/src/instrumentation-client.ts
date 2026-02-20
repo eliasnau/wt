@@ -1,6 +1,7 @@
 import { env } from "@repo/env/web";
 import posthog from "posthog-js";
 import { initBotId } from "botid/client/core";
+import { botIdConfig } from "@/lib/botid";
 
 if (env.NEXT_PUBLIC_POSTHOG_KEY) {
   posthog.init(env.NEXT_PUBLIC_POSTHOG_KEY, {
@@ -10,21 +11,4 @@ if (env.NEXT_PUBLIC_POSTHOG_KEY) {
     advanced_disable_feature_flags: true,
   });
 }
-initBotId({
-  protect: [
-    {
-      path: "/api/auth/sign-up/email",
-      method: "POST",
-      advancedOptions: {
-        checkLevel: "deepAnalysis",
-      },
-    },
-    {
-      path: "/api/auth/sign-in/email",
-      method: "POST",
-      advancedOptions: {
-        checkLevel: "basic",
-      },
-    },
-  ],
-});
+initBotId(botIdConfig);
