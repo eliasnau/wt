@@ -1,135 +1,173 @@
-import { BlurFade } from "@/components/landing/_components/blur-fade";
-import { CardWrapper } from "@/components/landing/_components/card-wrapper";
-import {
-	Section,
-	SectionContent,
-} from "@/components/landing/_components/section";
-import {
-	PageHeading,
-	Paragraph,
-	Subheading,
-} from "@/components/landing/_components/typography";
+import type { Metadata } from "next";
 import { Footer } from "@/components/landing/footer";
+import { Header } from "@/components/landing/header";
+import { LandingHotkeys } from "@/components/hotkeys/landing-hotkeys";
+import { getServerSession } from "@/lib/auth";
+import { cn } from "@/lib/utils";
+import { GridPattern } from "@/components/ui/grid-pattern";
 
-const LAYOUT_CLASSNAME = "max-w-6xl mx-auto px-6 lg:px-8 xl:px-0";
+const LAYOUT_CLASSNAME = "mx-auto max-w-5xl px-6 lg:px-8 xl:px-0";
+const LAST_UPDATED = "20. Februar 2026";
 
-export default function PrivacyPage() {
-	return (
-		<div>
-			<main className={LAYOUT_CLASSNAME}>
-				<Section className="mt-20 md:mt-32">
-					<SectionContent>
-						<BlurFade inView>
-							<PageHeading>Datenschutzerklärung</PageHeading>
-							<div className="mt-8">
-								<CardWrapper className="p-8 md:p-12">
-									<div className="space-y-8">
-										<Paragraph size="sm" color="light">
-											Last updated: {new Date().toLocaleDateString()}
-										</Paragraph>
+export const metadata: Metadata = {
+  title: "Datenschutzerklarung",
+  description:
+    "Datenschutzinformationen zur Verarbeitung personenbezogener Daten bei Matdesk.",
+};
 
-										<div className="space-y-4">
-											<Subheading>1. Einleitung</Subheading>
-											<Paragraph>
-												Welcome to Martial Arts Manager. We respect your privacy
-												and are committed to protecting your personal data. This
-												privacy policy will inform you as to how we look after
-												your personal data when you visit our website and tell
-												you about your privacy rights and how the law protects
-												you.
-											</Paragraph>
-										</div>
+const sections = [
+  {
+    id: "einleitung",
+    title: "1. Einleitung",
+    body: [
+      "Diese Datenschutzerklarung informiert Sie daruber, wie Matdesk personenbezogene Daten verarbeitet, wenn Sie unsere Website und Dienste nutzen.",
+      "Wir behandeln Ihre Daten vertraulich und entsprechend den geltenden Datenschutzvorschriften.",
+    ],
+  },
+  {
+    id: "datenarten",
+    title: "2. Welche Daten wir verarbeiten",
+    body: [
+      "Abhangig von der Nutzung konnen wir unterschiedliche Kategorien personenbezogener Daten verarbeiten.",
+    ],
+    bullets: [
+      "Kontaktdaten, z. B. Name und E-Mail-Adresse",
+      "Account- und Nutzungsdaten, z. B. Login-Zeitpunkte und Einstellungen",
+      "Technische Daten, z. B. IP-Adresse, Browsertyp, Endgerat und Betriebssystem",
+      "Kommunikationsdaten bei Anfragen an unseren Support",
+    ],
+  },
+  {
+    id: "zwecke",
+    title: "3. Zwecke und Rechtsgrundlagen",
+    body: [
+      "Wir verarbeiten personenbezogene Daten nur, wenn eine Rechtsgrundlage besteht. Die Verarbeitung erfolgt insbesondere zur Vertragserfullung, zur Erfullung rechtlicher Pflichten oder auf Basis berechtigter Interessen.",
+      "Soweit erforderlich, holen wir Ihre Einwilligung ein. Eine erteilte Einwilligung kann jederzeit mit Wirkung fur die Zukunft widerrufen werden.",
+    ],
+  },
+  {
+    id: "weitergabe",
+    title: "4. Empfanger und Weitergabe",
+    body: [
+      "Wir geben personenbezogene Daten nur weiter, wenn dies fur die Leistungserbringung erforderlich ist, eine rechtliche Verpflichtung besteht oder Sie eingewilligt haben.",
+      "Dienstleister werden von uns sorgfaltig ausgewahlt und vertraglich auf Datenschutz und Vertraulichkeit verpflichtet.",
+    ],
+  },
+  {
+    id: "speicherung",
+    title: "5. Speicherdauer",
+    body: [
+      "Wir speichern personenbezogene Daten nur so lange, wie es fur die jeweiligen Zwecke erforderlich ist oder gesetzliche Aufbewahrungspflichten bestehen.",
+      "Nach Wegfall des Verarbeitungszwecks oder Ablauf gesetzlicher Fristen werden Daten geloscht oder anonymisiert.",
+    ],
+  },
+  {
+    id: "rechte",
+    title: "6. Ihre Rechte",
+    body: [
+      "Sie haben im Rahmen der gesetzlichen Vorgaben insbesondere das Recht auf Auskunft, Berichtigung, Loschung, Einschrankung der Verarbeitung, Datenubertragbarkeit und Widerspruch.",
+      "Ausserdem besteht ein Beschwerderecht bei einer Datenschutzaufsichtsbehorde.",
+    ],
+  },
+  {
+    id: "kontakt",
+    title: "7. Kontakt",
+    body: [
+      "Bei Fragen zum Datenschutz oder zur Ausubung Ihrer Rechte erreichen Sie uns unter support@matdesk.de.",
+    ],
+  },
+];
 
-										<div className="space-y-4">
-											<Subheading>2. Welche Daten wir erfassen</Subheading>
-											<Paragraph>
-												We may collect, use, store and transfer different kinds
-												of personal data about you which we have grouped
-												together as follows:
-											</Paragraph>
-											<ul className="list-disc space-y-2 pl-5">
-												<li>
-													<Paragraph>
-														Identity Data includes first name, last name,
-														username or similar identifier.
-													</Paragraph>
-												</li>
-												<li>
-													<Paragraph>
-														Contact Data includes billing address, delivery
-														address, email address and telephone numbers.
-													</Paragraph>
-												</li>
-												<li>
-													<Paragraph>
-														Technical Data includes internet protocol (IP)
-														address, your login data, browser type and version,
-														time zone setting and location, browser plug-in
-														types and versions, operating system and platform,
-														and other technology on the devices you use to
-														access this website.
-													</Paragraph>
-												</li>
-											</ul>
-										</div>
+export default async function PrivacyPage() {
+  const session = await getServerSession();
 
-										<div className="space-y-4">
-											<Subheading>3. Wie wir deine Daten verwenden</Subheading>
-											<Paragraph>
-												We will only use your personal data when the law allows
-												us to. Most commonly, we will use your personal data in
-												the following circumstances:
-											</Paragraph>
-											<ul className="list-disc space-y-2 pl-5">
-												<li>
-													<Paragraph>
-														Where we need to perform the contract we are about
-														to enter into or have entered into with you.
-													</Paragraph>
-												</li>
-												<li>
-													<Paragraph>
-														Where it is necessary for our legitimate interests
-														(or those of a third party) and your interests and
-														fundamental rights do not override those interests.
-													</Paragraph>
-												</li>
-												<li>
-													<Paragraph>
-														Where we need to comply with a legal obligation.
-													</Paragraph>
-												</li>
-											</ul>
-										</div>
+  return (
+    <div className="relative min-h-screen bg-background">
+      <LandingHotkeys />
+      <Header className={LAYOUT_CLASSNAME} session={session} />
 
-										<div className="space-y-4">
-											<Subheading>4. Datensicherheit</Subheading>
-											<Paragraph>
-												We have put in place appropriate security measures to
-												prevent your personal data from being accidentally lost,
-												used or accessed in an unauthorized way, altered or
-												disclosed. In addition, we limit access to your personal
-												data to those employees, agents, contractors and other
-												third parties who have a business need to know.
-											</Paragraph>
-										</div>
+      <main className="relative isolate overflow-hidden pb-16 md:pb-24">
+        <div className="absolute inset-0 -z-10">
+          <div className="absolute inset-0 bg-[radial-gradient(80%_50%_at_50%_-10%,theme(--color-foreground/.1),transparent)]" />
+          <GridPattern
+            className="absolute inset-0 size-full stroke-foreground/10 mask-[radial-gradient(ellipse_at_center,white,transparent_75%)]"
+            height={44}
+            width={44}
+            x={-1}
+            y={-1}
+          />
+        </div>
 
-										<div className="space-y-4">
-											<Subheading>5. Kontakt</Subheading>
-											<Paragraph>
-												If you have any questions about this privacy policy or
-												our privacy practices, please contact us at:
-												support@martialartsmanager.com
-											</Paragraph>
-										</div>
-									</div>
-								</CardWrapper>
-							</div>
-						</BlurFade>
-					</SectionContent>
-				</Section>
-			</main>
-			<Footer className={LAYOUT_CLASSNAME} />
-		</div>
-	);
+        <section className={cn(LAYOUT_CLASSNAME, "pt-16 md:pt-24")}>
+          <div className="fade-in slide-in-from-bottom-8 animate-in fill-mode-backwards rounded-2xl border bg-background/80 p-6 shadow-sm backdrop-blur-sm duration-500 md:p-10">
+            <p className="mb-4 inline-flex rounded-full border px-3 py-1 font-medium text-muted-foreground text-xs tracking-wide uppercase">
+              Datenschutz
+            </p>
+            <h1 className="max-w-3xl text-balance font-medium text-4xl leading-tight tracking-tight md:text-5xl">
+              Datenschutzerklarung
+            </h1>
+            <p className="mt-4 max-w-2xl text-muted-foreground text-sm md:text-base">
+              Wir respektieren Ihre Privatsphare und informieren transparent
+              uber Art, Umfang und Zweck der Verarbeitung personenbezogener
+              Daten.
+            </p>
+            <div className="mt-6 grid gap-2 text-muted-foreground text-sm md:grid-cols-2">
+              <p>Zuletzt aktualisiert: {LAST_UPDATED}</p>
+              <p>Kontakt: support@matdesk.de</p>
+            </div>
+          </div>
+        </section>
+
+        <section className={cn(LAYOUT_CLASSNAME, "mt-8 md:mt-10")}>
+          <div className="grid gap-4 md:grid-cols-3">
+            {sections.map((section) => (
+              <a
+                className="rounded-lg border bg-background/60 px-4 py-3 text-muted-foreground text-sm transition-colors hover:text-foreground"
+                href={`#${section.id}`}
+                key={section.id}
+              >
+                {section.title}
+              </a>
+            ))}
+          </div>
+        </section>
+
+        <section className={cn(LAYOUT_CLASSNAME, "mt-8 md:mt-10")}>
+          <div className="space-y-4">
+            {sections.map((section, index) => (
+              <article
+                className="fade-in slide-in-from-bottom-6 animate-in rounded-2xl border bg-background/90 p-6 duration-500 md:p-8"
+                id={section.id}
+                key={section.id}
+                style={{ animationDelay: `${index * 70}ms` }}
+              >
+                <h2 className="text-balance font-medium text-2xl tracking-tight">
+                  {section.title}
+                </h2>
+                <div className="mt-4 space-y-4">
+                  {section.body.map((paragraph) => (
+                    <p
+                      className="leading-7 text-muted-foreground"
+                      key={paragraph}
+                    >
+                      {paragraph}
+                    </p>
+                  ))}
+                  {section.bullets ? (
+                    <ul className="list-disc space-y-2 pl-6 text-muted-foreground">
+                      {section.bullets.map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  ) : null}
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      <Footer className={LAYOUT_CLASSNAME} />
+    </div>
+  );
 }

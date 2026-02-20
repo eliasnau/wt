@@ -1,127 +1,118 @@
-import Link from "next/link";
+import { Logo } from "@/components/logo";
+import { ThemeToggle } from "@/components/landing/theme-toggle";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { CardWrapper } from "./_components/card-wrapper";
-import { Section, SectionContent } from "./_components/section";
-import { Paragraph } from "./_components/typography";
+import { GithubIcon } from "lucide-react";
+import type { Route } from "next";
+import Link from "next/link";
+
+const navLinks = [
+  { href: "#", label: "Features" },
+  { href: "#", label: "About" },
+  { href: "#", label: "Docs" },
+  { href: "#", label: "Contact" },
+  { href: "/terms", label: "Terms of Service" },
+  { href: "/privacy", label: "Privacy" },
+];
+
+const socialLinks = [
+  {
+    href: "#",
+    label: "X",
+    icon: <XIcon />,
+  },
+  {
+    href: "https://github.com/eliasnau/wt",
+    label: "Github",
+    icon: <GithubIcon />,
+  },
+];
 
 interface FooterProps {
-	className?: string;
+  className?: string;
 }
 
 export function Footer({ className }: FooterProps) {
-	const currentYear = new Date().getFullYear();
+  return (
+    <footer className={cn("mx-auto max-w-5xl px-6 lg:px-8 xl:px-0", className)}>
+      <div className="flex flex-col gap-6 py-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Logo className="h-4.5" />
+          </div>
+          <ThemeToggle />
+        </div>
 
-	return (
-		<Section className={cn("mt-20", className)}>
-			<SectionContent>
-				<CardWrapper className="p-8 md:p-12">
-					<div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-						<div className="col-span-2 flex flex-col gap-4 pr-8 md:col-span-1">
-							<Link href="/" className="flex items-center gap-2">
-								<span className="font-bold font-heading text-xl">
-									Martial Arts
-								</span>
-							</Link>
-							<Paragraph size="sm" color="light">
-								The best way to manage your martial arts studio.
-							</Paragraph>
-						</div>
-						<div>
-							<h3 className="mb-4 font-semibold text-gray-900 text-sm">
-								Product
-							</h3>
-							<ul className="space-y-3">
-								<li>
-									<Link
-										href="#features"
-										className="text-gray-500 text-sm transition-colors hover:text-gray-900"
-									>
-										Features
-									</Link>
-								</li>
-								<li>
-									<Link
-										href="#pricing"
-										className="text-gray-500 text-sm transition-colors hover:text-gray-900"
-									>
-										Pricing
-									</Link>
-								</li>
-								<li>
-									<Link
-										href={"/demo" as any}
-										className="text-gray-500 text-sm transition-colors hover:text-gray-900"
-									>
-										Demo
-									</Link>
-								</li>
-							</ul>
-						</div>
-						<div>
-							<h3 className="mb-4 font-semibold text-gray-900 text-sm">
-								Company
-							</h3>
-							<ul className="space-y-3">
-								<li>
-									<Link
-										href={"/about" as any}
-										className="text-gray-500 text-sm transition-colors hover:text-gray-900"
-									>
-										About
-									</Link>
-								</li>
-								<li>
-									<Link
-										href={"/blog" as any}
-										className="text-gray-500 text-sm transition-colors hover:text-gray-900"
-									>
-										Blog
-									</Link>
-								</li>
-								<li>
-									<Link
-										href={"/contact" as any}
-										className="text-gray-500 text-sm transition-colors hover:text-gray-900"
-									>
-										Contact
-									</Link>
-								</li>
-							</ul>
-						</div>
-						<div>
-							<h3 className="mb-4 font-semibold text-gray-900 text-sm">
-								Legal
-							</h3>
-							<ul className="space-y-3">
-								<li>
-									<Link
-										href={"/privacy" as any}
-										className="text-gray-500 text-sm transition-colors hover:text-gray-900"
-									>
-										Privacy
-									</Link>
-								</li>
-								<li>
-									<Link
-										href={"/terms" as any}
-										className="text-gray-500 text-sm transition-colors hover:text-gray-900"
-									>
-										Terms
-									</Link>
-								</li>
-							</ul>
-						</div>
-					</div>
-					<div className="mt-12 flex flex-col items-center justify-between gap-4 border-[#F7F7F7] border-t pt-8 md:flex-row">
-						<Paragraph size="xs" color="light">
-							&copy; {currentYear} Martial Arts Manager. All rights reserved.
-						</Paragraph>
-						<div className="flex space-x-6">
-							{/* Add social icons here if needed */}
-						</div>
-					</div>
-				</CardWrapper>
-			</SectionContent>
-		</Section>
-	);
+        <nav>
+          <ul className="flex flex-wrap gap-4 font-medium text-muted-foreground text-sm md:gap-6">
+            {navLinks.map((link) => (
+              <li key={link.label}>
+                <a className="hover:text-foreground" href={link.href}>
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      </div>
+
+      <div className="flex items-center justify-between gap-4 border-t py-4 text-muted-foreground text-sm">
+        <p>&copy; {new Date().getFullYear()} Matdesk</p>
+
+        <div className="flex items-center gap-3">
+          {/*<p className="inline-flex items-center gap-1">
+            <span>Built by</span>
+            <a
+              aria-label="x/twitter"
+              className="inline-flex items-center gap-1 text-foreground/80 hover:text-foreground hover:underline"
+              href="https://codity.app"
+              rel="noreferrer"
+              target="_blank"
+            >
+              <img
+                alt="shaban"
+                className="size-4 rounded-full"
+                height="auto"
+                src="https://codity.app/favicon.ico"
+                width="auto"
+              />
+              Codity
+            </a>
+          </p>
+          <span className="block h-4 border-l" />*/}
+          <div className="flex items-center">
+            {socialLinks.map(({ href, label, icon }) => (
+              <Button
+                key={label}
+                size="icon-sm"
+                variant="ghost"
+                render={
+                  <Link
+                    aria-label={label}
+                    href={href as Route}
+                    target="_blank"
+                  />
+                }
+              >
+                {icon}
+              </Button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+function XIcon(props: React.ComponentProps<"svg">) {
+  return (
+    <svg
+      fill="currentColor"
+      viewBox="0 0 24 24"
+      xmlns="http://www.w3.org/2000/svg"
+      {...props}
+    >
+      <path d="m18.9,1.153h3.682l-8.042,9.189,9.46,12.506h-7.405l-5.804-7.583-6.634,7.583H.469l8.6-9.831L0,1.153h7.593l5.241,6.931,6.065-6.931Zm-1.293,19.494h2.039L6.482,3.239h-2.19l13.314,17.408Z" />
+    </svg>
+  );
 }

@@ -30,7 +30,11 @@ const searchMembersInput = z.object({
 
 const getMemberInfoInput = z
 	.object({
-		memberId: z.string().uuid().optional(),
+		memberId: z
+			.string()
+			.trim()
+			.optional()
+			.describe("Member UUID. If unknown, provide query or search first."),
 		query: z
 			.string()
 			.trim()
@@ -186,17 +190,75 @@ const createTools = (organizationId: string) => ({
 	}),
 	getMemberInfo: tool({
 		description:
-			"Get detailed information about one member, including contract and groups.",
+			"Get detailed information about one member by UUID. If UUID is unknown, pass query to resolve the member first.",
 		inputSchema: getMemberInfoInput,
 		execute: async ({ memberId, query }) => {
+			const isValidMemberId =
+				!!memberId && z.string().uuid().safeParse(memberId).success;
+			let resolvedMemberId = isValidMemberId ? memberId : undefined;
+			const queryFromMemberId = !isValidMemberId ? memberId : undefined;
+			const rawQuery = query ?? queryFromMemberId;
 			const normalizedQuery =
-				query && query.trim() !== "*" ? query.trim() : undefined;
+				rawQuery && rawQuery.trim() !== "*" ? rawQuery.trim() : undefined;
 			const like = normalizedQuery ? `%${normalizedQuery}%` : undefined;
+
+			// Resolve non-UUID lookups first to avoid silently returning the wrong member.
+			if (!resolvedMemberId && normalizedQuery) {
+				const matches = await db
+					.select({
+						id: clubMember.id,
+						firstName: clubMember.firstName,
+						lastName: clubMember.lastName,
+						email: clubMember.email,
+						phone: clubMember.phone,
+					})
+					.from(clubMember)
+					.where(
+						and(
+							eq(clubMember.organizationId, organizationId),
+							or(
+								ilike(clubMember.firstName, like!),
+								ilike(clubMember.lastName, like!),
+								ilike(clubMember.email, like!),
+								ilike(clubMember.phone, like!),
+								ilike(
+									sql`${clubMember.firstName} || ' ' || ${clubMember.lastName}`,
+									like!,
+								),
+							),
+						),
+					)
+					.limit(6);
+
+				if (matches.length === 0) {
+					return {
+						found: false,
+						message: "Member not found. Use searchMembers to find the right member.",
+					};
+				}
+
+				if (matches.length > 1) {
+					return {
+						found: false,
+						ambiguous: true,
+						message:
+							"Multiple members match. Call searchMembers and then call getMemberInfo with the selected memberId.",
+						candidates: matches.map((match) => ({
+							id: match.id,
+							name: `${match.firstName} ${match.lastName}`.trim(),
+							email: match.email,
+							phone: match.phone,
+						})),
+					};
+				}
+
+				resolvedMemberId = matches[0]!.id;
+			}
 
 			const memberWhere = and(
 				eq(clubMember.organizationId, organizationId),
-				memberId ? eq(clubMember.id, memberId) : undefined,
-				!memberId && normalizedQuery
+				resolvedMemberId ? eq(clubMember.id, resolvedMemberId) : undefined,
+				!resolvedMemberId && normalizedQuery
 					? or(
 							ilike(clubMember.firstName, like!),
 							ilike(clubMember.lastName, like!),
@@ -376,7 +438,7 @@ export async function POST(req: Request) {
 
 	const result = streamText({
 		model,
-		system: `You are a helpful assistant for MatDesk, a martial arts school management platform. Keep the conversation related to the user's school. When listing members, call searchMembers with an empty query to list all (paginated) and never use "*". For one specific member, call getMemberInfo. Reply with Markdown your response is rendered in a Markdown component supporting github flavored md. Users usually do not care about UUIDs, so only include IDs when explicitly useful. Use tools to read school data. Context user: ${session.userName}.`,
+		system: `You are a helpful assistant for MatDesk, a martial arts school management platform. Keep the conversation related to the user's school. When listing members, call searchMembers with an empty query to list all (paginated) and never use "*". If the user asks about a specific member by name/email/phone, call searchMembers first, then call getMemberInfo with the selected memberId. Only call getMemberInfo directly when a UUID is already known. Reply with Markdown your response is rendered in a Markdown component supporting github flavored md. Users usually do not care about UUIDs, so only include IDs when explicitly useful. Use tools to read school data. Context user: ${session.userName}.`,
 		messages: await convertToModelMessages(messages),
 		stopWhen: stepCountIs(5),
 		tools: createTools(session.organizationId),

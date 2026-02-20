@@ -1,48 +1,49 @@
-import { ArrowLeft } from "lucide-react";
 import type { Metadata } from "next";
-import Link from "next/link";
-import { IconHouse } from "nucleo-glass";
-import { Button } from "@/components/landing/_components/button";
+import { Button } from "@/components/ui/button";
 import {
-	Section,
-	SectionContent,
-} from "@/components/landing/_components/section";
-import {
-	PageHeading,
-	Paragraph,
-} from "@/components/landing/_components/typography";
-import { Footer } from "@/components/landing/footer";
+  Empty,
+  EmptyContent,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyTitle,
+} from "@/components/ui/empty";
+import { HomeIcon, CompassIcon } from "lucide-react";
 import { NotFoundTracker } from "./not-found-tracker";
 
 export const metadata: Metadata = {
-	description: "Die gesuchte Seite existiert nicht oder wurde verschoben.",
-	title: "Page Not Found",
+  description: "Die gesuchte Seite existiert nicht oder wurde verschoben.",
+  title: "Seite nicht gefunden",
 };
 
 export default function NotFound() {
-	return (
-		<>
-			<NotFoundTracker />
-			<div className="flex min-h-screen flex-col justify-between bg-white">
-				<main className="flex flex-grow items-center justify-center">
-					<Section>
-						<SectionContent className="flex flex-col items-center gap-6 text-center">
-							<PageHeading>Seite nicht gefunden</PageHeading>
-							<Paragraph size="lg" color="light">
-								The page you&apos;re looking for doesn&apos;t exist or may have
-								verschoben.
-							</Paragraph>
-							<Button size="lg" variant="primary" asChild>
-								<Link href="/">
-									<IconHouse className="z-10 size-4" />
-									<span className="relative z-10">Zur Startseite</span>
-								</Link>
-							</Button>
-						</SectionContent>
-					</Section>
-				</main>
-				<Footer className="mx-auto w-full max-w-6xl px-6 lg:px-8 xl:px-0" />
-			</div>
-		</>
-	);
+  return (
+    <>
+      <NotFoundTracker />
+      <div className="relative flex min-h-screen w-full items-center justify-center overflow-hidden">
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle className="mask-b-from-20% mask-b-to-80% font-extrabold text-9xl">
+              404
+            </EmptyTitle>
+            <EmptyDescription className="-mt-8 text-nowrap text-foreground/80">
+              Die gesuchte Seite wurde möglicherweise <br />
+              verschoben oder existiert nicht.
+            </EmptyDescription>
+          </EmptyHeader>
+          <EmptyContent>
+            <div className="flex gap-2">
+              <Button render={<a href="/" />}>
+                <HomeIcon data-icon="inline-start" />
+                Startseite
+              </Button>
+              <Button variant="outline" render={<a href="/features" />}>
+                <CompassIcon data-icon="inline-start" />
+                Entdecken
+              </Button>
+            </div>
+          </EmptyContent>
+        </Empty>
+      </div>
+    </>
+  );
 }
