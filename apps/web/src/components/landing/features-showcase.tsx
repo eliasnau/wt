@@ -20,7 +20,7 @@ const features: Feature[] = [
       "A complete hub for managing your students. Track belt progressions, attendance, contact details and more — all from one intuitive dashboard.",
     icon: <IconUsers />,
     image: {
-      src: "/images/landing/members-portal.jpg",
+      src: "https://ik.imagekit.io/codity/wt/landing/hero-light.webp",
       alt: "Members portal dashboard showing student profiles and belt levels",
     },
   },
@@ -30,7 +30,7 @@ const features: Feature[] = [
       "Understand your studio at a glance. Revenue trends, member growth, class attendance, and retention metrics — visualized in real-time.",
     icon: <IconChartBar />,
     image: {
-      src: "/images/landing/statistics.jpg",
+      src: "https://ik.imagekit.io/codity/wt/landing/hero-light.webp",
       alt: "Analytics dashboard with charts and key performance metrics",
     },
   },
@@ -40,7 +40,7 @@ const features: Feature[] = [
       "Your intelligent co-pilot for studio management. Get smart suggestions, automate repetitive tasks, and surface insights you would have missed.",
     icon: <IconSparkle />,
     image: {
-      src: "/images/landing/ai-assistant.jpg",
+      src: "https://ik.imagekit.io/codity/wt/landing/hero-light.webp",
       alt: "AI assistant chat interface helping manage studio operations",
     },
   },
