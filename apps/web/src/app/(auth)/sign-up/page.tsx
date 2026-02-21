@@ -3,20 +3,29 @@
 import { authClient } from "@repo/auth/client";
 import { useForm } from "@tanstack/react-form";
 import { initBotId } from "botid/client/core";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import {
+  AtSignIcon,
+  ChevronLeftIcon,
+  KeyRoundIcon,
+  UserIcon,
+} from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
 import posthog from "posthog-js";
 import { toast } from "sonner";
+import { FloatingPaths } from "@/components/floating-paths";
+import { Logo } from "@/components/logo";
 import { Button } from "@/components/ui/button";
-import { Frame, FrameFooter, FramePanel } from "@/components/ui/frame";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import {
+  InputGroup,
+  InputGroupAddon,
+  InputGroupInput,
+} from "@/components/ui/input-group";
 import { botIdConfig } from "@/lib/botid";
 
-export default function SignUp() {
+export default function SignUp2Page() {
   const router = useRouter();
   const [redirectUrl] = useQueryState("redirectUrl", {
     defaultValue: "/dashboard",
@@ -30,6 +39,8 @@ export default function SignUp() {
       password: "",
     },
     onSubmit: async ({ value }) => {
+      await initBotId(botIdConfig);
+
       await authClient.signUp.email(
         {
           email: value.email,
@@ -54,119 +65,92 @@ export default function SignUp() {
   });
 
   return (
-    <div className="flex min-h-screen items-start justify-center p-4 md:items-center">
-      <div className="my-4 w-full max-w-md md:my-0">
-        <div className="mb-4">
-          <Link
-            href={"/" as Route}
-            className="inline-flex items-center gap-2 text-muted-foreground text-sm transition-colors hover:text-foreground"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Zur Startseite
-          </Link>
+    <main className="relative md:h-screen md:overflow-hidden lg:grid lg:grid-cols-2">
+      <div className="relative hidden h-full flex-col border-r bg-secondary p-10 lg:flex dark:bg-secondary/20">
+        <div className="absolute inset-0 bg-linear-to-b from-transparent via-transparent to-background" />
+        <Logo className="mr-auto h-4.5" monochrome />
+
+        <div className="z-10 mt-auto">
+          <blockquote className="space-y-2">
+            <p className="text-xl">&ldquo;I am a cool qoute.&rdquo;</p>
+            <footer className="font-mono font-semibold text-sm">
+              ~ Someone
+            </footer>
+          </blockquote>
         </div>
-        <Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
-          <FramePanel>
-            <h1 className="mb-4 font-heading text-2xl">Registrieren</h1>
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                form.handleSubmit();
-              }}
-              className="space-y-3"
-            >
-              <div className="grid grid-cols-2 gap-4">
-                <form.Field
-                  name="firstName"
-                  validators={{
-                    onBlur: ({ value }) => {
-                      if (!value) return "Vorname ist erforderlich";
-                      if (value.length < 2)
-                        return "Vorname muss mindestens 2 Zeichen lang sein";
-                      return undefined;
-                    },
-                  }}
-                >
-                  {(field) => (
-                    <div className="space-y-2">
-                      <Label htmlFor={field.name}>Vorname</Label>
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        placeholder="Max"
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                      />
-                      {field.state.meta.isTouched &&
-                        !field.state.meta.isValidating &&
-                        field.state.meta.errors.length > 0 && (
-                          <p className="text-destructive text-xs">
-                            {field.state.meta.errors[0]}
-                          </p>
-                        )}
-                    </div>
-                  )}
-                </form.Field>
 
-                <form.Field
-                  name="lastName"
-                  validators={{
-                    onBlur: ({ value }) => {
-                      if (!value) return "Nachname ist erforderlich";
-                      if (value.length < 2)
-                        return "Nachname muss mindestens 2 Zeichen lang sein";
-                      return undefined;
-                    },
-                  }}
-                >
-                  {(field) => (
-                    <div className="space-y-2">
-                      <Label htmlFor={field.name}>Nachname</Label>
-                      <Input
-                        id={field.name}
-                        name={field.name}
-                        placeholder="Robinson"
-                        value={field.state.value}
-                        onBlur={field.handleBlur}
-                        onChange={(e) => field.handleChange(e.target.value)}
-                      />
-                      {field.state.meta.isTouched &&
-                        !field.state.meta.isValidating &&
-                        field.state.meta.errors.length > 0 && (
-                          <p className="text-destructive text-xs">
-                            {field.state.meta.errors[0]}
-                          </p>
-                        )}
-                    </div>
-                  )}
-                </form.Field>
-              </div>
+        <div className="absolute inset-0">
+          <FloatingPaths position={1} />
+          <FloatingPaths position={-1} />
+        </div>
+      </div>
 
+      <div className="relative flex min-h-screen flex-col justify-center px-8 py-10 lg:py-0">
+        <div
+          aria-hidden
+          className="absolute inset-0 isolate -z-10 opacity-60 contain-strict"
+        >
+          <div className="absolute top-0 right-0 h-320 w-140 -translate-y-87.5 rounded-full bg-[radial-gradient(68.54%_68.72%_at_55.02%_31.46%,--theme(--color-foreground/.06)_0,hsla(0,0%,55%,.02)_50%,--theme(--color-foreground/.01)_80%)]" />
+          <div className="absolute top-0 right-0 h-320 w-60 rounded-full bg-[radial-gradient(50%_50%_at_50%_50%,--theme(--color-foreground/.04)_0,--theme(--color-foreground/.01)_80%,transparent_100%)] [translate:5%_-50%]" />
+          <div className="absolute top-0 right-0 h-320 w-60 -translate-y-87.5 rounded-full bg-[radial-gradient(50%_50%_at_50%_50%,--theme(--color-foreground/.04)_0,--theme(--color-foreground/.01)_80%,transparent_100%)]" />
+        </div>
+
+        <Button
+          className="absolute top-7 left-5"
+          variant="ghost"
+          render={<Link href={"/" as Route} />}
+        >
+          <ChevronLeftIcon data-icon="inline-start" />
+          Startseite
+        </Button>
+
+        <div className="mx-auto w-full max-w-sm space-y-4">
+          <Logo className="h-4.5 lg:hidden" monochrome />
+          <div className="flex flex-col space-y-1">
+            <h1 className="font-bold text-2xl tracking-wide">
+              Erstelle dein Konto
+            </h1>
+            <p className="text-base text-muted-foreground">
+              Erstelle ein konto um loszulegen.
+            </p>
+          </div>
+
+          <form
+            className="space-y-3"
+            onSubmit={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              form.handleSubmit();
+            }}
+          >
+            <div className="grid grid-cols-2 gap-3">
               <form.Field
-                name="email"
+                name="firstName"
                 validators={{
                   onBlur: ({ value }) => {
-                    if (!value) return "E-Mail ist erforderlich";
-                    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value))
-                      return "Ungültige E-Mail-Adresse";
+                    if (!value) return "Vorname ist erforderlich";
+                    if (value.length < 2) {
+                      return "Vorname muss mindestens 2 Zeichen lang sein";
+                    }
                     return undefined;
                   },
                 }}
               >
                 {(field) => (
-                  <div className="space-y-2">
-                    <Label htmlFor={field.name}>E-Mail</Label>
-                    <Input
-                      id={field.name}
-                      name={field.name}
-                      type="email"
-                      placeholder="m@example.com"
-                      value={field.state.value}
-                      onBlur={field.handleBlur}
-                      onChange={(e) => field.handleChange(e.target.value)}
-                    />
+                  <div className="space-y-1.5">
+                    <InputGroup>
+                      <InputGroupAddon align="inline-start">
+                        <UserIcon />
+                      </InputGroupAddon>
+                      <InputGroupInput
+                        id={field.name}
+                        name={field.name}
+                        placeholder="Vorname"
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                      />
+                    </InputGroup>
                     {field.state.meta.isTouched &&
                       !field.state.meta.isValidating &&
                       field.state.meta.errors.length > 0 && (
@@ -179,73 +163,166 @@ export default function SignUp() {
               </form.Field>
 
               <form.Field
-                name="password"
+                name="lastName"
                 validators={{
                   onBlur: ({ value }) => {
-                    if (!value) return "Passwort ist erforderlich";
-                    if (value.length < 8)
-                      return "Das Passwort muss mindestens 8 Zeichen lang sein";
+                    if (!value) return "Nachname ist erforderlich";
+                    if (value.length < 2) {
+                      return "Nachname muss mindestens 2 Zeichen lang sein";
+                    }
                     return undefined;
                   },
                 }}
               >
                 {(field) => (
-                  <div className="space-y-2">
-                    <Label htmlFor={field.name}>Passwort</Label>
-                    <Input
+                  <div className="space-y-1.5">
+                    <InputGroup>
+                      <InputGroupAddon align="inline-start">
+                        <UserIcon />
+                      </InputGroupAddon>
+                      <InputGroupInput
+                        id={field.name}
+                        name={field.name}
+                        placeholder="Nachname"
+                        value={field.state.value}
+                        onBlur={field.handleBlur}
+                        onChange={(e) => field.handleChange(e.target.value)}
+                      />
+                    </InputGroup>
+                    {field.state.meta.isTouched &&
+                      !field.state.meta.isValidating &&
+                      field.state.meta.errors.length > 0 && (
+                        <p className="text-destructive text-xs">
+                          {field.state.meta.errors[0]}
+                        </p>
+                      )}
+                  </div>
+                )}
+              </form.Field>
+            </div>
+
+            <form.Field
+              name="email"
+              validators={{
+                onBlur: ({ value }) => {
+                  if (!value) return "E-Mail ist erforderlich";
+                  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+                    return "Ungültige E-Mail-Adresse";
+                  }
+                  return undefined;
+                },
+              }}
+            >
+              {(field) => (
+                <div className="space-y-1.5">
+                  <InputGroup>
+                    <InputGroupAddon align="inline-start">
+                      <AtSignIcon />
+                    </InputGroupAddon>
+                    <InputGroupInput
                       id={field.name}
                       name={field.name}
-                      type="password"
+                      placeholder="your.email@example.com"
+                      type="email"
+                      value={field.state.value}
+                      onBlur={field.handleBlur}
+                      onChange={(e) => field.handleChange(e.target.value)}
+                    />
+                  </InputGroup>
+                  {field.state.meta.isTouched &&
+                    !field.state.meta.isValidating &&
+                    field.state.meta.errors.length > 0 && (
+                      <p className="text-destructive text-xs">
+                        {field.state.meta.errors[0]}
+                      </p>
+                    )}
+                </div>
+              )}
+            </form.Field>
+
+            <form.Field
+              name="password"
+              validators={{
+                onBlur: ({ value }) => {
+                  if (!value) return "Passwort ist erforderlich";
+                  if (value.length < 8) {
+                    return "Das Passwort muss mindestens 8 Zeichen lang sein";
+                  }
+                  return undefined;
+                },
+              }}
+            >
+              {(field) => (
+                <div className="space-y-1.5">
+                  <InputGroup>
+                    <InputGroupAddon align="inline-start">
+                      <KeyRoundIcon />
+                    </InputGroupAddon>
+                    <InputGroupInput
+                      id={field.name}
+                      name={field.name}
                       placeholder="Passwort"
+                      type="password"
                       autoComplete="new-password"
                       value={field.state.value}
                       onBlur={field.handleBlur}
                       onChange={(e) => field.handleChange(e.target.value)}
                     />
-                    {field.state.meta.isTouched &&
-                      !field.state.meta.isValidating &&
-                      field.state.meta.errors.length > 0 && (
-                        <p className="text-destructive text-xs">
-                          {field.state.meta.errors[0]}
-                        </p>
-                      )}
-                  </div>
-                )}
-              </form.Field>
-
-              <form.Subscribe
-                selector={(state) => [state.canSubmit, state.isSubmitting]}
-              >
-                {([canSubmit, isSubmitting]) => (
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={!canSubmit || isSubmitting}
-                  >
-                    {isSubmitting ? (
-                      <Loader2 size={16} className="animate-spin" />
-                    ) : (
-                      "Konto erstellen"
+                  </InputGroup>
+                  {field.state.meta.isTouched &&
+                    !field.state.meta.isValidating &&
+                    field.state.meta.errors.length > 0 && (
+                      <p className="text-destructive text-xs">
+                        {field.state.meta.errors[0]}
+                      </p>
                     )}
-                  </Button>
-                )}
-              </form.Subscribe>
-            </form>
-          </FramePanel>
+                </div>
+              )}
+            </form.Field>
 
-          <FrameFooter className="flex-row items-center justify-center">
-            <p className="text-muted-foreground text-sm">
-              Already have an account?{" "}
-              <Link
-                href={"/sign-in" as Route}
-                className="text-foreground hover:underline"
-              >
-                Sign in
-              </Link>
-            </p>
-          </FrameFooter>
-        </Frame>
+            <form.Subscribe
+              selector={(state) => [state.canSubmit, state.isSubmitting]}
+            >
+              {([canSubmit, isSubmitting]) => (
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={!canSubmit || isSubmitting}
+                >
+                  {isSubmitting ? "Wird erstellt..." : "Konto erstellen"}
+                </Button>
+              )}
+            </form.Subscribe>
+          </form>
+          <p className="text-muted-foreground text-xs leading-relaxed">
+            Mit dem Klick auf „Konto erstellen“ stimmen Sie unseren{" "}
+            <Link
+              href={"/terms" as Route}
+              className="underline underline-offset-4 hover:text-primary"
+            >
+              Nutzungsbedingungen
+            </Link>{" "}
+            und unserer{" "}
+            <Link
+              href={"/privacy" as Route}
+              className="underline underline-offset-4 hover:text-primary"
+            >
+              Datenschutzerklärung
+            </Link>{" "}
+            zu.
+          </p>
+
+          {/*<p className="text-muted-foreground text-sm">
+            Du hast schon ein Konto?{" "}
+            <Link
+              href={"/sign-in" as Route}
+              className="underline underline-offset-4 hover:text-primary"
+            >
+              Anmelden
+            </Link>
+          </p>*/}
+        </div>
       </div>
-    </div>
+    </main>
   );
 }
