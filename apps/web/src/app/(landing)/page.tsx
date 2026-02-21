@@ -23,9 +23,9 @@ export default async function Home() {
         </div>
         {/* <SwitchingSection /> */}
       </main>
-      <div id="cta">
+      {/*<div id="cta">
         <CallToAction />
-      </div>
+      </div>*/}
       <div id="footer">
         <Footer className={LAYOUT_CLASSNAME} />
       </div>
