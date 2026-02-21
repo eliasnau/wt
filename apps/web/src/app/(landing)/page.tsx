@@ -1,4 +1,5 @@
 import { CallToAction } from "@/components/landing/call-to-action";
+import { FeaturesShowcase } from "@/components/landing/features-showcase";
 import { Footer } from "@/components/landing/footer";
 import { Header } from "@/components/landing/header";
 import { HeroSection } from "@/components/landing/hero";
@@ -21,6 +22,7 @@ export default async function Home() {
         <div id="features">
           <SimpleFeatures />
         </div>
+        <FeaturesShowcase />
         {/* <SwitchingSection /> */}
       </main>
       <div id="cta">
