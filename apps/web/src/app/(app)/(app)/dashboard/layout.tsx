@@ -1,28 +1,17 @@
-"use client";
+import { getServerSession } from "@/lib/auth";
+import { headers } from "next/headers";
+import { redirect } from "next/navigation";
 
-import { authClient } from "@repo/auth/client";
-import { usePathname, useRouter } from "next/navigation";
-import { useEffect } from "react";
-
-export default function DashboardLayout({
-	children,
+export default async function DashboardLayout({
+  children,
 }: {
-	children: React.ReactNode;
+  children: React.ReactNode;
 }) {
-	const { data: activeOrg, isPending } = authClient.useActiveOrganization();
-	const router = useRouter();
-	const pathname = usePathname();
-
-	useEffect(() => {
-		if (!isPending && !activeOrg) {
-			const redirectUrl = encodeURIComponent(pathname);
-			router.push(`/organizations?redirect=${redirectUrl}`);
-		}
-	}, [activeOrg, isPending, pathname, router]);
-
-	if (!isPending && !activeOrg) {
-		return null;
-	}
-
-	return <>{children}</>;
+  const session = await getServerSession();
+  if (!session?.session.activeOrganizationId) {
+    const h = await headers();
+    const pathname = h.get("x-pathname") || "/dashboard";
+    redirect(`/organizations?returnUrl=${encodeURIComponent(pathname)}`);
+  }
+  return <>{children}</>;
 }
