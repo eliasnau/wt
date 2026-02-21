@@ -59,50 +59,70 @@ export function FeaturesShowcase() {
         </p>
       </div>
 
-      <div className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {features.map((feature) => (
-          <FeatureCard key={feature.title} feature={feature} />
+      <div className="mt-12 flex flex-col gap-6">
+        {features.map((feature, index) => (
+          <FeatureRow key={feature.title} feature={feature} index={index} />
         ))}
       </div>
     </section>
   );
 }
 
-function FeatureCard({ feature }: { feature: Feature }) {
-  return (
-    <div className="group overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md">
-      {/* Image */}
-      <div className="overflow-hidden border-b bg-muted">
+function FeatureRow({ feature, index }: { feature: Feature; index: number }) {
+  const isReversed = index % 2 !== 0;
+
+  const textContent = (
+    <div className="relative overflow-hidden bg-background p-8 md:p-12">
+      <div className="mask-[radial-gradient(farthest-side_at_top_left,white,transparent)] pointer-events-none absolute inset-0">
+        <GridPattern
+          className="absolute inset-0 size-full stroke-foreground/10"
+          height={40}
+          width={40}
+          x={20}
+        />
+      </div>
+      <div className="relative z-10">
+        <div className="[&_svg]:size-7 [&_svg]:text-foreground/75">
+          {feature.icon}
+        </div>
+        <h3 className="mt-6 font-medium text-foreground text-lg md:text-xl">
+          {feature.title}
+        </h3>
+        <p className="mt-3 max-w-md font-light text-muted-foreground text-sm leading-relaxed">
+          {feature.description}
+        </p>
+      </div>
+    </div>
+  );
+
+  const imageContent = (
+    <div className="relative overflow-hidden bg-background p-4 md:p-6">
+      <div className="overflow-hidden rounded-md border bg-card shadow-sm">
         <Image
           src={feature.image.src}
           alt={feature.image.alt}
-          width={600}
-          height={400}
-          className="h-auto w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          width={800}
+          height={500}
+          className="h-auto w-full object-cover"
         />
       </div>
+    </div>
+  );
 
-      {/* Content */}
-      <div className="relative overflow-hidden bg-card p-6">
-        <div className="mask-[radial-gradient(farthest-side_at_top_left,white,transparent)] pointer-events-none absolute inset-0 opacity-50">
-          <GridPattern
-            className="absolute inset-0 size-full stroke-foreground/5"
-            height={40}
-            width={40}
-            x={20}
-          />
-        </div>
-        <div className="relative z-10">
-          <div className="[&_svg]:size-6 [&_svg]:text-foreground/75">
-            {feature.icon}
-          </div>
-          <h3 className="mt-4 font-medium text-foreground text-lg">
-            {feature.title}
-          </h3>
-          <p className="mt-2 font-light text-muted-foreground text-sm leading-relaxed">
-            {feature.description}
-          </p>
-        </div>
+  return (
+    <div className="overflow-hidden rounded-lg border">
+      <div className="relative grid grid-cols-1 items-center gap-px bg-border lg:grid-cols-2">
+        {isReversed ? (
+          <>
+            {imageContent}
+            {textContent}
+          </>
+        ) : (
+          <>
+            {textContent}
+            {imageContent}
+          </>
+        )}
       </div>
     </div>
   );

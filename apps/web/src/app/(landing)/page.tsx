@@ -19,10 +19,10 @@ export default async function Home() {
       <Header className={LAYOUT_CLASSNAME} session={session} />
       <main className={LAYOUT_CLASSNAME}>
         <HeroSection />
-        <FeaturesShowcase />
         <div id="features">
           <SimpleFeatures />
         </div>
+        <FeaturesShowcase />
         {/* <SwitchingSection /> */}
       </main>
       <div id="cta">
