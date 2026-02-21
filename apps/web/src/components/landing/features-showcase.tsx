@@ -70,7 +70,7 @@ export function FeaturesShowcase() {
 
 function FeatureCard({ feature }: { feature: Feature }) {
   return (
-    <div className="group overflow-hidden rounded-lg border bg-card transition-shadow hover:shadow-md">
+    <div className="overflow-hidden rounded-lg border bg-card">
       {/* Image */}
       <div className="overflow-hidden border-b bg-muted">
         <Image
