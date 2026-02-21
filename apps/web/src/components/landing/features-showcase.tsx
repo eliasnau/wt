@@ -73,11 +73,9 @@ function FeatureCard({ feature }: { feature: Feature }) {
     <div className="overflow-hidden rounded-lg border bg-card">
       {/* Image */}
       <div className="overflow-hidden border-b bg-muted">
-        <Image
+        <img
           src={feature.image.src}
           alt={feature.image.alt}
-          width={600}
-          height={400}
           className="h-auto w-full object-cover"
         />
       </div>
