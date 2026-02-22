@@ -1,5 +1,4 @@
 import { CircleUser } from "lucide-react";
-import type { Route } from "next";
 import Link from "next/link";
 import { Suspense } from "react";
 import { Button } from "@/components/ui/button";
@@ -47,12 +46,6 @@ export default function GeneralSettingsPage() {
 					</HeaderDescription>
 				</HeaderContent>
 				<HeaderActions>
-					<Link href={"/account/customization" as Route}>
-						<Button variant={"outline"}>
-							<CircleUser className="mr-2 size-4" />
-							Customization
-						</Button>
-					</Link>
 					<Link href={"/account"}>
 						<Button variant={"outline"}>
 							<CircleUser className="mr-2 size-4" />
