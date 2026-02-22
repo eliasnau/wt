@@ -18,13 +18,13 @@
 	},
 	"dependencies": {
 		"@arcjet/next": "^1.0.0",
+		"@axiomhq/js": "^1.4.0",
+		"@axiomhq/logging": "^0.2.0",
+		"@axiomhq/nextjs": "^0.2.0",
 		"@opentelemetry/api-logs": "^0.208.0",
 		"@opentelemetry/exporter-logs-otlp-http": "^0.208.0",
 		"@opentelemetry/resources": "^2.5.0",
 		"@opentelemetry/sdk-logs": "^0.208.0",
-		"@axiomhq/js": "^1.4.0",
-		"@axiomhq/logging": "^0.2.0",
-		"@axiomhq/nextjs": "^0.2.0",
 		"@orpc/client": "catalog:",
 		"@orpc/openapi": "catalog:",
 		"@orpc/server": "catalog:",
@@ -37,6 +37,7 @@
 		"botid": "^1.5.10",
 		"dotenv": "catalog:",
 		"next": "16.1.6",
+		"posthog-node": "^5.24.13",
 		"sepa": "^2.1.0",
 		"zod": "catalog:"
 	}

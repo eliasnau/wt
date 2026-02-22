@@ -49,7 +49,7 @@ export const UserButton = () => {
   const displayName = session?.user?.name ?? "User";
 
   const handleSignOut = async () => {
-    posthog.capture("auth:abmelden");
+    posthog.capture("auth:sign-out");
     posthog.reset();
 
     await authClient.signOut({

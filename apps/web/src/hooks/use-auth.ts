@@ -8,62 +8,62 @@ import { use } from "react";
 import { AuthContext } from "@/providers/auth-provider";
 
 export function useAuth() {
-	const context = use(AuthContext);
-	if (context === undefined) {
-		throw new Error("useAuth must be used within an AuthProvider");
-	}
+  const context = use(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
 
-	const queryClient = useQueryClient();
-	const router = useRouter();
+  const queryClient = useQueryClient();
+  const router = useRouter();
 
-	const switchOrganization = async (
-		organizationId: string,
-		source?: string,
-	) => {
-		const prevOrganizationId = context.activeOrganization?.id;
+  const switchOrganization = async (
+    organizationId: string,
+    source?: string,
+  ) => {
+    const prevOrganizationId = context.activeOrganization?.id;
 
-		if (prevOrganizationId === organizationId) {
-			return;
-		}
+    if (prevOrganizationId === organizationId) {
+      return;
+    }
 
-		const { error, data } = await authClient.organization.setActive({
-			organizationId,
-		});
+    const { error, data } = await authClient.organization.setActive({
+      organizationId,
+    });
 
-		if (error) {
-			throw new Error(error.message || "Failed to switch organization");
-		}
+    if (error) {
+      throw new Error(error.message || "Failed to switch organization");
+    }
 
-		context.activeOrganization = data;
+    context.activeOrganization = data;
 
-		posthog.capture("organization:switch", {
-			organization_id: organizationId,
-			prev_organization_id: prevOrganizationId,
-			switch_source: source || "unknown",
-		});
+    posthog.capture("organization:switch", {
+      organization_id: organizationId,
+      prev_organization_id: prevOrganizationId,
+      switch_source: source || "unknown",
+    });
 
-		await queryClient.resetQueries();
+    await queryClient.resetQueries();
 
-		router.refresh();
-	};
+    router.refresh();
+  };
 
-	const signOut = async () => {
-		posthog.capture("auth:sign_out");
-		posthog.reset();
+  const signOut = async () => {
+    posthog.capture("auth:sign_out");
+    posthog.reset();
 
-		const { error } = await authClient.signOut();
+    const { error } = await authClient.signOut();
 
-		if (error) {
-			throw new Error(error.message || "Failed to sign out");
-		}
+    if (error) {
+      throw new Error(error.message || "Failed to sign out");
+    }
 
-		router.push("/sign-in");
-	};
+    router.push("/sign-in");
+  };
 
-	return {
-		session: context.session,
-		activeOrganization: context.activeOrganization,
-		switchOrganization,
-		signOut,
-	};
+  return {
+    session: context.session,
+    activeOrganization: context.activeOrganization,
+    switchOrganization,
+    signOut,
+  };
 }

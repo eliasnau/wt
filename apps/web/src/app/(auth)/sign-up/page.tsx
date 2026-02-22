@@ -53,7 +53,7 @@ export default function SignUp2Page() {
             toast.error(ctx.error.message);
           },
           onSuccess: () => {
-            posthog.capture("auth:registrieren", {
+            posthog.capture("auth:sign-up", {
               auth_method: "email",
             });
 
