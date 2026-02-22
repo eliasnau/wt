@@ -1,0 +1,33 @@
+{
+  "name": "@repo/emails",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit",
+    "email:dev": "email dev --dir src/templates"
+  },
+  "dependencies": {
+    "@react-email/components": "^0.5.7",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "resend": "^6.4.1"
+  },
+  "devDependencies": {
+    "@react-email/preview-server": "^4.3.2",
+    "@types/react": "19.2.10",
+    "@types/react-dom": "19.2.3",
+    "@repo/config": "workspace:*",
+    "react-email": "^4.3.2",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}
