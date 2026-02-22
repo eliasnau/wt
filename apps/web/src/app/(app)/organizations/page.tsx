@@ -47,11 +47,6 @@ export default function OrganizationsPage() {
     defaultValue: "/dashboard",
   });
 
-  const hideSensitiveInformatoin = Boolean(
-    (session?.user as { hideSensitiveInformatoin?: boolean } | undefined)
-      ?.hideSensitiveInformatoin,
-  );
-
   const handleCreateOrganization = async () => {
     if (!orgName.trim() || !orgSlug.trim()) {
       toast.error("Bitte fülle alle Felder aus");
@@ -155,8 +150,6 @@ export default function OrganizationsPage() {
         <UserAccountMenu
           className="absolute top-7 right-5"
           user={session?.user}
-          loading={!session?.user}
-          hideSensitiveInformatoin={hideSensitiveInformatoin}
         />
 
         <div className="mx-auto w-full max-w-2xl space-y-4">

@@ -16,36 +16,29 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/use-auth";
+import type { User } from "@repo/auth";
 
 type UserAccountMenuProps = {
-  user?: {
-    id?: string;
-    name?: string | null;
-    image?: string | null;
-  };
-  loading?: boolean;
-  hideSensitiveInformatoin?: boolean;
+  user?: User;
   className?: string;
 };
 
-export function UserAccountMenu({
-  user,
-  loading = false,
-  hideSensitiveInformatoin,
-  className,
-}: UserAccountMenuProps) {
+export function UserAccountMenu({ user, className }: UserAccountMenuProps) {
   const router = useRouter();
   const { signOut } = useAuth();
+  const hideSensitiveInformatoin = user?.hideSensitiveInformatoin;
+  const displayName = user?.name ?? "Account";
 
   const handleSignOut = async () => {
     try {
-      await signOut();
+      // await signOut();
+      console.log(user);
     } catch (error: any) {
       toast.error(error?.message || "Failed to sign out");
     }
   };
 
-  if (loading) {
+  if (!user) {
     return (
       <div className={cn("flex items-center rounded-md px-2 py-1", className)}>
         <Avatar className="h-6 w-6 rounded-full">
@@ -82,7 +75,15 @@ export function UserAccountMenu({
             <Skeleton className="h-6 w-6 rounded-md" />
           </AvatarFallback>
         </Avatar>
-        <span className="ml-1">{user?.name || "Account"}</span>
+        <span
+          className={cn(
+            "ml-1",
+            hideSensitiveInformatoin &&
+              "select-none text-foreground/75 tracking-[0.02em] opacity-90 blur-[4px]",
+          )}
+        >
+          {displayName}
+        </span>
       </MenuTrigger>
       <MenuPopup align="end" sideOffset={8}>
         <MenuItem className="gap-2" onClick={() => router.push("/account")}>
