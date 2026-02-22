@@ -2,45 +2,49 @@ import { createEnv } from "@t3-oss/env-nextjs";
 import { z } from "zod";
 
 export const env = createEnv({
-	server: {
-		POSTHOG_API_KEY: z.string(),
-		POSTHOG_ENV_ID: z.string(),
+  server: {
+    POSTHOG_API_KEY: z.string(),
+    POSTHOG_ENV_ID: z.string(),
 
-		// Security
-		ARCJET_KEY: z.string().optional(),
+    // Security
+    ARCJET_KEY: z.string().optional(),
 
-		// Observability
-		AXIOM_TOKEN: z.string().optional(),
-		AXIOM_DATASET: z.string().optional(),
+    // Observability
+    AXIOM_TOKEN: z.string().optional(),
+    AXIOM_DATASET: z.string().optional(),
 
-		// Database
-		DATABASE_URL: z.string(), //String so it alows "*" pattern
+    // Database
+    DATABASE_URL: z.string(), //String so it alows "*" pattern
 
-		// Better Auth
-		BETTER_AUTH_SECRET: z.string().min(32).optional(),
-	},
-	client: {
-		// PostHog Analytics
-		NEXT_PUBLIC_POSTHOG_KEY: z.string(),
-		NEXT_PUBLIC_POSTHOG_HOST: z.url(),
-	},
-	runtimeEnv: {
-		// Server
-		POSTHOG_API_KEY: process.env.POSTHOG_API_KEY,
-		POSTHOG_ENV_ID: process.env.POSTHOG_ENV_ID,
+    // Better Auth
+    BETTER_AUTH_SECRET: z.string().min(32).optional(),
 
-		ARCJET_KEY: process.env.ARCJET_KEY,
+    RESEND_API_KEY: z.string().startsWith("re_"),
+  },
+  client: {
+    // PostHog Analytics
+    NEXT_PUBLIC_POSTHOG_KEY: z.string(),
+    NEXT_PUBLIC_POSTHOG_HOST: z.url(),
+  },
+  runtimeEnv: {
+    // Server
+    POSTHOG_API_KEY: process.env.POSTHOG_API_KEY,
+    POSTHOG_ENV_ID: process.env.POSTHOG_ENV_ID,
 
-		AXIOM_TOKEN: process.env.AXIOM_TOKEN,
-		AXIOM_DATASET: process.env.AXIOM_DATASET,
+    ARCJET_KEY: process.env.ARCJET_KEY,
 
-		DATABASE_URL: process.env.DATABASE_URL,
+    AXIOM_TOKEN: process.env.AXIOM_TOKEN,
+    AXIOM_DATASET: process.env.AXIOM_DATASET,
 
-		BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
+    DATABASE_URL: process.env.DATABASE_URL,
 
-		// Client
-		NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
-		NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
-	},
-	emptyStringAsUndefined: true,
+    BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
+
+    // Client
+    NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
+    NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+  },
+  emptyStringAsUndefined: true,
 });
