@@ -7,7 +7,7 @@ import { SimpleFeatures } from "@/components/landing/simple-features";
 // import { SwitchingSection } from "@/components/landing/switching";
 // import { FeaturesSection } from "@/components/landing/features";
 import { getServerSession } from "@/lib/auth";
-const LAYOUT_CLASSNAME = "max-w-5xl mx-auto px-6 lg:px-8 xl:px-0";
+const LAYOUT_CLASSNAME = "max-w-5xl mx-auto";
 
 export default async function Home() {
   const session = await getServerSession();
