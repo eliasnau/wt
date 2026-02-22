@@ -1,0 +1,17 @@
+{
+  "$schema": "https://openapi.vercel.sh/microfrontends.json",
+  "applications": {
+    "wt-web": {
+      "development": {
+        "fallback": "wt.codity.app"
+      }
+    },
+    "wt-docs": {
+      "routing": [
+        {
+          "paths": ["/docs", "/docs/:path*"]
+        }
+      ]
+    }
+  }
+}
