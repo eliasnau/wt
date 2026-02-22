@@ -56,6 +56,19 @@ const getOrganizationSession = async (req: Request) => {
 	};
 };
 
+const hasAiChatPermission = async (req: Request) => {
+	const result = await auth.api.hasPermission({
+		headers: req.headers,
+		body: {
+			permissions: {
+				ai: ["chat"],
+			},
+		},
+	});
+
+	return result.success;
+};
+
 const getSchoolStats = async (organizationId: string) => {
 	return new Promise(async (resolve, reject) => {
 		try {
@@ -233,7 +246,8 @@ const createTools = (organizationId: string) => ({
 				if (matches.length === 0) {
 					return {
 						found: false,
-						message: "Member not found. Use searchMembers to find the right member.",
+						message:
+							"Member not found. Use searchMembers to find the right member.",
 					};
 				}
 
@@ -404,6 +418,14 @@ export async function GET(req: Request) {
 		);
 	}
 
+	const canUseAiChat = await hasAiChatPermission(req);
+	if (!canUseAiChat) {
+		return new Response(
+			JSON.stringify({ error: "Forbidden: missing ai.chat permission." }),
+			{ status: 403, headers: { "Content-Type": "application/json" } },
+		);
+	}
+
 	const stats = await getSchoolStats(session.organizationId);
 	return new Response(JSON.stringify(stats), {
 		status: 200,
@@ -419,6 +441,14 @@ export async function POST(req: Request) {
 		return new Response(
 			JSON.stringify({ error: "Unauthorized: missing active organization." }),
 			{ status: 401, headers: { "Content-Type": "application/json" } },
+		);
+	}
+
+	const canUseAiChat = await hasAiChatPermission(req);
+	if (!canUseAiChat) {
+		return new Response(
+			JSON.stringify({ error: "Forbidden: missing ai.chat permission." }),
+			{ status: 403, headers: { "Content-Type": "application/json" } },
 		);
 	}
 

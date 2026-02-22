@@ -59,7 +59,12 @@ function getMonthRange(monthInput?: string) {
 export const statisticsRouter = {
 	monthlyOverview: protectedProcedure
 		.use(rateLimitMiddleware(2))
-		.use(requirePermission({ member: ["view"], groups: ["view"] }))
+		.use(
+			requirePermission({
+				statistics: ["view"],
+				financeStatistics: ["view"],
+			}),
+		)
 		.input(monthSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;

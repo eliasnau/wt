@@ -10,7 +10,7 @@ import { logger } from "../lib/logger";
  * @returns Middleware that verifies user has the required permissions
  * @example
  * protectedProcedure.use(requirePermission({ member: ["view"] })).handler(...)
- * protectedProcedure.use(requirePermission({ finance: ["view", "export"] })).handler(...)
+ * protectedProcedure.use(requirePermission({ paymentBatches: ["view"] })).handler(...)
  */
 export const requirePermission = (permissions: PermissionCheck) => {
 	return os.$context<Context>().middleware(async ({ context, next }) => {

@@ -16,8 +16,11 @@ const customStatement = {
 		"export",
 		"view_payment",
 	] as const,
-	finance: ["view", "download", "export"] as const,
-	statistics: ["view", "export"] as const,
+	ai: ["chat"] as const,
+	sepa: ["view", "update"] as const,
+	statistics: ["view"] as const,
+	financeStatistics: ["view"] as const,
+	paymentBatches: ["view", "generate", "download"] as const,
 	groups: ["view", "create", "update", "delete"] as const,
 } as const;
 
@@ -43,8 +46,11 @@ export const owner = ac.newRole({
 		"export",
 		"view_payment",
 	],
-	finance: ["view", "download", "export"],
-	statistics: ["view", "export"],
+	ai: ["chat"],
+	sepa: ["view", "update"],
+	statistics: ["view"],
+	financeStatistics: ["view"],
+	paymentBatches: ["view", "generate", "download"],
 	groups: ["view", "create", "update", "delete"],
 });
 
@@ -59,14 +65,18 @@ export const admin = ac.newRole({
 		"export",
 		"view_payment",
 	],
-	finance: ["view", "download", "export"],
-	statistics: ["view", "export"],
+	ai: ["chat"],
+	sepa: ["view", "update"],
+	statistics: ["view"],
+	financeStatistics: ["view"],
+	paymentBatches: ["view", "generate", "download"],
 	groups: ["view", "create", "update", "delete"],
 });
 
 export const member = ac.newRole({
 	...memberAc.statements,
 	member: ["view"],
+	ai: ["chat"],
 	groups: ["view"],
 });
 

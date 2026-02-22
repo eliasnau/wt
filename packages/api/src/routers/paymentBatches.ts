@@ -96,7 +96,7 @@ function generateBatchNumber(
 export const paymentBatchesRouter = {
 	create: protectedProcedure
 		.use(rateLimitMiddleware(10))
-		.use(requirePermission({ finance: ["view"] }))
+		.use(requirePermission({ paymentBatches: ["generate"] }))
 		.input(createPaymentBatchSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
@@ -329,7 +329,7 @@ export const paymentBatchesRouter = {
 
 	list: protectedProcedure
 		.use(rateLimitMiddleware(5))
-		.use(requirePermission({ finance: ["view"] }))
+		.use(requirePermission({ paymentBatches: ["view"] }))
 		.handler(async ({ context }) => {
 			const organizationId = context.session.activeOrganizationId!;
 
@@ -356,7 +356,7 @@ export const paymentBatchesRouter = {
 
 	view: protectedProcedure
 		.use(rateLimitMiddleware(5))
-		.use(requirePermission({ finance: ["view"] }))
+		.use(requirePermission({ paymentBatches: ["view"] }))
 		.input(batchIdSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
@@ -414,7 +414,7 @@ export const paymentBatchesRouter = {
 
 	exportSepa: protectedProcedure
 		.use(rateLimitMiddleware(3))
-		.use(requirePermission({ finance: ["export"] }))
+		.use(requirePermission({ paymentBatches: ["download"] }))
 		.input(batchIdSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;

@@ -294,7 +294,7 @@ export const organizationsRouter = {
 
 	getSettings: protectedProcedure
 		.use(rateLimitMiddleware(3))
-		.use(requirePermission({ finance: ["view"] }))
+		.use(requirePermission({ sepa: ["view"] }))
 		.handler(async ({ context }) => {
 			const organizationId = context.session.activeOrganizationId!;
 
@@ -311,7 +311,7 @@ export const organizationsRouter = {
 
 	updateSettings: protectedProcedure
 		.use(rateLimitMiddleware(5))
-		.use(requirePermission({ finance: ["export"] }))
+		.use(requirePermission({ sepa: ["update"] }))
 		.input(updateOrganizationSettingsSchema)
 		.handler(async ({ context, input }) => {
 			const organizationId = context.session.activeOrganizationId!;
