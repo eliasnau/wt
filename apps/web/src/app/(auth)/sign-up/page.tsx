@@ -2,7 +2,6 @@
 
 import { authClient } from "@repo/auth/client";
 import { useForm } from "@tanstack/react-form";
-import { initBotId } from "botid/client/core";
 import {
   AtSignIcon,
   ChevronLeftIcon,
@@ -23,7 +22,6 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
-import { botIdConfig } from "@/lib/botid";
 
 export default function SignUp2Page() {
   const router = useRouter();

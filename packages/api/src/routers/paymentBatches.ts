@@ -496,6 +496,8 @@ export const paymentBatchesRouter = {
           yearlyFeeAmount: payment.yearlyFeeAmount,
           dueDate: payment.dueDate,
           contractStartDate: contract.startDate,
+          contractMandateId: contract.mandateId,
+          contractMandateSignatureDate: contract.mandateSignatureDate,
           memberId: clubMember.id,
           memberFirstName: clubMember.firstName,
           memberLastName: clubMember.lastName,
@@ -530,7 +532,9 @@ export const paymentBatchesRouter = {
         if (
           !paymentRow.memberIban ||
           !paymentRow.memberBic ||
-          !paymentRow.memberCardHolder
+          !paymentRow.memberCardHolder ||
+          !paymentRow.contractMandateId ||
+          !paymentRow.contractMandateSignatureDate
         ) {
           invalidMembers.push(
             `${paymentRow.memberFirstName} ${paymentRow.memberLastName}`.trim(),
@@ -641,8 +645,10 @@ export const paymentBatchesRouter = {
         tx.debtorName = memberName;
         tx.debtorIBAN = paymentRow.memberIban;
         tx.debtorBIC = paymentRow.memberBic;
-        tx.mandateId = normalizeSepaId(paymentRow.contractId, 35);
-        tx.mandateSignatureDate = new Date(paymentRow.contractStartDate);
+        tx.mandateId = normalizeSepaId(paymentRow.contractMandateId, 35);
+        tx.mandateSignatureDate = new Date(
+          `${paymentRow.contractMandateSignatureDate}T00:00:00.000Z`,
+        );
         tx.amount = amount;
         tx.currency = "EUR";
         tx.remittanceInfo = remittanceInfo;

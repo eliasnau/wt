@@ -184,6 +184,10 @@ function getTodayInBerlinDateString(): string {
   return `${year}-${month}-${day}`;
 }
 
+function generateMandateId(): string {
+  return `WT-${randomBytes(12).toString("hex").toUpperCase()}`;
+}
+
 /**
  * Calculate the end date for the initial period based on contract type
  */
@@ -506,6 +510,7 @@ export const membersRouter = {
         input.initialPeriod,
       );
       const nextBillingDate = getNextBillingDate(input.contractStartDate);
+      const mandateSignatureDate = getTodayInBerlinDateString();
       try {
         const result = await DB.mutation.members.createMemberWithContract({
           organizationId,
@@ -533,6 +538,8 @@ export const membersRouter = {
             startDate: input.contractStartDate,
             initialPeriodEndDate,
             nextBillingDate,
+            mandateId: generateMandateId(),
+            mandateSignatureDate,
             joiningFeeAmount: input.joiningFeeAmount,
             yearlyFeeAmount: input.yearlyFeeAmount,
             notes: input.contractNotes,
