@@ -39,7 +39,9 @@ export default function SignUp2Page() {
       password: "",
     },
     onSubmit: async ({ value }) => {
-      await initBotId(botIdConfig);
+      void initBotId(botIdConfig).catch(() => {
+        // Do not block signup if BotID bootstrap fails on client side.
+      });
 
       await authClient.signUp.email(
         {
@@ -49,7 +51,6 @@ export default function SignUp2Page() {
         },
         {
           onError: (ctx) => {
-            initBotId(botIdConfig);
             toast.error(ctx.error.message);
           },
           onSuccess: () => {
