@@ -1,6 +1,7 @@
 import { passkey } from "@better-auth/passkey";
 import { createId } from "@paralleldrive/cuid2";
 import { db } from "@repo/db";
+import { sendOrganizationInvitationEmail } from "@repo/emails";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
 import { nextCookies } from "better-auth/next-js";
@@ -14,6 +15,29 @@ import { ac, admin, member, owner } from "./permissions";
 import { manageSessions } from "./plugins/manageSessions";
 import { checkBotId } from "botid/server";
 import { APIError } from "better-auth/api";
+
+type OrganizationInvitationEmailPayload = {
+  id: string;
+  email: string;
+  inviter: {
+    user: {
+      name: string;
+      email: string;
+    };
+  };
+  organization: {
+    name: string;
+  };
+};
+
+function getPublicBaseUrl() {
+  const baseUrl =
+    process.env.BETTER_AUTH_URL ||
+    process.env.VERCEL_URL ||
+    "http://localhost:3001";
+
+  return /^https?:\/\//.test(baseUrl) ? baseUrl : `https://${baseUrl}`;
+}
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -96,6 +120,22 @@ export const auth = betterAuth({
         owner,
         admin,
         member,
+      },
+      async sendInvitationEmail(data) {
+        const inviteData = data as OrganizationInvitationEmailPayload;
+        const inviteLink = `${getPublicBaseUrl()}/accept-invitation/${inviteData.id}`;
+        //TODO: add posthog analytics
+        try {
+          await sendOrganizationInvitationEmail({
+            email: inviteData.email,
+            invitedByUsername: inviteData.inviter.user.name,
+            invitedByEmail: inviteData.inviter.user.email,
+            organizationName: inviteData.organization.name,
+            inviteLink,
+          });
+        } catch (error) {
+          console.error("Failed to send organization invitation email", error);
+        }
       },
       disableOrganizationDeletion: true,
       dynamicAccessControl: {
