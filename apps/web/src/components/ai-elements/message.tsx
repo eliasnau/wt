@@ -320,8 +320,8 @@ export type MessageResponseProps = StreamdownProps;
 
 const streamdownPlugins = { cjk, code, math, mermaid };
 const defaultStreamAnimation: NonNullable<StreamdownProps["animated"]> = {
-  animation: "slideUp",
-  duration: 300,
+  animation: "blurIn",
+  duration: 250,
   easing: "ease-out",
   sep: "word",
 };
@@ -336,13 +336,11 @@ export const MessageResponse = memo(
     ...props
   }: MessageResponseProps) => {
     const resolvedMode = mode ?? (isAnimating ? "streaming" : "static");
-    const resolvedCaret = caret ?? (isAnimating ? "block" : undefined);
     return (
       <Streamdown
         animated={animated}
         isAnimating={isAnimating}
         mode={resolvedMode}
-        caret={resolvedCaret}
         className={cn(
           "size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
           className,
