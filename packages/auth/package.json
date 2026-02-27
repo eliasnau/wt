@@ -17,6 +17,7 @@
     "@better-auth/passkey": "^1.4.18",
     "@paralleldrive/cuid2": "^2.2.2",
     "@repo/db": "workspace:*",
+    "@repo/emails": "workspace:*",
     "better-auth": "^1.4.18",
     "botid": "^1.5.10",
     "dotenv": "catalog:",

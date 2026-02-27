@@ -1,40 +1,41 @@
 {
-	"name": "repo",
-	"private": true,
-	"type": "module",
-	"workspaces": {
-		"packages": [
-			"apps/*",
-			"packages/*"
-		]
-	},
-	"scripts": {
-		"check": "biome check --write .",
-		"dev": "turbo dev",
-		"build": "turbo build",
-		"check-types": "turbo check-types",
-		"dev:native": "turbo -F native dev",
-		"dev:web": "turbo -F web dev",
-		"db:push": "turbo -F @repo/db db:push",
-		"db:studio": "turbo -F @repo/db db:studio",
-		"db:generate": "turbo -F @repo/db db:generate",
-		"db:migrate": "turbo -F @repo/db db:migrate"
-	},
-	"dependencies": {
-		"dotenv": "catalog:",
-		"pg": "^8.18.0",
-		"zod": "catalog:"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^2.4.2",
-		"@types/node": "^25.3.0",
-		"turbo": "^2.8.10"
-	},
-	"pnpm": {
-		"overrides": {
-			"@types/react": "19.2.10",
-			"@types/react-dom": "19.2.3"
-		}
-	},
-	"packageManager": "pnpm@10.25.0"
+  "name": "repo",
+  "private": true,
+  "type": "module",
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*"
+    ]
+  },
+  "scripts": {
+    "check": "biome check --write .",
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "check-types": "turbo check-types",
+    "import:matool": "pnpm -F @repo/scripts import:matool",
+    "dev:native": "turbo -F native dev",
+    "dev:web": "turbo -F web dev",
+    "db:push": "turbo -F @repo/db db:push",
+    "db:studio": "turbo -F @repo/db db:studio",
+    "db:generate": "turbo -F @repo/db db:generate",
+    "db:migrate": "turbo -F @repo/db db:migrate"
+  },
+  "dependencies": {
+    "dotenv": "catalog:",
+    "pg": "^8.18.0",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.2",
+    "@types/node": "^25.3.0",
+    "turbo": "^2.8.10"
+  },
+  "pnpm": {
+    "overrides": {
+      "@types/react": "19.2.10",
+      "@types/react-dom": "19.2.3"
+    }
+  },
+  "packageManager": "pnpm@10.25.0"
 }
