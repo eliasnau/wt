@@ -13,6 +13,8 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "check-types": "turbo check-types",
+    "matool:prepare": "pnpm -F @repo/scripts matool:prepare",
+    "matool:map": "pnpm -F @repo/scripts matool:map",
     "import:matool": "pnpm -F @repo/scripts import:matool",
     "dev:native": "turbo -F native dev",
     "dev:web": "turbo -F web dev",
