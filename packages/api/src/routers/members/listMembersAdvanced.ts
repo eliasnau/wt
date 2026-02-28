@@ -90,9 +90,49 @@ export const listMembersAdvancedSchema = z.object({
 	filters: z.array(advancedFilterSchema).optional(),
 });
 
+export const listMembersAdvancedExportSchema = listMembersAdvancedSchema.omit({
+	page: true,
+	limit: true,
+});
+
 export type ListMembersAdvancedInput = z.infer<
 	typeof listMembersAdvancedSchema
 >;
+export type ListMembersAdvancedExportInput = z.infer<
+	typeof listMembersAdvancedExportSchema
+>;
+
+const memberSelect = {
+	id: clubMember.id,
+	firstName: clubMember.firstName,
+	lastName: clubMember.lastName,
+	email: clubMember.email,
+	phone: clubMember.phone,
+	street: clubMember.street,
+	city: clubMember.city,
+	state: clubMember.state,
+	postalCode: clubMember.postalCode,
+	country: clubMember.country,
+	notes: clubMember.notes,
+	guardianName: clubMember.guardianName,
+	guardianEmail: clubMember.guardianEmail,
+	guardianPhone: clubMember.guardianPhone,
+	organizationId: clubMember.organizationId,
+	createdAt: clubMember.createdAt,
+	updatedAt: clubMember.updatedAt,
+	contractId: contract.id,
+	contractStartDate: contract.startDate,
+	contractInitialPeriod: contract.initialPeriod,
+	contractInitialPeriodEndDate: contract.initialPeriodEndDate,
+	contractCurrentPeriodEndDate: contract.currentPeriodEndDate,
+	contractNextBillingDate: contract.nextBillingDate,
+	contractJoiningFeeAmount: contract.joiningFeeAmount,
+	contractYearlyFeeAmount: contract.yearlyFeeAmount,
+	contractNotes: contract.notes,
+	contractCancelledAt: contract.cancelledAt,
+	contractCancelReason: contract.cancelReason,
+	contractCancellationEffectiveDate: contract.cancellationEffectiveDate,
+};
 
 function getTodayInBerlinDateString(): string {
 	const parts = new Intl.DateTimeFormat("en-CA", {
@@ -223,11 +263,11 @@ function buildAdvancedFilterCondition(
 	const { compareExpr, textExpr } = getFieldConfig(filter.field);
 
 	if (filter.operator === "isNull") {
-		return sql`${compareExpr} IS NULL`;
+		return sql`${compareExpr} IS NULL OR NULLIF(BTRIM(${textExpr}), '') IS NULL`;
 	}
 
 	if (filter.operator === "isNotNull") {
-		return sql`${compareExpr} IS NOT NULL`;
+		return sql`${compareExpr} IS NOT NULL AND NULLIF(BTRIM(${textExpr}), '') IS NOT NULL`;
 	}
 
 	if (filter.operator === "in") {
@@ -274,33 +314,37 @@ function resolveMembershipStatus(
 	return "cancelled";
 }
 
-export async function listMembersAdvanced({
+type MembersQueryContext =
+	| {
+			emptyResult: true;
+			todayInBerlin: string;
+	  }
+	| {
+			emptyResult: false;
+			todayInBerlin: string;
+			memberWhere: ReturnType<typeof and>;
+			sortExpression: unknown;
+			sortDirection: "asc" | "desc";
+	  };
+
+function buildMembersQueryContext({
 	organizationId,
 	input,
 }: {
 	organizationId: string;
-	input: ListMembersAdvancedInput;
-}) {
-	const page = input.page ?? 1;
-	const limit = input.limit ?? 20;
-	const offset = (page - 1) * limit;
-
+	input: ListMembersAdvancedExportInput;
+}): MembersQueryContext {
 	const includeActive = input.status?.includeActive ?? true;
 	const includeCancelled = input.status?.includeCancelled ?? false;
 	const includeCancelledButActive =
 		input.status?.includeCancelledButActive ?? true;
 
+	const todayInBerlin = getTodayInBerlinDateString();
+
 	if (!includeActive && !includeCancelled && !includeCancelledButActive) {
 		return {
-			data: [],
-			pagination: {
-				page,
-				limit,
-				totalCount: 0,
-				totalPages: 0,
-				hasNextPage: false,
-				hasPreviousPage: page > 1,
-			},
+			emptyResult: true,
+			todayInBerlin,
 		};
 	}
 
@@ -316,19 +360,10 @@ export async function listMembersAdvanced({
 
 	if (input.groupIds && (!groupIds || groupIds.length === 0)) {
 		return {
-			data: [],
-			pagination: {
-				page,
-				limit,
-				totalCount: 0,
-				totalPages: 0,
-				hasNextPage: false,
-				hasPreviousPage: page > 1,
-			},
+			emptyResult: true,
+			todayInBerlin,
 		};
 	}
-
-	const todayInBerlin = getTodayInBerlinDateString();
 
 	const statusConditions = [
 		includeActive ? sql`${contract.cancelledAt} IS NULL` : undefined,
@@ -424,48 +459,81 @@ export async function listMembersAdvanced({
 											? contract.cancelledAt
 											: clubMember.createdAt;
 
-	const members = await db
+	return {
+		emptyResult: false,
+		todayInBerlin,
+		memberWhere,
+		sortExpression,
+		sortDirection,
+	};
+}
+
+async function buildGroupMap(memberIds: string[]) {
+	if (memberIds.length === 0) {
+		return new Map<
+			string,
+			{ groupId: string; group: { id: string; name: string } }[]
+		>();
+	}
+
+	const groupRows = await db
 		.select({
-			id: clubMember.id,
-			firstName: clubMember.firstName,
-			lastName: clubMember.lastName,
-			email: clubMember.email,
-			phone: clubMember.phone,
-			street: clubMember.street,
-			city: clubMember.city,
-			state: clubMember.state,
-			postalCode: clubMember.postalCode,
-			country: clubMember.country,
-			notes: clubMember.notes,
-			guardianName: clubMember.guardianName,
-			guardianEmail: clubMember.guardianEmail,
-			guardianPhone: clubMember.guardianPhone,
-			organizationId: clubMember.organizationId,
-			createdAt: clubMember.createdAt,
-			updatedAt: clubMember.updatedAt,
-			contractId: contract.id,
-			contractStartDate: contract.startDate,
-			contractInitialPeriod: contract.initialPeriod,
-			contractInitialPeriodEndDate: contract.initialPeriodEndDate,
-			contractCurrentPeriodEndDate: contract.currentPeriodEndDate,
-			contractNextBillingDate: contract.nextBillingDate,
-			contractJoiningFeeAmount: contract.joiningFeeAmount,
-			contractYearlyFeeAmount: contract.yearlyFeeAmount,
-			contractNotes: contract.notes,
-			contractCancelledAt: contract.cancelledAt,
-			contractCancelReason: contract.cancelReason,
-			contractCancellationEffectiveDate: contract.cancellationEffectiveDate,
+			memberId: groupMember.memberId,
+			groupId: groupMember.groupId,
+			groupName: group.name,
 		})
-		.from(clubMember)
-		.innerJoin(contract, eq(contract.memberId, clubMember.id))
-		.where(memberWhere)
-		.orderBy(
-			sortDirection === "asc"
-				? sql`${sortExpression} asc`
-				: sql`${sortExpression} desc`,
-		)
-		.limit(limit)
-		.offset(offset);
+		.from(groupMember)
+		.innerJoin(group, eq(group.id, groupMember.groupId))
+		.where(inArray(groupMember.memberId, memberIds));
+
+	return groupRows.reduce(
+		(acc, row) => {
+			const groupMembers = acc.get(row.memberId) ?? [];
+			groupMembers.push({
+				groupId: row.groupId,
+				group: { id: row.groupId, name: row.groupName },
+			});
+			acc.set(row.memberId, groupMembers);
+			return acc;
+		},
+		new Map<
+			string,
+			{
+				groupId: string;
+				group: { id: string; name: string };
+			}[]
+		>(),
+	);
+}
+
+async function fetchMembersAdvancedData({
+	organizationId,
+	input,
+	page,
+	limit,
+	maxRows,
+}: {
+	organizationId: string;
+	input: ListMembersAdvancedExportInput;
+	page?: number;
+	limit?: number;
+	maxRows?: number;
+}) {
+	const queryContext = buildMembersQueryContext({
+		organizationId,
+		input,
+	});
+
+	if (queryContext.emptyResult) {
+		return {
+			data: [],
+			totalCount: 0,
+			exceededMaxRows: false,
+		};
+	}
+
+	const { memberWhere, sortExpression, sortDirection, todayInBerlin } =
+		queryContext;
 
 	const [{ count: totalCount = 0 } = { count: 0 }] = await db
 		.select({ count: count() })
@@ -473,44 +541,48 @@ export async function listMembersAdvanced({
 		.innerJoin(contract, eq(contract.memberId, clubMember.id))
 		.where(memberWhere);
 
-	const totalPages = Math.ceil(totalCount / limit);
-
-	const memberIds = members.map((member) => member.id);
-	let groupMap = new Map<
-		string,
-		{ groupId: string; group: { id: string; name: string } }[]
-	>();
-
-	if (memberIds.length > 0) {
-		const groupRows = await db
-			.select({
-				memberId: groupMember.memberId,
-				groupId: groupMember.groupId,
-				groupName: group.name,
-			})
-			.from(groupMember)
-			.innerJoin(group, eq(group.id, groupMember.groupId))
-			.where(inArray(groupMember.memberId, memberIds));
-
-		groupMap = groupRows.reduce(
-			(acc, row) => {
-				const groupMembers = acc.get(row.memberId) ?? [];
-				groupMembers.push({
-					groupId: row.groupId,
-					group: { id: row.groupId, name: row.groupName },
-				});
-				acc.set(row.memberId, groupMembers);
-				return acc;
-			},
-			new Map<
-				string,
-				{
-					groupId: string;
-					group: { id: string; name: string };
-				}[]
-			>(),
-		);
+	if (maxRows !== undefined && totalCount > maxRows) {
+		return {
+			data: [],
+			totalCount,
+			exceededMaxRows: true,
+		};
 	}
+
+	if (totalCount === 0) {
+		return {
+			data: [],
+			totalCount: 0,
+			exceededMaxRows: false,
+		};
+	}
+
+	const members =
+		typeof page === "number" && typeof limit === "number"
+			? await db
+					.select(memberSelect)
+					.from(clubMember)
+					.innerJoin(contract, eq(contract.memberId, clubMember.id))
+					.where(memberWhere)
+					.orderBy(
+						sortDirection === "asc"
+							? sql`${sortExpression} asc`
+							: sql`${sortExpression} desc`,
+					)
+					.limit(limit)
+					.offset((page - 1) * limit)
+			: await db
+					.select(memberSelect)
+					.from(clubMember)
+					.innerJoin(contract, eq(contract.memberId, clubMember.id))
+					.where(memberWhere)
+					.orderBy(
+						sortDirection === "asc"
+							? sql`${sortExpression} asc`
+							: sql`${sortExpression} desc`,
+					);
+
+	const groupMap = await buildGroupMap(members.map((member) => member.id));
 
 	const data = members.map((member) => {
 		const {
@@ -556,6 +628,45 @@ export async function listMembersAdvanced({
 
 	return {
 		data,
+		totalCount,
+		exceededMaxRows: false,
+	};
+}
+
+function toListMembersAdvancedExportInput(
+	input: ListMembersAdvancedInput,
+): ListMembersAdvancedExportInput {
+	return {
+		search: input.search,
+		groupIds: input.groupIds,
+		status: input.status,
+		sort: input.sort,
+		filterMode: input.filterMode,
+		filters: input.filters,
+	};
+}
+
+export async function listMembersAdvanced({
+	organizationId,
+	input,
+}: {
+	organizationId: string;
+	input: ListMembersAdvancedInput;
+}) {
+	const page = input.page ?? 1;
+	const limit = input.limit ?? 20;
+
+	const { data, totalCount } = await fetchMembersAdvancedData({
+		organizationId,
+		input: toListMembersAdvancedExportInput(input),
+		page,
+		limit,
+	});
+
+	const totalPages = Math.ceil(totalCount / limit);
+
+	return {
+		data,
 		pagination: {
 			page,
 			limit,
@@ -566,3 +677,23 @@ export async function listMembersAdvanced({
 		},
 	};
 }
+
+export async function listMembersAdvancedForExport({
+	organizationId,
+	input,
+	maxRows,
+}: {
+	organizationId: string;
+	input: ListMembersAdvancedExportInput;
+	maxRows: number;
+}) {
+	return fetchMembersAdvancedData({
+		organizationId,
+		input,
+		maxRows,
+	});
+}
+
+export type ListMembersAdvancedRecord = Awaited<
+	ReturnType<typeof listMembersAdvanced>
+>["data"][number];

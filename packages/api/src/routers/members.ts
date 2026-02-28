@@ -13,8 +13,14 @@ import { requirePermission } from "../middleware/permissions";
 import { rateLimitMiddleware } from "../middleware/ratelimit";
 import {
 	listMembersAdvanced,
+	listMembersAdvancedExportSchema,
+	listMembersAdvancedForExport,
 	listMembersAdvancedSchema,
 } from "./members/listMembersAdvanced";
+import {
+	buildMembersExportFilename,
+	serializeMembersCsv,
+} from "./members/membersCsvExport";
 
 const createMemberSchema = z.object({
 	// Personal info
@@ -142,6 +148,8 @@ const removeGroupMembershipSchema = z.object({
 	memberId: z.string(),
 	groupId: z.string(),
 });
+
+const MAX_MEMBERS_EXPORT_ROWS = 10_000;
 
 type DateParts = {
 	year: number;
@@ -515,6 +523,32 @@ export const membersRouter = {
 			});
 		})
 		.route({ method: "POST", path: "/members/query" }),
+
+	exportCsv: protectedProcedure
+		.use(rateLimitMiddleware(1))
+		.use(requirePermission({ member: ["export"] }))
+		.input(listMembersAdvancedExportSchema)
+		.handler(async ({ input, context }) => {
+			const organizationId = context.session.activeOrganizationId!;
+			const result = await listMembersAdvancedForExport({
+				organizationId,
+				input,
+				maxRows: MAX_MEMBERS_EXPORT_ROWS,
+			});
+
+			if (result.exceededMaxRows) {
+				throw new ORPCError("BAD_REQUEST", {
+					message: `CSV export is limited to ${MAX_MEMBERS_EXPORT_ROWS.toLocaleString("en-US")} rows. Please narrow your filters.`,
+				});
+			}
+
+			return {
+				filename: buildMembersExportFilename(),
+				csv: serializeMembersCsv(result.data),
+				rowCount: result.data.length,
+			};
+		})
+		.route({ method: "POST", path: "/members/query/export" }),
 
 	create: protectedProcedure
 		.use(rateLimitMiddleware(10))
