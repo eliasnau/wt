@@ -231,6 +231,9 @@ export default function RangeComparisonPage() {
 						<Select
 							value={startMonth}
 							onValueChange={(value) => {
+								if (!value) {
+									return;
+								}
 								setStartMonth(value);
 								if (value > endMonth) {
 									setEndMonth(value);
@@ -255,6 +258,9 @@ export default function RangeComparisonPage() {
 						<Select
 							value={endMonth}
 							onValueChange={(value) => {
+								if (!value) {
+									return;
+								}
 								setEndMonth(value);
 								if (value < startMonth) {
 									setStartMonth(value);
@@ -278,7 +284,12 @@ export default function RangeComparisonPage() {
 
 						<Select
 							value={groupBy}
-							onValueChange={(value) => setGroupBy(value as TimelineGroupBy)}
+							onValueChange={(value) => {
+								if (!value) {
+									return;
+								}
+								setGroupBy(value as TimelineGroupBy);
+							}}
 						>
 							<SelectTrigger className="w-[140px]" size="sm">
 								<SelectValue placeholder="Group by" />
