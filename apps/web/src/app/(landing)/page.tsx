@@ -4,12 +4,15 @@ import { Header } from "@/components/landing/header";
 import { HeroSection } from "@/components/landing/hero";
 import { LandingHotkeys } from "@/components/hotkeys/landing-hotkeys";
 import { SimpleFeatures } from "@/components/landing/simple-features";
+import { redirect } from "next/navigation";
 // import { SwitchingSection } from "@/components/landing/switching";
 // import { FeaturesSection } from "@/components/landing/features";
 import { getServerSession } from "@/lib/auth";
 const LAYOUT_CLASSNAME = "max-w-5xl mx-auto";
 
 export default async function Home() {
+  return redirect("/sign-in");
+
   const session = await getServerSession();
 
   return (
