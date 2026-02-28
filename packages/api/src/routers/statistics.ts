@@ -129,6 +129,7 @@ export const statisticsRouter = {
 					.select({
 						groupId: group.id,
 						groupName: group.name,
+						groupColor: group.color,
 						total: sql<string>`COALESCE(SUM(${payment.membershipAmount}), 0)`,
 					})
 					.from(payment)
@@ -149,6 +150,7 @@ export const statisticsRouter = {
 					.select({
 						groupId: group.id,
 						groupName: group.name,
+						groupColor: group.color,
 						memberCount: sql<number>`COUNT(${groupMember.memberId})`,
 					})
 					.from(group)
@@ -182,6 +184,7 @@ export const statisticsRouter = {
 						groupMix: groupMix.map((item) => ({
 							groupId: item.groupId,
 							name: item.groupName,
+							color: item.groupColor,
 							count: Number(item.memberCount ?? 0),
 						})),
 					},
@@ -194,6 +197,7 @@ export const statisticsRouter = {
 						byGroup: revenueByGroup.map((item) => ({
 							groupId: item.groupId,
 							name: item.groupName,
+							color: item.groupColor,
 							total: item.total ?? "0",
 						})),
 					},
