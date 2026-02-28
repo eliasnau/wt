@@ -27,21 +27,6 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-const chartData = [
-	{ month: "January", newMembers: 45, cancellations: 12 },
-	{ month: "February", newMembers: 67, cancellations: 8 },
-	{ month: "March", newMembers: 52, cancellations: 15 },
-	{ month: "April", newMembers: 78, cancellations: 10 },
-	{ month: "May", newMembers: 61, cancellations: 18 },
-	{ month: "June", newMembers: 89, cancellations: 9 },
-	{ month: "July", newMembers: 43, cancellations: 22 },
-	{ month: "August", newMembers: 95, cancellations: 7 },
-	{ month: "September", newMembers: 72, cancellations: 14 },
-	{ month: "October", newMembers: 58, cancellations: 11 },
-	{ month: "November", newMembers: 87, cancellations: 13 },
-	{ month: "December", newMembers: 65, cancellations: 19 },
-];
-
 const chartConfig = {
 	newMembers: {
 		label: "Neue Mitglieder",
@@ -55,19 +40,45 @@ const chartConfig = {
 
 type ChartType = "area" | "bar";
 
-export function MembershipChart() {
-	const [chartType, setChartType] = useState<ChartType>("area");
+export type MembershipChartData = {
+	month: string;
+	newMembers: number;
+	cancellations: number;
+};
 
-	const lastMonth = chartData[chartData.length - 1];
-	const previousMonth = chartData[chartData.length - 2];
-	const netChange = lastMonth.newMembers - lastMonth.cancellations;
+interface MembershipChartProps {
+	data: MembershipChartData[];
+	isPending?: boolean;
+}
+
+export function MembershipChart({
+	data,
+	isPending = false,
+}: MembershipChartProps) {
+	const [chartType, setChartType] = useState<ChartType>("area");
+	const chartData = data;
+
+	const lastMonth = chartData.at(-1);
+	const previousMonth = chartData.at(-2);
+	const netChange =
+		(lastMonth?.newMembers ?? 0) - (lastMonth?.cancellations ?? 0);
 	const previousNetChange =
-		previousMonth.newMembers - previousMonth.cancellations;
-	const changePercent = (
-		((netChange - previousNetChange) / previousNetChange) *
-		100
-	).toFixed(1);
-	const isPositive = Number.parseFloat(changePercent) >= 0;
+		(previousMonth?.newMembers ?? 0) - (previousMonth?.cancellations ?? 0);
+	const hasComparison = Boolean(lastMonth && previousMonth);
+	const changePercent = hasComparison
+		? previousNetChange === 0
+			? netChange === 0
+				? 0
+				: 100
+			: ((netChange - previousNetChange) / Math.abs(previousNetChange)) * 100
+		: 0;
+	const isPositive = changePercent >= 0;
+	const trendClass = isPositive
+		? "ml-2 border-none bg-green-500/10 text-green-500"
+		: "ml-2 border-none bg-red-500/10 text-red-500";
+	const trendText = hasComparison
+		? `${isPositive ? "+" : ""}${changePercent.toFixed(1)}%`
+		: "—";
 
 	return (
 		<Frame>
@@ -76,23 +87,13 @@ export function MembershipChart() {
 					<div className="flex items-center gap-2">
 						<FrameTitle>
 							Membership Overview
-							<Badge
-								variant="outline"
-								className={
-									isPositive
-										? "ml-2 border-none bg-green-500/10 text-green-500"
-										: "ml-2 border-none bg-red-500/10 text-red-500"
-								}
-							>
+							<Badge variant="outline" className={trendClass}>
 								{isPositive ? (
 									<TrendingUp className="h-4 w-4" />
 								) : (
 									<TrendingDown className="h-4 w-4" />
 								)}
-								<span>
-									{isPositive ? "+" : ""}
-									{changePercent}%
-								</span>
+								<span>{isPending ? "…" : trendText}</span>
 							</Badge>
 						</FrameTitle>
 						<Tooltip>

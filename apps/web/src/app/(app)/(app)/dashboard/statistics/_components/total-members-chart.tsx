@@ -4,6 +4,7 @@ import {
 	AreaChartIcon,
 	BarChartIcon,
 	InfoIcon,
+	TrendingDown,
 	TrendingUp,
 } from "lucide-react";
 import { useState } from "react";
@@ -26,21 +27,6 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-const chartData = [
-	{ month: "Jan", total: 1215 },
-	{ month: "Feb", total: 1248 },
-	{ month: "Mar", total: 1285 },
-	{ month: "Apr", total: 1312 },
-	{ month: "May", total: 1355 },
-	{ month: "Jun", total: 1398 },
-	{ month: "Jul", total: 1419 },
-	{ month: "Aug", total: 1467 },
-	{ month: "Sep", total: 1502 },
-	{ month: "Oct", total: 1549 },
-	{ month: "Nov", total: 1587 },
-	{ month: "Dec", total: 1623 },
-];
-
 const chartConfig = {
 	total: {
 		label: "Mitglieder gesamt",
@@ -50,8 +36,39 @@ const chartConfig = {
 
 type ChartType = "area" | "bar";
 
-export function TotalMembersChart() {
+export type TotalMembersChartData = {
+	month: string;
+	total: number;
+};
+
+interface TotalMembersChartProps {
+	data: TotalMembersChartData[];
+	isPending?: boolean;
+}
+
+export function TotalMembersChart({
+	data,
+	isPending = false,
+}: TotalMembersChartProps) {
 	const [chartType, setChartType] = useState<ChartType>("area");
+	const chartData = data;
+	const firstValue = chartData[0]?.total ?? 0;
+	const lastValue = chartData.at(-1)?.total ?? 0;
+	const hasData = chartData.length > 1;
+	const changePercent = hasData
+		? firstValue === 0
+			? lastValue === 0
+				? 0
+				: 100
+			: ((lastValue - firstValue) / Math.abs(firstValue)) * 100
+		: 0;
+	const isPositive = changePercent >= 0;
+	const trendClass = isPositive
+		? "ml-2 border-none bg-green-500/10 text-green-500"
+		: "ml-2 border-none bg-red-500/10 text-red-500";
+	const trendText = hasData
+		? `${isPositive ? "+" : ""}${changePercent.toFixed(1)}%`
+		: "—";
 
 	return (
 		<Frame>
@@ -60,12 +77,13 @@ export function TotalMembersChart() {
 					<div className="flex items-center gap-2">
 						<FrameTitle>
 							Total Members
-							<Badge
-								variant="outline"
-								className="ml-2 border-none bg-green-500/10 text-green-500"
-							>
-								<TrendingUp className="h-4 w-4" />
-								<span>+33.6%</span>
+							<Badge variant="outline" className={trendClass}>
+								{isPositive ? (
+									<TrendingUp className="h-4 w-4" />
+								) : (
+									<TrendingDown className="h-4 w-4" />
+								)}
+								<span>{isPending ? "…" : trendText}</span>
 							</Badge>
 						</FrameTitle>
 						<Tooltip>

@@ -1,22 +1,32 @@
 "use client";
 
-import { eachMonthOfInterval, format } from "date-fns";
-import { Calendar, ChevronDownIcon } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { eachMonthOfInterval, format, startOfMonth, subMonths } from "date-fns";
+import { AlertCircle, ChevronDownIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import {
 	Collapsible,
 	CollapsiblePanel,
 	CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+	Empty,
+	EmptyContent,
+	EmptyDescription,
+	EmptyHeader,
+	EmptyMedia,
+	EmptyTitle,
+} from "@/components/ui/empty";
 import { Frame, FrameHeader, FramePanel } from "@/components/ui/frame";
 import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+	Select,
+	SelectItem,
+	SelectPopup,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { orpc } from "@/utils/orpc";
 import {
 	Header,
 	HeaderActions,
@@ -30,39 +40,182 @@ import { MembershipChart } from "../_components/membership-chart";
 import { RevenueChart } from "../_components/revenue-chart";
 import { TotalMembersChart } from "../_components/total-members-chart";
 
+type GroupSeries = {
+	key: string;
+	label: string;
+	color: string;
+};
+
+type TimelineGroupBy = "month" | "quarter" | "year";
+
+function parseMonthValue(monthValue: string) {
+	const [year, month] = monthValue.split("-").map(Number);
+	return new Date(year, month - 1, 1);
+}
+
+function getPeriodChartLabel(
+	period: {
+		key: string;
+		startMonth: string;
+	},
+	groupBy: TimelineGroupBy,
+) {
+	if (groupBy === "year") {
+		return period.key.slice(2);
+	}
+
+	if (groupBy === "quarter") {
+		return period.key.split("-")[1] ?? period.key;
+	}
+
+	return format(parseMonthValue(period.startMonth), "MMM");
+}
+
 export default function RangeComparisonPage() {
-	const [startDate, setStartDate] = useState<Date | undefined>(
-		new Date(2024, 0, 1),
-	);
-	const [endDate, setEndDate] = useState<Date | undefined>(
-		new Date(2024, 11, 31),
-	);
-
-	const getRangeText = (start: Date | undefined, end: Date | undefined) => {
-		if (!start || !end) return "Datumsbereich wählen";
-		return `${format(start, "MMM d, yyyy")} - ${format(end, "MMM d, yyyy")}`;
-	};
-
-	const getMonthsInRange = () => {
-		if (!startDate || !endDate) return [];
-		return eachMonthOfInterval({ start: startDate, end: endDate });
-	};
-
-	const monthsInRange = getMonthsInRange();
-
-	const monthlyData = useMemo(() => {
-		return monthsInRange.map((month) => {
-			const monthIndex = month.getMonth();
-			return {
-				month: format(month, "MMMM yyyy"),
-				totalMembers: 1200 + monthIndex * 15,
-				newMembers: 50 + ((monthIndex * 7 + 3) % 50),
-				cancellations: 10 + ((monthIndex * 13 + 5) % 15),
-				totalRevenue: `€${(40000 + monthIndex * 2000).toLocaleString()}.00`,
-				pendingPayments: `€${(3000 + ((monthIndex * 11 + 7) % 2000)).toLocaleString()}.00`,
-			};
+	const currentMonth = startOfMonth(new Date());
+	const monthOptions = useMemo(() => {
+		const start = startOfMonth(subMonths(currentMonth, 119));
+		return eachMonthOfInterval({
+			start,
+			end: currentMonth,
 		});
-	}, [monthsInRange]);
+	}, [currentMonth]);
+	const [startMonth, setStartMonth] = useState(
+		format(startOfMonth(subMonths(currentMonth, 5)), "yyyy-MM"),
+	);
+	const [endMonth, setEndMonth] = useState(format(currentMonth, "yyyy-MM"));
+	const [groupBy, setGroupBy] = useState<TimelineGroupBy>("month");
+
+	const hasValidRange = startMonth <= endMonth;
+	const startMonthValue = startMonth;
+	const endMonthValue = endMonth;
+
+	const getRangeText = (start: string, end: string) => {
+		return `${format(parseMonthValue(start), "MMM yyyy")} - ${format(parseMonthValue(end), "MMM yyyy")}`;
+	};
+
+	const timelineQueryOptions = orpc.statistics.timeline.queryOptions({
+		input: {
+			startMonth: startMonthValue,
+			endMonth: endMonthValue,
+			groupBy,
+		},
+	});
+
+	const { data, isPending, error, refetch } = useQuery({
+		...timelineQueryOptions,
+		enabled: hasValidRange && Boolean(startMonthValue && endMonthValue),
+	});
+
+	const periods = data?.periods ?? [];
+	const periodLabels = useMemo(
+		() =>
+			new Map(
+				periods.map((period) => [
+					period.key,
+					getPeriodChartLabel(period, groupBy),
+				]),
+			),
+		[groupBy, periods],
+	);
+
+	const membershipData = useMemo(
+		() =>
+			periods.map((period) => ({
+				month: periodLabels.get(period.key) ?? period.label,
+				newMembers: period.membership.newMembers,
+				cancellations: period.membership.cancellations,
+			})),
+		[periodLabels, periods],
+	);
+
+	const totalMembersData = useMemo(
+		() =>
+			periods.map((period) => ({
+				month: periodLabels.get(period.key) ?? period.label,
+				total: period.kpis.activeMembers,
+			})),
+		[periodLabels, periods],
+	);
+
+	const totalRevenueData = useMemo(
+		() =>
+			periods.map((period) => ({
+				month: periodLabels.get(period.key) ?? period.label,
+				revenue: Number(period.kpis.revenueCollected ?? 0),
+			})),
+		[periodLabels, periods],
+	);
+
+	const groupSeries = useMemo<GroupSeries[]>(() => {
+		const groups = new Map<
+			string,
+			{ label: string; color: string | null | undefined }
+		>();
+
+		for (const period of periods) {
+			for (const group of period.membership.groupMix) {
+				if (!groups.has(group.groupId)) {
+					groups.set(group.groupId, {
+						label: group.name,
+						color: group.color,
+					});
+				}
+			}
+
+			for (const group of period.revenue.byGroup) {
+				if (!groups.has(group.groupId)) {
+					groups.set(group.groupId, {
+						label: group.name,
+						color: group.color,
+					});
+				}
+			}
+		}
+
+		return Array.from(groups.entries()).map(([groupId, group], index) => ({
+			key: groupId,
+			label: group.label,
+			color: group.color ?? `var(--chart-${(index % 5) + 1})`,
+		}));
+	}, [periods]);
+
+	const groupsMemberData = useMemo(() => {
+		return periods.map((period) => {
+			const row: Record<string, string | number> = {
+				month: periodLabels.get(period.key) ?? period.label,
+			};
+			const countByGroupId = new Map(
+				period.membership.groupMix.map((group) => [group.groupId, group.count]),
+			);
+
+			for (const group of groupSeries) {
+				row[group.key] = countByGroupId.get(group.key) ?? 0;
+			}
+
+			return row;
+		});
+	}, [groupSeries, periodLabels, periods]);
+
+	const groupsRevenueData = useMemo(() => {
+		return periods.map((period) => {
+			const row: Record<string, string | number> = {
+				month: periodLabels.get(period.key) ?? period.label,
+			};
+			const revenueByGroupId = new Map(
+				period.revenue.byGroup.map((group) => [
+					group.groupId,
+					Number(group.total ?? 0),
+				]),
+			);
+
+			for (const group of groupSeries) {
+				row[group.key] = revenueByGroupId.get(group.key) ?? 0;
+			}
+
+			return row;
+		});
+	}, [groupSeries, periodLabels, periods]);
 
 	return (
 		<div className="flex flex-col gap-8">
@@ -70,106 +223,175 @@ export default function RangeComparisonPage() {
 				<HeaderContent>
 					<HeaderTitle>Compare Months</HeaderTitle>
 					<HeaderDescription>
-						Analyze membership and revenue trends across a custom date range
+						Analyze membership and revenue trends across a custom month range
 					</HeaderDescription>
 				</HeaderContent>
 				<HeaderActions>
-					<Popover>
-						<PopoverTrigger
-							render={(props) => (
-								<Button
-									{...props}
-									variant="outline"
-									className={cn(
-										"w-[280px] justify-start text-left font-normal",
-										(!startDate || !endDate) && "text-muted-foreground",
-									)}
-								>
-									<Calendar className="mr-2 h-4 w-4" />
-									{getRangeText(startDate, endDate)}
-								</Button>
-							)}
-						/>
-						<PopoverContent className="w-auto p-0" align="end">
-							<div className="flex flex-col gap-2 p-3">
-								<div className="space-y-2">
-									<p className="font-medium text-sm">Startdatum</p>
-									<CalendarComponent
-										mode="single"
-										selected={startDate}
-										onSelect={setStartDate}
-										initialFocus
-									/>
-								</div>
-								<div className="space-y-2">
-									<p className="font-medium text-sm">Enddatum</p>
-									<CalendarComponent
-										mode="single"
-										selected={endDate}
-										onSelect={setEndDate}
-										disabled={(date) => (startDate ? date < startDate : false)}
-									/>
-								</div>
-							</div>
-						</PopoverContent>
-					</Popover>
+					<div className="flex items-center gap-2">
+						<Select
+							value={startMonth}
+							onValueChange={(value) => {
+								setStartMonth(value);
+								if (value > endMonth) {
+									setEndMonth(value);
+								}
+							}}
+						>
+							<SelectTrigger className="w-[150px]" size="sm">
+								<SelectValue placeholder="Start month" />
+							</SelectTrigger>
+							<SelectPopup>
+								{monthOptions.map((month) => {
+									const value = format(month, "yyyy-MM");
+									return (
+										<SelectItem key={value} value={value}>
+											{format(month, "MMM yyyy")}
+										</SelectItem>
+									);
+								})}
+							</SelectPopup>
+						</Select>
+
+						<Select
+							value={endMonth}
+							onValueChange={(value) => {
+								setEndMonth(value);
+								if (value < startMonth) {
+									setStartMonth(value);
+								}
+							}}
+						>
+							<SelectTrigger className="w-[150px]" size="sm">
+								<SelectValue placeholder="End month" />
+							</SelectTrigger>
+							<SelectPopup>
+								{monthOptions.map((month) => {
+									const value = format(month, "yyyy-MM");
+									return (
+										<SelectItem key={value} value={value}>
+											{format(month, "MMM yyyy")}
+										</SelectItem>
+									);
+								})}
+							</SelectPopup>
+						</Select>
+
+						<Select
+							value={groupBy}
+							onValueChange={(value) => setGroupBy(value as TimelineGroupBy)}
+						>
+							<SelectTrigger className="w-[140px]" size="sm">
+								<SelectValue placeholder="Group by" />
+							</SelectTrigger>
+							<SelectPopup>
+								<SelectItem value="month">Monthly</SelectItem>
+								<SelectItem value="quarter">Quarterly</SelectItem>
+								<SelectItem value="year">Yearly</SelectItem>
+							</SelectPopup>
+						</Select>
+						<p className="text-muted-foreground text-sm tabular-nums">
+							{getRangeText(startMonth, endMonth)}
+						</p>
+					</div>
 				</HeaderActions>
 			</Header>
 
-			<div className="space-y-6">
+			{error ? (
 				<Frame>
-					<Collapsible defaultOpen>
-						<FrameHeader className="flex-row items-center justify-between px-4 py-3">
-							<CollapsibleTrigger
-								className="data-panel-open:[&_svg]:rotate-180"
-								render={(props) => (
-									<Button variant="ghost" {...props}>
-										<ChevronDownIcon className="mr-2 size-4" />
-										<span className="font-semibold text-sm">
-											Membership Analytics
-										</span>
-									</Button>
-								)}
-							/>
-						</FrameHeader>
-						<CollapsiblePanel>
-							<FramePanel className="space-y-6">
-								<MembershipChart />
-								<div className="grid gap-6 md:grid-cols-2">
-									<TotalMembersChart />
-									<GroupsChart />
-								</div>
-							</FramePanel>
-						</CollapsiblePanel>
-					</Collapsible>
+					<FramePanel>
+						<Empty>
+							<EmptyHeader>
+								<EmptyMedia variant="icon">
+									<AlertCircle />
+								</EmptyMedia>
+								<EmptyTitle>
+									Statistiken konnten nicht geladen werden
+								</EmptyTitle>
+								<EmptyDescription>
+									{error instanceof Error
+										? error.message
+										: "Etwas ist schiefgelaufen. Bitte versuche es erneut."}
+								</EmptyDescription>
+							</EmptyHeader>
+							<EmptyContent>
+								<Button onClick={() => refetch()}>Erneut versuchen</Button>
+							</EmptyContent>
+						</Empty>
+					</FramePanel>
 				</Frame>
+			) : (
+				<div className="space-y-6">
+					<Frame>
+						<Collapsible defaultOpen>
+							<FrameHeader className="flex-row items-center justify-between px-4 py-3">
+								<CollapsibleTrigger
+									className="data-panel-open:[&_svg]:rotate-180"
+									render={(props) => (
+										<Button variant="ghost" {...props}>
+											<ChevronDownIcon className="mr-2 size-4" />
+											<span className="font-semibold text-sm">
+												Membership Analytics
+											</span>
+										</Button>
+									)}
+								/>
+							</FrameHeader>
+							<CollapsiblePanel>
+								<FramePanel className="space-y-6">
+									<MembershipChart
+										data={membershipData}
+										isPending={isPending}
+									/>
+									<div className="grid gap-6 md:grid-cols-2">
+										<TotalMembersChart
+											data={totalMembersData}
+											isPending={isPending}
+										/>
+										<GroupsChart
+											data={groupsMemberData}
+											series={groupSeries}
+											isPending={isPending}
+										/>
+									</div>
+								</FramePanel>
+							</CollapsiblePanel>
+						</Collapsible>
+					</Frame>
 
-				<Frame>
-					<Collapsible defaultOpen>
-						<FrameHeader className="flex-row items-center justify-between px-4 py-3">
-							<CollapsibleTrigger
-								className="data-panel-open:[&_svg]:rotate-180"
-								render={(props) => (
-									<Button variant="ghost" {...props}>
-										<ChevronDownIcon className="mr-2 size-4" />
-										<span className="font-semibold text-sm">
-											Financial Analytics
-										</span>
-									</Button>
-								)}
-							/>
-						</FrameHeader>
-						<CollapsiblePanel>
-							<FramePanel className="space-y-6">
-								<div className="grid gap-6 md:grid-cols-2">
-									<TotalRevenueChart />
-									<RevenueChart />
-								</div>
-							</FramePanel>
-						</CollapsiblePanel>
-					</Collapsible>
-				</Frame>
-			</div>
+					<Frame>
+						<Collapsible defaultOpen>
+							<FrameHeader className="flex-row items-center justify-between px-4 py-3">
+								<CollapsibleTrigger
+									className="data-panel-open:[&_svg]:rotate-180"
+									render={(props) => (
+										<Button variant="ghost" {...props}>
+											<ChevronDownIcon className="mr-2 size-4" />
+											<span className="font-semibold text-sm">
+												Financial Analytics
+											</span>
+										</Button>
+									)}
+								/>
+							</FrameHeader>
+							<CollapsiblePanel>
+								<FramePanel className="space-y-6">
+									<div className="grid gap-6 md:grid-cols-2">
+										<TotalRevenueChart
+											data={totalRevenueData}
+											isPending={isPending}
+										/>
+										<RevenueChart
+											data={groupsRevenueData}
+											series={groupSeries}
+											isPending={isPending}
+										/>
+									</div>
+								</FramePanel>
+							</CollapsiblePanel>
+						</Collapsible>
+					</Frame>
+				</div>
+			)}
 		</div>
 	);
 }

@@ -121,8 +121,8 @@ export default function StatisticsOverviewPage() {
 	};
 
 	const flowChartConfig = {
-		enrollments: { label: "Enrollments", color: "var(--chart-1)" },
-		cancellations: { label: "Kündigungen", color: "var(--chart-2)" },
+		enrollments: { label: "Enrollments", color: "#16a34a" },
+		cancellations: { label: "Kündigungen", color: "#dc2626" },
 	} satisfies ChartConfig;
 
 	const groupBarChartConfig = {

@@ -4,9 +4,10 @@ import {
 	BarChartIcon,
 	InfoIcon,
 	LineChartIcon,
+	TrendingDown,
 	TrendingUp,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { BarChart } from "@/components/charts/bar-chart";
 import { LineChart } from "@/components/charts/line-chart";
 import { Badge } from "@/components/ui/badge";
@@ -26,132 +27,64 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 
-const chartData = [
-	{
-		month: "Jan",
-		yoga: 45,
-		football: 67,
-		tennis: 32,
-		swimming: 54,
-		basketball: 41,
-	},
-	{
-		month: "Feb",
-		yoga: 48,
-		football: 71,
-		tennis: 35,
-		swimming: 58,
-		basketball: 44,
-	},
-	{
-		month: "Mar",
-		yoga: 52,
-		football: 68,
-		tennis: 38,
-		swimming: 61,
-		basketball: 47,
-	},
-	{
-		month: "Apr",
-		yoga: 55,
-		football: 75,
-		tennis: 41,
-		swimming: 63,
-		basketball: 50,
-	},
-	{
-		month: "May",
-		yoga: 58,
-		football: 73,
-		tennis: 39,
-		swimming: 66,
-		basketball: 53,
-	},
-	{
-		month: "Jun",
-		yoga: 61,
-		football: 79,
-		tennis: 43,
-		swimming: 69,
-		basketball: 56,
-	},
-	{
-		month: "Jul",
-		yoga: 64,
-		football: 82,
-		tennis: 46,
-		swimming: 72,
-		basketball: 59,
-	},
-	{
-		month: "Aug",
-		yoga: 62,
-		football: 85,
-		tennis: 44,
-		swimming: 75,
-		basketball: 62,
-	},
-	{
-		month: "Sep",
-		yoga: 67,
-		football: 81,
-		tennis: 48,
-		swimming: 71,
-		basketball: 58,
-	},
-	{
-		month: "Oct",
-		yoga: 70,
-		football: 88,
-		tennis: 51,
-		swimming: 78,
-		basketball: 65,
-	},
-	{
-		month: "Nov",
-		yoga: 73,
-		football: 91,
-		tennis: 53,
-		swimming: 81,
-		basketball: 68,
-	},
-	{
-		month: "Dec",
-		yoga: 69,
-		football: 87,
-		tennis: 49,
-		swimming: 77,
-		basketball: 64,
-	},
-];
-
-const chartConfig = {
-	yoga: {
-		label: "Yoga",
-		color: "var(--chart-1)",
-	},
-	football: {
-		label: "Football",
-		color: "var(--chart-2)",
-	},
-	tennis: {
-		label: "Tennis",
-		color: "var(--chart-3)",
-	},
-	swimming: {
-		label: "Swimming",
-		color: "var(--chart-4)",
-	},
-	basketball: {
-		label: "Basketball",
-		color: "var(--chart-5)",
-	},
-} satisfies ChartConfig;
-
 type ChartType = "line" | "bar";
 
-export function GroupsChart() {
+type GroupsChartSeries = {
+	key: string;
+	label: string;
+	color: string;
+};
+
+interface GroupsChartProps {
+	data: Array<Record<string, string | number>>;
+	series: GroupsChartSeries[];
+	isPending?: boolean;
+}
+
+export function GroupsChart({
+	data,
+	series,
+	isPending = false,
+}: GroupsChartProps) {
 	const [chartType, setChartType] = useState<ChartType>("line");
+	const chartData = data;
+	const dataKeys = useMemo(() => series.map((entry) => entry.key), [series]);
+	const chartConfig = useMemo(
+		() =>
+			series.reduce<ChartConfig>((config, entry) => {
+				config[entry.key] = {
+					label: entry.label,
+					color: entry.color,
+				};
+				return config;
+			}, {}),
+		[series],
+	);
+	const monthTotals = useMemo(() => {
+		return chartData.map((entry) =>
+			dataKeys.reduce(
+				(total, key) => total + Number((entry[key] as number | undefined) ?? 0),
+				0,
+			),
+		);
+	}, [chartData, dataKeys]);
+	const hasComparison = monthTotals.length > 1;
+	const lastTotal = monthTotals.at(-1) ?? 0;
+	const previousTotal = monthTotals.at(-2) ?? 0;
+	const changePercent = hasComparison
+		? previousTotal === 0
+			? lastTotal === 0
+				? 0
+				: 100
+			: ((lastTotal - previousTotal) / Math.abs(previousTotal)) * 100
+		: 0;
+	const isPositive = changePercent >= 0;
+	const trendClass = isPositive
+		? "ml-2 border-none bg-green-500/10 text-green-500"
+		: "ml-2 border-none bg-red-500/10 text-red-500";
+	const trendText = hasComparison
+		? `${isPositive ? "+" : ""}${changePercent.toFixed(1)}%`
+		: "—";
 
 	return (
 		<Frame>
@@ -160,12 +93,13 @@ export function GroupsChart() {
 					<div className="flex items-center gap-2">
 						<FrameTitle>
 							Members per Group
-							<Badge
-								variant="outline"
-								className="ml-2 border-none bg-green-500/10 text-green-500"
-							>
-								<TrendingUp className="h-4 w-4" />
-								<span>+8.4%</span>
+							<Badge variant="outline" className={trendClass}>
+								{isPositive ? (
+									<TrendingUp className="h-4 w-4" />
+								) : (
+									<TrendingDown className="h-4 w-4" />
+								)}
+								<span>{isPending ? "…" : trendText}</span>
 							</Badge>
 						</FrameTitle>
 						<Tooltip>
@@ -211,14 +145,10 @@ export function GroupsChart() {
 					<LineChart
 						data={chartData}
 						config={chartConfig}
-						dataKeys={["yoga", "football", "tennis", "swimming", "basketball"]}
+						dataKeys={dataKeys}
 					/>
 				) : (
-					<BarChart
-						data={chartData}
-						config={chartConfig}
-						dataKeys={["yoga", "football", "tennis", "swimming", "basketball"]}
-					/>
+					<BarChart data={chartData} config={chartConfig} dataKeys={dataKeys} />
 				)}
 			</FramePanel>
 		</Frame>
