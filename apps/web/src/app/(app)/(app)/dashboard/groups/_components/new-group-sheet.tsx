@@ -38,6 +38,11 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
 import { client } from "@/utils/orpc";
+import {
+	DEFAULT_GROUP_COLOR,
+	GROUP_COLOR_PRESETS,
+	getRandomGroupColor,
+} from "./group-color-presets";
 
 interface NewGroupSheetProps {
 	onGroupCreated?: () => void;
@@ -63,11 +68,11 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 	const [open, setOpen] = React.useState(false);
 
 	const form = useForm<z.infer<typeof formSchema>>({
-		resolver: zodResolver(formSchema as any),
+		resolver: zodResolver(formSchema),
 		defaultValues: {
 			name: "",
 			description: "",
-			color: "#000000",
+			color: DEFAULT_GROUP_COLOR,
 			defaultMembershipPrice: "",
 		},
 	});
@@ -169,30 +174,68 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 								name="color"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Color *</FormLabel>
+										<div className="flex items-center justify-between gap-2">
+											<FormLabel>Color *</FormLabel>
+											<Button
+												type="button"
+												size="sm"
+												variant="outline"
+												onClick={() =>
+													field.onChange(getRandomGroupColor(field.value))
+												}
+												disabled={createGroupMutation.isPending}
+											>
+												Surprise me
+											</Button>
+										</div>
 										<FormControl>
-											<div className="flex items-center gap-3">
-												<Input
-													type="color"
-													value={field.value}
-													onChange={field.onChange}
-													disabled={createGroupMutation.isPending}
-													className="h-10 w-14 p-1"
-													required
-												/>
-												<Input
-													type="text"
-													value={field.value}
-													onChange={field.onChange}
-													placeholder="#000000"
-													disabled={createGroupMutation.isPending}
-													pattern="^#[0-9A-Fa-f]{6}$"
-													required
-												/>
+											<div className="space-y-3">
+												<div className="grid grid-cols-6 gap-2 sm:grid-cols-12">
+													{GROUP_COLOR_PRESETS.map((preset) => {
+														const isSelected =
+															field.value?.toLowerCase() === preset.hex;
+
+														return (
+															<button
+																key={preset.hex}
+																type="button"
+																onClick={() => field.onChange(preset.hex)}
+																disabled={createGroupMutation.isPending}
+																className={`h-8 w-8 rounded-md border transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring ${
+																	isSelected
+																		? "ring-2 ring-foreground ring-offset-2"
+																		: ""
+																}`}
+																style={{ backgroundColor: preset.hex }}
+																title={preset.name}
+																aria-label={`Select ${preset.name} color`}
+															/>
+														);
+													})}
+												</div>
+												<div className="flex items-center gap-3">
+													<Input
+														type="color"
+														value={field.value}
+														onChange={field.onChange}
+														disabled={createGroupMutation.isPending}
+														className="h-10 w-14 p-1"
+														required
+													/>
+													<Input
+														type="text"
+														value={field.value}
+														onChange={field.onChange}
+														placeholder={DEFAULT_GROUP_COLOR}
+														disabled={createGroupMutation.isPending}
+														pattern="^#[0-9A-Fa-f]{6}$"
+														required
+													/>
+												</div>
 											</div>
 										</FormControl>
 										<FormDescription>
-											Required hex color used to identify this group.
+											Pick a preset color or enter any hex value.
 										</FormDescription>
 										<FormMessage />
 									</FormItem>
