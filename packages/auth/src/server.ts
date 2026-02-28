@@ -18,6 +18,7 @@ import { ac, admin, member, owner } from "./permissions";
 import { manageSessions } from "./plugins/manageSessions";
 import { checkBotId } from "botid/server";
 import { APIError } from "better-auth/api";
+import { PostHog } from "posthog-node";
 
 type OrganizationInvitationEmailPayload = {
   id: string;
@@ -32,6 +33,70 @@ type OrganizationInvitationEmailPayload = {
     name: string;
   };
 };
+
+let posthogClient: PostHog | null = null;
+
+function getPostHogServer() {
+  if (!process.env.NEXT_PUBLIC_POSTHOG_KEY) {
+    return null;
+  }
+
+  if (!posthogClient) {
+    posthogClient = new PostHog(process.env.NEXT_PUBLIC_POSTHOG_KEY, {
+      host: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+      flushAt: 1,
+      flushInterval: 0,
+    });
+  }
+
+  return posthogClient;
+}
+
+function getReturnedUserId(returned: unknown) {
+  if (
+    returned &&
+    typeof returned === "object" &&
+    "user" in returned &&
+    returned.user &&
+    typeof returned.user === "object" &&
+    "id" in returned.user &&
+    typeof returned.user.id === "string"
+  ) {
+    return returned.user.id;
+  }
+
+  return undefined;
+}
+
+function captureServerEvent(
+  event:
+    | "auth:sign-in"
+    | "auth:sign-up"
+    | "org:create"
+    | "org:delete"
+    | "org:update"
+    | "invitation:create"
+    | "invitation:accept"
+    | "invitation:reject"
+    | "invitation:revoke",
+  distinctId: string,
+  properties: Record<string, unknown>,
+) {
+  const posthog = getPostHogServer();
+  if (!posthog) {
+    return;
+  }
+
+  try {
+    posthog.capture({
+      distinctId,
+      event,
+      properties,
+    });
+  } catch (error) {
+    console.error(`Failed to capture PostHog event: ${event}`, error);
+  }
+}
 
 function getPublicBaseUrl() {
   const baseUrl =
@@ -150,7 +215,6 @@ export const auth = betterAuth({
       async sendInvitationEmail(data) {
         const inviteData = data as OrganizationInvitationEmailPayload;
         const inviteLink = `${getPublicBaseUrl()}/accept-invitation/${inviteData.id}`;
-        //TODO: add posthog analytics
         try {
           await sendOrganizationInvitationEmail({
             email: inviteData.email,
@@ -168,6 +232,90 @@ export const auth = betterAuth({
         enabled: true,
       },
       membershipLimit: 15,
+      organizationHooks: {
+        afterCreateOrganization: async ({ organization, member, user }) => {
+          captureServerEvent("org:create", user.id, {
+            organizationId: organization.id,
+            organizationName: organization.name,
+            organizationSlug: organization.slug,
+            userRole: member.role,
+          });
+        },
+        afterDeleteOrganization: async ({ organization, user }) => {
+          captureServerEvent("org:delete", user.id, {
+            organizationId: organization.id,
+            organizationName: organization.name,
+            organizationSlug: organization.slug,
+          });
+        },
+        afterUpdateOrganization: async ({ organization, user, member }) => {
+          if (!organization) {
+            return;
+          }
+
+          captureServerEvent("org:update", user.id, {
+            organizationId: organization.id,
+            organizationName: organization.name,
+            organizationSlug: organization.slug,
+            userRole: member.role,
+            updatedBy: user.id,
+          });
+        },
+        afterCreateInvitation: async ({
+          invitation,
+          inviter,
+          organization,
+        }) => {
+          captureServerEvent("invitation:create", inviter.id, {
+            invitationId: invitation.id,
+            inviteeEmail: invitation.email,
+            organizationId: organization.id,
+            organizationName: organization.name,
+            inviterUserId: inviter.id,
+            inviterEmail: inviter.email,
+            role: invitation.role,
+          });
+        },
+        afterAcceptInvitation: async ({
+          invitation,
+          member,
+          user,
+          organization,
+        }) => {
+          captureServerEvent("invitation:accept", user.id, {
+            invitationId: invitation.id,
+            userId: user.id,
+            userEmail: user.email,
+            organizationId: organization.id,
+            organizationName: organization.name,
+            role: member.role,
+          });
+        },
+        afterRejectInvitation: async ({ invitation, user, organization }) => {
+          captureServerEvent("invitation:reject", user.id, {
+            invitationId: invitation.id,
+            userId: user.id,
+            userEmail: user.email,
+            organizationId: organization.id,
+            organizationName: organization.name,
+            rejectedEmail: invitation.email,
+          });
+        },
+        afterCancelInvitation: async ({
+          invitation,
+          cancelledBy,
+          organization,
+        }) => {
+          captureServerEvent("invitation:revoke", cancelledBy.id, {
+            invitationId: invitation.id,
+            revokedByUserId: cancelledBy.id,
+            revokedByEmail: cancelledBy.email,
+            organizationId: organization.id,
+            organizationName: organization.name,
+            inviteeEmail: invitation.email,
+          });
+        },
+      },
     }),
     twoFactor({
       issuer: "WT",
@@ -200,6 +348,36 @@ export const auth = betterAuth({
       if (verification.isBot) {
         throw new APIError("BAD_REQUEST", {
           message: "Captcha verification failed",
+        });
+      }
+    }),
+    after: createAuthMiddleware(async (ctx) => {
+      const userId =
+        ctx.context.newSession?.user.id ??
+        getReturnedUserId(ctx.context.returned);
+
+      if (!userId) {
+        return;
+      }
+
+      if (ctx.path === "/sign-up/email") {
+        captureServerEvent("auth:sign-up", userId, {
+          auth_method: "email",
+        });
+        return;
+      }
+
+      if (ctx.path === "/sign-in/email") {
+        captureServerEvent("auth:sign-in", userId, {
+          auth_method: "email",
+          has_two_factor: !!ctx.context.newSession?.user.twoFactorEnabled,
+        });
+        return;
+      }
+
+      if (ctx.path === "/passkey/verify-authentication") {
+        captureServerEvent("auth:sign-in", userId, {
+          auth_method: "passkey",
         });
       }
     }),

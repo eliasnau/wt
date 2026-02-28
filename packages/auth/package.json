@@ -21,6 +21,7 @@
     "better-auth": "^1.4.18",
     "botid": "^1.5.10",
     "dotenv": "catalog:",
+    "posthog-node": "^5.24.13",
     "zod": "catalog:"
   },
   "devDependencies": {

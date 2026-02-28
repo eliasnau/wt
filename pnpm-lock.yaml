@@ -532,6 +532,9 @@ importers:
       dotenv:
         specifier: 'catalog:'
         version: 17.2.3
+      posthog-node:
+        specifier: ^5.24.13
+        version: 5.24.13
       zod:
         specifier: 'catalog:'
         version: 4.3.6

@@ -13,7 +13,6 @@ import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
-import posthog from "posthog-js";
 import { toast } from "sonner";
 import { FloatingPaths } from "@/components/floating-paths";
 import { Logo } from "@/components/logo";
@@ -51,10 +50,6 @@ export default function SignUp2Page() {
             toast.error(ctx.error.message);
           },
           onSuccess: () => {
-            posthog.capture("auth:sign-up", {
-              auth_method: "email",
-            });
-
             router.push(redirectUrl as Route);
           },
         },

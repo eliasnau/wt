@@ -7,7 +7,6 @@ import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQueryState } from "nuqs";
-import posthog from "posthog-js";
 import { toast } from "sonner";
 import { Fingerprint } from "@/components/animate-ui/icons/fingerprint";
 import { AnimateIcon } from "@/components/animate-ui/icons/icon";
@@ -44,11 +43,6 @@ export default function SignIn() {
             toast.error(ctx.error.message);
           },
           onSuccess: (ctx) => {
-            posthog.capture("auth:sign-in", {
-              auth_method: "email",
-              has_two_factor: !!ctx.data.twoFactorRedirect,
-            });
-
             if (ctx.data.twoFactorRedirect) {
               router.push(
                 `/verify-2fa?redirectUrl=${encodeURIComponent(redirectUrl)}` as Route,
@@ -69,10 +63,6 @@ export default function SignIn() {
           toast.error(ctx.error.message || "Passkey authentication failed");
         },
         onSuccess: () => {
-          posthog.capture("auth:sign-in", {
-            auth_method: "passkey",
-          });
-
           router.push(redirectUrl as Route);
         },
       },
