@@ -296,7 +296,7 @@ function createFilterRow(): QueryBuilderRow {
 }
 
 function queryFilterToBuilderRow(filter: QueryFilter): QueryBuilderRow {
-	if (filter.operator === "isNull" || filter.operator === "isNotNull") {
+	if (!("value" in filter)) {
 		return {
 			id: createLocalId(),
 			field: filter.field,
@@ -305,11 +305,11 @@ function queryFilterToBuilderRow(filter: QueryFilter): QueryBuilderRow {
 		};
 	}
 
-	if (filter.operator === "in") {
+	if (Array.isArray(filter.value)) {
 		return {
 			id: createLocalId(),
 			field: filter.field,
-			operator: filter.operator,
+			operator: "in",
 			value: filter.value.join(", "),
 		};
 	}
@@ -349,40 +349,49 @@ function sanitizeFilter(raw: unknown): QueryFilter | null {
 	}
 
 	const field = rawField as FilterField;
-	const operator = rawOperator as FilterOperator;
+	switch (rawOperator) {
+		case "isNull":
+			return { field, operator: "isNull" };
+		case "isNotNull":
+			return { field, operator: "isNotNull" };
+		case "in": {
+			if (!Array.isArray(raw.value)) return null;
+			const values = raw.value
+				.filter((value): value is string => typeof value === "string")
+				.map((value) => value.trim())
+				.filter(Boolean);
+			if (values.length === 0) return null;
+			return {
+				field,
+				operator: "in",
+				value: values,
+			};
+		}
+		case "contains":
+		case "eq":
+		case "neq":
+		case "startsWith":
+		case "endsWith":
+		case "gte":
+		case "lte": {
+			if (typeof raw.value !== "string") {
+				return null;
+			}
 
-	if (operator === "isNull" || operator === "isNotNull") {
-		return { field, operator };
+			const value = raw.value.trim();
+			if (!value) {
+				return null;
+			}
+
+			return {
+				field,
+				operator: rawOperator,
+				value,
+			};
+		}
+		default:
+			return null;
 	}
-
-	if (operator === "in") {
-		if (!Array.isArray(raw.value)) return null;
-		const values = raw.value
-			.filter((value): value is string => typeof value === "string")
-			.map((value) => value.trim())
-			.filter(Boolean);
-		if (values.length === 0) return null;
-		return {
-			field,
-			operator,
-			value: values,
-		};
-	}
-
-	if (typeof raw.value !== "string") {
-		return null;
-	}
-
-	const value = raw.value.trim();
-	if (!value) {
-		return null;
-	}
-
-	return {
-		field,
-		operator,
-		value,
-	};
 }
 
 function sanitizeSavedViewState(raw: unknown): SavedMembersViewState | null {
