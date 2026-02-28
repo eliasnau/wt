@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { OrganizationInvitationEmail } from "./templates/organization-invitation-email";
+import { VerifyEmail } from "./templates/verify-email";
 
 export type SendOrganizationInvitationEmailInput = {
 	email: string;
@@ -7,6 +8,14 @@ export type SendOrganizationInvitationEmailInput = {
 	invitedByEmail: string;
 	organizationName: string;
 	inviteLink: string;
+	from?: string;
+	subject?: string;
+};
+
+export type SendEmailVerificationEmailInput = {
+	email: string;
+	verificationLink: string;
+	userName?: string;
 	from?: string;
 	subject?: string;
 };
@@ -49,6 +58,27 @@ export async function sendOrganizationInvitationEmail(
 			invitedByEmail,
 			organizationName,
 			inviteLink,
+		}),
+	});
+}
+
+export async function sendEmailVerificationEmail(
+	{
+		email,
+		verificationLink,
+		userName,
+		from = getDefaultFromEmail(),
+		subject = "Bestätige deine E-Mail-Adresse",
+	}: SendEmailVerificationEmailInput,
+	client = createResendClient(),
+) {
+	return client.emails.send({
+		from,
+		to: [email],
+		subject,
+		react: VerifyEmail({
+			userName,
+			verificationLink,
 		}),
 	});
 }

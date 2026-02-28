@@ -31,7 +31,7 @@ type VerifyEmailComponent = ((
 
 export const VerifyEmail: VerifyEmailComponent = ({
 	userName = "there",
-	verificationLink = "https://matdesk.app/email-verified",
+	verificationLink = "https://matdesk.app/verify-email",
 }: VerifyEmailProps) => {
 	const previewText = "Bestätige deine E-Mail-Adresse für matdesk";
 
@@ -89,7 +89,7 @@ export const VerifyEmail: VerifyEmailComponent = ({
 
 VerifyEmail.PreviewProps = {
 	userName: "Elias",
-	verificationLink: "https://matdesk.app/email-verified?token=example",
+	verificationLink: "https://matdesk.app/verify-email?token=example",
 } as VerifyEmailProps;
 
 export default VerifyEmail;

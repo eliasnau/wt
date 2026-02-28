@@ -1,7 +1,10 @@
 import { passkey } from "@better-auth/passkey";
 import { createId } from "@paralleldrive/cuid2";
 import { db } from "@repo/db";
-import { sendOrganizationInvitationEmail } from "@repo/emails";
+import {
+  sendEmailVerificationEmail,
+  sendOrganizationInvitationEmail,
+} from "@repo/emails";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
 import { nextCookies } from "better-auth/next-js";
@@ -108,8 +111,30 @@ export const auth = betterAuth({
   trustedOrigins: [process.env.VERCEL_URL!, process.env.BETTER_AUTH_URL!],
   secret: process.env.BETTER_AUTH_SECRET!,
   emailVerification: {
-    sendVerificationEmail: async ({ url }) => {
-      console.log("Email Verification: ", url);
+    sendOnSignUp: true,
+    sendOnSignIn: true,
+    sendVerificationEmail: async ({ user, token, url }) => {
+      const verificationUrl = new URL(url);
+      const manualVerificationUrl = new URL(
+        "/verify-email",
+        verificationUrl.origin,
+      );
+      manualVerificationUrl.searchParams.set("token", token);
+
+      const callbackURL = verificationUrl.searchParams.get("callbackURL");
+      if (callbackURL) {
+        manualVerificationUrl.searchParams.set("callbackURL", callbackURL);
+      }
+
+      try {
+        await sendEmailVerificationEmail({
+          email: user.email,
+          userName: user.name,
+          verificationLink: manualVerificationUrl.toString(),
+        });
+      } catch (error) {
+        console.error("Failed to send verification email", error);
+      }
     },
   },
   plugins: [
