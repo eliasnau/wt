@@ -73,6 +73,15 @@ function getMonthOptions() {
 	return months;
 }
 
+function getOptionalColor(value: unknown): string | undefined {
+	if (!value || typeof value !== "object" || !("color" in value)) {
+		return undefined;
+	}
+
+	const color = value.color;
+	return typeof color === "string" ? color : undefined;
+}
+
 export default function StatisticsOverviewPage() {
 	const monthOptions = useMemo(() => getMonthOptions(), []);
 	const monthSelectItems = useMemo(
@@ -125,7 +134,7 @@ export default function StatisticsOverviewPage() {
 			data?.membership.groupMix?.map((item) => ({
 				name: item.name,
 				value: item.count,
-				color: item.color,
+				color: getOptionalColor(item),
 			})) ?? [],
 		[data?.membership.groupMix],
 	);
@@ -135,7 +144,7 @@ export default function StatisticsOverviewPage() {
 			data?.revenue.byGroup?.map((item) => ({
 				name: item.name,
 				value: Number(item.total ?? 0),
-				color: item.color,
+				color: getOptionalColor(item),
 			})) ?? [],
 		[data?.revenue.byGroup],
 	);
