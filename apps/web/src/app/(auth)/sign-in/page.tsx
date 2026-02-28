@@ -2,7 +2,7 @@
 
 import { authClient } from "@repo/auth/client";
 import { useForm } from "@tanstack/react-form";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, Loader2 } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -16,12 +16,16 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Frame, FrameFooter, FramePanel } from "@/components/ui/frame";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function SignIn() {
   const router = useRouter();
   const [redirectUrl] = useQueryState("redirectUrl", {
     defaultValue: "/dashboard",
   });
+  const [invite] = useQueryState("invite");
+  const showInvitationEmailBanner = invite === "1";
+  const signUpHref = `/sign-up?redirectUrl=${encodeURIComponent(redirectUrl)}${showInvitationEmailBanner ? "&invite=1" : ""}`;
 
   const form = useForm({
     defaultValues: {
@@ -90,6 +94,18 @@ export default function SignIn() {
         <Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
           <FramePanel>
             <h1 className="mb-4 font-heading text-2xl">Anmelden</h1>
+            {showInvitationEmailBanner ? (
+              <Alert variant="warning" className="mb-4">
+                <AlertCircle />
+                <AlertDescription>
+                  Melde dich mit derselben E-Mail-Adresse an oder erstelle damit
+                  ein Konto, an die du die Einladung erhalten hast. Falls du
+                  bereits ein Konto mit einer anderen E-Mail-Adresse hast, bitte
+                  den Organisations-Admin, die Einladung an diese Adresse zu
+                  senden.
+                </AlertDescription>
+              </Alert>
+            ) : null}
             <form
               onSubmit={(e) => {
                 e.preventDefault();
@@ -239,7 +255,7 @@ export default function SignIn() {
             <p className="text-muted-foreground text-sm">
               Don't have an account?{" "}
               <Link
-                href={"/sign-up" as Route}
+                href={signUpHref as Route}
                 className="text-foreground hover:underline"
               >
                 Sign up

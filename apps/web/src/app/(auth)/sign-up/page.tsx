@@ -3,6 +3,7 @@
 import { authClient } from "@repo/auth/client";
 import { useForm } from "@tanstack/react-form";
 import {
+  AlertCircle,
   AtSignIcon,
   ChevronLeftIcon,
   KeyRoundIcon,
@@ -28,6 +29,8 @@ export default function SignUp2Page() {
   const [redirectUrl] = useQueryState("redirectUrl", {
     defaultValue: "/dashboard",
   });
+  const [invite] = useQueryState("invite");
+  const showInvitationEmailBanner = invite === "1";
 
   const form = useForm({
     defaultValues: {
@@ -109,6 +112,20 @@ export default function SignUp2Page() {
               Erstelle ein konto um loszulegen.
             </p>
           </div>
+          {showInvitationEmailBanner ? (
+            <div className="rounded-lg border border-warning/35 bg-warning/6 px-3 py-2">
+              <p className="flex items-start gap-2 text-muted-foreground text-xs leading-relaxed">
+                <AlertCircle className="mt-0.5 size-3.5 shrink-0 text-warning" />
+                <span>
+                  Melde dich mit derselben E-Mail-Adresse an oder erstelle damit
+                  ein Konto, an die du die Einladung erhalten hast. Falls du
+                  bereits ein Konto mit einer anderen E-Mail-Adresse hast, bitte
+                  den Organisations-Admin, die Einladung an diese Adresse zu
+                  senden.
+                </span>
+              </p>
+            </div>
+          ) : null}
 
           <form
             className="space-y-3"
