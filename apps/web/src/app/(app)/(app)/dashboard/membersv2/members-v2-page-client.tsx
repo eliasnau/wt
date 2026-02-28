@@ -480,40 +480,54 @@ function sanitizeSavedViewsPayload(raw: unknown): SavedMembersView[] {
 }
 
 function toCompiledFilter(row: QueryBuilderRow): QueryFilter | null {
-	if (NULL_OPERATORS.has(row.operator)) {
-		return {
-			field: row.field,
-			operator: row.operator,
-		};
-	}
+	switch (row.operator) {
+		case "isNull":
+			return {
+				field: row.field,
+				operator: "isNull",
+			};
+		case "isNotNull":
+			return {
+				field: row.field,
+				operator: "isNotNull",
+			};
+		case "in": {
+			const values = row.value
+				.split(",")
+				.map((value) => value.trim())
+				.filter(Boolean);
 
-	if (row.operator === "in") {
-		const values = row.value
-			.split(",")
-			.map((value) => value.trim())
-			.filter(Boolean);
+			if (values.length === 0) {
+				return null;
+			}
 
-		if (values.length === 0) {
-			return null;
+			return {
+				field: row.field,
+				operator: "in",
+				value: values,
+			};
 		}
+		case "contains":
+		case "eq":
+		case "neq":
+		case "startsWith":
+		case "endsWith":
+		case "gte":
+		case "lte": {
+			const trimmed = row.value.trim();
+			if (!trimmed) {
+				return null;
+			}
 
-		return {
-			field: row.field,
-			operator: "in",
-			value: values,
-		};
+			return {
+				field: row.field,
+				operator: row.operator,
+				value: trimmed,
+			};
+		}
+		default:
+			return null;
 	}
-
-	const trimmed = row.value.trim();
-	if (!trimmed) {
-		return null;
-	}
-
-	return {
-		field: row.field,
-		operator: row.operator,
-		value: trimmed,
-	};
 }
 
 export function MembersV2PageClient() {

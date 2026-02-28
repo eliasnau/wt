@@ -262,39 +262,32 @@ function buildAdvancedFilterCondition(
 ) {
 	const { compareExpr, textExpr } = getFieldConfig(filter.field);
 
-	if (filter.operator === "isNull") {
-		return sql`${compareExpr} IS NULL OR NULLIF(BTRIM(${textExpr}), '') IS NULL`;
-	}
-
-	if (filter.operator === "isNotNull") {
-		return sql`${compareExpr} IS NOT NULL AND NULLIF(BTRIM(${textExpr}), '') IS NOT NULL`;
-	}
-
-	if (filter.operator === "in") {
-		const valuesSql = sql.join(
-			filter.value.map((value) => sql`${value}`),
-			sql`, `,
-		);
-		return sql`${compareExpr} IN (${valuesSql})`;
-	}
-
-	const value = filter.value;
-
 	switch (filter.operator) {
+		case "isNull":
+			return sql`${compareExpr} IS NULL OR NULLIF(BTRIM(${textExpr}), '') IS NULL`;
+		case "isNotNull":
+			return sql`${compareExpr} IS NOT NULL AND NULLIF(BTRIM(${textExpr}), '') IS NOT NULL`;
+		case "in": {
+			const valuesSql = sql.join(
+				filter.value.map((value) => sql`${value}`),
+				sql`, `,
+			);
+			return sql`${compareExpr} IN (${valuesSql})`;
+		}
 		case "contains":
-			return ilike(textExpr, `%${value}%`);
+			return ilike(textExpr, `%${filter.value}%`);
 		case "startsWith":
-			return ilike(textExpr, `${value}%`);
+			return ilike(textExpr, `${filter.value}%`);
 		case "endsWith":
-			return ilike(textExpr, `%${value}`);
+			return ilike(textExpr, `%${filter.value}`);
 		case "eq":
-			return sql`${compareExpr} = ${value}`;
+			return sql`${compareExpr} = ${filter.value}`;
 		case "neq":
-			return sql`${compareExpr} <> ${value}`;
+			return sql`${compareExpr} <> ${filter.value}`;
 		case "gte":
-			return sql`${compareExpr} >= ${value}`;
+			return sql`${compareExpr} >= ${filter.value}`;
 		case "lte":
-			return sql`${compareExpr} <= ${value}`;
+			return sql`${compareExpr} <= ${filter.value}`;
 	}
 }
 
