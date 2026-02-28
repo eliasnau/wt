@@ -834,6 +834,7 @@ export const PromptInputTextarea = ({
 	onChange,
 	onKeyDown,
 	className,
+	style,
 	placeholder = "What would you like to know?",
 	...props
 }: PromptInputTextareaProps) => {
@@ -932,13 +933,21 @@ export const PromptInputTextarea = ({
 
 	return (
 		<InputGroupTextarea
-			className={cn("field-sizing-content max-h-48 min-h-16", className)}
+			className={cn(
+				"field-sizing-content max-h-48 min-h-16 w-full",
+				className,
+			)}
+			dir="auto"
 			name="message"
 			onCompositionEnd={handleCompositionEnd}
 			onCompositionStart={handleCompositionStart}
 			onKeyDown={handleKeyDown}
 			onPaste={handlePaste}
 			placeholder={placeholder}
+			style={{
+				textAlign: "left",
+				...style,
+			}}
 			{...props}
 			{...controlledProps}
 		/>
