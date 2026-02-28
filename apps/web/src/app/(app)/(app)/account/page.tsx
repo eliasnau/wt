@@ -1,4 +1,4 @@
-import { protectPage } from "@/lib/auth";
+import { protectPageFresh } from "@/lib/auth";
 import {
 	Header,
 	HeaderActions,
@@ -11,7 +11,7 @@ import { EmailVerificationBanner } from "./_components/email-verification-banner
 import { ProfileFrame } from "./_components/profile-frame";
 
 export default async function AccountPage() {
-	const { user } = await protectPage();
+	const { user } = await protectPageFresh();
 
 	return (
 		<div className="flex flex-col gap-8">
@@ -22,7 +22,7 @@ export default async function AccountPage() {
 						Verwalte deine Profilinformationen
 					</HeaderDescription>
 				</HeaderContent>
-				<HeaderActions></HeaderActions>
+				<HeaderActions />
 			</Header>
 
 			{!user.emailVerified && <EmailVerificationBanner email={user.email} />}
