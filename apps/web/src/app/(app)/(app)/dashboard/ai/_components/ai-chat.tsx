@@ -364,7 +364,7 @@ const AiChat = () => {
 	);
 
 	const handlePromptDragEnter = useCallback(
-		(event: React.DragEvent<HTMLDivElement>) => {
+		(event: React.DragEvent<HTMLFieldSetElement>) => {
 			if (!hasDraggedFiles(event)) {
 				return;
 			}
@@ -376,7 +376,7 @@ const AiChat = () => {
 	);
 
 	const handlePromptDragOver = useCallback(
-		(event: React.DragEvent<HTMLDivElement>) => {
+		(event: React.DragEvent<HTMLFieldSetElement>) => {
 			if (!hasDraggedFiles(event)) {
 				return;
 			}
@@ -387,7 +387,7 @@ const AiChat = () => {
 	);
 
 	const handlePromptDragLeave = useCallback(
-		(event: React.DragEvent<HTMLDivElement>) => {
+		(event: React.DragEvent<HTMLFieldSetElement>) => {
 			if (!hasDraggedFiles(event)) {
 				return;
 			}
@@ -401,7 +401,7 @@ const AiChat = () => {
 	);
 
 	const handlePromptDrop = useCallback(
-		(event: React.DragEvent<HTMLDivElement>) => {
+		(event: React.DragEvent<HTMLFieldSetElement>) => {
 			if (!hasDraggedFiles(event)) {
 				return;
 			}
