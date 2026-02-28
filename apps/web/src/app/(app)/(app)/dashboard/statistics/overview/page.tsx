@@ -10,10 +10,22 @@ import {
 	InfoIcon,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import {
+	Bar,
+	CartesianGrid,
+	Cell,
+	BarChart as RechartsBarChart,
+	XAxis,
+} from "recharts";
 import { BarChart } from "@/components/charts/bar-chart";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { ChartConfig } from "@/components/ui/chart";
+import {
+	ChartContainer,
+	ChartTooltip,
+	ChartTooltipContent,
+} from "@/components/ui/chart";
 import {
 	Collapsible,
 	CollapsiblePanel,
@@ -104,9 +116,29 @@ export default function StatisticsOverviewPage() {
 		cancellations: { label: "Kündigungen", color: "var(--chart-2)" },
 	} satisfies ChartConfig;
 
-	const groupChartConfig = {
+	const groupBarChartConfig = {
 		value: { label: "Mitglieder", color: "var(--chart-3)" },
 	} satisfies ChartConfig;
+
+	const groupMixChartData = useMemo(
+		() =>
+			data?.membership.groupMix?.map((item) => ({
+				name: item.name,
+				value: item.count,
+				color: item.color,
+			})) ?? [],
+		[data?.membership.groupMix],
+	);
+
+	const groupRevenueChartData = useMemo(
+		() =>
+			data?.revenue.byGroup?.map((item) => ({
+				name: item.name,
+				value: Number(item.total ?? 0),
+				color: item.color,
+			})) ?? [],
+		[data?.revenue.byGroup],
+	);
 
 	return (
 		<div className="flex flex-col gap-8">
@@ -362,27 +394,45 @@ export default function StatisticsOverviewPage() {
 									</FrameHeader>
 									<FramePanel>
 										{groupChartType === "pie" ? (
-											<GroupMixPieChart
-												data={
-													data?.membership.groupMix?.map((item) => ({
-														name: item.name,
-														value: item.count,
-													})) ?? []
-												}
-											/>
+											<GroupMixPieChart data={groupMixChartData} />
 										) : (
-											<BarChart
-												data={
-													data?.membership.groupMix?.map((item) => ({
-														month: item.name,
-														value: item.count,
-													})) ?? []
-												}
-												config={groupChartConfig}
-												dataKeys={["value"]}
-												xAxisKey="month"
-												height="h-[240px]"
-											/>
+											<ChartContainer
+												config={groupBarChartConfig}
+												className="h-[240px] w-full"
+											>
+												<RechartsBarChart
+													accessibilityLayer
+													data={groupMixChartData}
+												>
+													<CartesianGrid
+														vertical={false}
+														strokeDasharray="3 3"
+													/>
+													<XAxis
+														dataKey="name"
+														tickLine={false}
+														tickMargin={10}
+														axisLine={false}
+														tickFormatter={(value) =>
+															typeof value === "string" && value.length > 3
+																? value.slice(0, 3)
+																: value
+														}
+													/>
+													<ChartTooltip
+														cursor={false}
+														content={<ChartTooltipContent indicator="dashed" />}
+													/>
+													<Bar dataKey="value" radius={4}>
+														{groupMixChartData.map((entry, index) => (
+															<Cell
+																key={`${entry.name}-${index}`}
+																fill={entry.color ?? "var(--chart-3)"}
+															/>
+														))}
+													</Bar>
+												</RechartsBarChart>
+											</ChartContainer>
 										)}
 									</FramePanel>
 								</Frame>
@@ -418,14 +468,7 @@ export default function StatisticsOverviewPage() {
 										</div>
 									</FrameHeader>
 									<FramePanel>
-										<PricingByGroupPieChart
-											data={
-												data?.revenue.byGroup?.map((item) => ({
-													name: item.name,
-													value: Number(item.total ?? 0),
-												})) ?? []
-											}
-										/>
+										<PricingByGroupPieChart data={groupRevenueChartData} />
 									</FramePanel>
 								</Frame>
 

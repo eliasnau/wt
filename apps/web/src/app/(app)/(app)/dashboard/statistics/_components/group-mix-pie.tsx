@@ -25,7 +25,7 @@ const colorPalette = [
 export function GroupMixPieChart({
 	data,
 }: {
-	data: { name: string; value: number }[];
+	data: { name: string; value: number; color?: string }[];
 }) {
 	if (!data.length) {
 		return (
@@ -55,7 +55,7 @@ export function GroupMixPieChart({
 					{data.map((entry, index) => (
 						<Cell
 							key={`${entry.name}-${index}`}
-							fill={colorPalette[index % colorPalette.length]}
+							fill={entry.color ?? colorPalette[index % colorPalette.length]}
 						/>
 					))}
 					<LabelList
