@@ -5,7 +5,7 @@ import type { InferClientOutputs } from "@orpc/client";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, SearchIcon, XIcon } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
@@ -77,15 +77,18 @@ const groupFormSchema = z.object({
 		message: "Name muss mindestens 3 Zeichen lang sein.",
 	}),
 	description: z.string().optional(),
+	color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, {
+		message: "Please enter a valid hex color (e.g., #000000)",
+	}),
 	defaultMembershipPrice: z
 		.string()
 		.optional()
-		.refine((val) => !val || /^\\d+(\\.\\d{1,2})?$/.test(val), {
+		.refine((val) => !val || /^\d+(\.\d{1,2})?$/.test(val), {
 			message: "Please enter a valid price (e.g., 10 or 10.99)",
 		}),
 });
 
-const priceRegex = /^\\d+(\\.\\d{1,2})?$/;
+const priceRegex = /^\d+(\.\d{1,2})?$/;
 
 function EnrollMemberDialog({
 	group,
@@ -276,6 +279,7 @@ export function EditGroupSheet({
 		defaultValues: {
 			name: group?.name ?? "",
 			description: group?.description ?? "",
+			color: group?.color ?? "#000000",
 			defaultMembershipPrice: group?.defaultMembershipPrice ?? "",
 		},
 	});
@@ -285,6 +289,7 @@ export function EditGroupSheet({
 			id: string;
 			name?: string;
 			description?: string;
+			color: string;
 			defaultMembershipPrice?: string;
 		}) => client.groups.update(data),
 		onSuccess: () => {
@@ -303,24 +308,25 @@ export function EditGroupSheet({
 			id: group.id,
 			name: values.name.trim(),
 			description: values.description?.trim() ?? "",
+			color: values.color.toLowerCase(),
 			defaultMembershipPrice:
 				values.defaultMembershipPrice?.trim() || undefined,
 		});
 	};
 
-	const handleOpenChange = (nextOpen: boolean) => {
-		onOpenChange(nextOpen);
-		if (nextOpen && group) {
-			form.reset({
-				name: group.name ?? "",
-				description: group.description ?? "",
-				defaultMembershipPrice: group.defaultMembershipPrice ?? "",
-			});
-		}
-	};
+	useEffect(() => {
+		if (!open || !group) return;
+
+		form.reset({
+			name: group.name ?? "",
+			description: group.description ?? "",
+			color: group.color ?? "#000000",
+			defaultMembershipPrice: group.defaultMembershipPrice ?? "",
+		});
+	}, [open, group, form]);
 
 	return (
-		<Sheet open={open} onOpenChange={handleOpenChange}>
+		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetPopup inset>
 				<Form {...form}>
 					<form
@@ -379,6 +385,40 @@ export function EditGroupSheet({
 							/>
 							<FormField
 								control={form.control}
+								name="color"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Color *</FormLabel>
+										<FormControl>
+											<div className="flex items-center gap-3">
+												<Input
+													type="color"
+													value={field.value}
+													onChange={field.onChange}
+													disabled={updateGroupMutation.isPending}
+													className="h-10 w-14 p-1"
+													required
+												/>
+												<Input
+													type="text"
+													value={field.value}
+													onChange={field.onChange}
+													placeholder="#000000"
+													disabled={updateGroupMutation.isPending}
+													pattern="^#[0-9A-Fa-f]{6}$"
+													required
+												/>
+											</div>
+										</FormControl>
+										<FormDescription>
+											Required hex color used to identify this group.
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
 								name="defaultMembershipPrice"
 								render={({ field }) => (
 									<FormItem>
@@ -394,7 +434,7 @@ export function EditGroupSheet({
 													type="text"
 													{...field}
 													disabled={updateGroupMutation.isPending}
-													pattern="^\\d+(\\.\\d{1,2})?$"
+													pattern="^[0-9]+(\\.[0-9]{1,2})?$"
 												/>
 												<InputGroupAddon align="inline-end">
 													<InputGroupText>€</InputGroupText>

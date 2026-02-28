@@ -81,6 +81,7 @@ export const DB = {
             groupMemberCreatedAt: groupMember.createdAt,
             groupName: group.name,
             groupDescription: group.description,
+            groupColor: group.color,
             groupDefaultMembershipPrice: group.defaultMembershipPrice,
           })
           .from(clubMember)
@@ -105,6 +106,7 @@ export const DB = {
               id: row.groupId!,
               name: row.groupName!,
               description: row.groupDescription,
+              color: row.groupColor,
               defaultMembershipPrice: row.groupDefaultMembershipPrice,
             },
           }));
@@ -380,11 +382,13 @@ export const DB = {
         organizationId,
         name,
         description,
+        color,
         defaultMembershipPrice,
       }: {
         organizationId: string;
         name: string;
         description?: string;
+        color: string;
         defaultMembershipPrice?: string;
       }) => {
         const [newGroup] = await db
@@ -392,6 +396,7 @@ export const DB = {
           .values({
             name,
             description,
+            color,
             defaultMembershipPrice,
             organizationId,
           })
@@ -411,6 +416,7 @@ export const DB = {
         updates: {
           name?: string;
           description?: string;
+          color?: string;
           defaultMembershipPrice?: string;
         };
       }) => {

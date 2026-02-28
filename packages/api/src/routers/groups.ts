@@ -8,9 +8,15 @@ import { requirePermission } from "../middleware/permissions";
 import { rateLimitMiddleware } from "../middleware/ratelimit";
 import { getPostHogServer } from "../lib/posthog";
 
+const groupColorSchema = z
+  .string()
+  .regex(/^#[0-9A-Fa-f]{6}$/, "Color must be a valid hex value")
+  .transform((value) => value.toLowerCase());
+
 const createGroupSchema = z.object({
   name: z.string().min(1, "Name is required").max(255),
   description: z.string().max(1000).optional(),
+  color: groupColorSchema,
   defaultMembershipPrice: z
     .string()
     .regex(/^\d+(\.\d{1,2})?$/)
@@ -21,6 +27,7 @@ const updateGroupSchema = z.object({
   id: z.string(),
   name: z.string().min(1, "Name is required").max(255).optional(),
   description: z.string().max(1000).optional(),
+  color: groupColorSchema,
   defaultMembershipPrice: z
     .string()
     .regex(/^\d+(\.\d{1,2})?$/)
@@ -137,6 +144,7 @@ export const groupsRouter = {
           organizationId,
           name: input.name,
           description: input.description,
+          color: input.color,
           defaultMembershipPrice: input.defaultMembershipPrice,
         });
 

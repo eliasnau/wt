@@ -2,13 +2,12 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { Loader2, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
 import { Button } from "@/components/ui/button";
-import { Field, FieldLabel } from "@/components/ui/field";
 import {
 	Form,
 	FormControl,
@@ -38,7 +37,7 @@ import {
 } from "@/components/ui/sheet";
 import { Spinner } from "@/components/ui/spinner";
 import { Textarea } from "@/components/ui/textarea";
-import { client, orpc } from "@/utils/orpc";
+import { client } from "@/utils/orpc";
 
 interface NewGroupSheetProps {
 	onGroupCreated?: () => void;
@@ -49,6 +48,9 @@ const formSchema = z.object({
 		message: "Name muss mindestens 3 Zeichen lang sein.",
 	}),
 	description: z.string().optional(),
+	color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, {
+		message: "Please enter a valid hex color (e.g., #000000)",
+	}),
 	defaultMembershipPrice: z
 		.string()
 		.optional()
@@ -65,6 +67,7 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 		defaultValues: {
 			name: "",
 			description: "",
+			color: "#000000",
 			defaultMembershipPrice: "",
 		},
 	});
@@ -73,6 +76,7 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 		mutationFn: async (data: {
 			name: string;
 			description?: string;
+			color: string;
 			defaultMembershipPrice?: string;
 		}) => {
 			return client.groups.create(data);
@@ -92,6 +96,7 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 		createGroupMutation.mutate({
 			name: values.name.trim(),
 			description: values.description?.trim(),
+			color: values.color.toLowerCase(),
 			defaultMembershipPrice:
 				values.defaultMembershipPrice?.trim() || undefined,
 		});
@@ -161,6 +166,40 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 							/>
 							<FormField
 								control={form.control}
+								name="color"
+								render={({ field }) => (
+									<FormItem>
+										<FormLabel>Color *</FormLabel>
+										<FormControl>
+											<div className="flex items-center gap-3">
+												<Input
+													type="color"
+													value={field.value}
+													onChange={field.onChange}
+													disabled={createGroupMutation.isPending}
+													className="h-10 w-14 p-1"
+													required
+												/>
+												<Input
+													type="text"
+													value={field.value}
+													onChange={field.onChange}
+													placeholder="#000000"
+													disabled={createGroupMutation.isPending}
+													pattern="^#[0-9A-Fa-f]{6}$"
+													required
+												/>
+											</div>
+										</FormControl>
+										<FormDescription>
+											Required hex color used to identify this group.
+										</FormDescription>
+										<FormMessage />
+									</FormItem>
+								)}
+							/>
+							<FormField
+								control={form.control}
 								name="defaultMembershipPrice"
 								render={({ field }) => (
 									<FormItem>
@@ -172,7 +211,7 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 													type="text"
 													{...field}
 													disabled={createGroupMutation.isPending}
-													pattern="^\d+(\.\d{1,2})?$"
+													pattern="^[0-9]+(\\.[0-9]{1,2})?$"
 												/>
 												<InputGroupAddon align="inline-end">
 													<InputGroupText>€</InputGroupText>

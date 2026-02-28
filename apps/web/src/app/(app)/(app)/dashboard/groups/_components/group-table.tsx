@@ -162,6 +162,23 @@ export const columns: ColumnDef<GroupRow>[] = [
 		header: "Name",
 	},
 	{
+		accessorKey: "color",
+		header: "Color",
+		enableSorting: false,
+		cell: ({ row }) => {
+			const color = row.original.color ?? "#000000";
+			return (
+				<div className="flex items-center gap-2">
+					<span
+						className="size-3 rounded-full border"
+						style={{ backgroundColor: color }}
+					/>
+					<span className="font-mono text-xs uppercase">{color}</span>
+				</div>
+			);
+		},
+	},
+	{
 		accessorKey: "description",
 		header: "Description",
 		enableSorting: false,
