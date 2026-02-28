@@ -141,6 +141,7 @@ export const auth = betterAuth({
     passkey(),
     organization({
       ac,
+      requireEmailVerificationOnInvitation: true,
       roles: {
         owner,
         admin,
