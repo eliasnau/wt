@@ -15,6 +15,7 @@ interface DataTableFacetedFilterProps {
 	}[];
 	selectedValues: string[];
 	onValueChange: (values: string[]) => void;
+	buttonSize?: "sm" | "default";
 }
 
 export function DataTableFacetedFilter({
@@ -22,6 +23,7 @@ export function DataTableFacetedFilter({
 	options,
 	selectedValues,
 	onValueChange,
+	buttonSize = "sm",
 }: DataTableFacetedFilterProps) {
 	const selectedSet = new Set(selectedValues);
 	const [open, setOpen] = useState(false);
@@ -47,19 +49,18 @@ export function DataTableFacetedFilter({
 				render={
 					<Button
 						variant="outline"
-						size="sm"
+						size={buttonSize}
 						className="border-dashed font-normal"
 					>
 						{selectedSet.size > 0 ? (
-							<div
-								role="button"
+							<button
+								type="button"
 								aria-label={`Clear ${title} filter`}
-								tabIndex={0}
 								className="rounded-sm opacity-70 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
 								onClick={onReset}
 							>
 								<XCircle />
-							</div>
+							</button>
 						) : (
 							<PlusCircle />
 						)}
