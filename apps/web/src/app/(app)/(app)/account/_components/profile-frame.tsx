@@ -38,6 +38,7 @@ export function ProfileFrame({ initialName, initialEmail }: ProfileFrameProps) {
 	const hideSensitiveInformatoin = Boolean(
 		session?.user?.hideSensitiveInformatoin,
 	);
+	type AuthCallbackContext = { error: { message?: string } };
 
 	const handleUpdateName = async () => {
 		if (!newName.trim()) {
@@ -57,7 +58,7 @@ export function ProfileFrame({ initialName, initialEmail }: ProfileFrameProps) {
 						setNameDialogOpen(false);
 						setNewName("");
 					},
-					onError: (context) => {
+					onError: (context: AuthCallbackContext) => {
 						toast.error(
 							context.error.message ||
 								"Aktualisierung des Namens fehlgeschlagen",
@@ -93,7 +94,7 @@ export function ProfileFrame({ initialName, initialEmail }: ProfileFrameProps) {
 						setEmailDialogOpen(false);
 						setNewEmail("");
 					},
-					onError: (context) => {
+					onError: (context: AuthCallbackContext) => {
 						toast.error(
 							context.error.message || "Änderung der E-Mail fehlgeschlagen",
 						);

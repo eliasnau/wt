@@ -1,6 +1,5 @@
 import { APIError, type BetterAuthPlugin, type Session } from "better-auth";
-import { sessionMiddleware } from "better-auth/api";
-import { createAuthEndpoint } from "better-auth/plugins";
+import { createAuthEndpoint, sessionMiddleware } from "better-auth/api";
 import { z } from "zod";
 
 export const manageSessions = () => {

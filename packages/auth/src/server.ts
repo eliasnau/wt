@@ -9,7 +9,6 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
 import { nextCookies } from "better-auth/next-js";
 import {
-  createAuthMiddleware,
   haveIBeenPwned,
   organization,
   twoFactor,
@@ -17,7 +16,7 @@ import {
 import { ac, admin, member, owner } from "./permissions";
 import { manageSessions } from "./plugins/manageSessions";
 import { checkBotId } from "botid/server";
-import { APIError } from "better-auth/api";
+import { APIError, createAuthMiddleware } from "better-auth/api";
 import { PostHog } from "posthog-node";
 import { dash } from "@better-auth/infra";
 
