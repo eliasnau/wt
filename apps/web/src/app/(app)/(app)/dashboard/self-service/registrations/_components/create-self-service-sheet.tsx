@@ -41,7 +41,7 @@ type GroupRow = {
 
 const BILLING_CYCLE_ITEMS = [
   { value: "monthly", label: "Monatlich" },
-  { value: "quarterly", label: "Quartalsweise" },
+  { value: "half_yearly", label: "Halbjaehrlich" },
   { value: "yearly", label: "Jaehrlich" },
 ] as const;
 
@@ -62,7 +62,7 @@ export function CreateSelfServiceSheet({ onCreated }: CreateSelfServiceSheetProp
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
-  const [billingCycle, setBillingCycle] = useState<"monthly" | "quarterly" | "yearly">(
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "half_yearly" | "yearly">(
     "monthly",
   );
   const [joiningFeeAmount, setJoiningFeeAmount] = useState("");
@@ -192,17 +192,18 @@ export function CreateSelfServiceSheet({ onCreated }: CreateSelfServiceSheetProp
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="space-y-2">
               <label className="font-medium text-sm" htmlFor="ss-billing">
-                Abrechnung
+                Vertragslaufzeit
               </label>
+              <p className="text-muted-foreground text-xs">Abrechnung erfolgt immer monatlich.</p>
               <Select
                 items={BILLING_CYCLE_ITEMS}
                 value={billingCycle}
                 onValueChange={(value) =>
-                  setBillingCycle(value as "monthly" | "quarterly" | "yearly")
+                  setBillingCycle(value as "monthly" | "half_yearly" | "yearly")
                 }
               >
                 <SelectTrigger id="ss-billing">
-                  <SelectValue placeholder="Abrechnung" />
+                  <SelectValue placeholder="Laufzeit" />
                 </SelectTrigger>
                 <SelectPopup>
                   {BILLING_CYCLE_ITEMS.map((item) => (

@@ -72,8 +72,16 @@ function SelectTrigger({
 	className,
 	size = "default",
 	children,
+	items: _items,
 	...props
-}: SelectPrimitive.Trigger.Props & VariantProps<typeof selectTriggerVariants>) {
+}: SelectPrimitive.Trigger.Props &
+	VariantProps<typeof selectTriggerVariants> & {
+		items?: ReadonlyArray<{
+			value: string;
+			label: string;
+			disabled?: boolean;
+		}>;
+	}) {
 	return (
 		<SelectPrimitive.Trigger
 			className={cn(selectTriggerVariants({ size }), className)}

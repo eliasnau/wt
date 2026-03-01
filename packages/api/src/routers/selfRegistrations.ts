@@ -25,7 +25,7 @@ const createSelfRegistrationSchema = z.object({
   name: z.string().min(1).max(255),
   description: z.string().max(1000).optional(),
   isActive: z.boolean().default(true),
-  billingCycle: z.enum(["monthly", "quarterly", "yearly"]).default("monthly"),
+  billingCycle: z.enum(["monthly", "half_yearly", "yearly"]).default("monthly"),
   joiningFeeAmount: decimalSchema.optional(),
   yearlyFeeAmount: decimalSchema.optional(),
   contractStartDate: z
@@ -41,7 +41,7 @@ const updateSelfRegistrationSchema = z.object({
   name: z.string().min(1).max(255).optional(),
   description: z.string().max(1000).optional(),
   isActive: z.boolean().optional(),
-  billingCycle: z.enum(["monthly", "quarterly", "yearly"]).optional(),
+  billingCycle: z.enum(["monthly", "half_yearly", "yearly"]).optional(),
   joiningFeeAmount: decimalSchema.optional(),
   yearlyFeeAmount: decimalSchema.optional(),
   contractStartDate: z
@@ -139,9 +139,11 @@ export const selfRegistrationsRouter = {
       let isUnique = false;
       for (let attempt = 0; attempt < 20; attempt += 1) {
         generatedCode = generateRandomCode(8);
-        const existingByCode = await DB.query.selfRegistrations.getConfigByCode({
-          code: generatedCode,
-        });
+        const existingByCode = await DB.query.selfRegistrations.getConfigByCode(
+          {
+            code: generatedCode,
+          },
+        );
         if (!existingByCode) {
           isUnique = true;
           break;
@@ -153,16 +155,19 @@ export const selfRegistrationsRouter = {
         });
       }
 
-      const uniqueGroupIds = Array.from(new Set(input.groups.map((g) => g.groupId)));
+      const uniqueGroupIds = Array.from(
+        new Set(input.groups.map((g) => g.groupId)),
+      );
       if (uniqueGroupIds.length !== input.groups.length) {
         throw new ORPCError("BAD_REQUEST", {
           message: "Duplicate groups are not allowed",
         });
       }
-      const groupsFromOrg = await DB.query.selfRegistrations.listGroupsByIdsAndOrganization({
-        organizationId,
-        groupIds: uniqueGroupIds,
-      });
+      const groupsFromOrg =
+        await DB.query.selfRegistrations.listGroupsByIdsAndOrganization({
+          organizationId,
+          groupIds: uniqueGroupIds,
+        });
 
       if (groupsFromOrg.length !== uniqueGroupIds.length) {
         throw new ORPCError("BAD_REQUEST", {
@@ -235,7 +240,9 @@ export const selfRegistrationsRouter = {
         | undefined;
 
       if (input.groups) {
-        const uniqueGroupIds = Array.from(new Set(input.groups.map((g) => g.groupId)));
+        const uniqueGroupIds = Array.from(
+          new Set(input.groups.map((g) => g.groupId)),
+        );
         if (uniqueGroupIds.length !== input.groups.length) {
           throw new ORPCError("BAD_REQUEST", {
             message: "Duplicate groups are not allowed",
@@ -308,12 +315,13 @@ export const selfRegistrationsRouter = {
     .route({ method: "DELETE", path: "/self-registrations/:id" }),
 
   getPublicByCode: publicProcedure
-    .use(rateLimitMiddleware(5))
+    //.use(rateLimitMiddleware(5)) add ip ratelimit
     .input(getByCodeSchema)
     .handler(async ({ input }) => {
-      const config = await DB.query.selfRegistrations.getActiveConfigByCodeWithGroups({
-        code: input.code,
-      });
+      const config =
+        await DB.query.selfRegistrations.getActiveConfigByCodeWithGroups({
+          code: input.code,
+        });
 
       if (!config) {
         throw new ORPCError("NOT_FOUND", {
@@ -337,12 +345,13 @@ export const selfRegistrationsRouter = {
     .route({ method: "GET", path: "/self-registrations/by-code/:code" }),
 
   submit: publicProcedure
-    .use(rateLimitMiddleware(10))
+    // .use(rateLimitMiddleware(10)) add ip ratelimit
     .input(submitSelfRegistrationSchema)
     .handler(async ({ input }) => {
-      const config = await DB.query.selfRegistrations.getActiveConfigByCodeWithGroups({
-        code: input.code,
-      });
+      const config =
+        await DB.query.selfRegistrations.getActiveConfigByCodeWithGroups({
+          code: input.code,
+        });
 
       if (!config) {
         throw new ORPCError("NOT_FOUND", {
@@ -370,23 +379,24 @@ export const selfRegistrationsRouter = {
         });
       }
 
-      const createdSubmission = await DB.mutation.selfRegistrations.createSubmission({
-        configId: config.id,
-        submission: {
-          firstName: input.firstName,
-          lastName: input.lastName,
-          email: input.email,
-          phone: input.phone,
-          birthdate: input.birthdate,
-          street: input.street,
-          city: input.city,
-          postalCode: input.postalCode,
-          country: input.country,
-          accountHolder: input.accountHolder,
-          iban: input.iban,
-          bic: input.bic,
-        },
-      });
+      const createdSubmission =
+        await DB.mutation.selfRegistrations.createSubmission({
+          configId: config.id,
+          submission: {
+            firstName: input.firstName,
+            lastName: input.lastName,
+            email: input.email,
+            phone: input.phone,
+            birthdate: input.birthdate,
+            street: input.street,
+            city: input.city,
+            postalCode: input.postalCode,
+            country: input.country,
+            accountHolder: input.accountHolder,
+            iban: input.iban,
+            bic: input.bic,
+          },
+        });
 
       return {
         id: createdSubmission.id,
@@ -416,21 +426,26 @@ export const selfRegistrationsRouter = {
     .handler(async ({ input, context }) => {
       const organizationId = context.session.activeOrganizationId!;
 
-      const existingSubmission = await DB.query.selfRegistrations.getSubmissionById({
-        id: input.id,
-      });
+      const existingSubmission =
+        await DB.query.selfRegistrations.getSubmissionById({
+          id: input.id,
+        });
 
-      if (!existingSubmission || existingSubmission.organizationId !== organizationId) {
+      if (
+        !existingSubmission ||
+        existingSubmission.organizationId !== organizationId
+      ) {
         throw new ORPCError("NOT_FOUND", {
           message: "Submission not found",
         });
       }
 
-      const updatedSubmission = await DB.mutation.selfRegistrations.updateSubmissionStatus({
-        submissionId: input.id,
-        organizationId,
-        status: input.status,
-      });
+      const updatedSubmission =
+        await DB.mutation.selfRegistrations.updateSubmissionStatus({
+          submissionId: input.id,
+          organizationId,
+          status: input.status,
+        });
 
       if (!updatedSubmission) {
         throw new ORPCError("INTERNAL_SERVER_ERROR", {
@@ -440,5 +455,8 @@ export const selfRegistrationsRouter = {
 
       return updatedSubmission;
     })
-    .route({ method: "PATCH", path: "/self-registrations/submissions/:id/status" }),
+    .route({
+      method: "PATCH",
+      path: "/self-registrations/submissions/:id/status",
+    }),
 };
