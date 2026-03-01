@@ -179,6 +179,7 @@ export const auth = betterAuth({
     cookieCache: {
       enabled: true,
       maxAge: 3 * 60,
+      strategy: "jwe",
     },
   },
   baseURL:
