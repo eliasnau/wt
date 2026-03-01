@@ -8,11 +8,7 @@ import {
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
 import { nextCookies } from "better-auth/next-js";
-import {
-  haveIBeenPwned,
-  organization,
-  twoFactor,
-} from "better-auth/plugins";
+import { haveIBeenPwned, organization, twoFactor } from "better-auth/plugins";
 import { ac, admin, member, owner } from "./permissions";
 import { manageSessions } from "./plugins/manageSessions";
 import { checkBotId } from "botid/server";
@@ -112,6 +108,16 @@ export const auth = betterAuth({
     provider: "pg",
   }),
   advanced: {
+    ipAddress: {
+      // For Cloudflare
+      //ipAddressHeaders: ["cf-connecting-ip", "x-forwarded-for"],
+
+      // For Vercel
+      ipAddressHeaders: ["x-vercel-forwarded-for", "x-forwarded-for"],
+
+      // For AWS/Generic
+      // ipAddressHeaders: ["x-forwarded-for"],
+    },
     database: {
       generateId: (options) => {
         if (options.model === "user" || options.model === "users") {
