@@ -152,9 +152,9 @@ export function MembersV2Controls({
 
 	return (
 		<div className="space-y-2">
-			<div className="space-y-2 sm:flex sm:items-center sm:justify-between sm:gap-2 sm:space-y-0">
-				<div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 sm:flex sm:flex-wrap sm:items-center">
-					<InputGroup className="w-full sm:w-[280px] sm:flex-none md:w-[320px]">
+			<div className="space-y-2 2xl:flex 2xl:items-center 2xl:justify-between 2xl:gap-2 2xl:space-y-0">
+				<div className="flex flex-wrap items-center gap-2">
+					<InputGroup className="w-[260px] max-w-full sm:w-[320px] lg:w-[360px]">
 						<InputGroupAddon>
 							<SearchIcon className="size-4" />
 						</InputGroupAddon>
@@ -184,7 +184,7 @@ export function MembersV2Controls({
 					/>
 				</div>
 
-					<div className="flex flex-wrap items-center justify-start gap-2 sm:justify-end">
+				<div className="flex flex-wrap items-center justify-start gap-2 2xl:justify-end">
 						<Popover>
 							<PopoverTrigger render={<Button variant="outline" size="sm" />}>
 								<SortDirectionIcon />
@@ -338,7 +338,7 @@ export function MembersV2Controls({
 				</div>
 			</div>
 
-			<div className="flex flex-wrap items-center gap-2 sm:hidden">
+			<div className="flex flex-wrap items-center gap-2 2xl:hidden">
 				{hasActiveFilters && (
 					<>
 						<Button variant="outline" size="sm" onClick={onSaveView}>
@@ -352,7 +352,7 @@ export function MembersV2Controls({
 				)}
 			</div>
 
-			<div className="hidden sm:flex sm:items-center sm:justify-end sm:gap-2">
+			<div className="hidden 2xl:flex 2xl:items-center 2xl:justify-end 2xl:gap-2">
 				{hasActiveFilters && (
 					<>
 						<Button variant="outline" size="sm" onClick={onSaveView}>
