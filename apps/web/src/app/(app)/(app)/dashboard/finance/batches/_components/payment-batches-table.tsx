@@ -13,6 +13,7 @@ import {
 	useReactTable,
 } from "@tanstack/react-table";
 import {
+	CheckCircle2,
 	ChevronDownIcon,
 	ChevronUpIcon,
 	Download,
@@ -91,28 +92,48 @@ interface BatchActionsProps {
 	batch: BatchRow;
 	onViewBatch: (batchId: string) => void;
 	onExportSepa?: (batchId: string) => void;
+	onValidateSepa?: (batchId: string) => void;
 	exportingBatchId?: string | null;
+	validatingBatchId?: string | null;
 }
 
 function BatchActions({
 	batch,
 	onViewBatch,
 	onExportSepa,
+	onValidateSepa,
 	exportingBatchId,
+	validatingBatchId,
 }: BatchActionsProps) {
 	const isExporting = exportingBatchId === batch.id;
+	const isValidating = validatingBatchId === batch.id;
 	return (
 		<div className="flex items-center justify-end gap-2">
 			<Button size="sm" variant="outline" onClick={() => onViewBatch(batch.id)}>
 				<EyeIcon />
 				View
 			</Button>
+			{onValidateSepa ? (
+				<Button
+					size="sm"
+					variant="outline"
+					onClick={() => onValidateSepa(batch.id)}
+					disabled={isValidating || isExporting}
+				>
+					{isValidating ? (
+						<Loader2 className="animate-spin" />
+					) : (
+						<CheckCircle2 />
+					)}
+					Prüfen
+				</Button>
+			) : null}
 			{onExportSepa ? (
 				<Button
 					size="sm"
 					variant="outline"
 					onClick={() => onExportSepa(batch.id)}
-					disabled={isExporting}
+					disabled={isExporting || isValidating}
 				>
 					{isExporting ? <Loader2 className="animate-spin" /> : <Download />}
 					{isExporting ? "Preparing..." : "Herunterladen"}
@@ -132,7 +153,7 @@ function BatchActions({
 						View Details
 					</MenuItem>
 					<MenuItem
-						disabled={!onExportSepa || isExporting}
+						disabled={!onExportSepa || isExporting || isValidating}
 						onClick={() => onExportSepa?.(batch.id)}
 					>
 						{isExporting ? <Loader2 className="animate-spin" /> : <Download />}
@@ -147,7 +168,9 @@ function BatchActions({
 export const createColumns = (
 	onViewBatch: (batchId: string) => void,
 	onExportSepa?: (batchId: string) => void,
+	onValidateSepa?: (batchId: string) => void,
 	exportingBatchId?: string | null,
+	validatingBatchId?: string | null,
 ): ColumnDef<BatchRow>[] => [
 	{
 		accessorKey: "billingMonth",
@@ -199,7 +222,9 @@ export const createColumns = (
 					batch={batch}
 					onViewBatch={onViewBatch}
 					onExportSepa={onExportSepa}
+					onValidateSepa={onValidateSepa}
 					exportingBatchId={exportingBatchId}
+					validatingBatchId={validatingBatchId}
 				/>
 			);
 		},
@@ -210,12 +235,16 @@ export default function PaymentBatchesTable({
 	data,
 	loading = false,
 	onExportSepa,
+	onValidateSepa,
 	exportingBatchId,
+	validatingBatchId,
 }: {
 	data: BatchRow[];
 	loading?: boolean;
 	onExportSepa?: (batchId: string) => void;
+	onValidateSepa?: (batchId: string) => void;
 	exportingBatchId?: string | null;
+	validatingBatchId?: string | null;
 }) {
 	"use no memo";
 	const pageSize = 10;
@@ -243,8 +272,21 @@ export default function PaymentBatchesTable({
 	}, []);
 
 	const columns = useMemo(
-		() => createColumns(handleViewBatch, onExportSepa, exportingBatchId),
-		[handleViewBatch, onExportSepa, exportingBatchId],
+		() =>
+			createColumns(
+				handleViewBatch,
+				onExportSepa,
+				onValidateSepa,
+				exportingBatchId,
+				validatingBatchId,
+			),
+		[
+			handleViewBatch,
+			onExportSepa,
+			onValidateSepa,
+			exportingBatchId,
+			validatingBatchId,
+		],
 	);
 
 	const table = useReactTable({

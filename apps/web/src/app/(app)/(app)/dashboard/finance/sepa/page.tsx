@@ -32,10 +32,8 @@ export default function SepaExportPage() {
 		}),
 	);
 	const [exportingBatchId, setExportingBatchId] = useState<string | null>(null);
-	const [validatingBatchId, setValidatingBatchId] = useState<string | null>(null);
 
 	const handleValidate = useCallback(async (batchId: string) => {
-		setValidatingBatchId(batchId);
 		try {
 			const result = await client.paymentBatches.validateSepaExport({
 				id: batchId,
@@ -60,8 +58,6 @@ export default function SepaExportPage() {
 				description: err instanceof Error ? err.message : "Please try again.",
 			});
 			return false;
-		} finally {
-			setValidatingBatchId(null);
 		}
 	}, []);
 
@@ -139,9 +135,7 @@ export default function SepaExportPage() {
 					data={data ?? []}
 					loading={isPending}
 					onExportSepa={handleExport}
-					onValidateSepa={handleValidate}
 					exportingBatchId={exportingBatchId}
-					validatingBatchId={validatingBatchId}
 				/>
 			)}
 		</div>
