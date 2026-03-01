@@ -117,11 +117,12 @@ function normalizeGroups(value: unknown): Array<{
       ) {
         return null;
       }
+      const schedule = typeof item.schedule === "string" ? item.schedule : undefined;
       return {
         groupId: item.groupId,
         groupNameSnapshot: item.groupNameSnapshot,
         monthlyFee: item.monthlyFee,
-        schedule: typeof item.schedule === "string" ? item.schedule : undefined,
+        ...(schedule ? { schedule } : {}),
       };
     })
     .filter(

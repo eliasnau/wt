@@ -17,6 +17,7 @@ export {
 	type InferSelectModel,
 	ilike,
 	inArray,
+	isNotNull,
 	isNull,
 	lte,
 	or,
