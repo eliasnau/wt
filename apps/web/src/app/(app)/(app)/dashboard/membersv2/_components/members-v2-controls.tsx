@@ -180,7 +180,10 @@ export function MembersV2Controls({
 								<Select
 									items={sortFieldOptions}
 									value={sortField}
-									onValueChange={onSortFieldChange}
+									onValueChange={(value) => {
+										if (!value) return;
+										onSortFieldChange(value);
+									}}
 								>
 									<SelectTrigger>
 										<SelectValue />
@@ -196,7 +199,10 @@ export function MembersV2Controls({
 								<Select
 									items={sortDirectionOptions}
 									value={sortDirection}
-									onValueChange={onSortDirectionChange}
+									onValueChange={(value) => {
+										if (!value) return;
+										onSortDirectionChange(value);
+									}}
 								>
 									<SelectTrigger>
 										<SelectValue />

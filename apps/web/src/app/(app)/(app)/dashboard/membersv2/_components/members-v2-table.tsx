@@ -17,6 +17,7 @@ import {
 	UserIcon,
 	UserXIcon,
 } from "lucide-react";
+import type { Route } from "next";
 import Link from "next/link";
 import { type CSSProperties, useMemo, useState } from "react";
 import { CopyableTableCell } from "@/components/table/copyable-table-cell";
@@ -115,7 +116,7 @@ const createColumns = (
 			const member = row.original;
 			const status = member.membershipStatus;
 			const effectiveDate = member.contract?.cancellationEffectiveDate;
-			const memberHref = `/dashboard/members/${member.id}`;
+			const memberHref = `/dashboard/members/${member.id}` as Route;
 
 			if (status === "active") {
 				return (
@@ -207,7 +208,7 @@ const createColumns = (
 			cell: ({ row }) => {
 				const member = row.original;
 				const isCancelled = member.contract?.cancelledAt !== null;
-				const memberHref = `/dashboard/members/${member.id}`;
+				const memberHref = `/dashboard/members/${member.id}` as Route;
 				const hasEmail =
 					typeof member.email === "string" && member.email.trim().length > 0;
 				const hasPhone =
