@@ -19,6 +19,7 @@ import { manageSessions } from "./plugins/manageSessions";
 import { checkBotId } from "botid/server";
 import { APIError } from "better-auth/api";
 import { PostHog } from "posthog-node";
+import { dash } from "@better-auth/infra";
 
 type OrganizationInvitationEmailPayload = {
   id: string;
@@ -325,6 +326,7 @@ export const auth = betterAuth({
       customPasswordCompromisedMessage:
         "This password has been found in a Data breach. Please choose a more secure one",
     }),
+    dash(),
     nextCookies(), //! has to be last plugin in array
   ],
   experimental: { joins: true },
