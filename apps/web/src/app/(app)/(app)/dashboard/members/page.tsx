@@ -1,10 +1,10 @@
 import { Suspense } from "react";
 import { NoPermission } from "@/components/dashboard/no-permission";
 import { hasPermission } from "@/lib/auth";
-import { MembersPageClient } from "./members-page-client";
+import { MembersV2PageClient } from "../membersv2/members-v2-page-client";
 
 export default async function MembersPage() {
-	const result = await hasPermission({ member: ["list"] });
+	const result = await hasPermission({ member: ["view"] });
 
 	if (!result.success) {
 		return (
@@ -17,7 +17,7 @@ export default async function MembersPage() {
 
 	return (
 		<Suspense>
-			<MembersPageClient />
+			<MembersV2PageClient />
 		</Suspense>
 	);
 }
