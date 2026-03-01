@@ -1,5 +1,6 @@
 "use client";
 
+import { ORPCError } from "@orpc/client";
 import { useQuery } from "@tanstack/react-query";
 import { AlertCircle } from "lucide-react";
 import { useCallback, useState } from "react";
@@ -31,10 +32,45 @@ export default function SepaExportPage() {
 		}),
 	);
 	const [exportingBatchId, setExportingBatchId] = useState<string | null>(null);
+	const [validatingBatchId, setValidatingBatchId] = useState<string | null>(null);
+
+	const handleValidate = useCallback(async (batchId: string) => {
+		setValidatingBatchId(batchId);
+		try {
+			const result = await client.paymentBatches.validateSepaExport({
+				id: batchId,
+			});
+			if (result.valid) {
+				toast.success("SEPA Daten sind gültig", {
+					description: `${result.totalPayments} Zahlungen geprüft.`,
+				});
+				return true;
+			}
+
+			const example = result.invalidMembers
+				.slice(0, 3)
+				.map((item) => `${item.memberName}: ${item.reasons.join(", ")}`)
+				.join(" | ");
+			toast.error("SEPA Export blockiert", {
+				description: `${result.invalidCount} ungültige Datensätze. ${example}`,
+			});
+			return false;
+		} catch (err) {
+			toast.error("SEPA-Prüfung fehlgeschlagen", {
+				description: err instanceof Error ? err.message : "Please try again.",
+			});
+			return false;
+		} finally {
+			setValidatingBatchId(null);
+		}
+	}, []);
 
 	const handleExport = useCallback(async (batchId: string) => {
 		setExportingBatchId(batchId);
 		try {
+			const isValid = await handleValidate(batchId);
+			if (!isValid) return;
+
 			const result = await client.paymentBatches.exportSepa({ id: batchId });
 			const blob = new Blob([result.xml], { type: "application/xml" });
 			const url = URL.createObjectURL(blob);
@@ -48,14 +84,16 @@ export default function SepaExportPage() {
 			toast.success("SEPA file ready", {
 				description: `Downloaded ${result.fileName}`,
 			});
-			setExportingBatchId(null);
 		} catch (err) {
+			const errorMessage =
+				err instanceof ORPCError ? err.message : err instanceof Error ? err.message : "Please try again.";
 			toast.error("SEPA-Datei konnte nicht exportiert werden", {
-				description: err instanceof Error ? err.message : "Please try again.",
+				description: errorMessage,
 			});
+		} finally {
 			setExportingBatchId(null);
 		}
-	}, []);
+	}, [handleValidate]);
 
 	return (
 		<div className="flex flex-col gap-8">
@@ -101,7 +139,9 @@ export default function SepaExportPage() {
 					data={data ?? []}
 					loading={isPending}
 					onExportSepa={handleExport}
+					onValidateSepa={handleValidate}
 					exportingBatchId={exportingBatchId}
+					validatingBatchId={validatingBatchId}
 				/>
 			)}
 		</div>

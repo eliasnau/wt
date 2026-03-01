@@ -27,6 +27,26 @@ type RemittanceContext = {
   joinDate: string;
 };
 
+type SepaPaymentRow = {
+  id: string;
+  totalAmount: string;
+  contractMandateId: string | null;
+  contractMandateSignatureDate: string | null;
+  memberId: string;
+  memberFirstName: string;
+  memberLastName: string;
+  memberIban: string | null;
+  memberBic: string | null;
+  memberCardHolder: string | null;
+};
+
+type SepaValidationIssue = {
+  paymentId: string;
+  memberId: string;
+  memberName: string;
+  reasons: string[];
+};
+
 function applyTemplate(template: string, context: RemittanceContext): string {
   return template
     .replace(/%MONTH%/g, context.monthName)
@@ -56,6 +76,61 @@ function buildEndToEndId(prefix: string, paymentId: string): string {
   const trimmedPrefix = prefix.slice(0, 20);
   const trimmedPayment = paymentId.replace(/-/g, "").slice(0, 14);
   return `${trimmedPrefix}.${trimmedPayment}`.slice(0, 35);
+}
+
+function normalizeIban(value: string | null | undefined): string {
+  return (value ?? "").replace(/\s+/g, "").toUpperCase();
+}
+
+function normalizeBic(value: string | null | undefined): string {
+  return (value ?? "").replace(/\s+/g, "").toUpperCase();
+}
+
+function normalizeRequiredText(value: string | null | undefined): string {
+  return (value ?? "").trim();
+}
+
+function validateSepaPayments(
+  payments: SepaPaymentRow[],
+  validateIBAN: (value: string) => boolean,
+): SepaValidationIssue[] {
+  const bicRegex = /^[A-Z0-9]{8}([A-Z0-9]{3})?$/;
+  const issues: SepaValidationIssue[] = [];
+
+  for (const paymentRow of payments) {
+    const memberName =
+      `${paymentRow.memberFirstName} ${paymentRow.memberLastName}`.trim() ||
+      paymentRow.memberId;
+    const iban = normalizeIban(paymentRow.memberIban);
+    const bic = normalizeBic(paymentRow.memberBic);
+    const cardHolder = normalizeRequiredText(paymentRow.memberCardHolder);
+    const mandateId = normalizeRequiredText(paymentRow.contractMandateId);
+    const amount = Number.parseFloat(paymentRow.totalAmount);
+    const reasons: string[] = [];
+
+    if (!iban) reasons.push("missing IBAN");
+    else if (!validateIBAN(iban)) reasons.push("invalid IBAN");
+
+    if (!bic) reasons.push("missing BIC");
+    else if (!bicRegex.test(bic)) reasons.push("invalid BIC");
+
+    if (!cardHolder) reasons.push("missing account holder");
+    if (!mandateId) reasons.push("missing mandate ID");
+    if (!paymentRow.contractMandateSignatureDate)
+      reasons.push("missing mandate signature date");
+    if (!Number.isFinite(amount) || amount <= 0) reasons.push("invalid amount");
+
+    if (reasons.length > 0) {
+      issues.push({
+        paymentId: paymentRow.id,
+        memberId: paymentRow.memberId,
+        memberName,
+        reasons,
+      });
+    }
+  }
+
+  return issues;
 }
 
 const createPaymentBatchSchema = z.object({
@@ -525,47 +600,18 @@ export const paymentBatchesRouter = {
       const sepa = await loadSepaModule();
       validateCreditorDetails(sepa, sepaSettings);
 
-      const invalidMembers: string[] = [];
-      const bicRegex = /^[A-Z0-9]{8}([A-Z0-9]{3})?$/;
-
-      for (const paymentRow of payments) {
-        if (
-          !paymentRow.memberIban ||
-          !paymentRow.memberBic ||
-          !paymentRow.memberCardHolder ||
-          !paymentRow.contractMandateId ||
-          !paymentRow.contractMandateSignatureDate
-        ) {
-          invalidMembers.push(
-            `${paymentRow.memberFirstName} ${paymentRow.memberLastName}`.trim(),
-          );
-          continue;
-        }
-
-        if (!sepa.validateIBAN(paymentRow.memberIban)) {
-          invalidMembers.push(
-            `${paymentRow.memberFirstName} ${paymentRow.memberLastName}`.trim(),
-          );
-        }
-
-        if (!bicRegex.test(paymentRow.memberBic)) {
-          invalidMembers.push(
-            `${paymentRow.memberFirstName} ${paymentRow.memberLastName}`.trim(),
-          );
-        }
-
-        const amount = Number.parseFloat(paymentRow.totalAmount);
-        if (!Number.isFinite(amount) || amount <= 0) {
-          invalidMembers.push(
-            `${paymentRow.memberFirstName} ${paymentRow.memberLastName}`.trim(),
-          );
-        }
-      }
+      const invalidMembers = validateSepaPayments(
+        payments,
+        (iban) => sepa.validateIBAN(iban),
+      );
 
       if (invalidMembers.length > 0) {
-        const sample = invalidMembers.slice(0, 3).join(", ");
+        const sample = invalidMembers
+          .slice(0, 3)
+          .map((item) => `${item.memberName} (${item.reasons.join(", ")})`)
+          .join(", ");
         throw new ORPCError("BAD_REQUEST", {
-          message: `SEPA export blocked. ${invalidMembers.length} member records are missing valid bank details or amounts. Fix them and try again. Example(s): ${sample}`,
+          message: `SEPA export blocked. ${invalidMembers.length} member records are invalid. Fix them and try again. Example(s): ${sample}`,
         });
       }
 
@@ -597,8 +643,16 @@ export const paymentBatchesRouter = {
 
       for (const paymentRow of payments) {
         const amount = Number.parseFloat(paymentRow.totalAmount);
+        const normalizedIban = normalizeIban(paymentRow.memberIban);
+        const normalizedBic = normalizeBic(paymentRow.memberBic);
+        const normalizedMandateId = normalizeRequiredText(
+          paymentRow.contractMandateId,
+        );
+        const normalizedCardHolder = normalizeRequiredText(
+          paymentRow.memberCardHolder,
+        );
         const memberName =
-          paymentRow.memberCardHolder ||
+          normalizedCardHolder ||
           `${paymentRow.memberFirstName} ${paymentRow.memberLastName}`.trim();
         const joinDate = new Date(paymentRow.contractStartDate)
           .toISOString()
@@ -643,9 +697,9 @@ export const paymentBatchesRouter = {
 
         const tx = info.createTransaction();
         tx.debtorName = memberName;
-        tx.debtorIBAN = paymentRow.memberIban;
-        tx.debtorBIC = paymentRow.memberBic;
-        tx.mandateId = normalizeSepaId(paymentRow.contractMandateId, 35);
+        tx.debtorIBAN = normalizedIban;
+        tx.debtorBIC = normalizedBic;
+        tx.mandateId = normalizeSepaId(normalizedMandateId, 35);
         tx.mandateSignatureDate = new Date(
           `${paymentRow.contractMandateSignatureDate}T00:00:00.000Z`,
         );
@@ -679,4 +733,84 @@ export const paymentBatchesRouter = {
       };
     })
     .route({ method: "GET", path: "/payment-batches/:id/sepa" }),
+
+  validateSepaExport: protectedProcedure
+    .use(rateLimitMiddleware(5))
+    .use(requirePermission({ paymentBatches: ["download"] }))
+    .input(batchIdSchema)
+    .handler(async ({ input, context }) => {
+      const organizationId = context.session.activeOrganizationId!;
+
+      const [batch] = await db
+        .select({
+          id: paymentBatch.id,
+        })
+        .from(paymentBatch)
+        .where(
+          and(
+            eq(paymentBatch.id, input.id),
+            eq(paymentBatch.organizationId, organizationId),
+          ),
+        )
+        .limit(1);
+
+      if (!batch) {
+        throw new ORPCError("NOT_FOUND", {
+          message: "Payment batch not found",
+        });
+      }
+
+      const [sepaRow] = await db
+        .select()
+        .from(organizationSettings)
+        .where(eq(organizationSettings.organizationId, organizationId))
+        .limit(1);
+
+      const sepaSettings = requireSepaSettings(sepaRow);
+      const sepa = await loadSepaModule();
+      validateCreditorDetails(sepa, sepaSettings);
+
+      const payments = await db
+        .select({
+          id: payment.id,
+          totalAmount: payment.totalAmount,
+          contractMandateId: contract.mandateId,
+          contractMandateSignatureDate: contract.mandateSignatureDate,
+          memberId: clubMember.id,
+          memberFirstName: clubMember.firstName,
+          memberLastName: clubMember.lastName,
+          memberIban: clubMember.iban,
+          memberBic: clubMember.bic,
+          memberCardHolder: clubMember.cardHolder,
+        })
+        .from(payment)
+        .innerJoin(contract, eq(payment.contractId, contract.id))
+        .innerJoin(clubMember, eq(contract.memberId, clubMember.id))
+        .where(
+          and(
+            eq(payment.batchId, input.id),
+            eq(contract.organizationId, organizationId),
+          ),
+        )
+        .orderBy(clubMember.lastName, clubMember.firstName);
+
+      if (payments.length === 0) {
+        throw new ORPCError("BAD_REQUEST", {
+          message: "No payments found for this batch",
+        });
+      }
+
+      const invalidMembers = validateSepaPayments(
+        payments,
+        (iban) => sepa.validateIBAN(iban),
+      );
+
+      return {
+        valid: invalidMembers.length === 0,
+        totalPayments: payments.length,
+        invalidCount: invalidMembers.length,
+        invalidMembers,
+      };
+    })
+    .route({ method: "GET", path: "/payment-batches/:id/sepa/validate" }),
 };
