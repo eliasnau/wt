@@ -195,12 +195,13 @@ export function CreateSelfServiceSheet({ onCreated }: CreateSelfServiceSheetProp
                 Abrechnung
               </label>
               <Select
+                items={BILLING_CYCLE_ITEMS}
                 value={billingCycle}
                 onValueChange={(value) =>
                   setBillingCycle(value as "monthly" | "quarterly" | "yearly")
                 }
               >
-                <SelectTrigger id="ss-billing" items={BILLING_CYCLE_ITEMS}>
+                <SelectTrigger id="ss-billing">
                   <SelectValue placeholder="Abrechnung" />
                 </SelectTrigger>
                 <SelectPopup>
@@ -285,6 +286,12 @@ export function CreateSelfServiceSheet({ onCreated }: CreateSelfServiceSheetProp
                     <div className="space-y-2">
                       <label className="font-medium text-xs">Gruppe *</label>
                       <Select
+                        items={allGroups.map((group) => ({
+                          value: group.id,
+                          label: group.name,
+                          disabled:
+                            selectedGroupIds.has(group.id) && row.groupId !== group.id,
+                        }))}
                         value={row.groupId}
                         onValueChange={(value) =>
                           setGroups((prev) =>
@@ -296,14 +303,7 @@ export function CreateSelfServiceSheet({ onCreated }: CreateSelfServiceSheetProp
                           )
                         }
                       >
-                        <SelectTrigger
-                          items={allGroups.map((group) => ({
-                            value: group.id,
-                            label: group.name,
-                            disabled:
-                              selectedGroupIds.has(group.id) && row.groupId !== group.id,
-                          }))}
-                        >
+                        <SelectTrigger>
                           <SelectValue placeholder="Gruppe waehlen" />
                         </SelectTrigger>
                         <SelectPopup>
