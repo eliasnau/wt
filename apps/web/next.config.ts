@@ -13,6 +13,10 @@ const nextConfig: NextConfig = {
   async rewrites() {
     return [
       {
+        source: "/dashboard/members",
+        destination: "/dashboard/membersv2",
+      },
+      {
         source: "/ph/static/:path*",
         destination: "https://eu-assets.i.posthog.com/static/:path*",
       },
