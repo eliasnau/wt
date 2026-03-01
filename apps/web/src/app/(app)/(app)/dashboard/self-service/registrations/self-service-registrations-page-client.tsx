@@ -2,10 +2,11 @@
 
 import { ORPCError } from "@orpc/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { AlertCircle, CheckCircle2, Copy, Eye, Trash2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Copy, Eye, QrCodeIcon, Trash2 } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 import { useState } from "react";
+import QRCode from "react-qr-code";
 import { toast } from "sonner";
 import {
   AlertDialog,
@@ -135,6 +136,7 @@ export function SelfServiceRegistrationsPageClient() {
   const [activeTab, setActiveTab] = useState<SubmissionStatusTab>("submitted");
   const [selectedRegistration, setSelectedRegistration] = useState<RegistrationRow | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<RegistrationRow | null>(null);
+  const [qrTarget, setQrTarget] = useState<RegistrationRow | null>(null);
 
   const {
     data: submittedRegistrations = [],
@@ -203,6 +205,10 @@ export function SelfServiceRegistrationsPageClient() {
     await Promise.all([refetchSubmitted(), refetchCreated(), refetchConfigs()]);
     queryClient.invalidateQueries();
   };
+
+  const registrationUrl = qrTarget
+    ? `${typeof window !== "undefined" ? window.location.origin : ""}/member-registration/${qrTarget.code}`
+    : "";
 
   return (
     <div className="flex flex-col gap-8">
@@ -315,6 +321,14 @@ export function SelfServiceRegistrationsPageClient() {
                             >
                               <Eye data-icon="inline-start" />
                               Ansehen
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setQrTarget(item)}
+                            >
+                              <QrCodeIcon data-icon="inline-start" />
+                              QR
                             </Button>
                             <Button
                               size="sm"
@@ -472,6 +486,63 @@ export function SelfServiceRegistrationsPageClient() {
               )}
             </FramePanel>
           </Frame>
+
+          <Sheet
+            open={Boolean(qrTarget)}
+            onOpenChange={(open) => {
+              if (!open) setQrTarget(null);
+            }}
+          >
+            <SheetPopup inset>
+              <SheetHeader>
+                <SheetTitle>QR-Code teilen</SheetTitle>
+              </SheetHeader>
+              <SheetPanel className="space-y-6">
+                <div className="flex justify-center">
+                  <div className="rounded-xl border bg-white p-4">
+                    {registrationUrl ? <QRCode value={registrationUrl} size={220} /> : null}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-muted-foreground text-xs">Code</p>
+                  <div className="rounded-lg border px-3 py-2 font-medium text-sm">
+                    {qrTarget?.code || "-"}
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-muted-foreground text-xs">Link</p>
+                  <div className="rounded-lg border px-3 py-2 text-sm break-all">
+                    {registrationUrl}
+                  </div>
+                </div>
+              </SheetPanel>
+              <SheetFooter>
+                <Button
+                  variant="outline"
+                  onClick={async () => {
+                    if (!qrTarget) return;
+                    await navigator.clipboard.writeText(qrTarget.code);
+                    toast.success("Code kopiert");
+                  }}
+                >
+                  <Copy data-icon="inline-start" />
+                  Code kopieren
+                </Button>
+                <Button
+                  onClick={async () => {
+                    if (!registrationUrl) return;
+                    await navigator.clipboard.writeText(registrationUrl);
+                    toast.success("Link kopiert");
+                  }}
+                >
+                  <Copy data-icon="inline-start" />
+                  Link kopieren
+                </Button>
+              </SheetFooter>
+            </SheetPopup>
+          </Sheet>
 
           <Sheet
             open={Boolean(selectedRegistration)}

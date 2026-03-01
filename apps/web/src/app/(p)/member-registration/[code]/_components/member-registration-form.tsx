@@ -305,20 +305,18 @@ export function MemberRegistrationForm({
           </p>
           <div className="flex items-center gap-3 rounded-lg border bg-background/70 p-3">
             <OrganizationAvatar
-              id="org-unknown"
-              name="Organisation"
-              logo={null}
+              id={data?.organization?.id || "org-unknown"}
+              name={data?.organization?.name || "Organisation"}
+              logo={data?.organization?.logo || null}
               className="size-10"
             />
             <div className="min-w-0">
-              <p className="truncate font-medium text-sm">Mitglieder-Onboarding</p>
+              <p className="truncate font-medium text-sm">
+                {data?.organization?.name || "Organisation"}
+              </p>
               <p className="text-muted-foreground text-xs">Mitgliedsanmeldung</p>
             </div>
           </div>
-          <p className="max-w-sm text-muted-foreground text-sm">
-            Gib persönliche Daten und Zahlungsdaten ein. Gruppenzuordnung und
-            Vertragskosten sind für diese Organisation bereits festgelegt.
-          </p>
         </div>
 
         <div className="absolute inset-0">

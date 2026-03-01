@@ -4,6 +4,7 @@ import {
   contract,
   group,
   groupMember,
+  organization,
   selfRegistration,
 } from "../schema";
 
@@ -284,6 +285,18 @@ export const DB = {
               inArray(group.id, groupIds),
             ),
           );
+      },
+      getOrganizationById: async ({ id }: { id: string }) => {
+        const [result] = await db
+          .select({
+            id: organization.id,
+            name: organization.name,
+            logo: organization.logo,
+          })
+          .from(organization)
+          .where(eq(organization.id, id))
+          .limit(1);
+        return result || null;
       },
       listSubmissionsByOrganization: async ({
         organizationId,

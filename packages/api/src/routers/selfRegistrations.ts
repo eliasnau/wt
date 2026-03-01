@@ -438,6 +438,10 @@ export const selfRegistrationsRouter = {
         });
       }
 
+      const organization = await DB.query.selfRegistrations.getOrganizationById({
+        id: config.organizationId,
+      });
+
       return {
         id: config.id,
         name: config.name,
@@ -450,6 +454,7 @@ export const selfRegistrationsRouter = {
         contractStartDate: config.contractStartDate,
         notes: config.notes,
         groups: config.groupsSnapshot,
+        organization,
       };
     })
     .route({ method: "GET", path: "/self-registrations/by-code/:code" }),

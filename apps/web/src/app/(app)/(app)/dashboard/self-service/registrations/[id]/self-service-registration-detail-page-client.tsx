@@ -43,6 +43,7 @@ type RegistrationFormState = {
   accountHolder: string;
   iban: string;
   bic: string;
+  contractStartMonth: string;
 };
 
 export function SelfServiceRegistrationDetailPageClient({ id }: Props) {
@@ -71,6 +72,9 @@ export function SelfServiceRegistrationDetailPageClient({ id }: Props) {
       accountHolder: data.accountHolder || "",
       iban: data.iban || "",
       bic: data.bic || "",
+      contractStartMonth: data.contractStartDate
+        ? String(data.contractStartDate).slice(0, 7)
+        : "",
     };
   }, [data, form]);
 
@@ -82,7 +86,6 @@ export function SelfServiceRegistrationDetailPageClient({ id }: Props) {
         lastName: next.lastName,
         email: next.email,
         phone: next.phone,
-        birthdate: next.birthdate,
         street: next.street,
         city: next.city,
         state: next.state,
@@ -91,6 +94,10 @@ export function SelfServiceRegistrationDetailPageClient({ id }: Props) {
         accountHolder: next.accountHolder,
         iban: next.iban,
         bic: next.bic,
+        contractStartDate: next.contractStartMonth
+          ? `${next.contractStartMonth}-01`
+          : undefined,
+        birthdate: next.birthdate || undefined,
       }),
     onSuccess: async () => {
       toast.success("Registrierung gespeichert");
@@ -168,6 +175,16 @@ export function SelfServiceRegistrationDetailPageClient({ id }: Props) {
           <div className="grid gap-3 sm:grid-cols-2">
             <Input value={data.code} readOnly />
             <Input value={data.memberId || "Noch kein Mitglied erstellt"} readOnly />
+            <Input
+              type="month"
+              value={hydratedForm?.contractStartMonth || ""}
+              onChange={(event) =>
+                setForm((prev) => ({
+                  ...(prev || (hydratedForm as RegistrationFormState)),
+                  contractStartMonth: event.target.value,
+                }))
+              }
+            />
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
