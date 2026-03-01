@@ -105,7 +105,6 @@ function validateSepaPayments(
     const bic = normalizeBic(paymentRow.memberBic);
     const cardHolder = normalizeRequiredText(paymentRow.memberCardHolder);
     const mandateId = normalizeRequiredText(paymentRow.contractMandateId);
-    const amount = Number.parseFloat(paymentRow.totalAmount);
     const reasons: string[] = [];
 
     if (!iban) reasons.push("missing IBAN");
@@ -118,7 +117,6 @@ function validateSepaPayments(
     if (!mandateId) reasons.push("missing mandate ID");
     if (!paymentRow.contractMandateSignatureDate)
       reasons.push("missing mandate signature date");
-    if (!Number.isFinite(amount) || amount <= 0) reasons.push("invalid amount");
 
     if (reasons.length > 0) {
       issues.push({
@@ -600,10 +598,36 @@ export const paymentBatchesRouter = {
       const sepa = await loadSepaModule();
       validateCreditorDetails(sepa, sepaSettings);
 
-      const invalidMembers = validateSepaPayments(
-        payments,
-        (iban) => sepa.validateIBAN(iban),
+      const positiveAmountPayments = payments.filter(
+        (paymentRow) => Number.parseFloat(paymentRow.totalAmount) > 0,
       );
+      const invalidAmountMembers = payments
+        .filter((paymentRow) => {
+          const amount = Number.parseFloat(paymentRow.totalAmount);
+          return !Number.isFinite(amount) || amount < 0;
+        })
+        .map((paymentRow) => ({
+          paymentId: paymentRow.id,
+          memberId: paymentRow.memberId,
+          memberName:
+            `${paymentRow.memberFirstName} ${paymentRow.memberLastName}`.trim(),
+          reasons: ["invalid amount"],
+        }));
+
+      if (positiveAmountPayments.length === 0) {
+        throw new ORPCError("BAD_REQUEST", {
+          message:
+            "SEPA export blocked. This batch has no payable transactions (amount > 0).",
+        });
+      }
+
+      const invalidMembers = [
+        ...validateSepaPayments(
+          positiveAmountPayments,
+          (iban) => sepa.validateIBAN(iban),
+        ),
+        ...invalidAmountMembers,
+      ];
 
       if (invalidMembers.length > 0) {
         const sample = invalidMembers
@@ -641,7 +665,7 @@ export const paymentBatchesRouter = {
         new Date(batch.billingMonth),
       );
 
-      for (const paymentRow of payments) {
+      for (const paymentRow of positiveAmountPayments) {
         const amount = Number.parseFloat(paymentRow.totalAmount);
         const normalizedIban = normalizeIban(paymentRow.memberIban);
         const normalizedBic = normalizeBic(paymentRow.memberBic);
@@ -800,14 +824,35 @@ export const paymentBatchesRouter = {
         });
       }
 
-      const invalidMembers = validateSepaPayments(
-        payments,
-        (iban) => sepa.validateIBAN(iban),
+      const positiveAmountPayments = payments.filter(
+        (paymentRow) => Number.parseFloat(paymentRow.totalAmount) > 0,
       );
+      const invalidAmountMembers = payments
+        .filter((paymentRow) => {
+          const amount = Number.parseFloat(paymentRow.totalAmount);
+          return !Number.isFinite(amount) || amount < 0;
+        })
+        .map((paymentRow) => ({
+          paymentId: paymentRow.id,
+          memberId: paymentRow.memberId,
+          memberName:
+            `${paymentRow.memberFirstName} ${paymentRow.memberLastName}`.trim(),
+          reasons: ["invalid amount"],
+        }));
+
+      const invalidMembers = [
+        ...validateSepaPayments(
+          positiveAmountPayments,
+          (iban) => sepa.validateIBAN(iban),
+        ),
+        ...invalidAmountMembers,
+      ];
 
       return {
         valid: invalidMembers.length === 0,
         totalPayments: payments.length,
+        payablePayments: positiveAmountPayments.length,
+        skippedZeroAmountCount: payments.length - positiveAmountPayments.length,
         invalidCount: invalidMembers.length,
         invalidMembers,
       };
