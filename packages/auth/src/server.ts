@@ -8,7 +8,12 @@ import {
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { betterAuth } from "better-auth/minimal";
 import { nextCookies } from "better-auth/next-js";
-import { haveIBeenPwned, organization, twoFactor } from "better-auth/plugins";
+import {
+  admin as adminPlugin,
+  haveIBeenPwned,
+  organization,
+  twoFactor,
+} from "better-auth/plugins";
 import { ac, admin, member, owner } from "./permissions";
 import { manageSessions } from "./plugins/manageSessions";
 import { checkBotId } from "botid/server";
@@ -210,6 +215,7 @@ export const auth = betterAuth({
   },
   plugins: [
     passkey(),
+    adminPlugin(),
     organization({
       ac,
       requireEmailVerificationOnInvitation: true,

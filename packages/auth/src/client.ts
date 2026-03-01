@@ -1,6 +1,7 @@
 import { passkeyClient } from "@better-auth/passkey/client";
 import { APIError } from "better-auth";
 import {
+	adminClient,
 	inferAdditionalFields,
 	organizationClient,
 	twoFactorClient,
@@ -14,6 +15,7 @@ export const authClient = createAuthClient({
 	plugins: [
 		passkeyClient(),
 		twoFactorClient(),
+		adminClient(),
 		organizationClient({
 			ac,
 			roles: {
