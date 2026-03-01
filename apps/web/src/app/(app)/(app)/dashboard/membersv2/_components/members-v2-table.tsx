@@ -10,10 +10,14 @@ import {
 import {
 	EditIcon,
 	EyeIcon,
+	ExternalLinkIcon,
+	MailIcon,
 	MoreVerticalIcon,
+	PhoneIcon,
 	UserIcon,
 	UserXIcon,
 } from "lucide-react";
+import Link from "next/link";
 import { type CSSProperties, useMemo, useState } from "react";
 import { CopyableTableCell } from "@/components/table/copyable-table-cell";
 import { Badge } from "@/components/ui/badge";
@@ -111,20 +115,33 @@ const createColumns = (
 			const member = row.original;
 			const status = member.membershipStatus;
 			const effectiveDate = member.contract?.cancellationEffectiveDate;
+			const memberHref = `/dashboard/members/${member.id}`;
 
 			if (status === "active") {
-				return <span>{member.firstName}</span>;
+				return (
+					<Link
+						href={memberHref}
+						className="font-medium hover:underline focus-visible:underline"
+					>
+						{member.firstName}
+					</Link>
+				);
 			}
 
 			const variant = status === "cancelled" ? "secondary" : "outline";
 			const dotClass = status === "cancelled" ? "bg-amber-500" : "bg-red-500";
 			const label = status === "cancelled" ? "Beendet" : "Gekündigt (aktiv)";
 
-			return (
-				<div className="flex items-center gap-2">
-					<span>{member.firstName}</span>
-					<TooltipProvider>
-						<Tooltip>
+				return (
+					<div className="flex items-center gap-2">
+						<Link
+							href={memberHref}
+							className="font-medium hover:underline focus-visible:underline"
+						>
+							{member.firstName}
+						</Link>
+						<TooltipProvider>
+							<Tooltip>
 							<TooltipTrigger render={<Badge variant={variant} />}>
 								<span
 									aria-hidden="true"
@@ -187,37 +204,74 @@ const createColumns = (
 		id: "actions",
 		header: "Aktionen",
 		enableSorting: false,
-		cell: ({ row }) => {
-			const member = row.original;
-			const isCancelled = member.contract?.cancelledAt !== null;
+			cell: ({ row }) => {
+				const member = row.original;
+				const isCancelled = member.contract?.cancelledAt !== null;
+				const memberHref = `/dashboard/members/${member.id}`;
+				const hasEmail =
+					typeof member.email === "string" && member.email.trim().length > 0;
+				const hasPhone =
+					typeof member.phone === "string" && member.phone.trim().length > 0;
 
-			return (
-				<div className="flex items-center justify-end gap-2">
+				return (
+					<div className="flex items-center justify-end gap-2">
 					<Button
 						size="sm"
 						variant="outline"
 						onClick={() => onViewMember(member)}
-					>
-						<EyeIcon />
-						Details
-					</Button>
-					<Menu>
+						>
+							<EyeIcon />
+							Info
+						</Button>
+						<Menu>
 						<MenuTrigger
 							render={
 								<Button size="sm" variant="outline">
 									<MoreVerticalIcon />
 								</Button>
 							}
-						/>
-						<MenuPopup align="end">
-							<MenuItem onClick={() => console.log("Edit member:", member)}>
-								<EditIcon />
-								Bearbeiten
-							</MenuItem>
-							<MenuSeparator />
-							<MenuItem
-								variant="destructive"
-								disabled={isCancelled}
+							/>
+								<MenuPopup align="end">
+									<MenuItem
+										onClick={() =>
+											window.open(memberHref, "_blank", "noopener,noreferrer")
+										}
+									>
+										<ExternalLinkIcon />
+										Open in new tab
+									</MenuItem>
+									<MenuItem
+										onClick={() => {
+											window.location.href = memberHref;
+										}}
+									>
+										<EditIcon />
+										Bearbeiten
+									</MenuItem>
+									<MenuSeparator />
+									<MenuItem
+										disabled={!hasEmail}
+										onClick={() => {
+											if (!hasEmail) return;
+										window.location.href = `mailto:${member.email}`;
+									}}
+								>
+									<MailIcon />
+									E-Mail senden
+								</MenuItem>
+								<MenuItem
+									disabled={!hasPhone}
+									onClick={() => {
+										if (!hasPhone) return;
+										window.location.href = `tel:${member.phone}`;
+									}}
+								>
+										<PhoneIcon />
+										Anrufen
+									</MenuItem>
+									<MenuItem
+									variant="destructive"
+									disabled={isCancelled}
 								onClick={() => onCancelMember(member)}
 							>
 								<UserXIcon />

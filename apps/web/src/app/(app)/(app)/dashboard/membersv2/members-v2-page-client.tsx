@@ -6,13 +6,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import {
 	AlertCircle,
 	CalendarIcon,
-	DownloadIcon,
-	EyeIcon,
-	Loader2,
-	MoreVerticalIcon,
 	PlusIcon,
-	SearchIcon,
-	SlidersHorizontalIcon,
 	Trash2Icon,
 	XIcon,
 } from "lucide-react";
@@ -25,10 +19,8 @@ import {
 } from "nuqs";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { DataTableFacetedFilter } from "@/components/table/data-table-faceted-filter";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
-import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 import {
 	Dialog,
 	DialogContent,
@@ -52,12 +44,10 @@ import {
 	InputGroupInput,
 } from "@/components/ui/input-group";
 import {
-	Menu,
-	MenuCheckboxItem,
-	MenuPopup,
-	MenuTrigger,
-} from "@/components/ui/menu";
-import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
+	Popover,
+	PopoverPopup,
+	PopoverTrigger,
+} from "@/components/ui/popover";
 import {
 	Select,
 	SelectItem,
@@ -65,12 +55,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import {
-	Tooltip,
-	TooltipContent,
-	TooltipProvider,
-	TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { useDebounce } from "@/hooks/use-debounce";
 import { orpc } from "@/utils/orpc";
 import {
@@ -81,6 +65,7 @@ import {
 	HeaderTitle,
 } from "../_components/page-header";
 import { CreateMemberButton } from "../members/_components/create-member-button";
+import { MembersV2Controls } from "./_components/members-v2-controls";
 import { MembersV2Table } from "./_components/members-v2-table";
 
 type QueryFilter = NonNullable<ListMembersAdvancedInput["filters"]>[number];
@@ -559,6 +544,7 @@ export function MembersV2PageClient() {
 	const [filters, setFilters] = useState<QueryBuilderRow[]>([]);
 	const [filterMode, setFilterMode] = useState<"and" | "or">("and");
 	const [advancedOpen, setAdvancedOpen] = useState(false);
+	const [advancedSheetOpen, setAdvancedSheetOpen] = useState(false);
 	const [localSearch, setLocalSearch] = useState(search);
 	const [savedViews, setSavedViews] = useState<SavedMembersView[]>(() => {
 		if (typeof window === "undefined") {
@@ -651,6 +637,14 @@ export function MembersV2PageClient() {
 		orpc.groups.list.queryOptions({
 			input: {},
 		}),
+	);
+	const groupFilterOptions = useMemo(
+		() =>
+			(groupsData ?? []).map((group) => ({
+				label: group.name,
+				value: group.id,
+			})),
+		[groupsData],
 	);
 
 	const exportCsvMutation = useMutation(
@@ -886,8 +880,218 @@ export function MembersV2PageClient() {
 		});
 	};
 
+	const advancedFiltersPanel = (
+		<div className="space-y-3">
+			<div className="flex flex-wrap items-center gap-2">
+				<span className="font-medium text-sm">Advanced Query</span>
+				<Select
+					items={FILTER_MODE_OPTIONS}
+					value={filterMode}
+					onValueChange={(value) => {
+						setFilterMode(value as "and" | "or");
+						setQueryState({ page: 1 });
+					}}
+				>
+					<SelectTrigger size="sm" className="min-w-36">
+						<SelectValue />
+					</SelectTrigger>
+					<SelectPopup>
+						{FILTER_MODE_OPTIONS.map((option) => (
+							<SelectItem key={option.value} value={option.value}>
+								{option.label}
+							</SelectItem>
+						))}
+					</SelectPopup>
+				</Select>
+				<Button
+					variant="outline"
+					size="sm"
+					onClick={() => {
+						setFilters((current) => [...current, createFilterRow()]);
+						setQueryState({ page: 1 });
+					}}
+				>
+					<PlusIcon />
+					Bedingung hinzufügen
+				</Button>
+				{filters.length > 0 && (
+					<Button
+						variant="ghost"
+						size="sm"
+						onClick={() => {
+							setFilters([]);
+							setQueryState({ page: 1 });
+						}}
+					>
+						<XIcon />
+						Advanced leeren
+					</Button>
+				)}
+			</div>
+
+			{filters.length === 0 ? (
+				<p className="text-muted-foreground text-sm">
+					Keine zusätzlichen Bedingungen. Füge eine Bedingung hinzu, z. B.
+					<code>email contains @gmail.com</code> oder
+					<code>city eq Berlin</code>.
+				</p>
+			) : (
+				<div className="space-y-2">
+					{filters.map((filter) => {
+						const availableOperators = getOperatorsForField(filter.field);
+						const dateField = isDateField(filter.field);
+						const selectedDate = dateField
+							? parseDateFilterValue(filter.value)
+							: undefined;
+						const requiresValue = !NULL_OPERATORS.has(filter.operator);
+						const inMode = filter.operator === "in";
+
+						return (
+							<div
+								key={filter.id}
+								className="grid gap-2 rounded-lg border bg-background p-2 md:grid-cols-[minmax(180px,1fr)_minmax(150px,0.8fr)_minmax(220px,1fr)_auto]"
+							>
+								<Select
+									items={FILTER_FIELDS}
+									value={filter.field}
+									onValueChange={(value) => {
+										const nextField = value as FilterField;
+										const nextOperators = getOperatorsForField(nextField);
+										const nextOperator =
+											nextOperators.find(
+												(operator) => operator.value === filter.operator,
+											)?.value ??
+											nextOperators[0]?.value ??
+											"eq";
+
+										updateFilter(filter.id, {
+											field: nextField,
+											operator: nextOperator,
+											value: isDateField(nextField) ? "" : filter.value,
+										});
+									}}
+								>
+									<SelectTrigger size="sm">
+										<SelectValue />
+									</SelectTrigger>
+									<SelectPopup>
+										{FILTER_FIELDS.map((option) => (
+											<SelectItem key={option.value} value={option.value}>
+												{option.label}
+											</SelectItem>
+										))}
+									</SelectPopup>
+								</Select>
+
+								<Select
+									items={availableOperators}
+									value={filter.operator}
+									onValueChange={(value) =>
+										updateFilter(filter.id, {
+											operator: value as FilterOperator,
+											value: NULL_OPERATORS.has(value as FilterOperator)
+												? ""
+												: filter.value,
+										})
+									}
+								>
+									<SelectTrigger size="sm">
+										<SelectValue />
+									</SelectTrigger>
+									<SelectPopup>
+										{availableOperators.map((option) => (
+											<SelectItem key={option.value} value={option.value}>
+												{option.label}
+											</SelectItem>
+										))}
+									</SelectPopup>
+								</Select>
+
+								{requiresValue ? (
+									dateField ? (
+										<Popover>
+											<PopoverTrigger
+												render={
+													<Button
+														variant="outline"
+														className="w-full justify-start text-left font-normal"
+													/>
+												}
+											>
+												<CalendarIcon />
+												{selectedDate ? (
+													<span>
+														{new Intl.DateTimeFormat("de-DE", {
+															dateStyle: "medium",
+														}).format(selectedDate)}
+													</span>
+												) : (
+													<span className="text-muted-foreground">
+														Datum wählen
+													</span>
+												)}
+											</PopoverTrigger>
+											<PopoverPopup align="start" className="w-auto p-0">
+												<Calendar
+													mode="single"
+													captionLayout="dropdown"
+													selected={selectedDate}
+													onSelect={(date) =>
+														updateFilter(filter.id, {
+															value: date ? formatDateFilterValue(date) : "",
+														})
+													}
+													fromYear={1950}
+													toYear={new Date().getFullYear() + 20}
+												/>
+											</PopoverPopup>
+										</Popover>
+									) : (
+										<InputGroup>
+											<InputGroupInput
+												type="text"
+												placeholder={
+													inMode
+														? "Werte mit Komma trennen (z.B. Berlin,Hamburg)"
+														: "Wert eingeben"
+												}
+												value={filter.value}
+												onChange={(event) =>
+													updateFilter(filter.id, {
+														value: event.target.value,
+													})
+												}
+											/>
+										</InputGroup>
+									)
+								) : (
+									<div className="flex items-center text-muted-foreground text-sm">
+										Kein Wert nötig
+									</div>
+								)}
+
+								<Button
+									variant="ghost"
+									size="sm"
+									onClick={() => {
+										setFilters((current) =>
+											current.filter((row) => row.id !== filter.id),
+										);
+										setQueryState({ page: 1 });
+									}}
+								>
+									<Trash2Icon />
+								</Button>
+							</div>
+						);
+					})}
+				</div>
+			)}
+		</div>
+	);
+
 	return (
-		<div className="flex flex-col gap-8">
+		<div className="flex flex-col gap-6">
 			<Header>
 				<HeaderContent>
 					<HeaderTitle>Mitglieder v2</HeaderTitle>
@@ -933,455 +1137,68 @@ export function MembersV2PageClient() {
 					</FramePanel>
 				</Frame>
 			) : (
-				<>
-						<div className="space-y-4">
-							<div className="flex items-center justify-between gap-3">
-								<div className="flex items-center gap-3">
-									<InputGroup className="w-[380px] max-w-[40vw]">
-										<InputGroupAddon>
-											<SearchIcon className="size-4" />
-										</InputGroupAddon>
-										<InputGroupInput
-											type="text"
-											placeholder="Suche über Name, E-Mail, Telefon, Adresse, Vertragsfelder..."
-											value={localSearch}
-											onChange={(event) => {
-												const next = event.target.value;
-												setLocalSearch(next);
-												debouncedSetSearch(next);
-											}}
-										/>
-										{localSearch !== "" && (
-											<InputGroupAddon
-												align="inline-end"
-												className="cursor-pointer"
-												onClick={() => {
-													setLocalSearch("");
-													setQueryState({ page: 1, search: "" });
-												}}
-											>
-												<XIcon className="size-4" />
-											</InputGroupAddon>
-										)}
-									</InputGroup>
-
-									<DataTableFacetedFilter
-										title="Gruppen"
-										options={(groupsData ?? []).map((group) => ({
-											label: group.name,
-											value: group.id,
-										}))}
-										selectedValues={groupIds}
-										buttonSize="default"
-										onValueChange={(nextGroupIds) => {
-											setQueryState({ page: 1, groupIds: nextGroupIds });
-										}}
-									/>
-								</div>
-
-								<div className="flex items-center gap-2">
-									<Button
-										variant="outline"
-										size="sm"
-										onClick={exportMembersCsv}
-										disabled={exportCsvMutation.isPending}
-									>
-										{exportCsvMutation.isPending ? (
-											<Loader2 className="size-4 animate-spin" />
-										) : (
-											<DownloadIcon />
-										)}
-										CSV export
-									</Button>
-									<Button
-										variant="outline"
-										size="sm"
-										onClick={() => setAdvancedOpen((open) => !open)}
-									>
-										<SlidersHorizontalIcon />
-										Advanced Builder
-										{compiledFilters.length > 0 ? ` (${compiledFilters.length})` : ""}
-									</Button>
-									<TooltipProvider>
-										<Tooltip>
-											<TooltipTrigger
-												render={
-													<Button
-														size="icon-sm"
-														variant="outline"
-														onClick={() => setSavedViewsDialogOpen(true)}
-													/>
-												}
-											>
-												<EyeIcon />
-											</TooltipTrigger>
-											<TooltipContent>Ansichten</TooltipContent>
-										</Tooltip>
-									</TooltipProvider>
-
-									<Menu>
-										<MenuTrigger
-											render={
-												<Button size="icon-sm" variant="outline">
-													<MoreVerticalIcon />
-												</Button>
-											}
-										/>
-										<MenuPopup align="end" className="w-[280px]">
-											<MenuCheckboxItem
-												variant="switch"
-												checked={includeActive}
-												onCheckedChange={(checked) =>
-													setQueryState({
-														page: 1,
-														includeActive: Boolean(checked),
-													})
-												}
-											>
-												Aktive Mitglieder
-											</MenuCheckboxItem>
-											<MenuCheckboxItem
-												variant="switch"
-												checked={includeCancelled}
-												onCheckedChange={(checked) =>
-													setQueryState({
-														page: 1,
-														includeCancelled: Boolean(checked),
-													})
-												}
-											>
-												Gekündigte Mitglieder
-											</MenuCheckboxItem>
-											<MenuCheckboxItem
-												variant="switch"
-												checked={includeCancelledButActive}
-												onCheckedChange={(checked) =>
-													setQueryState({
-														page: 1,
-														includeCancelledButActive: Boolean(checked),
-													})
-												}
-											>
-												Gekündigt, noch aktiv
-											</MenuCheckboxItem>
-										</MenuPopup>
-									</Menu>
-								</div>
-							</div>
-
-							<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-								<div className="flex items-center gap-2">
-									<span className="text-muted-foreground text-sm">
-										Sortierung
-									</span>
-									<Select
-										items={SORT_FIELDS}
-										value={safeSortField}
-										onValueChange={(value) => {
-											setQueryState({ page: 1, sortField: value });
-										}}
-									>
-										<SelectTrigger size="sm" className="min-w-44">
-											<SelectValue />
-										</SelectTrigger>
-										<SelectPopup>
-											{SORT_FIELDS.map((option) => (
-												<SelectItem key={option.value} value={option.value}>
-													{option.label}
-												</SelectItem>
-											))}
-										</SelectPopup>
-									</Select>
-									<Select
-										items={SORT_DIRECTIONS}
-										value={safeSortDirection}
-										onValueChange={(value) => {
-											setQueryState({ page: 1, sortDirection: value });
-										}}
-									>
-										<SelectTrigger size="sm" className="min-w-36">
-											<SelectValue />
-										</SelectTrigger>
-										<SelectPopup>
-											{SORT_DIRECTIONS.map((option) => (
-												<SelectItem key={option.value} value={option.value}>
-													{option.label}
-												</SelectItem>
-											))}
-										</SelectPopup>
-									</Select>
-								</div>
-								<div className="flex items-center gap-2">
-									{hasActiveFilters && (
-										<>
-											<Button
-												variant="outline"
-												size="sm"
-												onClick={requestSaveView}
-											>
-												Speichern
-											</Button>
-											<Button
-												variant="ghost"
-												size="sm"
-												onClick={resetAllFilters}
-											>
-												<XIcon />
-												Alles zurücksetzen
-											</Button>
-										</>
-									)}
-								</div>
-							</div>
-
-							<Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
-								<CollapsibleContent>
-								<Frame>
-									<FramePanel>
-										<div className="space-y-3">
-											<div className="flex flex-wrap items-center gap-2">
-												<span className="font-medium text-sm">
-													Advanced Query
-												</span>
-												<Select
-													items={FILTER_MODE_OPTIONS}
-													value={filterMode}
-													onValueChange={(value) => {
-														setFilterMode(value as "and" | "or");
-														setQueryState({ page: 1 });
-													}}
-												>
-													<SelectTrigger size="sm" className="min-w-36">
-														<SelectValue />
-													</SelectTrigger>
-													<SelectPopup>
-														{FILTER_MODE_OPTIONS.map((option) => (
-															<SelectItem
-																key={option.value}
-																value={option.value}
-															>
-																{option.label}
-															</SelectItem>
-														))}
-													</SelectPopup>
-												</Select>
-												<Button
-													variant="outline"
-													size="sm"
-													onClick={() => {
-														setFilters((current) => [
-															...current,
-															createFilterRow(),
-														]);
-														setQueryState({ page: 1 });
-													}}
-												>
-													<PlusIcon />
-													Bedingung hinzufügen
-												</Button>
-												{filters.length > 0 && (
-													<Button
-														variant="ghost"
-														size="sm"
-														onClick={() => {
-															setFilters([]);
-															setQueryState({ page: 1 });
-														}}
-													>
-														<XIcon />
-														Advanced leeren
-													</Button>
-												)}
-											</div>
-
-											{filters.length === 0 ? (
-												<p className="text-muted-foreground text-sm">
-													Keine zusätzlichen Bedingungen. Füge eine Bedingung
-													hinzu, z. B. <code>email contains @gmail.com</code>{" "}
-													oder
-													<code>city eq Berlin</code>.
-												</p>
-											) : (
-												<div className="space-y-2">
-													{filters.map((filter) => {
-														const availableOperators = getOperatorsForField(
-															filter.field,
-														);
-														const dateField = isDateField(filter.field);
-														const selectedDate = dateField
-															? parseDateFilterValue(filter.value)
-															: undefined;
-														const requiresValue = !NULL_OPERATORS.has(
-															filter.operator,
-														);
-														const inMode = filter.operator === "in";
-
-														return (
-															<div
-																key={filter.id}
-																className="grid gap-2 rounded-lg border bg-background p-2 md:grid-cols-[minmax(180px,1fr)_minmax(150px,0.8fr)_minmax(220px,1fr)_auto]"
-															>
-																<Select
-																	items={FILTER_FIELDS}
-																	value={filter.field}
-																	onValueChange={(value) => {
-																		const nextField = value as FilterField;
-																		const nextOperators =
-																			getOperatorsForField(nextField);
-																		const nextOperator =
-																			nextOperators.find(
-																				(operator) =>
-																					operator.value === filter.operator,
-																			)?.value ??
-																			nextOperators[0]?.value ??
-																			"eq";
-
-																		updateFilter(filter.id, {
-																			field: nextField,
-																			operator: nextOperator,
-																			value: isDateField(nextField)
-																				? ""
-																				: filter.value,
-																		});
-																	}}
-																>
-																	<SelectTrigger size="sm">
-																		<SelectValue />
-																	</SelectTrigger>
-																	<SelectPopup>
-																		{FILTER_FIELDS.map((option) => (
-																			<SelectItem
-																				key={option.value}
-																				value={option.value}
-																			>
-																				{option.label}
-																			</SelectItem>
-																		))}
-																	</SelectPopup>
-																</Select>
-
-																<Select
-																	items={availableOperators}
-																	value={filter.operator}
-																	onValueChange={(value) =>
-																		updateFilter(filter.id, {
-																			operator: value as FilterOperator,
-																			value: NULL_OPERATORS.has(
-																				value as FilterOperator,
-																			)
-																				? ""
-																				: filter.value,
-																		})
-																	}
-																>
-																	<SelectTrigger size="sm">
-																		<SelectValue />
-																	</SelectTrigger>
-																	<SelectPopup>
-																		{availableOperators.map((option) => (
-																			<SelectItem
-																				key={option.value}
-																				value={option.value}
-																			>
-																				{option.label}
-																			</SelectItem>
-																		))}
-																	</SelectPopup>
-																</Select>
-
-																{requiresValue ? (
-																	dateField ? (
-																		<Popover>
-																			<PopoverTrigger
-																				render={
-																					<Button
-																						variant="outline"
-																						className="w-full justify-start text-left font-normal"
-																					/>
-																				}
-																			>
-																				<CalendarIcon />
-																				{selectedDate ? (
-																					<span>
-																						{new Intl.DateTimeFormat("de-DE", {
-																							dateStyle: "medium",
-																						}).format(selectedDate)}
-																					</span>
-																				) : (
-																					<span className="text-muted-foreground">
-																						Datum wählen
-																					</span>
-																				)}
-																			</PopoverTrigger>
-																			<PopoverPopup
-																				align="start"
-																				className="w-auto p-0"
-																			>
-																				<Calendar
-																					mode="single"
-																					captionLayout="dropdown"
-																					selected={selectedDate}
-																					onSelect={(date) =>
-																						updateFilter(filter.id, {
-																							value: date
-																								? formatDateFilterValue(date)
-																								: "",
-																						})
-																					}
-																					fromYear={1950}
-																					toYear={new Date().getFullYear() + 20}
-																				/>
-																			</PopoverPopup>
-																		</Popover>
-																	) : (
-																		<InputGroup>
-																			<InputGroupInput
-																				type="text"
-																				placeholder={
-																					inMode
-																						? "Werte mit Komma trennen (z.B. Berlin,Hamburg)"
-																						: "Wert eingeben"
-																				}
-																				value={filter.value}
-																				onChange={(event) =>
-																					updateFilter(filter.id, {
-																						value: event.target.value,
-																					})
-																				}
-																			/>
-																		</InputGroup>
-																	)
-																) : (
-																	<div className="flex items-center text-muted-foreground text-sm">
-																		Kein Wert nötig
-																	</div>
-																)}
-
-																<Button
-																	variant="ghost"
-																	size="sm"
-																	onClick={() => {
-																		setFilters((current) =>
-																			current.filter(
-																				(row) => row.id !== filter.id,
-																			),
-																		);
-																		setQueryState({ page: 1 });
-																	}}
-																>
-																	<Trash2Icon />
-																</Button>
-															</div>
-														);
-													})}
-												</div>
-											)}
-										</div>
-									</FramePanel>
-								</Frame>
-								</CollapsibleContent>
-							</Collapsible>
-						</div>
+						<>
+							<MembersV2Controls
+								localSearch={localSearch}
+								onSearchChange={(next) => {
+									setLocalSearch(next);
+									debouncedSetSearch(next);
+								}}
+								onClearSearch={() => {
+									setLocalSearch("");
+									setQueryState({ page: 1, search: "" });
+								}}
+								groupOptions={groupFilterOptions}
+								groupIds={groupIds}
+								onGroupIdsChange={(nextGroupIds) => {
+									setQueryState({ page: 1, groupIds: nextGroupIds });
+								}}
+								sortFieldOptions={SORT_FIELDS}
+								sortDirectionOptions={SORT_DIRECTIONS}
+								sortField={safeSortField}
+								sortDirection={safeSortDirection}
+								onSortFieldChange={(value) => {
+									setQueryState({ page: 1, sortField: value });
+								}}
+								onSortDirectionChange={(value) => {
+									setQueryState({ page: 1, sortDirection: value });
+								}}
+								onExportCsv={exportMembersCsv}
+								exportPending={exportCsvMutation.isPending}
+								onOpenAdvancedSheet={() => setAdvancedSheetOpen(true)}
+								onToggleAdvancedDesktop={() => setAdvancedOpen((open) => !open)}
+								advancedFilterCount={compiledFilters.length}
+								onOpenSavedViews={() => setSavedViewsDialogOpen(true)}
+								includeActive={includeActive}
+								includeCancelled={includeCancelled}
+								includeCancelledButActive={includeCancelledButActive}
+								onIncludeActiveChange={(checked) =>
+									setQueryState({
+										page: 1,
+										includeActive: checked,
+									})
+								}
+								onIncludeCancelledChange={(checked) =>
+									setQueryState({
+										page: 1,
+										includeCancelled: checked,
+									})
+								}
+								onIncludeCancelledButActiveChange={(checked) =>
+									setQueryState({
+										page: 1,
+										includeCancelledButActive: checked,
+									})
+								}
+								hasActiveFilters={hasActiveFilters}
+								onSaveView={requestSaveView}
+								onResetAllFilters={resetAllFilters}
+								advancedOpen={advancedOpen}
+								onAdvancedOpenChange={setAdvancedOpen}
+								advancedSheetOpen={advancedSheetOpen}
+								onAdvancedSheetOpenChange={setAdvancedSheetOpen}
+								advancedFiltersPanel={advancedFiltersPanel}
+							/>
 
 						<Dialog
 							open={savedViewsDialogOpen}
