@@ -44,6 +44,7 @@ export default function CustomizationPage() {
 	const hideSensitiveInformatoin = Boolean(
 		session.user.hideSensitiveInformatoin,
 	);
+	type AuthCallbackContext = { error: { message?: string } };
 	const selectedTheme = theme ?? "system";
 
 	const handleChange = async (checked: boolean) => {
@@ -56,7 +57,7 @@ export default function CustomizationPage() {
 					onSuccess: () => {
 						toast.success("Einstellung gespeichert");
 					},
-					onError: (context) => {
+					onError: (context: AuthCallbackContext) => {
 						toast.error(
 							context.error.message ||
 								"Einstellung konnte nicht gespeichert werden",
