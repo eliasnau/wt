@@ -14,7 +14,7 @@ import {
 	UserIcon,
 	UserXIcon,
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { type CSSProperties, useMemo, useState } from "react";
 import { CopyableTableCell } from "@/components/table/copyable-table-cell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -88,6 +88,18 @@ interface MembersV2TableProps {
 	loading?: boolean;
 }
 
+function getGroupBadgeStyle(color: unknown): CSSProperties | undefined {
+	if (typeof color !== "string" || color.trim().length === 0) {
+		return undefined;
+	}
+
+	return {
+		color,
+		borderColor: color,
+		backgroundColor: `${color}1A`,
+	};
+}
+
 const createColumns = (
 	onViewMember: (member: MemberRow) => void,
 	onCancelMember: (member: MemberRow) => void,
@@ -159,7 +171,11 @@ const createColumns = (
 			return (
 				<div className="flex flex-wrap gap-1">
 					{groupMembers.map((groupMember) => (
-						<Badge variant="outline" key={groupMember.groupId}>
+						<Badge
+							variant="outline"
+							key={groupMember.groupId}
+							style={getGroupBadgeStyle(groupMember.group.color)}
+						>
 							{groupMember.group.name}
 						</Badge>
 					))}

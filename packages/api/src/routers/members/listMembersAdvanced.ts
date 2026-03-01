@@ -465,7 +465,10 @@ async function buildGroupMap(memberIds: string[]) {
 	if (memberIds.length === 0) {
 		return new Map<
 			string,
-			{ groupId: string; group: { id: string; name: string } }[]
+			{
+				groupId: string;
+				group: { id: string; name: string; color: string };
+			}[]
 		>();
 	}
 
@@ -474,6 +477,7 @@ async function buildGroupMap(memberIds: string[]) {
 			memberId: groupMember.memberId,
 			groupId: groupMember.groupId,
 			groupName: group.name,
+			groupColor: group.color,
 		})
 		.from(groupMember)
 		.innerJoin(group, eq(group.id, groupMember.groupId))
@@ -484,7 +488,7 @@ async function buildGroupMap(memberIds: string[]) {
 			const groupMembers = acc.get(row.memberId) ?? [];
 			groupMembers.push({
 				groupId: row.groupId,
-				group: { id: row.groupId, name: row.groupName },
+				group: { id: row.groupId, name: row.groupName, color: row.groupColor },
 			});
 			acc.set(row.memberId, groupMembers);
 			return acc;
@@ -493,7 +497,7 @@ async function buildGroupMap(memberIds: string[]) {
 			string,
 			{
 				groupId: string;
-				group: { id: string; name: string };
+				group: { id: string; name: string; color: string };
 			}[]
 		>(),
 	);

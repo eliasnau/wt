@@ -19,7 +19,7 @@ import {
 	UserXIcon,
 	XIcon,
 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import { type CSSProperties, useMemo, useRef, useState } from "react";
 import { CopyableTableCell } from "@/components/table/copyable-table-cell";
 import { DataTableFacetedFilter } from "@/components/table/data-table-faceted-filter";
 import { Badge } from "@/components/ui/badge";
@@ -31,7 +31,6 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
-import { Frame, FramePanel } from "@/components/ui/frame";
 import {
 	InputGroup,
 	InputGroupAddon,
@@ -39,7 +38,6 @@ import {
 } from "@/components/ui/input-group";
 import {
 	Menu,
-	MenuCheckboxItem,
 	MenuItem,
 	MenuPopup,
 	MenuSeparator,
@@ -84,6 +82,7 @@ type MembersListResponse = InferClientOutputs<typeof client>["members"]["list"];
 type MemberRow = MembersListResponse["data"][number];
 type GroupsListResponse = InferClientOutputs<typeof client>["groups"]["list"];
 type Group = GroupsListResponse[number];
+type MemberStatusFilter = "active" | "cancelled" | "cancelled_but_active";
 
 interface MembersTableProps {
 	data: MemberRow[];
@@ -98,13 +97,25 @@ interface MembersTableProps {
 	search: string;
 	groupIds: string[];
 	groups: Group[];
-	includeCancelled: boolean;
+	memberStatus: MemberStatusFilter;
 	onSearchChange: (search: string) => void;
 	onPageChange: (page: number) => void;
 	onLimitChange: (limit: number) => void;
 	onGroupFilterChange: (groupIds: string[]) => void;
-	onIncludeCancelledChange: (includeCancelled: boolean) => void;
+	onStatusFilterChange: (status: MemberStatusFilter) => void;
 	loading?: boolean;
+}
+
+function getGroupBadgeStyle(color: unknown): CSSProperties | undefined {
+	if (typeof color !== "string" || color.trim().length === 0) {
+		return undefined;
+	}
+
+	return {
+		color,
+		borderColor: color,
+		backgroundColor: `${color}1A`,
+	};
 }
 
 const createColumns = (
@@ -201,11 +212,21 @@ const createColumns = (
 			}
 			return (
 				<div className="flex flex-wrap gap-1">
-					{groupMembers.map((gm: (typeof groupMembers)[number]) => (
-						<Badge variant="outline" key={gm.groupId}>
-							{gm.group.name}
-						</Badge>
-					))}
+					{groupMembers.map((gm: (typeof groupMembers)[number]) => {
+						const groupColor =
+							"color" in gm.group
+								? (gm.group as { color?: unknown }).color
+								: undefined;
+						return (
+							<Badge
+								variant="outline"
+								key={gm.groupId}
+								style={getGroupBadgeStyle(groupColor)}
+							>
+								{gm.group.name}
+							</Badge>
+						);
+					})}
 				</div>
 			);
 		},
@@ -264,12 +285,12 @@ export default function MembersTable({
 	search,
 	groupIds,
 	groups,
-	includeCancelled,
+	memberStatus,
 	onSearchChange,
 	onPageChange,
 	onLimitChange,
 	onGroupFilterChange,
-	onIncludeCancelledChange,
+	onStatusFilterChange,
 	loading = false,
 }: MembersTableProps) {
 	"use no memo";
@@ -342,27 +363,29 @@ export default function MembersTable({
 		!data?.length &&
 		!search &&
 		groupIds.length === 0 &&
+		memberStatus === "active" &&
 		pagination.totalCount === 0;
 
 	if (hasNoMembers) {
 		return (
-			<Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
-				<FramePanel className="py-12">
-					<Empty>
-						<EmptyHeader>
-							<EmptyMedia variant="icon">
-								<UserIcon />
-							</EmptyMedia>
-							<EmptyTitle>Noch keine Mitglieder</EmptyTitle>
-							<EmptyDescription>
-								Lege los, indem du dein erstes Mitglied erstellst.
-							</EmptyDescription>
-						</EmptyHeader>
-					</Empty>
-				</FramePanel>
-			</Frame>
+			<div className="py-12">
+				<Empty>
+					<EmptyHeader>
+						<EmptyMedia variant="icon">
+							<UserIcon />
+						</EmptyMedia>
+						<EmptyTitle>Noch keine Mitglieder</EmptyTitle>
+						<EmptyDescription>
+							Lege los, indem du dein erstes Mitglied erstellst.
+						</EmptyDescription>
+					</EmptyHeader>
+				</Empty>
+			</div>
 		);
 	}
+
+	const hasActiveFilters =
+		Boolean(search) || groupIds.length > 0 || memberStatus !== "active";
 
 	return (
 		<div className="">
@@ -406,41 +429,46 @@ export default function MembersTable({
 				</div>
 
 				<div className="flex items-center gap-2">
-					{/* Clear All Filters */}
-					{(search || groupIds.length > 0) && (
+					<Select
+						items={[
+							{ label: "Active", value: "active" },
+							{ label: "Cancelled", value: "cancelled" },
+							{
+								label: "Cancelled But Still Active",
+								value: "cancelled_but_active",
+							},
+						]}
+						value={memberStatus}
+						onValueChange={(value) =>
+							onStatusFilterChange(value as MemberStatusFilter)
+						}
+					>
+						<SelectTrigger className="w-[240px]" size="sm">
+							<SelectValue />
+						</SelectTrigger>
+						<SelectPopup>
+							<SelectItem value="active">Active</SelectItem>
+							<SelectItem value="cancelled">Cancelled</SelectItem>
+							<SelectItem value="cancelled_but_active">
+								Cancelled But Still Active
+							</SelectItem>
+						</SelectPopup>
+					</Select>
+
+					{hasActiveFilters && (
 						<Button
-							variant="ghost"
+							variant="outline"
 							size="sm"
 							onClick={() => {
 								setLocalSearch("");
 								onSearchChange("");
 								onGroupFilterChange([]);
+								onStatusFilterChange("active");
 							}}
 						>
-							Clear filters
+							Reset filters
 						</Button>
 					)}
-
-					<Menu>
-						<MenuTrigger
-							render={
-								<Button variant="outline" size="sm">
-									<MoreVerticalIcon />
-								</Button>
-							}
-						/>
-						<MenuPopup align="end" className="w-[280px]">
-							<MenuCheckboxItem
-								variant="switch"
-								checked={includeCancelled}
-								onCheckedChange={(checked) =>
-									onIncludeCancelledChange(Boolean(checked))
-								}
-							>
-								Include Cancelled Members
-							</MenuCheckboxItem>
-						</MenuPopup>
-					</Menu>
 				</div>
 			</div>
 			<Table>
@@ -507,11 +535,11 @@ export default function MembersTable({
 							<TableCell colSpan={columns.length} className="h-32 text-center">
 								<div className="flex flex-col items-center justify-center gap-2">
 									<p className="text-muted-foreground">
-										{search || groupIds.length > 0
+										{search || groupIds.length > 0 || memberStatus !== "active"
 											? "Keine Mitglieder gefunden, die den Filtern entsprechen."
 											: "No results found."}
 									</p>
-									{(search || groupIds.length > 0) && (
+									{hasActiveFilters && (
 										<Button
 											size="sm"
 											variant="outline"
@@ -519,9 +547,10 @@ export default function MembersTable({
 												setLocalSearch("");
 												onSearchChange("");
 												onGroupFilterChange([]);
+												onStatusFilterChange("active");
 											}}
 										>
-											Clear filters
+											Reset filters
 										</Button>
 									)}
 								</div>
