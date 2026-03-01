@@ -1,6 +1,7 @@
 "use client";
 
 import {
+	ClipboardCheck,
 	ChevronDown,
 	ChevronUp,
 	DollarSign,
@@ -99,6 +100,18 @@ const routes: NavRoute[] = [
 		subs: [
 			{ title: "Zahlungsläufe", link: "/dashboard/finance/batches" },
 			{ title: "SEPA erstellen", link: "/dashboard/finance/sepa" },
+		],
+	},
+	{
+		id: "self-service",
+		title: "Self-Service",
+		icon: <ClipboardCheck className="size-4" />,
+		link: "/dashboard/self-service/registrations",
+		subs: [
+			{
+				title: "Registrierungen",
+				link: "/dashboard/self-service/registrations",
+			},
 		],
 	},
 	{

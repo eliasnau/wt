@@ -1,5 +1,11 @@
-import { and, count, db, eq, wsDb } from "..";
-import { clubMember, contract, group, groupMember } from "../schema";
+import { and, count, db, desc, eq, inArray, wsDb } from "..";
+import {
+  clubMember,
+  contract,
+  group,
+  groupMember,
+  selfRegistration,
+} from "../schema";
 
 export const DB = {
   query: {
@@ -200,6 +206,139 @@ export const DB = {
           .where(eq(groupMember.groupId, groupId));
 
         return result[0]?.count || 0;
+      },
+    },
+    selfRegistrations: {
+      listConfigsByOrganization: async ({
+        organizationId,
+      }: {
+        organizationId: string;
+      }) => {
+        return db
+          .select()
+          .from(selfRegistration)
+          .where(eq(selfRegistration.organizationId, organizationId))
+          .orderBy(desc(selfRegistration.createdAt));
+      },
+      getConfigById: async ({ id }: { id: string }) => {
+        const [result] = await db
+          .select()
+          .from(selfRegistration)
+          .where(eq(selfRegistration.id, id))
+          .limit(1);
+        return result || null;
+      },
+      getConfigByIdWithGroups: async ({ id }: { id: string }) => {
+        const [result] = await db
+          .select()
+          .from(selfRegistration)
+          .where(eq(selfRegistration.id, id))
+          .limit(1);
+        if (!result) return null;
+        return {
+          ...result,
+          groups: result.groupsSnapshot,
+        };
+      },
+      getConfigByCode: async ({ code }: { code: string }) => {
+        const [row] = await db
+          .select()
+          .from(selfRegistration)
+          .where(eq(selfRegistration.code, code))
+          .limit(1);
+
+        return row || null;
+      },
+      getActiveConfigByCodeWithGroups: async ({ code }: { code: string }) => {
+        const [row] = await db
+          .select()
+          .from(selfRegistration)
+          .where(
+            and(eq(selfRegistration.code, code), eq(selfRegistration.isActive, true)),
+          )
+          .limit(1);
+
+        if (!row) return null;
+        return {
+          ...row,
+          groups: row.groupsSnapshot,
+        };
+      },
+      listGroupsByIdsAndOrganization: async ({
+        organizationId,
+        groupIds,
+      }: {
+        organizationId: string;
+        groupIds: string[];
+      }) => {
+        if (groupIds.length === 0) return [];
+        return db
+          .select({
+            id: group.id,
+            name: group.name,
+          })
+          .from(group)
+          .where(
+            and(
+              eq(group.organizationId, organizationId),
+              inArray(group.id, groupIds),
+            ),
+          );
+      },
+      listSubmissionsByOrganization: async ({
+        organizationId,
+        status,
+      }: {
+        organizationId: string;
+        status?: "submitted" | "created";
+      }) => {
+        const baseWhere = eq(selfRegistration.organizationId, organizationId);
+        const whereClause = status
+          ? and(baseWhere, eq(selfRegistration.status, status))
+          : baseWhere;
+
+        return db
+          .select({
+            id: selfRegistration.id,
+            organizationId: selfRegistration.organizationId,
+            code: selfRegistration.code,
+            status: selfRegistration.status,
+            firstName: selfRegistration.firstName,
+            lastName: selfRegistration.lastName,
+            email: selfRegistration.email,
+            phone: selfRegistration.phone,
+            birthdate: selfRegistration.birthdate,
+            street: selfRegistration.street,
+            city: selfRegistration.city,
+            postalCode: selfRegistration.postalCode,
+            country: selfRegistration.country,
+            accountHolder: selfRegistration.accountHolder,
+            iban: selfRegistration.iban,
+            bic: selfRegistration.bic,
+            submittedAt: selfRegistration.submittedAt,
+            createdAt: selfRegistration.createdAt,
+            updatedAt: selfRegistration.updatedAt,
+            configName: selfRegistration.name,
+          })
+          .from(selfRegistration)
+          .where(whereClause)
+          .orderBy(desc(selfRegistration.submittedAt), desc(selfRegistration.createdAt));
+      },
+      getSubmissionById: async ({ id }: { id: string }) => {
+        const [result] = await db
+          .select()
+          .from(selfRegistration)
+          .where(eq(selfRegistration.id, id))
+          .limit(1);
+        return result || null;
+      },
+      getSubmissionByConfigId: async ({ configId }: { configId: string }) => {
+        const [result] = await db
+          .select()
+          .from(selfRegistration)
+          .where(eq(selfRegistration.id, configId))
+          .limit(1);
+        return result || null;
       },
     },
   },
@@ -504,6 +643,174 @@ export const DB = {
           .returning();
 
         return deletedGroupMember;
+      },
+    },
+    selfRegistrations: {
+      createConfigWithGroups: async ({
+        organizationId,
+        config,
+        groups,
+      }: {
+        organizationId: string;
+        config: {
+          name: string;
+          code: string;
+          description?: string;
+          isActive: boolean;
+          billingCycle: string;
+          joiningFeeAmount?: string;
+          yearlyFeeAmount?: string;
+          contractStartDate?: string;
+          notes?: string;
+        };
+        groups: Array<{
+          groupId: string;
+          groupNameSnapshot: string;
+          schedule?: string;
+          monthlyFee: string;
+        }>;
+      }) => {
+        const [created] = await db
+          .insert(selfRegistration)
+          .values({
+            organizationId,
+            name: config.name,
+            code: config.code,
+            description: config.description,
+            isActive: config.isActive,
+            billingCycle: config.billingCycle,
+            joiningFeeAmount: config.joiningFeeAmount,
+            yearlyFeeAmount: config.yearlyFeeAmount,
+            contractStartDate: config.contractStartDate,
+            notes: config.notes,
+            groupsSnapshot: groups,
+            status: "draft",
+          })
+          .returning();
+
+        if (!created) {
+          throw new Error("Failed to create self-registration");
+        }
+
+        return created;
+      },
+      updateConfigWithGroups: async ({
+        configId,
+        updates,
+        groups,
+      }: {
+        configId: string;
+        updates: {
+          name?: string;
+          description?: string;
+          isActive?: boolean;
+          billingCycle?: string;
+          joiningFeeAmount?: string;
+          yearlyFeeAmount?: string;
+          contractStartDate?: string;
+          notes?: string;
+        };
+        groups?: Array<{
+          groupId: string;
+          groupNameSnapshot: string;
+          schedule?: string;
+          monthlyFee: string;
+        }>;
+      }) => {
+        const [updated] = await db
+          .update(selfRegistration)
+          .set({
+            ...updates,
+            ...(groups ? { groupsSnapshot: groups } : {}),
+          })
+          .where(eq(selfRegistration.id, configId))
+          .returning();
+
+        if (!updated) {
+          throw new Error("Failed to update self-registration");
+        }
+
+        return updated;
+      },
+      deleteConfig: async ({ configId }: { configId: string }) => {
+        const [deletedConfig] = await db
+          .delete(selfRegistration)
+          .where(eq(selfRegistration.id, configId))
+          .returning();
+        return deletedConfig || null;
+      },
+      createSubmission: async ({
+        configId,
+        submission,
+      }: {
+        configId: string | null;
+        submission: {
+          firstName: string;
+          lastName: string;
+          email: string;
+          phone: string;
+          birthdate?: string;
+          street: string;
+          city: string;
+          postalCode: string;
+          country: string;
+          accountHolder: string;
+          iban: string;
+          bic: string;
+        };
+      }) => {
+        if (!configId) {
+          throw new Error("Config id is required");
+        }
+
+        const [updatedRegistration] = await db
+          .update(selfRegistration)
+          .set({
+            status: "submitted",
+            firstName: submission.firstName,
+            lastName: submission.lastName,
+            email: submission.email,
+            phone: submission.phone,
+            birthdate: submission.birthdate,
+            street: submission.street,
+            city: submission.city,
+            postalCode: submission.postalCode,
+            country: submission.country,
+            accountHolder: submission.accountHolder,
+            iban: submission.iban,
+            bic: submission.bic,
+            submittedAt: new Date(),
+          })
+          .where(eq(selfRegistration.id, configId))
+          .returning();
+
+        if (!updatedRegistration) {
+          throw new Error("Failed to submit self-registration");
+        }
+
+        return updatedRegistration;
+      },
+      updateSubmissionStatus: async ({
+        submissionId,
+        organizationId,
+        status,
+      }: {
+        submissionId: string;
+        organizationId: string;
+        status: "submitted" | "created";
+      }) => {
+        const [updatedSubmission] = await db
+          .update(selfRegistration)
+          .set({ status })
+          .where(
+            and(
+              eq(selfRegistration.id, submissionId),
+              eq(selfRegistration.organizationId, organizationId),
+            ),
+          )
+          .returning();
+
+        return updatedSubmission || null;
       },
     },
   },

@@ -5,6 +5,7 @@ import {
   decimal,
   index,
   integer,
+  jsonb,
   pgTable,
   primaryKey,
   text,
@@ -96,6 +97,57 @@ export const groupMember = pgTable(
   ],
 );
 
+export const selfRegistration = pgTable(
+  "self_registration",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    code: text("code").notNull(),
+    description: text("description"),
+    isActive: boolean("is_active").default(true).notNull(),
+    status: text("status").notNull().default("draft"), // draft | submitted | created
+    billingCycle: text("billing_cycle").notNull().default("monthly"),
+    joiningFeeAmount: decimal("joining_fee_amount", {
+      precision: 10,
+      scale: 2,
+    }),
+    yearlyFeeAmount: decimal("yearly_fee_amount", {
+      precision: 10,
+      scale: 2,
+    }),
+    contractStartDate: date("contract_start_date"),
+    notes: text("notes"),
+    groupsSnapshot: jsonb("groups_snapshot").notNull(),
+    firstName: text("first_name"),
+    lastName: text("last_name"),
+    email: text("email"),
+    phone: text("phone"),
+    birthdate: date("birthdate"),
+    street: text("street"),
+    city: text("city"),
+    postalCode: text("postal_code"),
+    country: text("country"),
+    accountHolder: text("account_holder"),
+    iban: text("iban"),
+    bic: text("bic"),
+    submittedAt: timestamp("submitted_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("self_registration_org_id_idx").on(table.organizationId),
+    index("self_registration_active_idx").on(table.isActive),
+    index("self_registration_status_idx").on(table.status),
+    unique("self_registration_code_unique").on(table.code),
+  ],
+);
+
 export const clubMemberRelations = relations(clubMember, ({ many, one }) => ({
   groupMembers: many(groupMember),
   contract: one(contract, {
@@ -118,6 +170,16 @@ export const groupMemberRelations = relations(groupMember, ({ one }) => ({
     references: [clubMember.id],
   }),
 }));
+
+export const selfRegistrationRelations = relations(
+  selfRegistration,
+  ({ one }) => ({
+    organization: one(organization, {
+      fields: [selfRegistration.organizationId],
+      references: [organization.id],
+    }),
+  }),
+);
 
 export const contract = pgTable(
   "contract",
