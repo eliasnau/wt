@@ -367,11 +367,11 @@ export function MembersV2Table({
 		);
 	}
 
-	return (
-		<>
-			<div className="overflow-hidden rounded-xl border bg-background">
-				<div className="w-full overflow-x-auto">
-					<Table className="min-w-[980px]">
+		return (
+			<>
+				<div className="rounded-xl border bg-background">
+					<div className="max-h-[70vh] overflow-auto">
+						<Table className="min-w-[980px]">
 						<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (
 							<TableRow className="hover:bg-transparent" key={headerGroup.id}>
@@ -525,9 +525,9 @@ export function MembersV2Table({
 							</TableCell>
 						</TableRow>
 					</TableFooter>
-					</Table>
+						</Table>
+					</div>
 				</div>
-			</div>
 
 			<MemberOverviewSheet
 				member={selectedMember}
