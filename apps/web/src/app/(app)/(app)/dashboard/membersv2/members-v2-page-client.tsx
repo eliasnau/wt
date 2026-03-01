@@ -116,6 +116,7 @@ type SystemMembersView = {
 const FILTER_FIELDS: Array<{ label: string; value: FilterField }> = [
 	{ label: "Vorname", value: "firstName" },
 	{ label: "Nachname", value: "lastName" },
+	{ label: "Geburtsdatum", value: "birthdate" },
 	{ label: "Voller Name", value: "fullName" },
 	{ label: "E-Mail", value: "email" },
 	{ label: "Telefon", value: "phone" },
@@ -149,6 +150,7 @@ const FILTER_OPERATORS: Array<{ label: string; value: FilterOperator }> = [
 ];
 
 const DATE_FILTER_FIELDS = new Set<FilterField>([
+	"birthdate",
 	"startDate",
 	"cancellationEffectiveDate",
 	"cancelledAt",
@@ -168,6 +170,7 @@ const SORT_FIELDS: Array<{ label: string; value: SortField }> = [
 	{ label: "Aktualisiert", value: "updatedAt" },
 	{ label: "Vorname", value: "firstName" },
 	{ label: "Nachname", value: "lastName" },
+	{ label: "Geburtsdatum", value: "birthdate" },
 	{ label: "Voller Name", value: "fullName" },
 	{ label: "E-Mail", value: "email" },
 	{ label: "Stadt", value: "city" },

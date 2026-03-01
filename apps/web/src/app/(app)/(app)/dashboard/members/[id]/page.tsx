@@ -102,6 +102,7 @@ export default function MemberDetailPage() {
   const [formState, setFormState] = useState({
     firstName: "",
     lastName: "",
+    birthdate: "",
     email: "",
     phone: "",
     guardianName: "",
@@ -164,6 +165,7 @@ export default function MemberDetailPage() {
       setFormState({
         firstName: member.firstName ?? "",
         lastName: member.lastName ?? "",
+        birthdate: member.birthdate ?? "",
         email: member.email ?? "",
         phone: member.phone ?? "",
         guardianName: member.guardianName ?? "",
@@ -253,6 +255,7 @@ export default function MemberDetailPage() {
     setFormState({
       firstName: member.firstName ?? "",
       lastName: member.lastName ?? "",
+      birthdate: member.birthdate ?? "",
       email: member.email ?? "",
       phone: member.phone ?? "",
       guardianName: member.guardianName ?? "",
@@ -276,6 +279,7 @@ export default function MemberDetailPage() {
       memberId,
       firstName: formState.firstName,
       lastName: formState.lastName,
+      birthdate: formState.birthdate || undefined,
       email: formState.email,
       phone: formState.phone,
       guardianName: formState.guardianName || undefined,
@@ -400,6 +404,26 @@ export default function MemberDetailPage() {
                       />
                     ) : (
                       <p className="mt-1 text-sm">{member.lastName}</p>
+                    )}
+                  </div>
+                  <div>
+                    <p className="font-medium text-muted-foreground text-sm">
+                      Birthdate
+                    </p>
+                    {isEditing ? (
+                      <Input
+                        type="date"
+                        value={formState.birthdate}
+                        onChange={(event) =>
+                          setFormState((prev) => ({
+                            ...prev,
+                            birthdate: event.target.value,
+                          }))
+                        }
+                        className="mt-1"
+                      />
+                    ) : (
+                      <p className="mt-1 text-sm">{formatDate(member.birthdate)}</p>
                     )}
                   </div>
                   <div>

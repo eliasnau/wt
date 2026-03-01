@@ -5,6 +5,7 @@ import { z } from "zod";
 const filterFieldSchema = z.enum([
 	"firstName",
 	"lastName",
+	"birthdate",
 	"fullName",
 	"email",
 	"phone",
@@ -60,6 +61,7 @@ const sortFieldSchema = z.enum([
 	"updatedAt",
 	"firstName",
 	"lastName",
+	"birthdate",
 	"fullName",
 	"email",
 	"city",
@@ -106,6 +108,7 @@ const memberSelect = {
 	id: clubMember.id,
 	firstName: clubMember.firstName,
 	lastName: clubMember.lastName,
+	birthdate: clubMember.birthdate,
 	email: clubMember.email,
 	phone: clubMember.phone,
 	street: clubMember.street,
@@ -163,6 +166,11 @@ function getFieldConfig(field: z.infer<typeof filterFieldSchema>) {
 			return {
 				compareExpr: sql`${clubMember.firstName} || ' ' || ${clubMember.lastName}`,
 				textExpr: sql`${clubMember.firstName} || ' ' || ${clubMember.lastName}`,
+			};
+		case "birthdate":
+			return {
+				compareExpr: clubMember.birthdate,
+				textExpr: sql`CAST(${clubMember.birthdate} AS TEXT)`,
 			};
 		case "initialPeriod":
 			return {
@@ -388,6 +396,7 @@ function buildMembersQueryContext({
 		? or(
 				ilike(clubMember.firstName, `%${search}%`),
 				ilike(clubMember.lastName, `%${search}%`),
+				ilike(sql`CAST(${clubMember.birthdate} AS TEXT)`, `%${search}%`),
 				ilike(clubMember.email, `%${search}%`),
 				ilike(clubMember.phone, `%${search}%`),
 				ilike(clubMember.street, `%${search}%`),
@@ -436,6 +445,8 @@ function buildMembersQueryContext({
 			? clubMember.firstName
 			: sortField === "lastName"
 				? clubMember.lastName
+				: sortField === "birthdate"
+					? clubMember.birthdate
 				: sortField === "fullName"
 					? sql`${clubMember.firstName} || ' ' || ${clubMember.lastName}`
 					: sortField === "email"

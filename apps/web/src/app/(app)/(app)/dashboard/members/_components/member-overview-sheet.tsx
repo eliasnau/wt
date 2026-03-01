@@ -2,7 +2,13 @@
 
 import type { InferClientOutputs } from "@orpc/client";
 import { differenceInMonths, format } from "date-fns";
-import { ArrowRightIcon, MailIcon, PhoneIcon, UserIcon } from "lucide-react";
+import {
+	ArrowRightIcon,
+	CalendarIcon,
+	MailIcon,
+	PhoneIcon,
+	UserIcon,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import { CopyableTableCell } from "@/components/table/copyable-table-cell";
 import { Badge } from "@/components/ui/badge";
@@ -73,6 +79,14 @@ export function MemberOverviewSheet({
 								Contact Information
 							</h4>
 							<div className="space-y-2">
+								{member.birthdate && (
+									<div className="flex items-center gap-3 text-sm">
+										<CalendarIcon className="size-4 text-muted-foreground" />
+										<span className="text-foreground">
+											{format(new Date(member.birthdate), "PPP")}
+										</span>
+									</div>
+								)}
 								<div className="flex items-center gap-3 text-sm">
 									<MailIcon className="size-4 text-muted-foreground" />
 									<CopyableTableCell value={member.email} />

@@ -12,6 +12,7 @@ export const DB = {
             organizationId: true,
             firstName: true,
             lastName: true,
+            birthdate: true,
             email: true,
             phone: true,
             street: true,
@@ -47,6 +48,7 @@ export const DB = {
             id: clubMember.id,
             firstName: clubMember.firstName,
             lastName: clubMember.lastName,
+            birthdate: clubMember.birthdate,
             email: clubMember.email,
             phone: clubMember.phone,
             street: clubMember.street,
@@ -115,6 +117,7 @@ export const DB = {
           id: firstRow.id,
           firstName: firstRow.firstName,
           lastName: firstRow.lastName,
+          birthdate: firstRow.birthdate,
           email: firstRow.email,
           phone: firstRow.phone,
           street: firstRow.street,
@@ -171,6 +174,7 @@ export const DB = {
             memberId: clubMember.id,
             firstName: clubMember.firstName,
             lastName: clubMember.lastName,
+            birthdate: clubMember.birthdate,
             email: clubMember.email,
             phone: clubMember.phone,
             street: clubMember.street,
@@ -214,6 +218,7 @@ export const DB = {
           lastName: string;
           email: string;
           phone: string;
+          birthdate?: string;
           street: string;
           city: string;
           state: string;
@@ -239,6 +244,7 @@ export const DB = {
               lastName: memberData.lastName,
               email: memberData.email,
               phone: memberData.phone,
+              birthdate: memberData.birthdate,
               street: memberData.street,
               city: memberData.city,
               state: memberData.state,
@@ -297,6 +303,7 @@ export const DB = {
           lastName: string;
           email: string;
           phone: string;
+          birthdate?: string;
           street: string;
           city: string;
           state: string;
@@ -331,6 +338,7 @@ export const DB = {
               lastName: memberData.lastName,
               email: memberData.email,
               phone: memberData.phone,
+              birthdate: memberData.birthdate,
               street: memberData.street,
               city: memberData.city,
               state: memberData.state,

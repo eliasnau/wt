@@ -30,6 +30,11 @@ import { client, orpc } from "@/utils/orpc";
 
 const firstNameSchema = z.string().min(1, "Vorname ist erforderlich").max(255);
 const lastNameSchema = z.string().min(1, "Nachname ist erforderlich").max(255);
+const birthdateSchema = z
+	.string()
+	.regex(/^\d{4}-\d{2}-\d{2}$/, "Ungültiges Datumsformat")
+	.optional()
+	.or(z.literal(""));
 const emailSchema = z.string().email("Ungültige E-Mail-Adresse");
 const phoneSchema = z.string().min(1, "Phone is required");
 const streetSchema = z.string().min(1, "Street is required");
@@ -66,6 +71,7 @@ const groupPriceSchema = /^\d+(\.\d{1,2})?$/;
 const formSchema = z.object({
 	firstName: firstNameSchema,
 	lastName: lastNameSchema,
+	birthdate: birthdateSchema,
 	email: emailSchema,
 	phone: phoneSchema,
 	guardianName: guardianNameSchema,
@@ -142,6 +148,7 @@ export function NewMemberForm() {
 		mutationFn: async (data: {
 			firstName: string;
 			lastName: string;
+			birthdate?: string;
 			email: string;
 			phone: string;
 			guardianName?: string;
@@ -204,6 +211,7 @@ export function NewMemberForm() {
 		defaultValues: {
 			firstName: "",
 			lastName: "",
+			birthdate: "",
 			email: "",
 			phone: "",
 			guardianName: "",
@@ -240,6 +248,7 @@ export function NewMemberForm() {
 			const submissionData = {
 				firstName: value.firstName,
 				lastName: value.lastName,
+				birthdate: value.birthdate || undefined,
 				email: value.email,
 				phone: value.phone,
 				guardianName: value.guardianName,
@@ -408,6 +417,30 @@ export function NewMemberForm() {
 													aria-invalid={isInvalid}
 													placeholder="john.doe@example.com"
 													type="email"
+												/>
+												{isInvalid && (
+													<FieldError errors={field.state.meta.errors} />
+												)}
+											</Field>
+										);
+									}}
+								</form.Field>
+
+								<form.Field name="birthdate">
+									{(field) => {
+										const isInvalid =
+											field.state.meta.isTouched && !field.state.meta.isValid;
+										return (
+											<Field data-invalid={isInvalid}>
+												<FieldLabel htmlFor="birthdate">Geburtsdatum</FieldLabel>
+												<Input
+													id="birthdate"
+													name={field.name}
+													value={field.state.value}
+													onBlur={field.handleBlur}
+													onChange={(e) => field.handleChange(e.target.value)}
+													aria-invalid={isInvalid}
+													type="date"
 												/>
 												{isInvalid && (
 													<FieldError errors={field.state.meta.errors} />

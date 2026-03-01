@@ -40,6 +40,7 @@ export const clubMember = pgTable("club_member", {
     .references(() => organization.id, { onDelete: "cascade" }),
   firstName: text("first_name").notNull(),
   lastName: text("last_name").notNull(),
+  birthdate: date("birthdate"),
   email: text("email").notNull(),
   phone: text("phone").notNull(),
   // Address fields

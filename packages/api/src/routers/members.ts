@@ -26,6 +26,11 @@ const createMemberSchema = z.object({
 	// Personal info
 	firstName: z.string().min(1, "First name is required").max(255),
 	lastName: z.string().min(1, "Last name is required").max(255),
+	birthdate: z
+		.string()
+		.regex(/^\d{4}-\d{2}-\d{2}$/, "Must be valid date format (YYYY-MM-DD)")
+		.optional()
+		.or(z.literal("")),
 	email: z.string().email("Invalid email address"),
 	phone: z.string().min(1, "Phone is required"),
 
@@ -97,6 +102,11 @@ const updateMemberSchema = z.object({
 	// Personal info
 	firstName: z.string().min(1, "First name is required").max(255),
 	lastName: z.string().min(1, "Last name is required").max(255),
+	birthdate: z
+		.string()
+		.regex(/^\d{4}-\d{2}-\d{2}$/, "Must be valid date format (YYYY-MM-DD)")
+		.optional()
+		.or(z.literal("")),
 	email: z.string().email("Invalid email address"),
 	phone: z.string().min(1, "Phone is required"),
 	// Address
@@ -366,6 +376,7 @@ export const membersRouter = {
 					? or(
 							ilike(clubMember.firstName, `%${search}%`),
 							ilike(clubMember.lastName, `%${search}%`),
+							ilike(sql`CAST(${clubMember.birthdate} AS TEXT)`, `%${search}%`),
 							ilike(clubMember.email, `%${search}%`),
 							ilike(clubMember.phone, `%${search}%`),
 							ilike(
@@ -389,6 +400,7 @@ export const membersRouter = {
 					id: clubMember.id,
 					firstName: clubMember.firstName,
 					lastName: clubMember.lastName,
+					birthdate: clubMember.birthdate,
 					email: clubMember.email,
 					phone: clubMember.phone,
 					street: clubMember.street,
@@ -591,6 +603,7 @@ export const membersRouter = {
 						lastName: input.lastName,
 						email: input.email,
 						phone: input.phone,
+						birthdate: input.birthdate?.trim() || undefined,
 						street: input.street,
 						city: input.city,
 						state: input.state,
@@ -653,6 +666,7 @@ export const membersRouter = {
 						lastName: input.lastName,
 						email: input.email,
 						phone: input.phone,
+						birthdate: input.birthdate?.trim() || undefined,
 						street: input.street,
 						city: input.city,
 						state: input.state,
