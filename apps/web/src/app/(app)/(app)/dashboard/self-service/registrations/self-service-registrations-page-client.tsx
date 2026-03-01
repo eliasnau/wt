@@ -3,6 +3,8 @@
 import { ORPCError } from "@orpc/client";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { AlertCircle, CheckCircle2, Copy, Eye, Trash2 } from "lucide-react";
+import type { Route } from "next";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -66,6 +68,7 @@ type RegistrationRow = {
   isActive: boolean;
   status: string;
   groupsSnapshot: unknown;
+  memberId?: string | null;
   createdAt: Date | string | null;
 };
 
@@ -164,19 +167,6 @@ export function SelfServiceRegistrationsPageClient() {
       input: {},
     }),
   );
-
-  const updateStatusMutation = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: SubmissionStatusTab }) =>
-      client.selfRegistrations.updateSubmissionStatus({ id, status }),
-    onSuccess: () => {
-      toast.success("Status aktualisiert");
-      refetchSubmitted();
-      refetchCreated();
-    },
-    onError: (error) => {
-      toast.error(error.message || "Status konnte nicht aktualisiert werden");
-    },
-  });
 
   const deleteRegistrationMutation = useMutation({
     mutationFn: async (id: string) => client.selfRegistrations.delete({ id }),
@@ -289,6 +279,7 @@ export function SelfServiceRegistrationsPageClient() {
                       <TableHead>Code</TableHead>
                       <TableHead>Laufzeit</TableHead>
                       <TableHead>Status</TableHead>
+                      <TableHead>Mitglied</TableHead>
                       <TableHead>Erstellt</TableHead>
                       <TableHead className="text-right">Aktionen</TableHead>
                     </TableRow>
@@ -312,6 +303,7 @@ export function SelfServiceRegistrationsPageClient() {
                                     : "Inaktiv"}
                           </Badge>
                         </TableCell>
+                        <TableCell>{item.memberId || "-"}</TableCell>
                         <TableCell>{formatDate(item.createdAt)}</TableCell>
                         <TableCell>
                           <div className="flex justify-end gap-2">
@@ -357,7 +349,7 @@ export function SelfServiceRegistrationsPageClient() {
               <div className="mb-4">
                 <h2 className="font-semibold text-base">Eingegangene Registrierungen</h2>
                 <p className="text-muted-foreground text-sm">
-                  Pruefe Einsendungen und markiere sie nach manueller Anlage als erstellt.
+                  Prüfe Einsendungen, bearbeite Daten und erstelle danach das Mitglied.
                 </p>
               </div>
               <div className="mb-4 flex items-center gap-2">
@@ -409,6 +401,7 @@ export function SelfServiceRegistrationsPageClient() {
                       <TableHead>Telefon</TableHead>
                       <TableHead>Code</TableHead>
                       <TableHead>Self-Service</TableHead>
+                      <TableHead>Mitglied</TableHead>
                       <TableHead>Eingang</TableHead>
                       <TableHead className="text-right">Aktion</TableHead>
                     </TableRow>
@@ -423,20 +416,21 @@ export function SelfServiceRegistrationsPageClient() {
                         <TableCell>{row.phone}</TableCell>
                         <TableCell>{row.code}</TableCell>
                         <TableCell>{row.configName || "-"}</TableCell>
+                        <TableCell>{row.memberId || "-"}</TableCell>
                         <TableCell>{formatDate(row.submittedAt)}</TableCell>
                         <TableCell className="text-right">
                           <Button
                             size="sm"
-                            onClick={() =>
-                              updateStatusMutation.mutate({
-                                id: row.id,
-                                status: "created",
-                              })
+                            render={
+                              <Link
+                                href={
+                                  `/dashboard/self-service/registrations/${row.id}` as Route
+                                }
+                              />
                             }
-                            disabled={updateStatusMutation.isPending}
                           >
                             <CheckCircle2 data-icon="inline-start" />
-                            Als erstellt markieren
+                            Prüfen
                           </Button>
                         </TableCell>
                       </TableRow>
@@ -451,6 +445,7 @@ export function SelfServiceRegistrationsPageClient() {
                       <TableHead>E-Mail</TableHead>
                       <TableHead>Code</TableHead>
                       <TableHead>Self-Service</TableHead>
+                      <TableHead>Mitglied</TableHead>
                       <TableHead>Eingang</TableHead>
                       <TableHead className="text-right">Status</TableHead>
                     </TableRow>
@@ -464,6 +459,7 @@ export function SelfServiceRegistrationsPageClient() {
                         <TableCell>{row.email}</TableCell>
                         <TableCell>{row.code}</TableCell>
                         <TableCell>{row.configName || "-"}</TableCell>
+                        <TableCell>{row.memberId || "-"}</TableCell>
                         <TableCell>{formatDate(row.submittedAt)}</TableCell>
                         <TableCell className="text-right">
                           <Badge variant="secondary">Created</Badge>

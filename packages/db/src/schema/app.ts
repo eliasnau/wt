@@ -108,7 +108,11 @@ export const selfRegistration = pgTable(
     code: text("code").notNull(),
     description: text("description"),
     isActive: boolean("is_active").default(true).notNull(),
+    submitted: boolean("submitted").default(false).notNull(),
     status: text("status").notNull().default("draft"), // draft | submitted | created
+    memberId: uuid("member_id").references(() => clubMember.id, {
+      onDelete: "set null",
+    }),
     billingCycle: text("billing_cycle").notNull().default("monthly"),
     joiningFeeAmount: decimal("joining_fee_amount", {
       precision: 10,
@@ -128,6 +132,7 @@ export const selfRegistration = pgTable(
     birthdate: date("birthdate"),
     street: text("street"),
     city: text("city"),
+    state: text("state"),
     postalCode: text("postal_code"),
     country: text("country"),
     accountHolder: text("account_holder"),
@@ -143,6 +148,8 @@ export const selfRegistration = pgTable(
   (table) => [
     index("self_registration_org_id_idx").on(table.organizationId),
     index("self_registration_active_idx").on(table.isActive),
+    index("self_registration_submitted_idx").on(table.submitted),
+    index("self_registration_member_id_idx").on(table.memberId),
     index("self_registration_status_idx").on(table.status),
     unique("self_registration_code_unique").on(table.code),
   ],

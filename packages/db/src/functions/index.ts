@@ -1,4 +1,4 @@
-import { and, count, db, desc, eq, inArray, wsDb } from "..";
+import { and, count, db, desc, eq, inArray, isNotNull, isNull, wsDb } from "..";
 import {
   clubMember,
   contract,
@@ -293,15 +293,20 @@ export const DB = {
         status?: "submitted" | "created";
       }) => {
         const baseWhere = eq(selfRegistration.organizationId, organizationId);
-        const whereClause = status
-          ? and(baseWhere, eq(selfRegistration.status, status))
-          : baseWhere;
+        const whereClause =
+          status === "submitted"
+            ? and(baseWhere, eq(selfRegistration.submitted, true), isNull(selfRegistration.memberId))
+            : status === "created"
+              ? and(baseWhere, isNotNull(selfRegistration.memberId))
+              : baseWhere;
 
         return db
           .select({
             id: selfRegistration.id,
             organizationId: selfRegistration.organizationId,
             code: selfRegistration.code,
+            memberId: selfRegistration.memberId,
+            submitted: selfRegistration.submitted,
             status: selfRegistration.status,
             firstName: selfRegistration.firstName,
             lastName: selfRegistration.lastName,
@@ -310,6 +315,7 @@ export const DB = {
             birthdate: selfRegistration.birthdate,
             street: selfRegistration.street,
             city: selfRegistration.city,
+            state: selfRegistration.state,
             postalCode: selfRegistration.postalCode,
             country: selfRegistration.country,
             accountHolder: selfRegistration.accountHolder,
@@ -709,6 +715,20 @@ export const DB = {
           yearlyFeeAmount?: string;
           contractStartDate?: string;
           notes?: string;
+          firstName?: string;
+          lastName?: string;
+          email?: string;
+          phone?: string;
+          birthdate?: string;
+          street?: string;
+          city?: string;
+          state?: string;
+          postalCode?: string;
+          country?: string;
+          accountHolder?: string;
+          iban?: string;
+          bic?: string;
+          submitted?: boolean;
         };
         groups?: Array<{
           groupId: string;
@@ -735,7 +755,12 @@ export const DB = {
       deleteConfig: async ({ configId }: { configId: string }) => {
         const [deletedConfig] = await db
           .delete(selfRegistration)
-          .where(eq(selfRegistration.id, configId))
+          .where(
+            and(
+              eq(selfRegistration.id, configId),
+              isNull(selfRegistration.memberId),
+            ),
+          )
           .returning();
         return deletedConfig || null;
       },
@@ -752,6 +777,7 @@ export const DB = {
           birthdate?: string;
           street: string;
           city: string;
+          state?: string;
           postalCode: string;
           country: string;
           accountHolder: string;
@@ -767,6 +793,7 @@ export const DB = {
           .update(selfRegistration)
           .set({
             status: "submitted",
+            submitted: true,
             firstName: submission.firstName,
             lastName: submission.lastName,
             email: submission.email,
@@ -774,6 +801,7 @@ export const DB = {
             birthdate: submission.birthdate,
             street: submission.street,
             city: submission.city,
+            state: submission.state,
             postalCode: submission.postalCode,
             country: submission.country,
             accountHolder: submission.accountHolder,
@@ -801,7 +829,7 @@ export const DB = {
       }) => {
         const [updatedSubmission] = await db
           .update(selfRegistration)
-          .set({ status })
+          .set({ status, submitted: status === "submitted" ? true : undefined })
           .where(
             and(
               eq(selfRegistration.id, submissionId),
@@ -811,6 +839,32 @@ export const DB = {
           .returning();
 
         return updatedSubmission || null;
+      },
+      setMemberId: async ({
+        registrationId,
+        organizationId,
+        memberId,
+      }: {
+        registrationId: string;
+        organizationId: string;
+        memberId: string;
+      }) => {
+        const [updated] = await db
+          .update(selfRegistration)
+          .set({
+            memberId,
+            submitted: true,
+            status: "created",
+          })
+          .where(
+            and(
+              eq(selfRegistration.id, registrationId),
+              eq(selfRegistration.organizationId, organizationId),
+            ),
+          )
+          .returning();
+
+        return updated || null;
       },
     },
   },
