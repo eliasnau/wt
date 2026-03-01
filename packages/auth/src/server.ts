@@ -109,6 +109,7 @@ function getPublicBaseUrl() {
 }
 
 export const auth = betterAuth({
+  appName: "matdesk",
   database: drizzleAdapter(db, {
     provider: "pg",
   }),
