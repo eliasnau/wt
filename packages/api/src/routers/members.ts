@@ -167,6 +167,12 @@ type DateParts = {
 	day: number;
 };
 
+type SepaMemberValidationIssue = {
+	memberId: string;
+	memberName: string;
+	reasons: string[];
+};
+
 function parseDateOnly(dateStr: string): DateParts | null {
 	const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
 	if (!match) return null;
@@ -212,6 +218,18 @@ function getTodayInBerlinDateString(): string {
 
 function generateMandateId(): string {
 	return `WT-${randomBytes(12).toString("hex").toUpperCase()}`;
+}
+
+function normalizeIban(value: string | null | undefined): string {
+	return (value ?? "").replace(/\s+/g, "").toUpperCase();
+}
+
+function normalizeBic(value: string | null | undefined): string {
+	return (value ?? "").replace(/\s+/g, "").toUpperCase();
+}
+
+function normalizeRequiredText(value: string | null | undefined): string {
+	return (value ?? "").trim();
 }
 
 /**
@@ -539,6 +557,83 @@ export const membersRouter = {
 			});
 		})
 		.route({ method: "POST", path: "/members/query" }),
+
+	validateSepa: protectedProcedure
+		.use(rateLimitMiddleware(2))
+		.use(requirePermission({ member: ["view"] }))
+		.handler(async ({ context }) => {
+			const organizationId = context.session.activeOrganizationId!;
+			const sepa = await loadSepaModule();
+			const bicRegex = /^[A-Z0-9]{8}([A-Z0-9]{3})?$/;
+
+			const rows = await db
+				.select({
+					memberId: clubMember.id,
+					firstName: clubMember.firstName,
+					lastName: clubMember.lastName,
+					email: clubMember.email,
+					iban: clubMember.iban,
+					bic: clubMember.bic,
+					cardHolder: clubMember.cardHolder,
+					mandateId: contract.mandateId,
+					mandateSignatureDate: contract.mandateSignatureDate,
+					contractCancelledAt: contract.cancelledAt,
+				})
+				.from(clubMember)
+				.innerJoin(contract, eq(contract.memberId, clubMember.id))
+				.where(
+					and(
+						eq(clubMember.organizationId, organizationId),
+						eq(contract.organizationId, organizationId),
+					),
+				)
+				.orderBy(clubMember.lastName, clubMember.firstName);
+
+			const members = rows.map((row) => {
+				const memberName = `${row.firstName} ${row.lastName}`.trim();
+				const iban = normalizeIban(row.iban);
+				const bic = normalizeBic(row.bic);
+				const cardHolder = normalizeRequiredText(row.cardHolder);
+				const mandateId = normalizeRequiredText(row.mandateId);
+				const reasons: string[] = [];
+
+				if (!iban) reasons.push("missing IBAN");
+				else if (!sepa.validateIBAN(iban)) reasons.push("invalid IBAN");
+
+				if (!bic) reasons.push("missing BIC");
+				else if (!bicRegex.test(bic)) reasons.push("invalid BIC");
+
+				if (!cardHolder) reasons.push("missing account holder");
+				if (!mandateId) reasons.push("missing mandate ID");
+				if (!row.mandateSignatureDate) reasons.push("missing mandate signature date");
+
+				return {
+					memberId: row.memberId,
+					memberName,
+					email: row.email,
+					contractCancelledAt: row.contractCancelledAt,
+					valid: reasons.length === 0,
+					reasons,
+				};
+			});
+
+			const invalidMembers: SepaMemberValidationIssue[] = members
+				.filter((member) => !member.valid)
+				.map((member) => ({
+					memberId: member.memberId,
+					memberName: member.memberName,
+					reasons: member.reasons,
+				}));
+
+			return {
+				total: members.length,
+				validCount: members.length - invalidMembers.length,
+				invalidCount: invalidMembers.length,
+				members,
+				invalidMembers,
+			};
+		})
+		.route({ method: "GET", path: "/members/sepa/validate" }),
 
 	exportCsv: protectedProcedure
 		.use(rateLimitMiddleware(1))
