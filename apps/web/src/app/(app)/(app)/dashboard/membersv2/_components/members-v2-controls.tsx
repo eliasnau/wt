@@ -1,7 +1,10 @@
 "use client";
 
 import {
-	ArrowUpDownIcon,
+	ArrowDownAZIcon,
+	ArrowDownZAIcon,
+	ClockArrowDownIcon,
+	ClockArrowUpIcon,
 	DownloadIcon,
 	EyeIcon,
 	Loader2,
@@ -59,6 +62,14 @@ type Option = {
 	label: string;
 	value: string;
 };
+
+const DATE_SORT_FIELDS = new Set([
+	"createdAt",
+	"updatedAt",
+	"startDate",
+	"cancellationEffectiveDate",
+	"cancelledAt",
+]);
 
 type MembersV2ControlsProps = {
 	localSearch: string;
@@ -129,6 +140,16 @@ export function MembersV2Controls({
 	onAdvancedSheetOpenChange,
 	advancedFiltersPanel,
 }: MembersV2ControlsProps) {
+	const isDateSort = DATE_SORT_FIELDS.has(sortField);
+	const SortDirectionIcon =
+		sortDirection === "asc"
+			? isDateSort
+				? ClockArrowUpIcon
+				: ArrowDownAZIcon
+			: isDateSort
+				? ClockArrowDownIcon
+				: ArrowDownZAIcon;
+
 	return (
 		<div className="space-y-2">
 			<div className="space-y-2 sm:flex sm:items-center sm:justify-between sm:gap-2 sm:space-y-0">
@@ -163,12 +184,12 @@ export function MembersV2Controls({
 					/>
 				</div>
 
-				<div className="flex flex-wrap items-center justify-start gap-2 sm:justify-end">
-					<Popover>
-						<PopoverTrigger render={<Button variant="outline" size="sm" />}>
-							<ArrowUpDownIcon />
-							Sortierung
-						</PopoverTrigger>
+					<div className="flex flex-wrap items-center justify-start gap-2 sm:justify-end">
+						<Popover>
+							<PopoverTrigger render={<Button variant="outline" size="sm" />}>
+								<SortDirectionIcon />
+								Sortierung
+							</PopoverTrigger>
 						<PopoverPopup align="end" className="w-[320px]">
 							<div className="grid gap-3">
 								<div className="space-y-1">
@@ -205,12 +226,26 @@ export function MembersV2Controls({
 									}}
 								>
 									<SelectTrigger>
+										<SortDirectionIcon />
 										<SelectValue />
 									</SelectTrigger>
 									<SelectPopup>
 										{sortDirectionOptions.map((option) => (
 											<SelectItem key={option.value} value={option.value}>
-												{option.label}
+												<span className="inline-flex items-center gap-2">
+													{option.value === "asc" ? (
+														isDateSort ? (
+															<ClockArrowUpIcon />
+														) : (
+															<ArrowDownAZIcon />
+														)
+													) : isDateSort ? (
+														<ClockArrowDownIcon />
+													) : (
+														<ArrowDownZAIcon />
+													)}
+													<span>{option.label}</span>
+												</span>
 											</SelectItem>
 										))}
 									</SelectPopup>
