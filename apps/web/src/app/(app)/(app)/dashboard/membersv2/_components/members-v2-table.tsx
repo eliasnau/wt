@@ -161,16 +161,24 @@ const createColumns = (
 		accessorKey: "lastName",
 		header: "Nachname",
 	},
-	{
-		accessorKey: "email",
-		header: "E-Mail",
-		cell: ({ row }) => <CopyableTableCell value={row.original.email} />,
-	},
-	{
-		accessorKey: "phone",
-		header: "Telefon",
-		cell: ({ row }) => <CopyableTableCell value={row.original.phone} />,
-	},
+		{
+			accessorKey: "email",
+			header: "E-Mail",
+			cell: ({ row }) => (
+				<div className="max-w-[260px]">
+					<CopyableTableCell value={row.original.email} />
+				</div>
+			),
+		},
+		{
+			accessorKey: "phone",
+			header: "Telefon",
+			cell: ({ row }) => (
+				<div className="max-w-[180px]">
+					<CopyableTableCell value={row.original.phone} />
+				</div>
+			),
+		},
 	{
 		accessorKey: "groups",
 		header: "Gruppen",
@@ -363,9 +371,9 @@ export function MembersV2Table({
 
 	return (
 		<>
-			<div className="rounded-xl border bg-background">
-				<div className="w-full overflow-x-auto">
-					<table className="w-max min-w-full caption-bottom text-sm">
+			<div className="min-w-0 max-w-full rounded-xl border bg-background">
+				<div className="relative min-w-0 max-w-full overflow-x-auto">
+					<table className="w-full min-w-[980px] caption-bottom text-sm">
 						<thead className="[&_tr]:border-b">
 							{table.getHeaderGroups().map((headerGroup) => (
 								<tr key={headerGroup.id}>

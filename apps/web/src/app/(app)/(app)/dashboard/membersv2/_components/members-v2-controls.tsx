@@ -151,7 +151,7 @@ export function MembersV2Controls({
 				: ArrowDownZAIcon;
 
 	return (
-		<div className="space-y-2">
+		<div className="min-w-0 max-w-full space-y-2">
 			<div className="space-y-2 2xl:flex 2xl:items-center 2xl:justify-between 2xl:gap-2 2xl:space-y-0">
 				<div className="flex flex-wrap items-center gap-2">
 					<InputGroup className="w-[260px] max-w-full sm:w-[320px] lg:w-[360px]">

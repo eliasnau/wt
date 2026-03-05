@@ -1092,7 +1092,7 @@ export function MembersV2PageClient() {
   );
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex w-full min-w-0 max-w-full flex-col gap-6 overflow-x-hidden">
       <Header>
         <HeaderContent>
           <HeaderTitle>Mitglieder</HeaderTitle>
@@ -1360,26 +1360,28 @@ export function MembersV2PageClient() {
             </DialogContent>
           </Dialog>
 
-          <MembersV2Table
-            data={data?.data ?? []}
-            pagination={
-              data?.pagination ?? {
-                page,
-                limit,
-                totalCount: 0,
-                totalPages: 0,
-                hasNextPage: false,
-                hasPreviousPage: false,
+          <div className="min-w-0 max-w-full">
+            <MembersV2Table
+              data={data?.data ?? []}
+              pagination={
+                data?.pagination ?? {
+                  page,
+                  limit,
+                  totalCount: 0,
+                  totalPages: 0,
+                  hasNextPage: false,
+                  hasPreviousPage: false,
+                }
               }
-            }
-            hasActiveFilters={hasActiveFilters}
-            onClearFilters={resetAllFilters}
-            onPageChange={(nextPage) => setQueryState({ page: nextPage })}
-            onLimitChange={(nextLimit) =>
-              setQueryState({ page: 1, limit: nextLimit })
-            }
-            loading={isPending}
-          />
+              hasActiveFilters={hasActiveFilters}
+              onClearFilters={resetAllFilters}
+              onPageChange={(nextPage) => setQueryState({ page: nextPage })}
+              onLimitChange={(nextLimit) =>
+                setQueryState({ page: 1, limit: nextLimit })
+              }
+              loading={isPending}
+            />
+          </div>
         </>
       )}
     </div>

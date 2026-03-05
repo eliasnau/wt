@@ -26,7 +26,7 @@ export default function DashboardLayout({
 		<>
 			<TopLoader />
 			<SidebarProvider>
-				<div className="relative flex h-screen w-full">
+				<div className="relative flex h-screen w-full overflow-hidden">
 					<AppSidebar />
 					<SidebarInset className="flex flex-col">
 						{/* <header className="sticky top-0 z-10 flex h-14 shrink-0 items-center gap-2 border-b bg-background/95 px-4 backdrop-blur supports-[backdrop-filter]:bg-background/60 md:hidden">
@@ -35,7 +35,7 @@ export default function DashboardLayout({
             </header> */}
 
 						<main className="flex-1 overflow-auto">
-							<div className="mx-auto w-full max-w-screen p-4 sm:p-6 md:max-w-3xl md:max-w-[45rem] lg:max-w-7xl lg:p-10">
+							<div className="mx-auto w-full max-w-full p-4 sm:p-6 md:max-w-3xl md:max-w-[45rem] lg:max-w-7xl lg:p-10">
 								{children}
 							</div>
 						</main>
