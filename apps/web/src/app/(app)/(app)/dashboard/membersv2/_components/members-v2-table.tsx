@@ -53,13 +53,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-	Table,
-	TableBody,
 	TableCell,
-	TableFooter,
-	TableHead,
-	TableHeader,
-	TableRow,
 } from "@/components/ui/table";
 import {
 	Tooltip,
@@ -367,49 +361,49 @@ export function MembersV2Table({
 		);
 	}
 
-		return (
-			<>
-				<div className="rounded-xl border bg-background">
-					<div className="max-h-[70vh] overflow-auto">
-						<Table className="min-w-[980px]">
-						<TableHeader>
-						{table.getHeaderGroups().map((headerGroup) => (
-							<TableRow className="hover:bg-transparent" key={headerGroup.id}>
-								{headerGroup.headers.map((header, index) => {
-									const isLast = index === headerGroup.headers.length - 1;
-									return (
-										<TableHead
-											key={header.id}
-											className={isLast ? "text-right" : undefined}
-										>
-											{header.isPlaceholder
-												? null
+	return (
+		<>
+			<div className="rounded-xl border bg-background">
+				<div className="w-full overflow-x-auto">
+					<table className="w-max min-w-full caption-bottom text-sm">
+						<thead className="[&_tr]:border-b">
+							{table.getHeaderGroups().map((headerGroup) => (
+								<tr key={headerGroup.id}>
+									{headerGroup.headers.map((header, index) => {
+										const isLast = index === headerGroup.headers.length - 1;
+										return (
+											<th
+												key={header.id}
+												className={`h-10 whitespace-nowrap px-2 text-left align-middle font-medium text-muted-foreground ${isLast ? "text-right" : ""}`}
+											>
+												{header.isPlaceholder
+													? null
 												: flexRender(
 														header.column.columnDef.header,
-														header.getContext(),
-													)}
-										</TableHead>
-									);
-								})}
-							</TableRow>
-						))}
-					</TableHeader>
-					<TableBody>
-						{loading ? (
-							skeletonRowKeys.map((rowKey) => (
-								<TableRow key={rowKey}>
-									{skeletonColumnKeys.map((columnKey) => (
-										<TableCell key={`${rowKey}-${columnKey}`} className="py-3">
-											<Skeleton className="h-5 w-full" />
-										</TableCell>
-									))}
-								</TableRow>
-							))
-						) : !table.getRowModel().rows.length ? (
-							<TableRow>
-								<TableCell
-									colSpan={columns.length}
-									className="h-32 text-center"
+															header.getContext(),
+														)}
+											</th>
+										);
+									})}
+								</tr>
+							))}
+						</thead>
+						<tbody className="[&_tr:last-child]:border-0">
+							{loading ? (
+								skeletonRowKeys.map((rowKey) => (
+									<tr key={rowKey} className="border-b">
+										{skeletonColumnKeys.map((columnKey) => (
+											<TableCell key={`${rowKey}-${columnKey}`} className="py-3">
+												<Skeleton className="h-5 w-full" />
+											</TableCell>
+										))}
+									</tr>
+								))
+							) : !table.getRowModel().rows.length ? (
+								<tr className="border-b">
+									<TableCell
+										colSpan={columns.length}
+										className="h-32 text-center"
 								>
 									<div className="flex flex-col items-center justify-center gap-2">
 										<p className="text-muted-foreground">
@@ -423,29 +417,32 @@ export function MembersV2Table({
 											>
 												Filter zurücksetzen
 											</Button>
-										)}
-									</div>
-								</TableCell>
-							</TableRow>
-						) : (
-							table.getRowModel().rows.map((row) => (
-								<TableRow key={row.id}>
-									{row.getVisibleCells().map((cell) => (
-										<TableCell key={cell.id}>
-											{flexRender(
+											)}
+										</div>
+									</TableCell>
+								</tr>
+							) : (
+								table.getRowModel().rows.map((row) => (
+									<tr
+										key={row.id}
+										className="border-b transition-colors hover:bg-muted/50"
+									>
+										{row.getVisibleCells().map((cell) => (
+											<TableCell key={cell.id}>
+												{flexRender(
 												cell.column.columnDef.cell,
 												cell.getContext(),
-											)}
-										</TableCell>
-									))}
-								</TableRow>
-							))
-						)}
-					</TableBody>
-					<TableFooter>
-						<TableRow>
-							<TableCell colSpan={columns.length} className="p-2">
-								<div className="flex items-center justify-between gap-2">
+												)}
+											</TableCell>
+										))}
+									</tr>
+								))
+							)}
+						</tbody>
+						<tfoot className="border-t bg-muted/50 font-medium [&>tr]:last:border-b-0">
+							<tr>
+								<TableCell colSpan={columns.length} className="p-2">
+									<div className="flex items-center justify-between gap-2">
 									<div className="flex items-center gap-2 whitespace-nowrap">
 										<p className="text-muted-foreground text-sm">Showing</p>
 										<Select
@@ -520,14 +517,14 @@ export function MembersV2Table({
 												/>
 											</PaginationItem>
 										</PaginationContent>
-									</Pagination>
-								</div>
-							</TableCell>
-						</TableRow>
-					</TableFooter>
-						</Table>
-					</div>
+										</Pagination>
+									</div>
+								</TableCell>
+							</tr>
+						</tfoot>
+					</table>
 				</div>
+			</div>
 
 			<MemberOverviewSheet
 				member={selectedMember}
