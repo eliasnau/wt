@@ -16,8 +16,10 @@ import { Frame, FrameFooter, FramePanel } from "@/components/ui/frame";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function SignIn() {
+  const { session } = useAuth();
   const router = useRouter();
   const [redirectUrl] = useQueryState("redirectUrl", {
     defaultValue: "/dashboard",
@@ -68,6 +70,10 @@ export default function SignIn() {
       },
     });
   };
+
+  if (session?.session.id) {
+    router.push(redirectUrl as Route);
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">

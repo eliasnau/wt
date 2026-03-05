@@ -22,8 +22,10 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function SignUp2Page() {
+  const { session } = useAuth();
   const router = useRouter();
   const [redirectUrl] = useQueryState("redirectUrl", {
     defaultValue: "/dashboard",
@@ -56,6 +58,10 @@ export default function SignUp2Page() {
       );
     },
   });
+
+  if (session?.session.id) {
+    router.push(redirectUrl as Route);
+  }
 
   return (
     <main className="relative md:h-screen md:overflow-hidden lg:grid lg:grid-cols-2">
