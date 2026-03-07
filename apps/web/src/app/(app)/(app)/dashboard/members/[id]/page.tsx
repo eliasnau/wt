@@ -36,6 +36,14 @@ import { Frame, FrameHeader, FramePanel } from "@/components/ui/frame";
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { orpc } from "@/utils/orpc";
@@ -60,6 +68,17 @@ function formatCurrency(amount: string | null | undefined) {
     style: "currency",
     currency: "EUR",
   }).format(Number.parseFloat(amount));
+}
+
+function getPaymentTypeLabel(payment: {
+  membershipAmount: string;
+  joiningFeeAmount: string;
+  yearlyFeeAmount: string;
+}) {
+  if (Number.parseFloat(payment.membershipAmount) > 0) return "Mitgliedschaft";
+  if (Number.parseFloat(payment.joiningFeeAmount) > 0) return "Aufnahmegebühr";
+  if (Number.parseFloat(payment.yearlyFeeAmount) > 0) return "Jahresbeitrag";
+  return "Sonstiges";
 }
 
 function parseInitialPeriod(
@@ -133,6 +152,13 @@ export default function MemberDetailPage() {
 
   const paymentDetailsQuery = useQuery(
     orpc.members.getPaymentDetails.queryOptions({
+      input: { memberId },
+      enabled: false,
+    }),
+  );
+
+  const paymentHistoryQuery = useQuery(
+    orpc.members.getPayments.queryOptions({
       input: { memberId },
       enabled: false,
     }),
@@ -296,6 +322,13 @@ export default function MemberDetailPage() {
       joiningFeeAmount: formState.joiningFeeAmount || undefined,
       yearlyFeeAmount: formState.yearlyFeeAmount || undefined,
     });
+  };
+
+  const handleLoadPaymentData = async () => {
+    await Promise.all([
+      paymentDetailsQuery.refetch(),
+      paymentHistoryQuery.refetch(),
+    ]);
   };
 
   return (
@@ -995,12 +1028,72 @@ export default function MemberDetailPage() {
                     </div>
                     <Button
                       variant="outline"
-                      onClick={() => paymentDetailsQuery.refetch()}
-                      disabled={paymentDetailsQuery.isFetching}
+                      onClick={handleLoadPaymentData}
+                      disabled={
+                        paymentDetailsQuery.isFetching || paymentHistoryQuery.isFetching
+                      }
                     >
-                      {paymentDetailsQuery.isFetching ? "Lädt..." : "View"}
+                      {paymentDetailsQuery.isFetching || paymentHistoryQuery.isFetching
+                        ? "Lädt..."
+                        : "View"}
                     </Button>
                   </div>
+                )}
+
+                {paymentDetailsQuery.data && (
+                  <>
+                    <Separator className="my-6" />
+                    <div className="space-y-4">
+                      <div>
+                        <p className="font-medium text-sm">Zahlungsverlauf</p>
+                        <p className="text-muted-foreground text-xs">
+                          Alle erzeugten Zahlungspositionen dieses Mitglieds.
+                        </p>
+                      </div>
+
+                      {paymentHistoryQuery.error ? (
+                        <p className="text-destructive text-sm">
+                          Zahlungsverlauf konnte nicht geladen werden.
+                        </p>
+                      ) : paymentHistoryQuery.data?.payments.length ? (
+                        <div className="w-full overflow-x-auto">
+                          <Table className="min-w-[760px]">
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Fällig</TableHead>
+                                <TableHead>Typ</TableHead>
+                                <TableHead>Zeitraum</TableHead>
+                                <TableHead>Lauf</TableHead>
+                                <TableHead className="text-right">Betrag</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {paymentHistoryQuery.data.payments.map((payment) => (
+                                <TableRow key={payment.id}>
+                                  <TableCell>{formatDate(payment.dueDate)}</TableCell>
+                                  <TableCell>{getPaymentTypeLabel(payment)}</TableCell>
+                                  <TableCell>
+                                    {formatDate(payment.billingPeriodStart)} -{" "}
+                                    {formatDate(payment.billingPeriodEnd)}
+                                  </TableCell>
+                                  <TableCell>
+                                    {payment.batchNumber ?? payment.billingMonth}
+                                  </TableCell>
+                                  <TableCell className="text-right font-medium">
+                                    {formatCurrency(payment.totalAmount)}
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      ) : (
+                        <p className="text-muted-foreground text-sm">
+                          Noch keine Zahlungen vorhanden.
+                        </p>
+                      )}
+                    </div>
+                  </>
                 )}
               </FramePanel>
             </CollapsiblePanel>

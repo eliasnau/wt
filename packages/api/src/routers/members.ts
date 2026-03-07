@@ -1,8 +1,15 @@
 import { randomBytes } from "node:crypto";
 import { ORPCError } from "@orpc/server";
-import { and, count, db, eq, ilike, inArray, or, sql } from "@repo/db";
+import { and, count, db, desc, eq, ilike, inArray, or, sql } from "@repo/db";
 import { DB } from "@repo/db/functions";
-import { clubMember, contract, group, groupMember } from "@repo/db/schema";
+import {
+	clubMember,
+	contract,
+	group,
+	groupMember,
+	payment,
+	paymentBatch,
+} from "@repo/db/schema";
 import { after } from "next/server";
 import { z } from "zod";
 import { protectedProcedure } from "../index";
@@ -331,6 +338,63 @@ export const membersRouter = {
 			};
 		})
 		.route({ method: "GET", path: "/members/:memberId/payment-details" }),
+
+	getPayments: protectedProcedure
+		.use(rateLimitMiddleware(2))
+		.use(requirePermission({ member: ["view_payment"] }))
+		.input(getMemberSchema)
+		.handler(async ({ input, context }) => {
+			const organizationId = context.session.activeOrganizationId!;
+			const member = await db.query.clubMember.findFirst({
+				where: and(
+					eq(clubMember.id, input.memberId),
+					eq(clubMember.organizationId, organizationId),
+				),
+				columns: {
+					id: true,
+				},
+			});
+
+			if (!member) {
+				throw new ORPCError("NOT_FOUND", {
+					message: "Member not found",
+				});
+			}
+
+			const payments = await db
+				.select({
+					id: payment.id,
+					batchId: payment.batchId,
+					batchNumber: paymentBatch.batchNumber,
+					billingMonth: paymentBatch.billingMonth,
+					membershipAmount: payment.membershipAmount,
+					joiningFeeAmount: payment.joiningFeeAmount,
+					yearlyFeeAmount: payment.yearlyFeeAmount,
+					totalAmount: payment.totalAmount,
+					billingPeriodStart: payment.billingPeriodStart,
+					billingPeriodEnd: payment.billingPeriodEnd,
+					dueDate: payment.dueDate,
+					notes: payment.notes,
+					createdAt: payment.createdAt,
+				})
+				.from(payment)
+				.innerJoin(contract, eq(payment.contractId, contract.id))
+				.innerJoin(paymentBatch, eq(payment.batchId, paymentBatch.id))
+				.where(
+					and(
+						eq(contract.memberId, input.memberId),
+						eq(contract.organizationId, organizationId),
+						eq(paymentBatch.organizationId, organizationId),
+					),
+				)
+				.orderBy(desc(payment.dueDate), desc(payment.createdAt));
+
+			return {
+				memberId: input.memberId,
+				payments,
+			};
+		})
+		.route({ method: "GET", path: "/members/:memberId/payments" }),
 
 	list: protectedProcedure
 		.use(rateLimitMiddleware(1))
