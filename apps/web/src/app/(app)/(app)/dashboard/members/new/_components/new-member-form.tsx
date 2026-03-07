@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import * as z from "zod";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -26,6 +27,11 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import {
+	isFreeMembershipPrice,
+	normalizeMembershipPriceInput,
+	parseMembershipPriceInput,
+} from "@/utils/membership-price";
 import { client, orpc } from "@/utils/orpc";
 
 const firstNameSchema = z.string().min(1, "Vorname ist erforderlich").max(255);
@@ -66,8 +72,6 @@ const guardianEmailSchema = z
 	.or(z.literal(""));
 const guardianPhoneSchema = z.string().optional();
 const notesSchema = z.string().max(1000, "Maximum 1000 characters");
-const groupPriceSchema = /^\d+(\.\d{1,2})?$/;
-
 const formSchema = z.object({
 	firstName: firstNameSchema,
 	lastName: lastNameSchema,
@@ -96,7 +100,7 @@ const formSchema = z.object({
 
 type GroupAssignment = {
 	groupId: string;
-	membershipPrice?: string;
+	membershipPrice?: number;
 };
 
 const CONTRACT_START_MONTH_ITEMS = [
@@ -133,7 +137,7 @@ export function NewMemberForm() {
 		return selectedGroupIds.reduce<Record<string, string | undefined>>(
 			(errors, groupId) => {
 				const value = groupPrices[groupId];
-				if (value && !groupPriceSchema.test(value)) {
+				if (value && parseMembershipPriceInput(value) === null) {
 					errors[groupId] = "Ungültiges Preisformat";
 				}
 				return errors;
@@ -280,9 +284,11 @@ export function NewMemberForm() {
 				const membershipPrice = groupPrices[groupId];
 				return {
 					groupId,
-					membershipPrice: membershipPrice?.trim()
-						? membershipPrice.trim()
-						: undefined,
+					membershipPrice:
+						membershipPrice?.trim() &&
+						parseMembershipPriceInput(membershipPrice) !== null
+							? (parseMembershipPriceInput(membershipPrice) ?? undefined)
+							: undefined,
 				};
 			});
 
@@ -432,7 +438,9 @@ export function NewMemberForm() {
 											field.state.meta.isTouched && !field.state.meta.isValid;
 										return (
 											<Field data-invalid={isInvalid}>
-												<FieldLabel htmlFor="birthdate">Geburtsdatum</FieldLabel>
+												<FieldLabel htmlFor="birthdate">
+													Geburtsdatum
+												</FieldLabel>
 												<Input
 													id="birthdate"
 													name={field.name}
@@ -788,11 +796,18 @@ export function NewMemberForm() {
 														<span className="font-medium text-sm">
 															{group.name}
 														</span>
-														{group.defaultMembershipPrice ? (
-															<span className="text-muted-foreground text-xs">
-																Default: €{group.defaultMembershipPrice}
-															</span>
-														) : null}
+														<div className="flex items-center gap-2">
+															{group.defaultMembershipPrice ? (
+																<span className="text-muted-foreground text-xs">
+																	Default: €{group.defaultMembershipPrice}
+																</span>
+															) : null}
+															{isFreeMembershipPrice(
+																group.defaultMembershipPrice,
+															) ? (
+																<Badge variant="secondary">Free</Badge>
+															) : null}
+														</div>
 													</div>
 													{group.description ? (
 														<p className="text-muted-foreground text-xs">
@@ -802,9 +817,16 @@ export function NewMemberForm() {
 
 													{isSelected ? (
 														<div className="space-y-1.5">
-															<FieldLabel htmlFor={`group-price-${group.id}`}>
-																Custom Monthly Price (Optional)
-															</FieldLabel>
+															<div className="flex items-center gap-2">
+																<FieldLabel htmlFor={`group-price-${group.id}`}>
+																	Monthly Price (Optional)
+																</FieldLabel>
+																{parseMembershipPriceInput(
+																	groupPrices[group.id] ?? "",
+																) === 0 ? (
+																	<Badge variant="secondary">Free</Badge>
+																) : null}
+															</div>
 															<Input
 																id={`group-price-${group.id}`}
 																value={groupPrices[group.id] ?? ""}
@@ -813,6 +835,14 @@ export function NewMemberForm() {
 																	setGroupPrices((prev) => ({
 																		...prev,
 																		[group.id]: value,
+																	}));
+																}}
+																onBlur={() => {
+																	setGroupPrices((prev) => ({
+																		...prev,
+																		[group.id]: normalizeMembershipPriceInput(
+																			prev[group.id] ?? "",
+																		),
 																	}));
 																}}
 																placeholder={

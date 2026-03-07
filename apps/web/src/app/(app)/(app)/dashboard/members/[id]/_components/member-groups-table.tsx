@@ -29,6 +29,7 @@ import {
 	AlertDialogPopup,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -66,17 +67,22 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import {
+	isFreeMembershipPrice,
+	normalizeMembershipPriceInput,
+	parseMembershipPriceInput,
+} from "@/utils/membership-price";
 import { client, orpc } from "@/utils/orpc";
 
 interface MemberGroup {
 	groupId: string;
-	membershipPrice: string;
+	membershipPrice: number;
 	joinedAt: string | Date | null;
 	group: {
 		id: string;
 		name: string;
 		description: string | null;
-		defaultMembershipPrice: string | null;
+		defaultMembershipPrice: number | null;
 	};
 }
 
@@ -86,15 +92,13 @@ interface MemberGroupsTableProps {
 	loading?: boolean;
 }
 
-function formatCurrency(amount: string | null | undefined) {
+function formatCurrency(amount: number | string | null | undefined) {
 	if (!amount) return "€0.00";
 	return new Intl.NumberFormat("en-US", {
 		style: "currency",
 		currency: "EUR",
-	}).format(Number.parseFloat(amount));
+	}).format(typeof amount === "number" ? amount : Number.parseFloat(amount));
 }
-
-const priceRegex = /^\d+(\.\d{1,2})?$/;
 
 function EditPriceDialog({
 	group,
@@ -110,11 +114,11 @@ function EditPriceDialog({
 	onSuccess?: () => void;
 }) {
 	const queryClient = useQueryClient();
-	const [price, setPrice] = useState(group.membershipPrice);
+	const [price, setPrice] = useState(group.membershipPrice.toString());
 	const [error, setError] = useState<string | null>(null);
 
 	const updateMutation = useMutation({
-		mutationFn: async (membershipPrice: string | null) => {
+		mutationFn: async (membershipPrice: number | null) => {
 			return client.members.updateGroupMembership({
 				memberId,
 				groupId: group.groupId,
@@ -139,13 +143,20 @@ function EditPriceDialog({
 	});
 
 	const handleSubmit = () => {
-		if (price && !priceRegex.test(price)) {
+		const normalizedPrice = normalizeMembershipPriceInput(price);
+		const parsedPrice =
+			normalizedPrice === ""
+				? null
+				: parseMembershipPriceInput(normalizedPrice);
+
+		if (normalizedPrice !== "" && parsedPrice === null) {
 			setError("Ungültiges Preisformat");
 			return;
 		}
 
 		setError(null);
-		updateMutation.mutate(price === "" ? null : price);
+		setPrice(normalizedPrice);
+		updateMutation.mutate(parsedPrice);
 	};
 
 	return (
@@ -154,7 +165,7 @@ function EditPriceDialog({
 			onOpenChange={(nextOpen) => {
 				onOpenChange(nextOpen);
 				if (nextOpen) {
-					setPrice(group.membershipPrice);
+					setPrice(group.membershipPrice.toString());
 					setError(null);
 				}
 			}}
@@ -169,13 +180,19 @@ function EditPriceDialog({
 				</DialogHeader>
 				<DialogPanel className="space-y-2">
 					<div className="space-y-1">
-						<label className="font-medium text-sm" htmlFor="membership-price">
-							Custom Monthly Price
-						</label>
+						<div className="flex items-center gap-2">
+							<label className="font-medium text-sm" htmlFor="membership-price">
+								Monthly Price (Optional)
+							</label>
+							{parseMembershipPriceInput(price) === 0 ? (
+								<Badge variant="secondary">Free</Badge>
+							) : null}
+						</div>
 						<Input
 							id="membership-price"
 							value={price}
 							onChange={(event) => setPrice(event.target.value)}
+							onBlur={() => setPrice(normalizeMembershipPriceInput(price))}
 							placeholder={
 								group.group.defaultMembershipPrice
 									? `Current default: ${group.group.defaultMembershipPrice}`
@@ -183,10 +200,15 @@ function EditPriceDialog({
 							}
 						/>
 						{group.group.defaultMembershipPrice && (
-							<p className="text-muted-foreground text-xs">
-								Leer lassen, um den aktuellen Gruppenstandard zu uebernehmen: €
-								{group.group.defaultMembershipPrice}
-							</p>
+							<div className="flex items-center gap-2 text-muted-foreground text-xs">
+								<p>
+									Leer lassen, um den aktuellen Gruppenstandard zu uebernehmen:
+									€{group.group.defaultMembershipPrice}
+								</p>
+								{isFreeMembershipPrice(group.group.defaultMembershipPrice) ? (
+									<Badge variant="secondary">Free</Badge>
+								) : null}
+							</div>
 						)}
 						{error && <p className="text-destructive text-xs">{error}</p>}
 					</div>
@@ -348,7 +370,14 @@ export function MemberGroupsTable({
 			id: "price",
 			header: "Monthly Price",
 			cell: ({ row }) => {
-				return formatCurrency(row.original.membershipPrice);
+				return (
+					<div className="flex items-center justify-end gap-2">
+						<span>{formatCurrency(row.original.membershipPrice)}</span>
+						{isFreeMembershipPrice(row.original.membershipPrice) ? (
+							<Badge variant="secondary">Free</Badge>
+						) : null}
+					</div>
+				);
 			},
 		},
 		{
@@ -392,8 +421,7 @@ export function MemberGroupsTable({
 	});
 
 	const totalMonthly = groups.reduce((sum, gm) => {
-		const price = gm.membershipPrice || "0";
-		return sum + Number.parseFloat(price);
+		return sum + gm.membershipPrice;
 	}, 0);
 
 	// If there are no groups at all, show empty state

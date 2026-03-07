@@ -26,6 +26,7 @@ export const group = pgTable("group", {
 	defaultMembershipPrice: decimal("default_membership_price", {
 		precision: 10,
 		scale: 2,
+		mode: "number",
 	}),
 	createdAt: timestamp("created_at").defaultNow().notNull(),
 	updatedAt: timestamp("updated_at")
@@ -82,6 +83,7 @@ export const groupMember = pgTable(
 		membershipPrice: decimal("membership_price", {
 			precision: 10,
 			scale: 2,
+			mode: "number",
 		}).notNull(),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at")

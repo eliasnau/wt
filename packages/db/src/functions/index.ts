@@ -13,11 +13,33 @@ async function resolveGroupMembershipPrice({
 	membershipPrice,
 }: {
 	groupId: string;
-	membershipPrice?: string | null;
+	membershipPrice?: number | string | null;
 }) {
-	const normalizedMembershipPrice = membershipPrice?.trim();
-	if (normalizedMembershipPrice) {
-		return normalizedMembershipPrice;
+	if (membershipPrice !== undefined && membershipPrice !== null) {
+		if (typeof membershipPrice === "number") {
+			if (!Number.isFinite(membershipPrice) || membershipPrice < 0) {
+				throw new Error("Invalid membership price");
+			}
+
+			return membershipPrice;
+		}
+
+		const normalizedMembershipPrice = membershipPrice
+			.trim()
+			.replace(/\s+/g, "")
+			.replace(",", ".");
+
+		if (normalizedMembershipPrice !== "") {
+			const parsedMembershipPrice = Number(normalizedMembershipPrice);
+			if (
+				!Number.isFinite(parsedMembershipPrice) ||
+				parsedMembershipPrice < 0
+			) {
+				throw new Error("Invalid membership price");
+			}
+
+			return parsedMembershipPrice;
+		}
 	}
 
 	const existingGroup = await db.query.group.findFirst({
@@ -31,7 +53,7 @@ async function resolveGroupMembershipPrice({
 		throw new Error("Group not found");
 	}
 
-	return existingGroup.defaultMembershipPrice ?? "0.00";
+	return existingGroup.defaultMembershipPrice ?? 0;
 }
 
 export const DB = {
@@ -645,7 +667,7 @@ export const DB = {
 			}: {
 				memberId: string;
 				groupId: string;
-				membershipPrice?: string | null;
+				membershipPrice?: number | string | null;
 			}) => {
 				const resolvedMembershipPrice = await resolveGroupMembershipPrice({
 					groupId,
@@ -670,7 +692,7 @@ export const DB = {
 			}: {
 				memberId: string;
 				groupId: string;
-				membershipPrice?: string | null;
+				membershipPrice?: number | string | null;
 			}) => {
 				const resolvedMembershipPrice = await resolveGroupMembershipPrice({
 					groupId,

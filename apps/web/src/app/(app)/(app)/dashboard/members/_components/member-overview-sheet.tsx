@@ -23,6 +23,7 @@ import {
 	SheetPopup,
 	SheetTitle,
 } from "@/components/ui/sheet";
+import { isFreeMembershipPrice } from "@/utils/membership-price";
 import type { client } from "@/utils/orpc";
 
 type MembersListResponse = InferClientOutputs<typeof client>["members"]["list"];
@@ -157,9 +158,12 @@ export function MemberOverviewSheet({
 							) : (
 								<div className="flex flex-wrap gap-2">
 									{groupMembers.map((gm) => (
-										<Badge variant="outline" key={gm.groupId}>
-											{gm.group.name}
-										</Badge>
+										<div className="flex items-center gap-2" key={gm.groupId}>
+											<Badge variant="outline">{gm.group.name}</Badge>
+											{isFreeMembershipPrice(gm.membershipPrice) ? (
+												<Badge variant="secondary">Free</Badge>
+											) : null}
+										</div>
 									))}
 								</div>
 							)}

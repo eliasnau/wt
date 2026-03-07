@@ -6,6 +6,7 @@ import { PlusIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import * as z from "zod";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -27,13 +28,19 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import {
+	isFreeMembershipPrice,
+	isMembershipPriceInputValid,
+	normalizeMembershipPriceInput,
+	parseMembershipPriceInput,
+} from "@/utils/membership-price";
 import { client, orpc } from "@/utils/orpc";
 
 const assignGroupSchema = z.object({
 	groupId: z.string().min(1, "Bitte wähle eine Gruppe"),
 	membershipPrice: z
 		.string()
-		.regex(/^\d+(\.\d{1,2})?$/, "Ungültiges Preisformat")
+		.refine(isMembershipPriceInputValid, "Ungültiges Preisformat")
 		.optional()
 		.or(z.literal("")),
 });
@@ -55,11 +62,11 @@ export function AssignGroupDialog({
 	);
 
 	const assignGroupMutation = useMutation({
-		mutationFn: async (data: { groupId: string; membershipPrice?: string }) => {
+		mutationFn: async (data: { groupId: string; membershipPrice?: number }) => {
 			return await client.members.assignGroup({
 				memberId,
 				groupId: data.groupId,
-				membershipPrice: data.membershipPrice || undefined,
+				membershipPrice: data.membershipPrice,
 			});
 		},
 		onSuccess: () => {
@@ -88,7 +95,13 @@ export function AssignGroupDialog({
 			onSubmit: assignGroupSchema as any,
 		},
 		onSubmit: async ({ value }) => {
-			await assignGroupMutation.mutateAsync(value);
+			await assignGroupMutation.mutateAsync({
+				groupId: value.groupId,
+				membershipPrice:
+					value.membershipPrice.trim() === ""
+						? undefined
+						: (parseMembershipPriceInput(value.membershipPrice) ?? undefined),
+			});
 		},
 	});
 
@@ -136,7 +149,11 @@ export function AssignGroupDialog({
 										<Select
 											name={field.name}
 											value={field.state.value}
-											onValueChange={(value) => field.handleChange(value!)}
+											onValueChange={(value) => {
+												if (value) {
+													field.handleChange(value);
+												}
+											}}
 											items={groups?.map((group) => ({
 												value: group.id,
 												label: group.name,
@@ -177,16 +194,31 @@ export function AssignGroupDialog({
 										{(field) => {
 											const isInvalid =
 												field.state.meta.isTouched && !field.state.meta.isValid;
+											const parsedMembershipPrice = parseMembershipPriceInput(
+												field.state.value,
+											);
 											return (
 												<Field data-invalid={isInvalid}>
-													<FieldLabel htmlFor="membershipPrice">
-														Monthly Price (Optional)
-													</FieldLabel>
+													<div className="flex items-center gap-2">
+														<FieldLabel htmlFor="membershipPrice">
+															Monthly Price (Optional)
+														</FieldLabel>
+														{parsedMembershipPrice === 0 ? (
+															<Badge variant="secondary">Free</Badge>
+														) : null}
+													</div>
 													<Input
 														id="membershipPrice"
 														name={field.name}
 														value={field.state.value}
-														onBlur={field.handleBlur}
+														onBlur={() => {
+															field.handleBlur();
+															field.handleChange(
+																normalizeMembershipPriceInput(
+																	field.state.value,
+																),
+															);
+														}}
 														onChange={(e) => field.handleChange(e.target.value)}
 														aria-invalid={isInvalid}
 														placeholder={
@@ -199,10 +231,17 @@ export function AssignGroupDialog({
 														<FieldError errors={field.state.meta.errors} />
 													)}
 													{selectedGroup?.defaultMembershipPrice && (
-														<p className="text-muted-foreground text-xs">
-															Current group default: €
-															{selectedGroup.defaultMembershipPrice}
-														</p>
+														<div className="flex items-center gap-2 text-muted-foreground text-xs">
+															<p>
+																Current group default: €
+																{selectedGroup.defaultMembershipPrice}
+															</p>
+															{isFreeMembershipPrice(
+																selectedGroup.defaultMembershipPrice,
+															) ? (
+																<Badge variant="secondary">Free</Badge>
+															) : null}
+														</div>
 													)}
 												</Field>
 											);

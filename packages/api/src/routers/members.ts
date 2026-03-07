@@ -146,19 +146,13 @@ const updateMemberSchema = z.object({
 const assignGroupSchema = z.object({
 	memberId: z.string(),
 	groupId: z.string(),
-	membershipPrice: z
-		.string()
-		.regex(/^\d+(\.\d{1,2})?$/)
-		.optional(),
+	membershipPrice: z.number().nonnegative().finite().optional(),
 });
 
 const updateGroupMembershipSchema = z.object({
 	memberId: z.string(),
 	groupId: z.string(),
-	membershipPrice: z
-		.string()
-		.regex(/^\d+(\.\d{1,2})?$/)
-		.nullable(),
+	membershipPrice: z.number().nonnegative().finite().nullable(),
 });
 
 const removeGroupMembershipSchema = z.object({
@@ -528,6 +522,7 @@ export const membersRouter = {
 				string,
 				{
 					groupId: string;
+					membershipPrice: number;
 					group: { id: string; name: string; color: string };
 				}[]
 			>();
@@ -536,6 +531,7 @@ export const membersRouter = {
 					.select({
 						memberId: groupMember.memberId,
 						groupId: groupMember.groupId,
+						membershipPrice: groupMember.membershipPrice,
 						gId: group.id,
 						gName: group.name,
 						gColor: group.color,
@@ -549,6 +545,7 @@ export const membersRouter = {
 						const list = acc.get(r.memberId) ?? [];
 						list.push({
 							groupId: r.groupId,
+							membershipPrice: r.membershipPrice,
 							group: { id: r.gId, name: r.gName, color: r.gColor },
 						});
 						acc.set(r.memberId, list);
@@ -558,6 +555,7 @@ export const membersRouter = {
 						string,
 						{
 							groupId: string;
+							membershipPrice: number;
 							group: { id: string; name: string; color: string };
 						}[]
 					>(),
