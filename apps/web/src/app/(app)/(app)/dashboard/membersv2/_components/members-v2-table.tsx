@@ -5,9 +5,14 @@ import {
 	type ColumnDef,
 	flexRender,
 	getCoreRowModel,
+	type OnChangeFn,
+	type RowSelectionState,
 	useReactTable,
 } from "@tanstack/react-table";
 import {
+	FilterIcon,
+	BotIcon,
+	DownloadIcon,
 	EditIcon,
 	EyeIcon,
 	ExternalLinkIcon,
@@ -16,13 +21,16 @@ import {
 	PhoneIcon,
 	UserIcon,
 	UserXIcon,
+	XIcon,
 } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
+import type React from "react";
 import { type CSSProperties, useMemo, useState } from "react";
 import { CopyableTableCell } from "@/components/table/copyable-table-cell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Empty,
 	EmptyDescription,
@@ -32,10 +40,13 @@ import {
 } from "@/components/ui/empty";
 import {
 	Menu,
+	MenuGroup,
+	MenuGroupLabel,
 	MenuItem,
 	MenuPopup,
 	MenuSeparator,
 	MenuTrigger,
+	MenuShortcut,
 } from "@/components/ui/menu";
 import {
 	Pagination,
@@ -53,7 +64,14 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+	Toolbar,
+	ToolbarButton,
+	ToolbarGroup,
+	ToolbarSeparator,
+} from "@/components/ui/toolbar";
+import {
 	TableCell,
+	TableHead,
 } from "@/components/ui/table";
 import {
 	Tooltip,
@@ -71,7 +89,9 @@ type MembersQueryResponse = InferClientOutputs<
 type MemberRow = MembersQueryResponse["data"][number];
 
 interface MembersV2TableProps {
+	canExportCsv: boolean;
 	data: MemberRow[];
+	rowSelection: RowSelectionState;
 	pagination: {
 		page: number;
 		limit: number;
@@ -82,8 +102,13 @@ interface MembersV2TableProps {
 	};
 	hasActiveFilters: boolean;
 	onClearFilters: () => void;
+	onClearSelection: () => void;
+	onExportCsv: () => void;
+	onShowOnlySelected: () => void;
+	onRowSelectionChange: OnChangeFn<RowSelectionState>;
 	onPageChange: (page: number) => void;
 	onLimitChange: (limit: number) => void;
+	exportPending?: boolean;
 	loading?: boolean;
 }
 
@@ -103,6 +128,45 @@ const createColumns = (
 	onViewMember: (member: MemberRow) => void,
 	onCancelMember: (member: MemberRow) => void,
 ): ColumnDef<MemberRow>[] => [
+	{
+		id: "select",
+		enableSorting: false,
+		size: 40,
+		header: ({ table }) => {
+			const isAllSelected = table.getIsAllPageRowsSelected();
+			const isSomeSelected = table.getIsSomePageRowsSelected();
+			const toggleHandler = table.getToggleAllPageRowsSelectedHandler();
+			return (
+				<Checkbox
+					aria-label="Alle Mitglieder auswählen"
+					checked={isAllSelected}
+					indeterminate={isSomeSelected && !isAllSelected}
+					onCheckedChange={(value) => {
+						const syntheticEvent = {
+							target: { checked: Boolean(value) },
+						} as React.ChangeEvent<HTMLInputElement>;
+						toggleHandler(syntheticEvent);
+					}}
+				/>
+			);
+		},
+		cell: ({ row }) => {
+			const toggleHandler = row.getToggleSelectedHandler();
+			return (
+				<Checkbox
+					aria-label={`Mitglied ${row.original.firstName} ${row.original.lastName} auswählen`}
+					checked={row.getIsSelected()}
+					disabled={!row.getCanSelect()}
+					onCheckedChange={(value) => {
+						const syntheticEvent = {
+							target: { checked: Boolean(value) },
+						} as React.ChangeEvent<HTMLInputElement>;
+						toggleHandler(syntheticEvent);
+					}}
+				/>
+			);
+		},
+	},
 	{
 		accessorKey: "firstName",
 		header: "Vorname",
@@ -289,12 +353,19 @@ const createColumns = (
 ];
 
 export function MembersV2Table({
+	canExportCsv,
 	data,
+	rowSelection,
 	pagination,
 	hasActiveFilters,
 	onClearFilters,
+	onClearSelection,
+	onExportCsv,
+	onShowOnlySelected,
+	onRowSelectionChange,
 	onPageChange,
 	onLimitChange,
+	exportPending = false,
 	loading = false,
 }: MembersV2TableProps) {
 	const [selectedMember, setSelectedMember] = useState<MemberRow | null>(null);
@@ -312,7 +383,10 @@ export function MembersV2Table({
 		setCancelDialogOpen(true);
 	};
 
-	const columns = createColumns(handleViewMember, handleCancelMember);
+	const columns = useMemo(
+		() => createColumns(handleViewMember, handleCancelMember),
+		[],
+	);
 
 	const skeletonRowKeys = useMemo(
 		() =>
@@ -340,10 +414,18 @@ export function MembersV2Table({
 	const table = useReactTable({
 		data,
 		columns,
+		enableRowSelection: true,
+		getRowId: (row) => row.id,
 		manualPagination: true,
 		pageCount: pagination.totalPages,
 		getCoreRowModel: getCoreRowModel(),
+		onRowSelectionChange,
+		state: {
+			rowSelection,
+		},
 	});
+
+	const selectedCount = Object.values(rowSelection).filter(Boolean).length;
 
 	const hasNoMembers =
 		!loading &&
@@ -373,16 +455,16 @@ export function MembersV2Table({
 		<>
 			<div className="min-w-0 max-w-full rounded-xl border bg-background">
 				<div className="relative min-w-0 max-w-full overflow-x-auto">
-					<table className="w-full min-w-[980px] caption-bottom text-sm">
+					<table className="w-full min-w-[1040px] caption-bottom text-sm">
 						<thead className="[&_tr]:border-b">
 							{table.getHeaderGroups().map((headerGroup) => (
 								<tr key={headerGroup.id}>
 									{headerGroup.headers.map((header, index) => {
 										const isLast = index === headerGroup.headers.length - 1;
 										return (
-											<th
+											<TableHead
 												key={header.id}
-												className={`h-10 whitespace-nowrap px-2 text-left align-middle font-medium text-muted-foreground ${isLast ? "text-right" : ""}`}
+												className={`${header.column.id === "select" ? "w-px" : ""} ${isLast ? "text-right" : ""}`}
 											>
 												{header.isPlaceholder
 													? null
@@ -390,7 +472,7 @@ export function MembersV2Table({
 														header.column.columnDef.header,
 															header.getContext(),
 														)}
-											</th>
+											</TableHead>
 										);
 									})}
 								</tr>
@@ -433,10 +515,17 @@ export function MembersV2Table({
 								table.getRowModel().rows.map((row) => (
 									<tr
 										key={row.id}
-										className="border-b transition-colors hover:bg-muted/50"
+										className={
+											row.getIsSelected()
+												? "border-b bg-primary/4 transition-colors hover:bg-primary/6"
+												: "border-b transition-colors hover:bg-muted/50"
+										}
 									>
 										{row.getVisibleCells().map((cell) => (
-											<TableCell key={cell.id}>
+											<TableCell
+												key={cell.id}
+												className={cell.column.id === "select" ? "w-px" : ""}
+											>
 												{flexRender(
 												cell.column.columnDef.cell,
 												cell.getContext(),
@@ -452,7 +541,7 @@ export function MembersV2Table({
 								<TableCell colSpan={columns.length} className="p-2">
 									<div className="flex items-center justify-between gap-2">
 									<div className="flex items-center gap-2 whitespace-nowrap">
-										<p className="text-muted-foreground text-sm">Showing</p>
+										<p className="text-muted-foreground text-sm">Zeige</p>
 										<Select
 											items={[
 												{ label: "10", value: 10 },
@@ -480,18 +569,18 @@ export function MembersV2Table({
 											</SelectPopup>
 										</Select>
 										<span className="text-muted-foreground text-sm">
-											of{" "}
+											von{" "}
 											<strong className="font-medium text-foreground">
 												{pagination.totalCount}
 											</strong>{" "}
-											{pagination.totalCount === 1 ? "member" : "members"}
+											{pagination.totalCount === 1 ? "Mitglied" : "Mitgliedern"}
 										</span>
 									</div>
 									<Pagination className="justify-end">
 										<PaginationContent>
 											<PaginationItem>
 												<span className="text-muted-foreground text-sm">
-													Page {pagination.page} of {pagination.totalPages}
+													Seite {pagination.page} von {pagination.totalPages}
 												</span>
 											</PaginationItem>
 											<PaginationItem>
@@ -504,7 +593,7 @@ export function MembersV2Table({
 															size="sm"
 															variant="outline"
 														>
-															Previous
+															Zurück
 														</Button>
 													}
 												/>
@@ -519,7 +608,7 @@ export function MembersV2Table({
 															size="sm"
 															variant="outline"
 														>
-															Next
+															Weiter
 														</Button>
 													}
 												/>
@@ -532,6 +621,110 @@ export function MembersV2Table({
 						</tfoot>
 					</table>
 				</div>
+			</div>
+
+			<div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center px-4">
+				<Toolbar
+					aria-label="Aktionen für ausgewählte Mitglieder"
+					className={
+						selectedCount > 0
+							? "pointer-events-auto translate-y-0 opacity-100 transition-all duration-200 ease-out"
+							: "pointer-events-none translate-y-4 opacity-0 transition-all duration-200 ease-out"
+					}
+				>
+					<ToolbarGroup>
+						<p className="px-1.5 font-medium text-sm leading-none sm:px-2">
+							<span className="sm:hidden">{selectedCount}</span>
+							<span className="hidden sm:inline">{selectedCount} ausgewählt</span>
+						</p>
+					</ToolbarGroup>
+					<ToolbarSeparator />
+					<ToolbarGroup>
+						<ToolbarButton
+							render={
+								<Button
+									disabled={!canExportCsv || exportPending}
+									size="sm"
+									variant="outline"
+									onClick={onExportCsv}
+								/>
+							}
+						>
+							<DownloadIcon />
+							<span className="hidden sm:inline">Export CSV</span>
+						</ToolbarButton>
+						<ToolbarButton
+							render={
+								<Button
+									disabled
+									size="sm"
+									variant="outline"
+								/>
+							}
+						>
+							<MailIcon />
+							<span className="hidden sm:inline">E-Mail</span>
+							<Badge className="hidden sm:inline-flex" variant="outline">
+								Demnächst
+							</Badge>
+						</ToolbarButton>
+						<ToolbarButton
+							render={
+								<Button
+									disabled
+									size="sm"
+									variant="outline"
+								/>
+							}
+						>
+							<BotIcon />
+							<span className="hidden sm:inline">KI fragen</span>
+							<Badge className="hidden sm:inline-flex" variant="outline">
+								Demnächst
+							</Badge>
+						</ToolbarButton>
+						<Menu>
+							<MenuTrigger
+								render={
+									<Button aria-label="Weitere Aktionen" size="sm" variant="outline">
+										<MoreVerticalIcon />
+									</Button>
+								}
+							/>
+							<MenuPopup align="end" className="w-[240px]">
+								<MenuGroup>
+									<MenuGroupLabel>Ausgewählte Mitglieder</MenuGroupLabel>
+									<MenuItem onClick={onShowOnlySelected}>
+										<FilterIcon />
+										Nur Auswahl anzeigen
+										<MenuShortcut>{selectedCount}</MenuShortcut>
+									</MenuItem>
+								</MenuGroup>
+								<MenuSeparator />
+								<MenuItem disabled>
+									<EditIcon />
+									Sammelbearbeitung
+									<MenuShortcut>Demnächst</MenuShortcut>
+								</MenuItem>
+							</MenuPopup>
+						</Menu>
+					</ToolbarGroup>
+					<ToolbarSeparator />
+					<ToolbarGroup>
+						<ToolbarButton
+							render={
+								<Button
+									size="sm"
+									variant="ghost"
+									onClick={onClearSelection}
+								/>
+							}
+						>
+							<XIcon />
+							<span className="hidden sm:inline">Abwählen</span>
+						</ToolbarButton>
+					</ToolbarGroup>
+				</Toolbar>
 			</div>
 
 			<MemberOverviewSheet

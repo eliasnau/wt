@@ -76,6 +76,7 @@ export const listMembersAdvancedSchema = z.object({
 	limit: z.coerce.number().int().min(1).max(100).default(20),
 	search: z.string().optional(),
 	groupIds: z.array(z.string()).optional(),
+	memberIds: z.array(z.string().min(1)).optional(),
 	status: z
 		.object({
 			includeActive: z.boolean().optional(),
@@ -420,6 +421,13 @@ function buildMembersQueryContext({
 			.filter((value, index, values) => values.indexOf(value) === index) ??
 		undefined;
 
+	const memberIds =
+		input.memberIds
+			?.map((memberId) => memberId.trim())
+			.filter(Boolean)
+			.filter((value, index, values) => values.indexOf(value) === index) ??
+		undefined;
+
 	if (input.groupIds && (!groupIds || groupIds.length === 0)) {
 		return {
 			emptyResult: true,
@@ -486,6 +494,7 @@ function buildMembersQueryContext({
 
 	const memberWhere = and(
 		eq(clubMember.organizationId, organizationId),
+		memberIds?.length ? inArray(clubMember.id, memberIds) : undefined,
 		searchCondition,
 		groupIds?.length
 			? sql`${clubMember.id} in (
@@ -712,6 +721,7 @@ function toListMembersAdvancedExportInput(
 	return {
 		search: input.search,
 		groupIds: input.groupIds,
+		memberIds: input.memberIds,
 		status: input.status,
 		sort: input.sort,
 		filterMode: input.filterMode,

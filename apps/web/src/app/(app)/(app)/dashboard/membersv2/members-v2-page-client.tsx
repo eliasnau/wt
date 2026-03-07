@@ -2,6 +2,7 @@
 
 import { ORPCError } from "@orpc/client";
 import type { ListMembersAdvancedInput } from "@repo/api/routers/members/listMembersAdvanced";
+import type { OnChangeFn, RowSelectionState } from "@tanstack/react-table";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   AlertCircle,
@@ -63,6 +64,10 @@ import {
 import { CreateMemberButton } from "../members/_components/create-member-button";
 import { MembersV2Controls } from "./_components/members-v2-controls";
 import { MembersV2Table } from "./_components/members-v2-table";
+
+type MembersV2PageClientProps = {
+  canExportMembers: boolean;
+};
 
 type QueryFilter = NonNullable<ListMembersAdvancedInput["filters"]>[number];
 type FilterField = QueryFilter["field"];
@@ -546,13 +551,16 @@ function toCompiledFilter(row: QueryBuilderRow): QueryFilter | null {
   }
 }
 
-export function MembersV2PageClient() {
+export function MembersV2PageClient({
+  canExportMembers,
+}: MembersV2PageClientProps) {
   const [
     {
       page,
       limit,
       search,
       groupIds,
+      memberIds,
       includeActive,
       includeCancelled,
       includeCancelledButActive,
@@ -565,6 +573,7 @@ export function MembersV2PageClient() {
     limit: parseAsInteger.withDefault(20),
     search: parseAsString.withDefault(""),
     groupIds: parseAsArrayOf(parseAsString).withDefault([]),
+    memberIds: parseAsArrayOf(parseAsString).withDefault([]),
     includeActive: parseAsBoolean.withDefault(true),
     includeCancelled: parseAsBoolean.withDefault(false),
     includeCancelledButActive: parseAsBoolean.withDefault(true),
@@ -594,6 +603,7 @@ export function MembersV2PageClient() {
   const [selectedSavedViewId, setSelectedSavedViewId] = useState("");
   const [savedViewsDialogOpen, setSavedViewsDialogOpen] = useState(false);
   const [saveChoiceDialogOpen, setSaveChoiceDialogOpen] = useState(false);
+  const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
   const debouncedSetSearch = useDebounce((nextSearch: string) => {
     setQueryState({ page: 1, search: nextSearch });
@@ -602,6 +612,12 @@ export function MembersV2PageClient() {
   const validGroupIds =
     groupIds.length > 0
       ? groupIds.filter(
+          (id) => id && id.trim().length > 0 && UUID_REGEX.test(id),
+        )
+      : [];
+  const validMemberIds =
+    memberIds.length > 0
+      ? memberIds.filter(
           (id) => id && id.trim().length > 0 && UUID_REGEX.test(id),
         )
       : [];
@@ -629,6 +645,7 @@ export function MembersV2PageClient() {
     limit,
     search: search || undefined,
     groupIds: validGroupIds.length > 0 ? validGroupIds : undefined,
+    memberIds: validMemberIds.length > 0 ? validMemberIds : undefined,
     status: {
       includeActive,
       includeCancelled,
@@ -645,6 +662,7 @@ export function MembersV2PageClient() {
   const exportInput = {
     search: search || undefined,
     groupIds: validGroupIds.length > 0 ? validGroupIds : undefined,
+    memberIds: validMemberIds.length > 0 ? validMemberIds : undefined,
     status: {
       includeActive,
       includeCancelled,
@@ -663,6 +681,28 @@ export function MembersV2PageClient() {
       input: queryInput,
     }),
   );
+
+  const handleRowSelectionChange: OnChangeFn<RowSelectionState> = (updater) => {
+    const visibleMemberIds = new Set((data?.data ?? []).map((member) => member.id));
+
+    setRowSelection((current) => {
+      const nextVisibleSelection =
+        typeof updater === "function" ? updater(current) : updater;
+      const mergedSelection: RowSelectionState = { ...current };
+
+      for (const memberId of visibleMemberIds) {
+        delete mergedSelection[memberId];
+      }
+
+      for (const [memberId, isSelected] of Object.entries(nextVisibleSelection)) {
+        if (visibleMemberIds.has(memberId) && isSelected) {
+          mergedSelection[memberId] = true;
+        }
+      }
+
+      return mergedSelection;
+    });
+  };
 
   const { data: groupsData } = useQuery(
     orpc.groups.list.queryOptions({
@@ -709,6 +749,7 @@ export function MembersV2PageClient() {
   const hasActiveFilters =
     Boolean(search) ||
     validGroupIds.length > 0 ||
+    validMemberIds.length > 0 ||
     !includeActive ||
     includeCancelled ||
     !includeCancelledButActive ||
@@ -739,6 +780,48 @@ export function MembersV2PageClient() {
     setFilterMode("and");
   };
 
+  const showOnlySelectedMembers = () => {
+    const selectedMemberIds = Object.entries(rowSelection)
+      .filter(([, isSelected]) => Boolean(isSelected))
+      .map(([memberId]) => memberId);
+
+    if (selectedMemberIds.length === 0) {
+      return;
+    }
+
+    setRowSelection({});
+    setLocalSearch("");
+    setFilters([]);
+    setFilterMode("and");
+    setAdvancedOpen(false);
+    setAdvancedSheetOpen(false);
+    setQueryState({
+      page: 1,
+      search: "",
+      groupIds: [],
+      memberIds: selectedMemberIds,
+      includeActive: true,
+      includeCancelled: true,
+      includeCancelledButActive: true,
+    });
+  };
+
+  const showAllMembers = () => {
+    const restoredSelection = validMemberIds.reduce<RowSelectionState>(
+      (acc, memberId) => {
+        acc[memberId] = true;
+        return acc;
+      },
+      {},
+    );
+
+    setRowSelection(restoredSelection);
+    setQueryState({
+      page: 1,
+      memberIds: [],
+    });
+  };
+
   const updateFilter = (id: string, updates: Partial<QueryBuilderRow>) => {
     setFilters((current) =>
       current.map((filter) =>
@@ -750,6 +833,18 @@ export function MembersV2PageClient() {
 
   const exportMembersCsv = () => {
     exportCsvMutation.mutate(exportInput);
+  };
+
+  const exportSelectedMembersCsv = () => {
+    const memberIds = Object.entries(rowSelection)
+      .filter(([, isSelected]) => Boolean(isSelected))
+      .map(([memberId]) => memberId);
+
+    if (memberIds.length === 0) {
+      return;
+    }
+
+    exportCsvMutation.mutate({ memberIds });
   };
 
   const persistSavedViews = (nextViews: SavedMembersView[]) => {
@@ -860,6 +955,7 @@ export function MembersV2PageClient() {
       limit: state.limit,
       search: state.search,
       groupIds: state.groupIds,
+      memberIds: [],
       includeActive: state.includeActive,
       includeCancelled: state.includeCancelled,
       includeCancelledButActive: state.includeCancelledButActive,
@@ -1188,6 +1284,8 @@ export function MembersV2PageClient() {
             onGroupIdsChange={(nextGroupIds) => {
               setQueryState({ page: 1, groupIds: nextGroupIds });
             }}
+            showSelectedOnly={validMemberIds.length > 0}
+            onShowAllMembers={showAllMembers}
             sortFieldOptions={SORT_FIELDS}
             sortDirectionOptions={SORT_DIRECTIONS}
             sortField={safeSortField}
@@ -1198,6 +1296,7 @@ export function MembersV2PageClient() {
             onSortDirectionChange={(value) => {
               setQueryState({ page: 1, sortDirection: value });
             }}
+            canExportCsv={canExportMembers}
             onExportCsv={exportMembersCsv}
             exportPending={exportCsvMutation.isPending}
             onOpenAdvancedSheet={() => setAdvancedSheetOpen(true)}
@@ -1399,7 +1498,9 @@ export function MembersV2PageClient() {
 
           <div className="min-w-0 max-w-full">
             <MembersV2Table
+              canExportCsv={canExportMembers}
               data={data?.data ?? []}
+              rowSelection={rowSelection}
               pagination={
                 data?.pagination ?? {
                   page,
@@ -1412,10 +1513,15 @@ export function MembersV2PageClient() {
               }
               hasActiveFilters={hasActiveFilters}
               onClearFilters={resetAllFilters}
+              onClearSelection={() => setRowSelection({})}
+              onExportCsv={exportSelectedMembersCsv}
+              onShowOnlySelected={showOnlySelectedMembers}
+              onRowSelectionChange={handleRowSelectionChange}
               onPageChange={(nextPage) => setQueryState({ page: nextPage })}
               onLimitChange={(nextLimit) =>
                 setQueryState({ page: 1, limit: nextLimit })
               }
+              exportPending={exportCsvMutation.isPending}
               loading={isPending}
             />
           </div>

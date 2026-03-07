@@ -4,7 +4,10 @@ import { hasPermission } from "@/lib/auth";
 import { MembersV2PageClient } from "../membersv2/members-v2-page-client";
 
 export default async function MembersPage() {
-	const result = await hasPermission({ member: ["view"] });
+	const [result, exportPermission] = await Promise.all([
+		hasPermission({ member: ["view"] }),
+		hasPermission({ member: ["export"] }),
+	]);
 
 	if (!result.success) {
 		return (
@@ -17,7 +20,7 @@ export default async function MembersPage() {
 
 	return (
 		<Suspense>
-			<MembersV2PageClient />
+			<MembersV2PageClient canExportMembers={exportPermission.success} />
 		</Suspense>
 	);
 }
