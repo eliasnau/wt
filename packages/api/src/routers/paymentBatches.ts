@@ -296,7 +296,7 @@ export const paymentBatchesRouter = {
         let joiningFeeTotal = 0;
         let yearlyFeeTotal = 0;
 
-        const paymentRecords = activeContracts.map((contractData) => {
+        const paymentRecords = activeContracts.flatMap((contractData) => {
           // Calculate membership amount
           const membershipAmount =
             Number.parseFloat(
@@ -317,25 +317,71 @@ export const paymentBatchesRouter = {
               ? Number.parseFloat(contractData.yearlyFeeAmount)
               : 0;
 
-          const total = membershipAmount + joiningFeeAmount + yearlyFeeAmount;
-
           // Update totals
           membershipTotal += membershipAmount;
           joiningFeeTotal += joiningFeeAmount;
           yearlyFeeTotal += yearlyFeeAmount;
-          totalAmount += total;
+          totalAmount += membershipAmount + joiningFeeAmount + yearlyFeeAmount;
 
-          return {
-            contractId: contractData.contractId,
-            membershipAmount: membershipAmount.toFixed(2),
-            joiningFeeAmount: joiningFeeAmount.toFixed(2),
-            yearlyFeeAmount: yearlyFeeAmount.toFixed(2),
-            totalAmount: total.toFixed(2),
-            billingPeriodStart,
-            billingPeriodEnd,
-            dueDate,
-          };
+          const records: Array<{
+            contractId: string;
+            membershipAmount: string;
+            joiningFeeAmount: string;
+            yearlyFeeAmount: string;
+            totalAmount: string;
+            billingPeriodStart: string;
+            billingPeriodEnd: string;
+            dueDate: string;
+          }> = [];
+
+          // Create one transaction per fee type (instead of one combined row).
+          if (membershipAmount > 0) {
+            records.push({
+              contractId: contractData.contractId,
+              membershipAmount: membershipAmount.toFixed(2),
+              joiningFeeAmount: "0.00",
+              yearlyFeeAmount: "0.00",
+              totalAmount: membershipAmount.toFixed(2),
+              billingPeriodStart,
+              billingPeriodEnd,
+              dueDate,
+            });
+          }
+
+          if (joiningFeeAmount > 0) {
+            records.push({
+              contractId: contractData.contractId,
+              membershipAmount: "0.00",
+              joiningFeeAmount: joiningFeeAmount.toFixed(2),
+              yearlyFeeAmount: "0.00",
+              totalAmount: joiningFeeAmount.toFixed(2),
+              billingPeriodStart,
+              billingPeriodEnd,
+              dueDate,
+            });
+          }
+
+          if (yearlyFeeAmount > 0) {
+            records.push({
+              contractId: contractData.contractId,
+              membershipAmount: "0.00",
+              joiningFeeAmount: "0.00",
+              yearlyFeeAmount: yearlyFeeAmount.toFixed(2),
+              totalAmount: yearlyFeeAmount.toFixed(2),
+              billingPeriodStart,
+              billingPeriodEnd,
+              dueDate,
+            });
+          }
+
+          return records;
         });
+
+        if (paymentRecords.length === 0) {
+          throw new ORPCError("BAD_REQUEST", {
+            message: "No payable transactions found for this month",
+          });
+        }
 
         // Create the batch
         const batchNumber = generateBatchNumber(
@@ -376,10 +422,9 @@ export const paymentBatchesRouter = {
 
         // Update contracts: mark joining fees and yearly fees as paid
         for (const contractData of activeContracts) {
-          const paymentRecord = paymentRecords.find(
+          const contractPaymentRecords = paymentRecords.filter(
             (p) => p.contractId === contractData.contractId,
           );
-          if (!paymentRecord) continue;
 
           const updates: {
             joiningFeePaidAt?: Date;
@@ -389,14 +434,22 @@ export const paymentBatchesRouter = {
 
           // Mark joining fee as paid
           if (
-            Number.parseFloat(paymentRecord.joiningFeeAmount) > 0 &&
+            contractPaymentRecords.some(
+              (paymentRecord) =>
+                Number.parseFloat(paymentRecord.joiningFeeAmount) > 0,
+            ) &&
             !contractData.joiningFeePaidAt
           ) {
             updates.joiningFeePaidAt = new Date();
           }
 
           // Mark yearly fee as paid
-          if (Number.parseFloat(paymentRecord.yearlyFeeAmount) > 0) {
+          if (
+            contractPaymentRecords.some(
+              (paymentRecord) =>
+                Number.parseFloat(paymentRecord.yearlyFeeAmount) > 0,
+            )
+          ) {
             updates.lastYearlyFeePaidYear = billingYear;
           }
 
