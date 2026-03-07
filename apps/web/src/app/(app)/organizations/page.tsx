@@ -46,6 +46,12 @@ export default function OrganizationsPage() {
   const [returnUrl] = useQueryState("returnUrl", {
     defaultValue: "/dashboard",
   });
+  const organizationList: Array<{
+    id: string;
+    name: string;
+    slug?: string | null;
+    logo?: string | null;
+  }> = organizations ?? [];
 
   const handleCreateOrganization = async () => {
     if (!orgName.trim() || !orgSlug.trim()) {
@@ -216,7 +222,7 @@ export default function OrganizationsPage() {
               ) : (
                 <div className="space-y-3">
                   <div className="rounded-xl border bg-background/40 p-2">
-                    {organizations?.map((org) => {
+                    {organizationList.map((org) => {
                       const isActive =
                         session?.session?.activeOrganizationId === org.id;
 

@@ -54,14 +54,14 @@ export const UserButton = () => {
 
     await authClient.signOut({
       fetchOptions: {
-        onSuccess: () => {
-          router.push("/sign-in" as Route);
-        },
-        onError(context) {
-          toast.error(context.error.message);
-        },
-      },
-    });
+		onSuccess: () => {
+			router.push("/sign-in" as Route);
+		},
+		onError(context: { error: { message: string } }) {
+			toast.error(context.error.message);
+		},
+	},
+});
   };
 
   if (isSessionPending) {

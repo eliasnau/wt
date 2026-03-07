@@ -87,6 +87,7 @@ export function PasskeyFrame({
 		},
 		initialData: initalPasskeys,
 	});
+	const passkeyList: Passkey[] = passkeys ?? [];
 
 	const handleAddPasskey = useCallback(async () => {
 		setIsAddingPasskey(true);
@@ -205,7 +206,7 @@ export function PasskeyFrame({
 		);
 	}
 
-	if (!passkeys || passkeys.length === 0) {
+	if (passkeyList.length === 0) {
 		return (
 			<>
 				<Frame
@@ -287,7 +288,7 @@ export function PasskeyFrame({
 					</p>
 
 					<div className="space-y-2">
-						{passkeys.map((passkey) => (
+						{passkeyList.map((passkey: Passkey) => (
 							<div
 								key={passkey.id}
 								className="flex items-center justify-between rounded-lg border p-4 transition-colors hover:bg-accent/50"

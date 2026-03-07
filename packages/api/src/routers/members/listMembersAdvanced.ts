@@ -539,6 +539,7 @@ async function buildGroupMap(memberIds: string[]) {
 			string,
 			{
 				groupId: string;
+				membershipPrice: number;
 				group: { id: string; name: string; color: string };
 			}[]
 		>();
@@ -548,6 +549,7 @@ async function buildGroupMap(memberIds: string[]) {
 		.select({
 			memberId: groupMember.memberId,
 			groupId: groupMember.groupId,
+			membershipPrice: groupMember.membershipPrice,
 			groupName: group.name,
 			groupColor: group.color,
 		})
@@ -560,6 +562,7 @@ async function buildGroupMap(memberIds: string[]) {
 			const groupMembers = acc.get(row.memberId) ?? [];
 			groupMembers.push({
 				groupId: row.groupId,
+				membershipPrice: row.membershipPrice ?? 0,
 				group: { id: row.groupId, name: row.groupName, color: row.groupColor },
 			});
 			acc.set(row.memberId, groupMembers);
@@ -569,6 +572,7 @@ async function buildGroupMap(memberIds: string[]) {
 			string,
 			{
 				groupId: string;
+				membershipPrice: number;
 				group: { id: string; name: string; color: string };
 			}[]
 		>(),

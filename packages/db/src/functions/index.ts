@@ -15,31 +15,11 @@ async function resolveGroupMembershipPrice({
 	groupId: string;
 	membershipPrice?: number | string | null;
 }) {
-	if (membershipPrice !== undefined && membershipPrice !== null) {
-		if (typeof membershipPrice === "number") {
-			if (!Number.isFinite(membershipPrice) || membershipPrice < 0) {
-				throw new Error("Invalid membership price");
-			}
+	const normalizedMembershipPrice =
+		normalizeOptionalPriceInput(membershipPrice);
 
-			return membershipPrice;
-		}
-
-		const normalizedMembershipPrice = membershipPrice
-			.trim()
-			.replace(/\s+/g, "")
-			.replace(",", ".");
-
-		if (normalizedMembershipPrice !== "") {
-			const parsedMembershipPrice = Number(normalizedMembershipPrice);
-			if (
-				!Number.isFinite(parsedMembershipPrice) ||
-				parsedMembershipPrice < 0
-			) {
-				throw new Error("Invalid membership price");
-			}
-
-			return parsedMembershipPrice;
-		}
+	if (normalizedMembershipPrice !== undefined) {
+		return normalizedMembershipPrice;
 	}
 
 	const existingGroup = await db.query.group.findFirst({
@@ -54,6 +34,35 @@ async function resolveGroupMembershipPrice({
 	}
 
 	return existingGroup.defaultMembershipPrice ?? 0;
+}
+
+function normalizeOptionalPriceInput(
+	value?: number | string | null,
+): number | undefined {
+	if (value === undefined || value === null) {
+		return undefined;
+	}
+
+	if (typeof value === "number") {
+		if (!Number.isFinite(value) || value < 0) {
+			throw new Error("Invalid membership price");
+		}
+
+		return value;
+	}
+
+	const normalizedValue = value.trim().replace(/\s+/g, "").replace(",", ".");
+
+	if (normalizedValue === "") {
+		return undefined;
+	}
+
+	const parsedValue = Number(normalizedValue);
+	if (!Number.isFinite(parsedValue) || parsedValue < 0) {
+		throw new Error("Invalid membership price");
+	}
+
+	return parsedValue;
 }
 
 export const DB = {
@@ -613,15 +622,19 @@ export const DB = {
 				name: string;
 				description?: string;
 				color: string;
-				defaultMembershipPrice?: string;
+				defaultMembershipPrice?: number | string | null;
 			}) => {
+				const normalizedDefaultMembershipPrice = normalizeOptionalPriceInput(
+					defaultMembershipPrice,
+				);
+
 				const [newGroup] = await db
 					.insert(group)
 					.values({
 						name,
 						description,
 						color,
-						defaultMembershipPrice,
+						defaultMembershipPrice: normalizedDefaultMembershipPrice,
 						organizationId,
 					})
 					.returning();
@@ -641,12 +654,20 @@ export const DB = {
 					name?: string;
 					description?: string;
 					color?: string;
-					defaultMembershipPrice?: string;
+					defaultMembershipPrice?: number | string | null;
 				};
 			}) => {
+				const normalizedUpdates = {
+					...updates,
+					defaultMembershipPrice:
+						updates.defaultMembershipPrice === undefined
+							? undefined
+							: normalizeOptionalPriceInput(updates.defaultMembershipPrice),
+				};
+
 				const [updatedGroup] = await db
 					.update(group)
-					.set(updates)
+					.set(normalizedUpdates)
 					.where(eq(group.id, groupId))
 					.returning();
 

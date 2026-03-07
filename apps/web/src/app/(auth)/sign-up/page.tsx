@@ -48,7 +48,7 @@ export default function SignUp2Page() {
           name: `${value.firstName} ${value.lastName}`,
         },
         {
-          onError: (ctx) => {
+          onError: (ctx: { error: { message: string } }) => {
             toast.error(ctx.error.message);
           },
           onSuccess: () => {

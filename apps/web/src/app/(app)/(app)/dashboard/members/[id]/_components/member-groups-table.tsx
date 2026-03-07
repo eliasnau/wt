@@ -76,7 +76,7 @@ import { client, orpc } from "@/utils/orpc";
 
 interface MemberGroup {
 	groupId: string;
-	membershipPrice: number;
+	membershipPrice: number | null;
 	joinedAt: string | Date | null;
 	group: {
 		id: string;
@@ -114,7 +114,7 @@ function EditPriceDialog({
 	onSuccess?: () => void;
 }) {
 	const queryClient = useQueryClient();
-	const [price, setPrice] = useState(group.membershipPrice.toString());
+	const [price, setPrice] = useState((group.membershipPrice ?? 0).toString());
 	const [error, setError] = useState<string | null>(null);
 
 	const updateMutation = useMutation({
@@ -163,12 +163,12 @@ function EditPriceDialog({
 		<Dialog
 			open={open}
 			onOpenChange={(nextOpen) => {
-				onOpenChange(nextOpen);
-				if (nextOpen) {
-					setPrice(group.membershipPrice.toString());
-					setError(null);
-				}
-			}}
+			onOpenChange(nextOpen);
+			if (nextOpen) {
+				setPrice((group.membershipPrice ?? 0).toString());
+				setError(null);
+			}
+		}}
 		>
 			<DialogContent>
 				<DialogHeader>
@@ -421,7 +421,7 @@ export function MemberGroupsTable({
 	});
 
 	const totalMonthly = groups.reduce((sum, gm) => {
-		return sum + gm.membershipPrice;
+		return sum + (gm.membershipPrice ?? 0);
 	}, 0);
 
 	// If there are no groups at all, show empty state

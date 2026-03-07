@@ -38,6 +38,7 @@ type Member = {
 	id: string;
 	role: string;
 	user: {
+		id: string;
 		name?: string;
 		email: string;
 		image?: string;
@@ -195,7 +196,7 @@ export function MembersSection() {
 						</TableRow>
 					</TableHeader>
 					<TableBody>
-						{members.map((member) => (
+						{members.map((member: Member) => (
 							<TableRow key={member.id}>
 								<TableCell>
 									<div className="flex items-center gap-3">

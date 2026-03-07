@@ -68,11 +68,13 @@ export function InvitationsSection() {
 
 	const invitations = invitationsData || [];
 	const pendingInvitations = invitations.filter(
-		(inv) => inv.status.toLowerCase() === "pending",
+		(inv: Invitation) => inv.status.toLowerCase() === "pending",
 	);
 	const sortedInvitations = [
 		...pendingInvitations,
-		...invitations.filter((inv) => inv.status.toLowerCase() !== "pending"),
+		...invitations.filter(
+			(inv: Invitation) => inv.status.toLowerCase() !== "pending",
+		),
 	];
 
 	const cancelInvitationMutation = useMutation({

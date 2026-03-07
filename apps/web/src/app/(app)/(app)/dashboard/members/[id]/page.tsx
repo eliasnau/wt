@@ -265,8 +265,7 @@ export default function MemberDetailPage() {
 
 	// Calculate total monthly payment from groups
 	const totalGroupPayment = member.groups.reduce((sum, gm) => {
-		const price = gm.membershipPrice || "0";
-		return sum + Number.parseFloat(price);
+		return sum + (gm.membershipPrice ?? 0);
 	}, 0);
 
 	// Calculate total monthly payment including yearly fee (divided by 12)

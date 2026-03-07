@@ -41,10 +41,10 @@ export default function SignIn() {
           password: value.password,
         },
         {
-          onError: (ctx) => {
+          onError: (ctx: { error: { message: string } }) => {
             toast.error(ctx.error.message);
           },
-          onSuccess: (ctx) => {
+          onSuccess: (ctx: { data: { twoFactorRedirect?: boolean } }) => {
             if (ctx.data.twoFactorRedirect) {
               router.push(
                 `/verify-2fa?redirectUrl=${encodeURIComponent(redirectUrl)}` as Route,
@@ -61,7 +61,7 @@ export default function SignIn() {
   const handlePasskeySignIn = async () => {
     await authClient.signIn.passkey({
       fetchOptions: {
-        onError: (ctx) => {
+        onError: (ctx: { error: { message?: string } }) => {
           toast.error(ctx.error.message || "Passkey authentication failed");
         },
         onSuccess: () => {

@@ -95,6 +95,15 @@ const groupFormSchema = z.object({
 
 const priceRegex = /^\d+(\.\d{1,2})?$/;
 
+function parsePriceValue(value: string): number | undefined {
+	const normalizedValue = value.trim();
+	if (!normalizedValue) {
+		return undefined;
+	}
+
+	return Number(normalizedValue);
+}
+
 function EnrollMemberDialog({
 	group,
 	existingMemberIds,
@@ -138,7 +147,7 @@ function EnrollMemberDialog({
 			return client.members.assignGroup({
 				memberId: selectedMemberId,
 				groupId: group.id,
-				membershipPrice: membershipPrice.trim() || undefined,
+				membershipPrice: parsePriceValue(membershipPrice),
 			});
 		},
 		onSuccess: () => {
@@ -285,7 +294,7 @@ export function EditGroupSheet({
 			name: group?.name ?? "",
 			description: group?.description ?? "",
 			color: group?.color ?? DEFAULT_GROUP_COLOR,
-			defaultMembershipPrice: group?.defaultMembershipPrice ?? "",
+			defaultMembershipPrice: group?.defaultMembershipPrice?.toString() ?? "",
 		},
 	});
 
@@ -326,7 +335,7 @@ export function EditGroupSheet({
 			name: group.name ?? "",
 			description: group.description ?? "",
 			color: group.color ?? DEFAULT_GROUP_COLOR,
-			defaultMembershipPrice: group.defaultMembershipPrice ?? "",
+			defaultMembershipPrice: group.defaultMembershipPrice?.toString() ?? "",
 		});
 	}, [open, group, form]);
 
