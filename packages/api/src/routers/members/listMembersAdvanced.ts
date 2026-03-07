@@ -23,6 +23,7 @@ const filterFieldSchema = z.enum([
 	"startDate",
 	"cancellationEffectiveDate",
 	"cancelledAt",
+	"groupCount",
 ]);
 
 const valueFilterSchema = z.object({
@@ -162,6 +163,18 @@ function getTodayInBerlinDateString(): string {
 
 function getFieldConfig(field: z.infer<typeof filterFieldSchema>) {
 	switch (field) {
+		case "groupCount": {
+			const groupCountExpr = sql<number>`(
+				select count(*)
+				from ${groupMember}
+				where ${groupMember.memberId} = ${clubMember.id}
+			)`;
+
+			return {
+				compareExpr: groupCountExpr,
+				textExpr: sql`CAST(${groupCountExpr} AS TEXT)`,
+			};
+		}
 		case "fullName":
 			return {
 				compareExpr: sql`${clubMember.firstName} || ' ' || ${clubMember.lastName}`,
@@ -269,13 +282,37 @@ function buildAdvancedFilterCondition(
 	filter: z.infer<typeof advancedFilterSchema>,
 ) {
 	const { compareExpr, textExpr } = getFieldConfig(filter.field);
+	const isGroupCountField = filter.field === "groupCount";
+	const parseGroupCountValue = (value: string) =>
+		/^\d+$/.test(value) ? Number.parseInt(value, 10) : Number.NaN;
 
 	switch (filter.operator) {
 		case "isNull":
-			return sql`${compareExpr} IS NULL OR NULLIF(BTRIM(${textExpr}), '') IS NULL`;
+			return isGroupCountField
+				? sql`false`
+				: sql`${compareExpr} IS NULL OR NULLIF(BTRIM(${textExpr}), '') IS NULL`;
 		case "isNotNull":
-			return sql`${compareExpr} IS NOT NULL AND NULLIF(BTRIM(${textExpr}), '') IS NOT NULL`;
+			return isGroupCountField
+				? sql`true`
+				: sql`${compareExpr} IS NOT NULL AND NULLIF(BTRIM(${textExpr}), '') IS NOT NULL`;
 		case "in": {
+			if (isGroupCountField) {
+				const numericValues = filter.value
+					.map(parseGroupCountValue)
+					.filter((value) => Number.isInteger(value) && value >= 0);
+
+				if (numericValues.length === 0) {
+					return sql`false`;
+				}
+
+				const valuesSql = sql.join(
+					numericValues.map((value) => sql`${value}`),
+					sql`, `,
+				);
+
+				return sql`${compareExpr} IN (${valuesSql})`;
+			}
+
 			const valuesSql = sql.join(
 				filter.value.map((value) => sql`${value}`),
 				sql`, `,
@@ -289,12 +326,36 @@ function buildAdvancedFilterCondition(
 		case "endsWith":
 			return ilike(textExpr, `%${filter.value}`);
 		case "eq":
+			if (isGroupCountField) {
+				const value = parseGroupCountValue(filter.value);
+				return Number.isInteger(value) && value >= 0
+					? sql`${compareExpr} = ${value}`
+					: sql`false`;
+			}
 			return sql`${compareExpr} = ${filter.value}`;
 		case "neq":
+			if (isGroupCountField) {
+				const value = parseGroupCountValue(filter.value);
+				return Number.isInteger(value) && value >= 0
+					? sql`${compareExpr} <> ${value}`
+					: sql`false`;
+			}
 			return sql`${compareExpr} <> ${filter.value}`;
 		case "gte":
+			if (isGroupCountField) {
+				const value = parseGroupCountValue(filter.value);
+				return Number.isInteger(value) && value >= 0
+					? sql`${compareExpr} >= ${value}`
+					: sql`false`;
+			}
 			return sql`${compareExpr} >= ${filter.value}`;
 		case "lte":
+			if (isGroupCountField) {
+				const value = parseGroupCountValue(filter.value);
+				return Number.isInteger(value) && value >= 0
+					? sql`${compareExpr} <= ${value}`
+					: sql`false`;
+			}
 			return sql`${compareExpr} <= ${filter.value}`;
 	}
 }

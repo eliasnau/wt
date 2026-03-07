@@ -130,6 +130,7 @@ const FILTER_FIELDS: Array<{ label: string; value: FilterField }> = [
   { label: "Startdatum", value: "startDate" },
   { label: "Kündigung wirksam", value: "cancellationEffectiveDate" },
   { label: "Gekündigt am", value: "cancelledAt" },
+  { label: "Gruppenanzahl", value: "groupCount" },
 ];
 
 const FILTER_OPERATORS: Array<{ label: string; value: FilterOperator }> = [
@@ -161,6 +162,18 @@ const DATE_FILTER_OPERATORS: Array<{ label: string; value: FilterOperator }> = [
   { label: "ist nicht leer", value: "isNotNull" },
 ];
 
+const NUMERIC_FILTER_FIELDS = new Set<FilterField>(["groupCount"]);
+
+const NUMERIC_FILTER_OPERATORS: Array<{
+  label: string;
+  value: FilterOperator;
+}> = [
+  { label: "gleich", value: "eq" },
+  { label: "ungleich", value: "neq" },
+  { label: "größer/gleich", value: "gte" },
+  { label: "kleiner/gleich", value: "lte" },
+];
+
 const SORT_FIELDS: Array<{ label: string; value: SortField }> = [
   { label: "Erstellt", value: "createdAt" },
   { label: "Aktualisiert", value: "updatedAt" },
@@ -188,14 +201,9 @@ const FILTER_MODE_OPTIONS: Array<{ label: string; value: "and" | "or" }> = [
 const NULL_OPERATORS = new Set<FilterOperator>(["isNull", "isNotNull"]);
 const UUID_REGEX =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const NON_NEGATIVE_INTEGER_REGEX = /^\d+$/;
 const FILTER_FIELD_VALUES = new Set<FilterField>(
   FILTER_FIELDS.map((option) => option.value),
-);
-const FILTER_OPERATOR_VALUES = new Set<FilterOperator>(
-  FILTER_OPERATORS.map((option) => option.value),
-);
-const DATE_FILTER_OPERATOR_VALUES = new Set<FilterOperator>(
-  DATE_FILTER_OPERATORS.map((option) => option.value),
 );
 const SORT_FIELD_VALUES = new Set<SortField>(
   SORT_FIELDS.map((option) => option.value),
@@ -237,10 +245,22 @@ function isDateField(field: FilterField): boolean {
   return DATE_FILTER_FIELDS.has(field);
 }
 
+function isNumericField(field: FilterField): boolean {
+  return NUMERIC_FILTER_FIELDS.has(field);
+}
+
 function getOperatorsForField(
   field: FilterField,
 ): Array<{ label: string; value: FilterOperator }> {
-  return isDateField(field) ? DATE_FILTER_OPERATORS : FILTER_OPERATORS;
+  if (isDateField(field)) {
+    return DATE_FILTER_OPERATORS;
+  }
+
+  if (isNumericField(field)) {
+    return NUMERIC_FILTER_OPERATORS;
+  }
+
+  return FILTER_OPERATORS;
 }
 
 function parseDateFilterValue(value: string): Date | undefined {
@@ -315,6 +335,9 @@ function sanitizeFilter(raw: unknown): QueryFilter | null {
   if (!isObject(raw)) return null;
   const rawField = raw.field;
   const rawOperator = raw.operator;
+  const allowedOperators = getOperatorsForField(rawField as FilterField).map(
+    (option) => option.value,
+  );
 
   if (
     typeof rawField !== "string" ||
@@ -325,11 +348,7 @@ function sanitizeFilter(raw: unknown): QueryFilter | null {
 
   if (
     typeof rawOperator !== "string" ||
-    !(
-      isDateField(rawField as FilterField)
-        ? DATE_FILTER_OPERATOR_VALUES
-        : FILTER_OPERATOR_VALUES
-    ).has(rawOperator as FilterOperator)
+    !allowedOperators.includes(rawOperator as FilterOperator)
   ) {
     return null;
   }
@@ -366,6 +385,10 @@ function sanitizeFilter(raw: unknown): QueryFilter | null {
 
       const value = raw.value.trim();
       if (!value) {
+        return null;
+      }
+
+      if (isNumericField(field) && !NON_NEGATIVE_INTEGER_REGEX.test(value)) {
         return null;
       }
 
@@ -502,6 +525,13 @@ function toCompiledFilter(row: QueryBuilderRow): QueryFilter | null {
     case "lte": {
       const trimmed = row.value.trim();
       if (!trimmed) {
+        return null;
+      }
+
+      if (
+        isNumericField(row.field) &&
+        !NON_NEGATIVE_INTEGER_REGEX.test(trimmed)
+      ) {
         return null;
       }
 
@@ -1050,9 +1080,16 @@ export function MembersV2PageClient() {
                   ) : (
                     <InputGroup>
                       <InputGroupInput
-                        type="text"
+                        type={isNumericField(filter.field) ? "number" : "text"}
+                        inputMode={
+                          isNumericField(filter.field) ? "numeric" : undefined
+                        }
+                        min={isNumericField(filter.field) ? 0 : undefined}
+                        step={isNumericField(filter.field) ? 1 : undefined}
                         placeholder={
-                          inMode
+                          isNumericField(filter.field)
+                            ? "0 = keine Gruppe, 1 = genau eine Gruppe"
+                            : inMode
                             ? "Werte mit Komma trennen (z.B. Berlin,Hamburg)"
                             : "Wert eingeben"
                         }
