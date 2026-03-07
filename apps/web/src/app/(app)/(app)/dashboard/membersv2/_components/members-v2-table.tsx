@@ -453,8 +453,8 @@ export function MembersV2Table({
 
 	return (
 		<>
-			<div className="min-w-0 max-w-full overflow-hidden rounded-xl border bg-background">
-				<div className="relative min-w-0 max-w-full overflow-x-auto">
+			<div className="w-full min-w-0 max-w-full overflow-hidden rounded-xl border bg-background">
+				<div className="relative w-full min-w-0 max-w-full overflow-x-auto">
 					<table className="w-full min-w-[1040px] caption-bottom text-sm">
 						<thead className="[&_tr]:border-b">
 							{table.getHeaderGroups().map((headerGroup) => (
