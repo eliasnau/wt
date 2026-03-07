@@ -34,8 +34,8 @@ export default function DashboardLayout({
               <Separator orientation="vertical" className="h-4" />
             </header> */}
 
-						<main className="flex-1 overflow-auto">
-							<div className="mx-auto w-full max-w-full p-4 sm:p-6 md:max-w-3xl md:max-w-[45rem] lg:max-w-7xl lg:p-10">
+						<main className="flex-1 overflow-y-auto overflow-x-hidden">
+							<div className="mx-auto w-full max-w-full overflow-x-hidden p-4 sm:p-6 md:max-w-3xl md:max-w-[45rem] lg:max-w-7xl lg:p-10">
 								{children}
 							</div>
 						</main>
