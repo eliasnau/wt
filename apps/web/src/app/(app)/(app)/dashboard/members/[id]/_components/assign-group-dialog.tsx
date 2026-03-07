@@ -112,8 +112,8 @@ export function AssignGroupDialog({
 				<DialogHeader>
 					<DialogTitle>Zur Gruppe zuweisen</DialogTitle>
 					<DialogDescription>
-						Add this member to a group. You can override the default membership
-						price.
+						Add this member to a group. If you leave the price empty, the
+						current group default will be copied to this membership.
 					</DialogDescription>
 				</DialogHeader>
 
@@ -180,7 +180,7 @@ export function AssignGroupDialog({
 											return (
 												<Field data-invalid={isInvalid}>
 													<FieldLabel htmlFor="membershipPrice">
-														Custom Monthly Price (Optional)
+														Monthly Price (Optional)
 													</FieldLabel>
 													<Input
 														id="membershipPrice"
@@ -191,8 +191,8 @@ export function AssignGroupDialog({
 														aria-invalid={isInvalid}
 														placeholder={
 															selectedGroup?.defaultMembershipPrice
-																? `Default: ${selectedGroup.defaultMembershipPrice}`
-																: "Leer lassen, um den Standard zu verwenden"
+																? `Current default: ${selectedGroup.defaultMembershipPrice}`
+																: "Leer lassen, um €0.00 zu verwenden"
 														}
 													/>
 													{isInvalid && (
@@ -200,7 +200,7 @@ export function AssignGroupDialog({
 													)}
 													{selectedGroup?.defaultMembershipPrice && (
 														<p className="text-muted-foreground text-xs">
-															Default price: €
+															Current group default: €
 															{selectedGroup.defaultMembershipPrice}
 														</p>
 													)}

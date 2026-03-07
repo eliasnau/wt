@@ -523,46 +523,46 @@ export const membersRouter = {
 			const totalPages = Math.ceil(totalCount / limit);
 
 			// Fetch group info for the listed members in one shot
-				const memberIds = members.map((m) => m.id);
-				let groupMap = new Map<
-					string,
-					{
-						groupId: string;
-						group: { id: string; name: string; color: string };
-					}[]
-				>();
-				if (memberIds.length > 0) {
-					const gmRows = await db
-						.select({
-							memberId: groupMember.memberId,
-							groupId: groupMember.groupId,
-							gId: group.id,
-							gName: group.name,
-							gColor: group.color,
-						})
-						.from(groupMember)
-						.innerJoin(group, eq(group.id, groupMember.groupId))
-						.where(inArray(groupMember.memberId, memberIds));
+			const memberIds = members.map((m) => m.id);
+			let groupMap = new Map<
+				string,
+				{
+					groupId: string;
+					group: { id: string; name: string; color: string };
+				}[]
+			>();
+			if (memberIds.length > 0) {
+				const gmRows = await db
+					.select({
+						memberId: groupMember.memberId,
+						groupId: groupMember.groupId,
+						gId: group.id,
+						gName: group.name,
+						gColor: group.color,
+					})
+					.from(groupMember)
+					.innerJoin(group, eq(group.id, groupMember.groupId))
+					.where(inArray(groupMember.memberId, memberIds));
 
 				groupMap = gmRows.reduce(
 					(acc, r) => {
-							const list = acc.get(r.memberId) ?? [];
-							list.push({
-								groupId: r.groupId,
-								group: { id: r.gId, name: r.gName, color: r.gColor },
-							});
-							acc.set(r.memberId, list);
-							return acc;
-						},
-						new Map<
-							string,
-							{
-								groupId: string;
-								group: { id: string; name: string; color: string };
-							}[]
-						>(),
-					);
-				}
+						const list = acc.get(r.memberId) ?? [];
+						list.push({
+							groupId: r.groupId,
+							group: { id: r.gId, name: r.gName, color: r.gColor },
+						});
+						acc.set(r.memberId, list);
+						return acc;
+					},
+					new Map<
+						string,
+						{
+							groupId: string;
+							group: { id: string; name: string; color: string };
+						}[]
+					>(),
+				);
+			}
 
 			const data = members.map((m) => {
 				const {
@@ -669,7 +669,8 @@ export const membersRouter = {
 
 				if (!cardHolder) reasons.push("missing account holder");
 				if (!mandateId) reasons.push("missing mandate ID");
-				if (!row.mandateSignatureDate) reasons.push("missing mandate signature date");
+				if (!row.mandateSignatureDate)
+					reasons.push("missing mandate signature date");
 
 				return {
 					memberId: row.memberId,
@@ -986,7 +987,7 @@ export const membersRouter = {
 						member_email: member.email,
 						group_id: input.groupId,
 						group_name: group.name,
-						membership_price: input.membershipPrice,
+						membership_price: result.membershipPrice,
 					},
 				});
 

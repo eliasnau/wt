@@ -29,7 +29,6 @@ import {
 	AlertDialogPopup,
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -71,7 +70,7 @@ import { client, orpc } from "@/utils/orpc";
 
 interface MemberGroup {
 	groupId: string;
-	membershipPrice: string | null;
+	membershipPrice: string;
 	joinedAt: string | Date | null;
 	group: {
 		id: string;
@@ -111,7 +110,7 @@ function EditPriceDialog({
 	onSuccess?: () => void;
 }) {
 	const queryClient = useQueryClient();
-	const [price, setPrice] = useState(group.membershipPrice ?? "");
+	const [price, setPrice] = useState(group.membershipPrice);
 	const [error, setError] = useState<string | null>(null);
 
 	const updateMutation = useMutation({
@@ -155,7 +154,7 @@ function EditPriceDialog({
 			onOpenChange={(nextOpen) => {
 				onOpenChange(nextOpen);
 				if (nextOpen) {
-					setPrice(group.membershipPrice ?? "");
+					setPrice(group.membershipPrice);
 					setError(null);
 				}
 			}}
@@ -179,13 +178,14 @@ function EditPriceDialog({
 							onChange={(event) => setPrice(event.target.value)}
 							placeholder={
 								group.group.defaultMembershipPrice
-									? `Default: ${group.group.defaultMembershipPrice}`
-									: "Leer lassen, um den Standard zu verwenden"
+									? `Current default: ${group.group.defaultMembershipPrice}`
+									: "Leer lassen, um €0.00 zu verwenden"
 							}
 						/>
 						{group.group.defaultMembershipPrice && (
 							<p className="text-muted-foreground text-xs">
-								Default price: €{group.group.defaultMembershipPrice}
+								Leer lassen, um den aktuellen Gruppenstandard zu uebernehmen: €
+								{group.group.defaultMembershipPrice}
 							</p>
 						)}
 						{error && <p className="text-destructive text-xs">{error}</p>}
@@ -336,21 +336,7 @@ export function MemberGroupsTable({
 		{
 			accessorKey: "group.name",
 			header: "Gruppenname",
-			cell: ({ row }) => {
-				const gm = row.original;
-				const isDefaultPrice =
-					!gm.membershipPrice && gm.group.defaultMembershipPrice;
-				return (
-					<div className="flex items-center gap-2">
-						<span>{gm.group.name}</span>
-						{isDefaultPrice && (
-							<Badge variant="outline" className="text-xs">
-								Default
-							</Badge>
-						)}
-					</div>
-				);
-			},
+			cell: ({ row }) => row.original.group.name,
 		},
 		{
 			accessorKey: "group.description",
@@ -362,10 +348,7 @@ export function MemberGroupsTable({
 			id: "price",
 			header: "Monthly Price",
 			cell: ({ row }) => {
-				const gm = row.original;
-				const price =
-					gm.membershipPrice || gm.group.defaultMembershipPrice || "0";
-				return formatCurrency(price);
+				return formatCurrency(row.original.membershipPrice);
 			},
 		},
 		{
@@ -409,7 +392,7 @@ export function MemberGroupsTable({
 	});
 
 	const totalMonthly = groups.reduce((sum, gm) => {
-		const price = gm.membershipPrice || gm.group.defaultMembershipPrice || "0";
+		const price = gm.membershipPrice || "0";
 		return sum + Number.parseFloat(price);
 	}, 0);
 
