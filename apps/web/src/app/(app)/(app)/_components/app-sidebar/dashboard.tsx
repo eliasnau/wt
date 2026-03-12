@@ -1,9 +1,9 @@
 "use client";
 
 import {
-	ClipboardCheck,
 	ChevronDown,
 	ChevronUp,
+	ClipboardCheck,
 	DollarSign,
 	PieChart,
 	Sparkles,
@@ -117,6 +117,7 @@ const routes: NavRoute[] = [
 		link: "/dashboard/settings",
 		subs: [
 			{ title: "Allgemein", link: "/dashboard/settings/general" },
+			{ title: "Abrechnung", link: "/dashboard/settings/billing" },
 			{ title: "Benutzer", link: "/dashboard/settings/members" },
 			{ title: "SEPA", link: "/dashboard/settings/sepa" },
 		],

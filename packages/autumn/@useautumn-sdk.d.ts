@@ -8,6 +8,7 @@ declare module '@useautumn/sdk' {
   export const ai_messages: Feature;
 
   // Plans
+  export const free: Plan;
   export const pro: Plan;
   export const enterprise: Plan;
   export const ai_credits: Plan;

@@ -23,6 +23,22 @@ export const users = feature({
 });
 
 // Plans
+export const free = plan({
+	id: 'free',
+	name: 'Free',
+	autoEnable: true,
+	items: [
+		item({
+			featureId: members.id,
+			included: 5,
+		}),
+		item({
+			featureId: users.id,
+			included: 1,
+		}),
+	],
+});
+
 export const basic = plan({
 	id: 'basic',
 	name: 'Basic',
