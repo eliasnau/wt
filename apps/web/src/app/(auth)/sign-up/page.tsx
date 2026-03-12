@@ -1,3 +1,4 @@
+import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { getServerSession } from "@/lib/auth";
 import SignUp from "./sign-up";
@@ -21,7 +22,7 @@ export default async function SignUpPage({
 	const invite = getSingleValue(params.invite) === "1";
 
 	if (session?.session.id) {
-		redirect(redirectUrl);
+		redirect(redirectUrl as Route);
 	}
 
 	return <SignUp redirectUrl={redirectUrl} invite={invite} />;
