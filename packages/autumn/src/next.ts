@@ -19,14 +19,19 @@ export async function identifyAutumnOrganization(request: Request) {
 	});
 
 	const customerId = session?.session.activeOrganizationId;
-	const userId = session?.user.id;
 
-	if (!customerId || !userId) {
+	if (!customerId) {
 		return null;
 	}
 
-	if (isBillingAction(request.url) && session.user?.role !== "owner") {
-		throw new Error("Only owners can manage billing");
+	if (isBillingAction(request.url)) {
+		const { role } = await auth.api.getActiveMemberRole({
+			headers: request.headers,
+		});
+
+		if (role !== "owner") {
+			throw new Error("Only owners can manage billing");
+		}
 	}
 
 	return {
