@@ -92,7 +92,7 @@ export function GroupsChart({
 				<div>
 					<div className="flex items-center gap-2">
 						<FrameTitle>
-							Members per Group
+							Mitglieder pro Gruppe
 							<Badge variant="outline" className={trendClass}>
 								{isPositive ? (
 									<TrendingUp className="h-4 w-4" />
@@ -111,14 +111,14 @@ export function GroupsChart({
 								<InfoIcon className="h-3.5 w-3.5 text-muted-foreground" />
 							</TooltipTrigger>
 							<TooltipContent className="max-w-xs">
-								Displays the distribution of members across different activity
-								groups. Helps identify which activities are most popular and
-								track participation trends in each group.
+								Zeigt die Verteilung der Mitglieder auf verschiedene Gruppen.
+								So lassen sich beliebte Gruppen und Entwicklungen im Zeitverlauf
+								schnell erkennen.
 							</TooltipContent>
 						</Tooltip>
 					</div>
 					<FrameDescription>
-						Member count across different activity groups
+						Mitgliederanzahl in den verschiedenen Gruppen
 					</FrameDescription>
 				</div>
 				<div className="flex gap-1 rounded-lg border p-1">

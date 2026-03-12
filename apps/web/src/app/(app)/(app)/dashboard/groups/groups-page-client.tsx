@@ -17,7 +17,6 @@ import {
 	Header,
 	HeaderActions,
 	HeaderContent,
-	HeaderDescription,
 	HeaderTitle,
 } from "../_components/page-header";
 import GroupTable from "./_components/group-table";
@@ -36,9 +35,6 @@ export function GroupsPageClient() {
 			<Header>
 				<HeaderContent>
 					<HeaderTitle>Gruppen</HeaderTitle>
-					<HeaderDescription>
-						Manage member groups and permissions
-					</HeaderDescription>
 				</HeaderContent>
 				<HeaderActions>
 					<NewGroupSheet onGroupCreated={() => refetch()} />

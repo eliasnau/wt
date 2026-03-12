@@ -42,14 +42,14 @@ const birthdateSchema = z
 	.optional()
 	.or(z.literal(""));
 const emailSchema = z.string().email("Ungültige E-Mail-Adresse");
-const phoneSchema = z.string().min(1, "Phone is required");
-const streetSchema = z.string().min(1, "Street is required");
-const citySchema = z.string().min(1, "City is required");
-const stateSchema = z.string().min(1, "State is required");
-const postalCodeSchema = z.string().min(1, "Postal code is required");
-const countrySchema = z.string().min(1, "Country is required");
-const ibanSchema = z.string().min(1, "IBAN is required");
-const bicSchema = z.string().min(1, "BIC is required");
+const phoneSchema = z.string().min(1, "Telefonnummer ist erforderlich");
+const streetSchema = z.string().min(1, "Straße ist erforderlich");
+const citySchema = z.string().min(1, "Stadt ist erforderlich");
+const stateSchema = z.string().min(1, "Bundesland ist erforderlich");
+const postalCodeSchema = z.string().min(1, "Postleitzahl ist erforderlich");
+const countrySchema = z.string().min(1, "Land ist erforderlich");
+const ibanSchema = z.string().min(1, "IBAN ist erforderlich");
+const bicSchema = z.string().min(1, "BIC ist erforderlich");
 const cardHolderSchema = z
 	.string()
 	.min(1, "Name des Kontoinhabers ist erforderlich");
@@ -71,7 +71,7 @@ const guardianEmailSchema = z
 	.optional()
 	.or(z.literal(""));
 const guardianPhoneSchema = z.string().optional();
-const notesSchema = z.string().max(1000, "Maximum 1000 characters");
+const notesSchema = z.string().max(1000, "Maximal 1000 Zeichen");
 const formSchema = z.object({
 	firstName: firstNameSchema,
 	lastName: lastNameSchema,
@@ -104,24 +104,24 @@ type GroupAssignment = {
 };
 
 const CONTRACT_START_MONTH_ITEMS = [
-	{ value: "01", label: "January" },
-	{ value: "02", label: "February" },
-	{ value: "03", label: "March" },
+	{ value: "01", label: "Januar" },
+	{ value: "02", label: "Februar" },
+	{ value: "03", label: "März" },
 	{ value: "04", label: "April" },
-	{ value: "05", label: "May" },
-	{ value: "06", label: "June" },
-	{ value: "07", label: "July" },
+	{ value: "05", label: "Mai" },
+	{ value: "06", label: "Juni" },
+	{ value: "07", label: "Juli" },
 	{ value: "08", label: "August" },
 	{ value: "09", label: "September" },
-	{ value: "10", label: "October" },
+	{ value: "10", label: "Oktober" },
 	{ value: "11", label: "November" },
-	{ value: "12", label: "December" },
+	{ value: "12", label: "Dezember" },
 ] as const;
 
 const INITIAL_PERIOD_ITEMS = [
 	{ value: "monthly", label: "Monatlich" },
-	{ value: "half_yearly", label: "Half Yearly" },
-	{ value: "yearly", label: "Yearly" },
+	{ value: "half_yearly", label: "Halbjährlich" },
+	{ value: "yearly", label: "Jährlich" },
 ] as const;
 
 export function NewMemberForm() {
@@ -196,9 +196,9 @@ export function NewMemberForm() {
 			toast.success("Mitglied erfolgreich erstellt");
 			if (failedAssignments.length > 0) {
 				toast.error(
-					`Member created, but ${failedAssignments.length} group assignment${
-						failedAssignments.length === 1 ? "" : "s"
-					} failed.`,
+					`Mitglied wurde erstellt, aber ${failedAssignments.length} Gruppenzuweisung${
+						failedAssignments.length === 1 ? "" : "en"
+					} ${failedAssignments.length === 1 ? "ist" : "sind"} fehlgeschlagen.`,
 				);
 			}
 		},
@@ -319,10 +319,10 @@ export function NewMemberForm() {
 								variant="outline"
 								onClick={() => router.push("/dashboard/members")}
 							>
-								View All Members
+								Alle Mitglieder anzeigen
 							</Button>
 							<Button onClick={() => createMemberMutation.reset()}>
-								Add Another Member
+								Weiteres Mitglied hinzufügen
 							</Button>
 						</div>
 					</div>
@@ -343,16 +343,17 @@ export function NewMemberForm() {
 			>
 				<FramePanel>
 					<h2 className="mb-2 font-heading text-foreground text-xl">
-						Member Information
+						Mitgliedsdaten
 					</h2>
 					<p className="mb-6 text-muted-foreground text-sm">
-						Add a new member with their personal, address, and contract details
+						Füge ein neues Mitglied mit seinen persönlichen Daten, seiner
+						Adresse und Vertragsdaten hinzu
 					</p>
 
 					<FieldGroup className="space-y-6">
 						<div className="space-y-4">
 							<h3 className="font-semibold text-foreground text-sm">
-								Personal Information
+								Persönliche Daten
 							</h3>
 							<div className="grid gap-4 md:grid-cols-2">
 								<form.Field name="firstName">
@@ -362,7 +363,7 @@ export function NewMemberForm() {
 										return (
 											<Field data-invalid={isInvalid}>
 												<FieldLabel htmlFor="firstName">
-													First Name *
+													Vorname *
 												</FieldLabel>
 												<Input
 													id="firstName"
@@ -371,7 +372,7 @@ export function NewMemberForm() {
 													onBlur={field.handleBlur}
 													onChange={(e) => field.handleChange(e.target.value)}
 													aria-invalid={isInvalid}
-													placeholder="John"
+													placeholder="Max"
 													type="text"
 												/>
 												{isInvalid && (
@@ -396,7 +397,7 @@ export function NewMemberForm() {
 													onBlur={field.handleBlur}
 													onChange={(e) => field.handleChange(e.target.value)}
 													aria-invalid={isInvalid}
-													placeholder="Doe"
+													placeholder="Mustermann"
 													type="text"
 												/>
 												{isInvalid && (
@@ -488,7 +489,7 @@ export function NewMemberForm() {
 
 							<div className="space-y-4">
 								<h3 className="font-semibold text-foreground text-sm">
-									Guardian Information (Optional)
+									Daten des Erziehungsberechtigten (optional)
 								</h3>
 								<div className="grid gap-4 md:grid-cols-2">
 									<form.Field name="guardianName">
@@ -547,7 +548,9 @@ export function NewMemberForm() {
 												field.state.meta.isTouched && !field.state.meta.isValid;
 											return (
 												<Field data-invalid={isInvalid}>
-													<FieldLabel htmlFor="guardianPhone">Phone</FieldLabel>
+													<FieldLabel htmlFor="guardianPhone">
+														Telefon
+													</FieldLabel>
 													<Input
 														id="guardianPhone"
 														name={field.name}
@@ -575,7 +578,7 @@ export function NewMemberForm() {
 									return (
 										<Field data-invalid={isInvalid}>
 											<FieldLabel htmlFor="memberNotes">
-												Member Notes
+												Mitgliedsnotizen
 											</FieldLabel>
 											<Textarea
 												id="memberNotes"
@@ -584,7 +587,7 @@ export function NewMemberForm() {
 												onBlur={field.handleBlur}
 												onChange={(e) => field.handleChange(e.target.value)}
 												aria-invalid={isInvalid}
-												placeholder="Additional notes about the member..."
+												placeholder="Zusätzliche Notizen zum Mitglied..."
 												rows={3}
 											/>
 											{isInvalid && (
@@ -608,7 +611,7 @@ export function NewMemberForm() {
 										return (
 											<Field data-invalid={isInvalid}>
 												<FieldLabel htmlFor="street">
-													Street Address *
+													Straße und Hausnummer *
 												</FieldLabel>
 												<Input
 													id="street"
@@ -617,7 +620,7 @@ export function NewMemberForm() {
 													onBlur={field.handleBlur}
 													onChange={(e) => field.handleChange(e.target.value)}
 													aria-invalid={isInvalid}
-													placeholder="123 Main St"
+													placeholder="Musterstraße 123"
 													type="text"
 												/>
 												{isInvalid && (
@@ -643,7 +646,7 @@ export function NewMemberForm() {
 														onBlur={field.handleBlur}
 														onChange={(e) => field.handleChange(e.target.value)}
 														aria-invalid={isInvalid}
-														placeholder="New York"
+														placeholder="Berlin"
 														type="text"
 													/>
 													{isInvalid && (
@@ -686,7 +689,7 @@ export function NewMemberForm() {
 											return (
 												<Field data-invalid={isInvalid}>
 													<FieldLabel htmlFor="postalCode">
-														Postal Code *
+														Postleitzahl *
 													</FieldLabel>
 													<Input
 														id="postalCode"
@@ -720,7 +723,7 @@ export function NewMemberForm() {
 														onBlur={field.handleBlur}
 														onChange={(e) => field.handleChange(e.target.value)}
 														aria-invalid={isInvalid}
-														placeholder="United States"
+														placeholder="Deutschland"
 														type="text"
 													/>
 													{isInvalid && (
@@ -739,11 +742,11 @@ export function NewMemberForm() {
 						<div className="space-y-4">
 							<div>
 								<h3 className="font-semibold text-foreground text-sm">
-									Group Assignments
+									Gruppenzuweisungen
 								</h3>
 								<p className="text-muted-foreground text-sm">
-									Assign this member to one or more groups. You can override the
-									default membership price per group.
+									Weise dieses Mitglied einer oder mehreren Gruppen zu. Du
+									kannst den Standard-Mitgliedsbeitrag pro Gruppe überschreiben.
 								</p>
 							</div>
 
@@ -789,7 +792,7 @@ export function NewMemberForm() {
 														});
 													}}
 													disabled={isLoading}
-													aria-label={`Select ${group.name}`}
+													aria-label={`${group.name} auswählen`}
 												/>
 												<div className="flex-1 space-y-2">
 													<div className="flex flex-wrap items-center justify-between gap-2">
@@ -799,13 +802,13 @@ export function NewMemberForm() {
 														<div className="flex items-center gap-2">
 															{group.defaultMembershipPrice ? (
 																<span className="text-muted-foreground text-xs">
-																	Default: €{group.defaultMembershipPrice}
+																	Standard: €{group.defaultMembershipPrice}
 																</span>
 															) : null}
 															{isFreeMembershipPrice(
 																group.defaultMembershipPrice,
 															) ? (
-																<Badge variant="secondary">Free</Badge>
+																<Badge variant="secondary">Kostenlos</Badge>
 															) : null}
 														</div>
 													</div>
@@ -819,12 +822,14 @@ export function NewMemberForm() {
 														<div className="space-y-1.5">
 															<div className="flex items-center gap-2">
 																<FieldLabel htmlFor={`group-price-${group.id}`}>
-																	Monthly Price (Optional)
+																	Monatlicher Beitrag (optional)
 																</FieldLabel>
 																{parseMembershipPriceInput(
 																	groupPrices[group.id] ?? "",
 																) === 0 ? (
-																	<Badge variant="secondary">Free</Badge>
+																	<Badge variant="secondary">
+																		Kostenlos
+																	</Badge>
 																) : null}
 															</div>
 															<Input
@@ -847,7 +852,7 @@ export function NewMemberForm() {
 																}}
 																placeholder={
 																	group.defaultMembershipPrice
-																		? `Default: ${group.defaultMembershipPrice}`
+																		? `Standard: ${group.defaultMembershipPrice}`
 																		: "Leer lassen, um den Standard zu verwenden"
 																}
 																aria-invalid={!!priceError}
@@ -871,7 +876,7 @@ export function NewMemberForm() {
 
 						<div className="space-y-4">
 							<h3 className="font-semibold text-foreground text-sm">
-								Payment Information
+								Zahlungsinformationen
 							</h3>
 							<div className="grid gap-4">
 								<form.Field name="iban">
@@ -932,7 +937,7 @@ export function NewMemberForm() {
 											return (
 												<Field data-invalid={isInvalid}>
 													<FieldLabel htmlFor="cardHolder">
-														Card Holder Name *
+														Name des Kontoinhabers *
 													</FieldLabel>
 													<Input
 														id="cardHolder"
@@ -959,7 +964,7 @@ export function NewMemberForm() {
 
 						<div className="space-y-4">
 							<h3 className="font-semibold text-foreground text-sm">
-								Contract Details
+								Vertragsdetails
 							</h3>
 							<div className="grid gap-4 md:grid-cols-2">
 								<div className="space-y-2">
@@ -987,18 +992,18 @@ export function NewMemberForm() {
 																<SelectValue placeholder="Monat" />
 															</SelectTrigger>
 															<SelectContent>
-																<SelectItem value="01">January</SelectItem>
-																<SelectItem value="02">February</SelectItem>
-																<SelectItem value="03">March</SelectItem>
+																<SelectItem value="01">Januar</SelectItem>
+																<SelectItem value="02">Februar</SelectItem>
+																<SelectItem value="03">März</SelectItem>
 																<SelectItem value="04">April</SelectItem>
-																<SelectItem value="05">May</SelectItem>
-																<SelectItem value="06">June</SelectItem>
-																<SelectItem value="07">July</SelectItem>
+																<SelectItem value="05">Mai</SelectItem>
+																<SelectItem value="06">Juni</SelectItem>
+																<SelectItem value="07">Juli</SelectItem>
 																<SelectItem value="08">August</SelectItem>
 																<SelectItem value="09">September</SelectItem>
-																<SelectItem value="10">October</SelectItem>
+																<SelectItem value="10">Oktober</SelectItem>
 																<SelectItem value="11">November</SelectItem>
-																<SelectItem value="12">December</SelectItem>
+																<SelectItem value="12">Dezember</SelectItem>
 															</SelectContent>
 														</Select>
 														{isInvalid && (
@@ -1036,7 +1041,7 @@ export function NewMemberForm() {
 																id="contractStartYear"
 																aria-invalid={isInvalid}
 															>
-																<SelectValue placeholder="Year" />
+																<SelectValue placeholder="Jahr" />
 															</SelectTrigger>
 															<SelectContent>
 																{years.map((year) => (
@@ -1087,9 +1092,9 @@ export function NewMemberForm() {
 													<SelectContent>
 														<SelectItem value="monthly">Monatlich</SelectItem>
 														<SelectItem value="half_yearly">
-															Half Yearly
+															Halbjährlich
 														</SelectItem>
-														<SelectItem value="yearly">Yearly</SelectItem>
+														<SelectItem value="yearly">Jährlich</SelectItem>
 													</SelectContent>
 												</Select>
 												{isInvalid && (
@@ -1162,9 +1167,9 @@ export function NewMemberForm() {
 											field.state.meta.isTouched && !field.state.meta.isValid;
 										return (
 											<Field data-invalid={isInvalid}>
-												<FieldLabel htmlFor="contractNotes">
-													Contract Notes
-												</FieldLabel>
+											<FieldLabel htmlFor="contractNotes">
+												Vertragsnotizen
+											</FieldLabel>
 												<Textarea
 													id="contractNotes"
 													name={field.name}
@@ -1172,7 +1177,7 @@ export function NewMemberForm() {
 													onBlur={field.handleBlur}
 													onChange={(e) => field.handleChange(e.target.value)}
 													aria-invalid={isInvalid}
-													placeholder="Additional notes about the contract..."
+													placeholder="Zusätzliche Notizen zum Vertrag..."
 													rows={3}
 												/>
 												{isInvalid && (
@@ -1194,10 +1199,10 @@ export function NewMemberForm() {
 						variant="ghost"
 						onClick={() => router.push("/dashboard/members")}
 					>
-						Cancel
+						Abbrechen
 					</Button>
 					<Button disabled={isLoading} type="submit" form="new-member-form">
-						{isLoading ? "Creating..." : "Mitglied erstellen"}
+						{isLoading ? "Wird erstellt..." : "Mitglied erstellen"}
 					</Button>
 				</FrameFooter>
 			</form>

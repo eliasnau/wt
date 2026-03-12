@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { format, startOfMonth, subMonths } from "date-fns";
+import { de } from "date-fns/locale";
 import {
 	AlertCircle,
 	AreaChartIcon,
@@ -88,7 +89,7 @@ export default function StatisticsOverviewPage() {
 		() =>
 			monthOptions.map((month) => ({
 				value: format(month, "yyyy-MM"),
-				label: format(month, "MMMM yyyy"),
+				label: format(month, "MMMM yyyy", { locale: de }),
 			})),
 		[monthOptions],
 	);
@@ -99,7 +100,9 @@ export default function StatisticsOverviewPage() {
 	const [groupChartType, setGroupChartType] = useState<"pie" | "bar">("pie");
 	const selectedMonthValue = format(selectedMonth, "yyyy-MM");
 
-	const selectedMonthLabel = format(selectedMonth, "MMMM yyyy");
+	const selectedMonthLabel = format(selectedMonth, "MMMM yyyy", {
+		locale: de,
+	});
 	const isCurrentMonth =
 		format(selectedMonth, "yyyy-MM") === format(currentMonth, "yyyy-MM");
 
@@ -114,14 +117,14 @@ export default function StatisticsOverviewPage() {
 	const formatCurrency = (value: string | number | null | undefined) => {
 		if (!value) return "€0.00";
 		const numeric = typeof value === "number" ? value : Number(value);
-		return new Intl.NumberFormat("en-US", {
+		return new Intl.NumberFormat("de-DE", {
 			style: "currency",
 			currency: "EUR",
 		}).format(Number.isFinite(numeric) ? numeric : 0);
 	};
 
 	const flowChartConfig = {
-		enrollments: { label: "Enrollments", color: "#16a34a" },
+		enrollments: { label: "Anmeldungen", color: "#16a34a" },
 		cancellations: { label: "Kündigungen", color: "#dc2626" },
 	} satisfies ChartConfig;
 
@@ -155,8 +158,8 @@ export default function StatisticsOverviewPage() {
 				<HeaderContent>
 					<HeaderTitle>Monatliche Übersicht</HeaderTitle>
 					<HeaderDescription>
-						A snapshot of performance for a single month. Future months are
-						disabled.
+						Ein Überblick über die Entwicklung eines einzelnen Monats.
+						Zukünftige Monate sind deaktiviert.
 					</HeaderDescription>
 				</HeaderContent>
 				<HeaderActions>
@@ -181,7 +184,7 @@ export default function StatisticsOverviewPage() {
 									const value = format(month, "yyyy-MM");
 									return (
 										<SelectItem key={value} value={value}>
-											{format(month, "MMMM yyyy")}
+											{format(month, "MMMM yyyy", { locale: de })}
 										</SelectItem>
 									);
 								})}
@@ -189,7 +192,7 @@ export default function StatisticsOverviewPage() {
 						</Select>
 						{isCurrentMonth && (
 							<Badge variant="outline" className="text-xs">
-								Current Month
+								Aktueller Monat
 							</Badge>
 						)}
 					</div>
@@ -225,13 +228,13 @@ export default function StatisticsOverviewPage() {
 						<FrameHeader className="flex-row items-start justify-between">
 							<div>
 								<p className="text-muted-foreground text-xs uppercase">
-									Active Members
+									Aktive Mitglieder
 								</p>
 								<p className="font-semibold text-2xl">
 									{isPending ? "—" : (data?.kpis.activeMembers ?? 0)}
 								</p>
 								<p className="text-muted-foreground text-xs">
-									As of {selectedMonthLabel}
+									Stand: {selectedMonthLabel}
 								</p>
 							</div>
 							<InfoIcon className="size-4 text-muted-foreground" />
@@ -241,13 +244,13 @@ export default function StatisticsOverviewPage() {
 						<FrameHeader className="flex-row items-start justify-between">
 							<div>
 								<p className="text-muted-foreground text-xs uppercase">
-									New Enrollments
+									Neue Anmeldungen
 								</p>
 								<p className="font-semibold text-2xl">
 									{isPending ? "—" : (data?.kpis.newEnrollments ?? 0)}
 								</p>
 								<p className="text-muted-foreground text-xs">
-									Total for {selectedMonthLabel}
+									Gesamt für {selectedMonthLabel}
 								</p>
 							</div>
 							<InfoIcon className="size-4 text-muted-foreground" />
@@ -257,7 +260,7 @@ export default function StatisticsOverviewPage() {
 						<FrameHeader className="flex-row items-start justify-between">
 							<div>
 								<p className="text-muted-foreground text-xs uppercase">
-									Revenue Collected
+									Eingenommener Umsatz
 								</p>
 								<p className="font-semibold text-2xl">
 									{isPending
@@ -265,7 +268,7 @@ export default function StatisticsOverviewPage() {
 										: formatCurrency(data?.kpis.revenueCollected)}
 								</p>
 								<p className="text-muted-foreground text-xs">
-									Billing period totals
+									Summe im Abrechnungszeitraum
 								</p>
 							</div>
 							<InfoIcon className="size-4 text-muted-foreground" />
@@ -275,13 +278,13 @@ export default function StatisticsOverviewPage() {
 						<FrameHeader className="flex-row items-start justify-between">
 							<div>
 								<p className="text-muted-foreground text-xs uppercase">
-									Cancellations
+									Kündigungen
 								</p>
 								<p className="font-semibold text-2xl">
 									{isPending ? "—" : (data?.membership.cancellations ?? 0)}
 								</p>
 								<p className="text-muted-foreground text-xs">
-									Total for {selectedMonthLabel}
+									Gesamt für {selectedMonthLabel}
 								</p>
 							</div>
 							<InfoIcon className="size-4 text-muted-foreground" />
@@ -300,7 +303,7 @@ export default function StatisticsOverviewPage() {
 									<Button variant="ghost" {...props}>
 										<ChevronDownIcon className="mr-2 size-4" />
 										<span className="font-semibold text-sm">
-											Membership Breakdown
+											Mitgliederübersicht
 										</span>
 									</Button>
 								)}
@@ -312,7 +315,7 @@ export default function StatisticsOverviewPage() {
 									<FrameHeader className="flex-row items-center justify-between">
 										<div>
 											<p className="font-medium text-sm">
-												Enrollments vs Cancellations
+												Anmeldungen vs. Kündigungen
 											</p>
 											<p className="text-muted-foreground text-xs">
 												{selectedMonthLabel}
@@ -459,7 +462,7 @@ export default function StatisticsOverviewPage() {
 									<Button variant="ghost" {...props}>
 										<ChevronDownIcon className="mr-2 size-4" />
 										<span className="font-semibold text-sm">
-											Pricing Breakdown by Group
+											Beitragsübersicht nach Gruppen
 										</span>
 									</Button>
 								)}
@@ -472,7 +475,7 @@ export default function StatisticsOverviewPage() {
 										<div>
 											<p className="font-medium text-sm">Mitgliedsbeiträge</p>
 											<p className="text-muted-foreground text-xs">
-												By group for {selectedMonthLabel}
+												Nach Gruppen für {selectedMonthLabel}
 											</p>
 										</div>
 									</FrameHeader>
@@ -484,9 +487,9 @@ export default function StatisticsOverviewPage() {
 								<Frame>
 									<FrameHeader className="flex-row items-center justify-between">
 										<div>
-											<p className="font-medium text-sm">Fee Mix</p>
+											<p className="font-medium text-sm">Beitragsmix</p>
 											<p className="text-muted-foreground text-xs">
-												Membership vs fees
+												Mitgliedschaften vs. Gebühren
 											</p>
 										</div>
 										<div className="flex items-center gap-2">

@@ -86,7 +86,7 @@ export function MembershipChart({
 				<div>
 					<div className="flex items-center gap-2">
 						<FrameTitle>
-							Membership Overview
+							Mitgliederentwicklung
 							<Badge variant="outline" className={trendClass}>
 								{isPositive ? (
 									<TrendingUp className="h-4 w-4" />
@@ -105,14 +105,14 @@ export function MembershipChart({
 								<InfoIcon className="h-3.5 w-3.5 text-muted-foreground" />
 							</TooltipTrigger>
 							<TooltipContent className="max-w-xs">
-								Tracks the number of new member registrations versus membership
-								cancellations over time. The percentage shows the net change in
-								membership growth compared to the previous period.
+								Zeigt neue Anmeldungen und Kündigungen im Zeitverlauf. Die
+								Prozentangabe beschreibt die Nettoveränderung im Vergleich zum
+								vorherigen Zeitraum.
 							</TooltipContent>
 						</Tooltip>
 					</div>
 					<FrameDescription>
-						New members and cancellations over the selected period
+						Neue Mitglieder und Kündigungen im ausgewählten Zeitraum
 					</FrameDescription>
 				</div>
 				<div className="flex gap-1 rounded-lg border p-1">

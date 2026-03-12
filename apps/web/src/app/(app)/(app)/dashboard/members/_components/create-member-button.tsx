@@ -31,11 +31,11 @@ export function CreateMemberButton() {
 			<MenuPopup align="end">
 				<MenuItem onClick={handleAddManually}>
 					<Plus />
-					Add Manually
+					Manuell hinzufügen
 				</MenuItem>
 				<MenuItem onClick={handleGenerateQR}>
 					<QrCodeIcon />
-					Generate QR Code
+					QR-Code generieren
 				</MenuItem>
 			</MenuPopup>
 		</Menu>
