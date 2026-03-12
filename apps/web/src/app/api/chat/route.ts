@@ -92,7 +92,7 @@ export async function POST(req: Request) {
 	}
 
 	const phClient = new PostHog(
-		process.env.NEXT_PUBLIC_POSTHOG_KEY,
+		process.env.NEXT_PUBLIC_POSTHOG_KEY!,
 		{ host: "https://eu.i.posthog.com" },
 	);
 
