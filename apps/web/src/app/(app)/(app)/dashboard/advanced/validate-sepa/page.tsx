@@ -45,9 +45,10 @@ export default function ValidateSepaPage() {
 		if (!term) return data?.members ?? [];
 		return (data?.members ?? []).filter((member) => {
 			const reasons = member.reasons.join(" ").toLowerCase();
+			const email = member.email?.toLowerCase() ?? "";
 			return (
 				member.memberName.toLowerCase().includes(term) ||
-				member.email.toLowerCase().includes(term) ||
+				email.includes(term) ||
 				reasons.includes(term)
 			);
 		});
@@ -135,7 +136,7 @@ export default function ValidateSepaPage() {
 													{member.memberName}
 												</TableCell>
 												<TableCell className="text-muted-foreground text-sm">
-													{member.email}
+													{member.email || "—"}
 												</TableCell>
 												<TableCell>
 													{member.valid ? (

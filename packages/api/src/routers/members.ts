@@ -29,6 +29,13 @@ import {
 	serializeMembersCsv,
 } from "./members/membersCsvExport";
 
+const optionalEmailSchema = z
+	.string()
+	.trim()
+	.email("Invalid email address")
+	.or(z.string().trim().length(0));
+const optionalPhoneSchema = z.string().trim().max(255, "Phone is too long");
+
 const createMemberSchema = z.object({
 	// Personal info
 	firstName: z.string().min(1, "First name is required").max(255),
@@ -38,8 +45,8 @@ const createMemberSchema = z.object({
 		.regex(/^\d{4}-\d{2}-\d{2}$/, "Must be valid date format (YYYY-MM-DD)")
 		.optional()
 		.or(z.literal("")),
-	email: z.string().email("Invalid email address"),
-	phone: z.string().min(1, "Phone is required"),
+	email: optionalEmailSchema,
+	phone: optionalPhoneSchema,
 
 	// Address
 	street: z.string().min(1, "Street is required"),
@@ -114,8 +121,8 @@ const updateMemberSchema = z.object({
 		.regex(/^\d{4}-\d{2}-\d{2}$/, "Must be valid date format (YYYY-MM-DD)")
 		.optional()
 		.or(z.literal("")),
-	email: z.string().email("Invalid email address"),
-	phone: z.string().min(1, "Phone is required"),
+	email: optionalEmailSchema,
+	phone: optionalPhoneSchema,
 	// Address
 	street: z.string().min(1, "Street is required"),
 	city: z.string().min(1, "City is required"),
@@ -231,6 +238,11 @@ function normalizeBic(value: string | null | undefined): string {
 
 function normalizeRequiredText(value: string | null | undefined): string {
 	return (value ?? "").trim();
+}
+
+function normalizeOptionalText(value: string | null | undefined): string | undefined {
+	const normalized = value?.trim();
+	return normalized ? normalized : undefined;
 }
 
 /**
@@ -760,8 +772,8 @@ export const membersRouter = {
 					memberData: {
 						firstName: input.firstName,
 						lastName: input.lastName,
-						email: input.email,
-						phone: input.phone,
+						email: normalizeOptionalText(input.email) ?? null,
+						phone: normalizeOptionalText(input.phone) ?? null,
 						birthdate: input.birthdate?.trim() || undefined,
 						street: input.street,
 						city: input.city,
@@ -848,8 +860,8 @@ export const membersRouter = {
 					memberData: {
 						firstName: input.firstName,
 						lastName: input.lastName,
-						email: input.email,
-						phone: input.phone,
+						email: normalizeOptionalText(input.email) ?? null,
+						phone: normalizeOptionalText(input.phone) ?? null,
 						birthdate: input.birthdate?.trim() || undefined,
 						street: input.street,
 						city: input.city,

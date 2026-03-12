@@ -8,6 +8,12 @@ import { requirePermission } from "../middleware/permissions";
 import { rateLimitMiddleware } from "../middleware/ratelimit";
 
 const decimalSchema = z.string().regex(/^\d+(\.\d{1,2})?$/);
+const optionalEmailSchema = z
+  .string()
+  .trim()
+  .email("Invalid email address")
+  .or(z.string().trim().length(0));
+const optionalPhoneSchema = z.string().trim().max(255, "Phone is too long");
 const codeSchema = z
   .string()
   .trim()
@@ -52,8 +58,8 @@ const updateSelfRegistrationSchema = z.object({
   notes: z.string().max(2000).optional(),
   firstName: z.string().min(1).max(255).optional(),
   lastName: z.string().min(1).max(255).optional(),
-  email: z.string().email().optional(),
-  phone: z.string().min(1).max(255).optional(),
+  email: optionalEmailSchema.optional(),
+  phone: optionalPhoneSchema.optional(),
   birthdate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Must be valid date format (YYYY-MM-DD)")
@@ -82,8 +88,8 @@ const submitSelfRegistrationSchema = z.object({
   code: codeSchema,
   firstName: z.string().min(1).max(255),
   lastName: z.string().min(1).max(255),
-  email: z.string().email(),
-  phone: z.string().min(1).max(255),
+  email: optionalEmailSchema,
+  phone: optionalPhoneSchema,
   birthdate: z
     .string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Must be valid date format (YYYY-MM-DD)"),
@@ -184,6 +190,11 @@ function generateRandomCode(length = 8): string {
     code += alphabet[randomIndex];
   }
   return code;
+}
+
+function normalizeOptionalText(value: string | null | undefined): string | undefined {
+  const normalized = value?.trim();
+  return normalized ? normalized : undefined;
 }
 
 export const selfRegistrationsRouter = {
@@ -318,8 +329,14 @@ export const selfRegistrationsRouter = {
           notes: input.notes,
           firstName: input.firstName,
           lastName: input.lastName,
-          email: input.email,
-          phone: input.phone,
+          email:
+            input.email === undefined
+              ? undefined
+              : (normalizeOptionalText(input.email) ?? null),
+          phone:
+            input.phone === undefined
+              ? undefined
+              : (normalizeOptionalText(input.phone) ?? null),
           birthdate: input.birthdate,
           street: input.street,
           city: input.city,
@@ -500,8 +517,8 @@ export const selfRegistrationsRouter = {
           submission: {
             firstName: input.firstName,
             lastName: input.lastName,
-            email: input.email,
-            phone: input.phone,
+            email: normalizeOptionalText(input.email) ?? null,
+            phone: normalizeOptionalText(input.phone) ?? null,
             birthdate: input.birthdate,
             street: input.street,
             city: input.city,
@@ -552,8 +569,6 @@ export const selfRegistrationsRouter = {
       const requiredFields = [
         ["firstName", registration.firstName],
         ["lastName", registration.lastName],
-        ["email", registration.email],
-        ["phone", registration.phone],
         ["street", registration.street],
         ["city", registration.city],
         ["state", registration.state],
@@ -612,8 +627,8 @@ export const selfRegistrationsRouter = {
         memberData: {
           firstName: registration.firstName!,
           lastName: registration.lastName!,
-          email: registration.email!,
-          phone: registration.phone!,
+          email: normalizeOptionalText(registration.email) ?? null,
+          phone: normalizeOptionalText(registration.phone) ?? null,
           birthdate: registration.birthdate || undefined,
           street: registration.street!,
           city: registration.city!,

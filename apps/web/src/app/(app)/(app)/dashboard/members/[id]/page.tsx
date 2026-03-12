@@ -305,8 +305,8 @@ export default function MemberDetailPage() {
 			firstName: formState.firstName,
 			lastName: formState.lastName,
 			birthdate: formState.birthdate || undefined,
-			email: formState.email,
-			phone: formState.phone,
+			email: formState.email.trim(),
+			phone: formState.phone.trim(),
 			guardianName: formState.guardianName || undefined,
 			guardianEmail: formState.guardianEmail || undefined,
 			guardianPhone: formState.guardianPhone || undefined,
@@ -477,7 +477,7 @@ export default function MemberDetailPage() {
 												className="mt-1"
 											/>
 										) : (
-											<p className="mt-1 text-sm">{member.email}</p>
+											<p className="mt-1 text-sm">{member.email || "-"}</p>
 										)}
 									</div>
 									<div>
@@ -497,7 +497,7 @@ export default function MemberDetailPage() {
 												className="mt-1"
 											/>
 										) : (
-											<p className="mt-1 text-sm">{member.phone}</p>
+											<p className="mt-1 text-sm">{member.phone || "-"}</p>
 										)}
 									</div>
 									<div className="sm:col-span-2">

@@ -441,8 +441,8 @@ export const DB = {
 				memberData: {
 					firstName: string;
 					lastName: string;
-					email: string;
-					phone: string;
+					email?: string | null;
+					phone?: string | null;
 					birthdate?: string;
 					street: string;
 					city: string;
@@ -526,8 +526,8 @@ export const DB = {
 				memberData: {
 					firstName: string;
 					lastName: string;
-					email: string;
-					phone: string;
+					email?: string | null;
+					phone?: string | null;
 					birthdate?: string;
 					street: string;
 					city: string;
@@ -874,8 +874,8 @@ export const DB = {
 				submission: {
 					firstName: string;
 					lastName: string;
-					email: string;
-					phone: string;
+					email?: string | null;
+					phone?: string | null;
 					birthdate?: string;
 					street: string;
 					city: string;
