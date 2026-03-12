@@ -1,4 +1,5 @@
 import { withTracing } from "@posthog/ai";
+import { checkAutumnFeature, trackAutumnUsage } from "@repo/autumn/backend";
 import { auth } from "@repo/auth";
 import { db, eq } from "@repo/db";
 import { organization } from "@repo/db/schema";
@@ -91,6 +92,18 @@ export async function POST(req: Request) {
 		);
 	}
 
+	const aiMessagesAccess = await checkAutumnFeature({
+		customerId: session.organizationId,
+		featureId: "ai_messages",
+		requiredBalance: 1,
+	});
+	if (!aiMessagesAccess.allowed) {
+		return new Response(
+			JSON.stringify({ error: "KI-Nachrichten-Limit erreicht." }),
+			{ status: 402, headers: { "Content-Type": "application/json" } },
+		);
+	}
+
 	const phClient = new PostHog(
 		process.env.NEXT_PUBLIC_POSTHOG_KEY!,
 		{ host: "https://eu.i.posthog.com" },
@@ -141,6 +154,20 @@ Formatting:
 		messages: await convertToModelMessages(messages),
 		stopWhen: stepCountIs(5),
 		tools: createTools(session.organizationId),
+		onFinish: async ({ totalUsage }) => {
+			const totalTokens = totalUsage.totalTokens;
+
+			if (typeof totalTokens !== "number" || totalTokens <= 0) {
+				return;
+			}
+
+			await trackAutumnUsage({
+				customerId: session.organizationId,
+				featureId: "ai_messages",
+				value: 1,
+				idempotencyKey: messages.at(-1)?.id,
+			});
+		},
 	});
 
 	return result.toUIMessageStreamResponse();

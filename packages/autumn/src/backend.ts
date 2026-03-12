@@ -47,5 +47,77 @@ export async function syncAutumnUsage({
 	}
 }
 
+export async function checkAutumnFeature({
+	customerId,
+	featureId,
+	requiredBalance = 1,
+}: {
+	customerId: string;
+	featureId: string;
+	requiredBalance?: number;
+}) {
+	const autumn = getAutumnClient();
+
+	if (!autumn) {
+		return { allowed: true, balance: undefined };
+	}
+
+	const { data, error } = await autumn.check({
+		customer_id: customerId,
+		feature_id: featureId,
+		required_balance: requiredBalance,
+	});
+
+	if (error) {
+		console.error("Failed to check Autumn feature access", {
+			customerId,
+			featureId,
+			requiredBalance,
+			error,
+		});
+		return { allowed: false, balance: undefined };
+	}
+
+	return {
+		allowed: data.allowed,
+		balance: data.balance,
+	};
+}
+
+export async function trackAutumnUsage({
+	customerId,
+	featureId,
+	value = 1,
+	idempotencyKey,
+}: {
+	customerId: string;
+	featureId: string;
+	value?: number;
+	idempotencyKey?: string;
+}) {
+	const autumn = getAutumnClient();
+
+	if (!autumn) {
+		return;
+	}
+
+	const { error } = await autumn.track({
+		customer_id: customerId,
+		feature_id: featureId,
+		value,
+		idempotency_key: idempotencyKey,
+	});
+
+	if (error) {
+		console.error("Failed to track Autumn usage", {
+			customerId,
+			featureId,
+			value,
+			idempotencyKey,
+			error,
+		});
+	}
+}
+
 export { Autumn } from "autumn-js";
 export * from "autumn-js/backend";
