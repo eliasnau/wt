@@ -1,6 +1,5 @@
 import { feature, item, plan } from 'atmn';
 
-// Features
 export const members = feature({
 	id: 'members',
 	name: 'Members',
@@ -22,7 +21,6 @@ export const users = feature({
 	consumable: false,
 });
 
-// Plans
 export const free = plan({
 	id: 'free',
 	name: 'Free',
