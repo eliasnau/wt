@@ -26,7 +26,7 @@ type Payment = {
 	memberId: string;
 	memberFirstName: string;
 	memberLastName: string;
-	memberEmail: string;
+	memberEmail: string | null;
 };
 
 export function PaymentsTable({ payments }: { payments: Payment[] }) {
@@ -73,7 +73,7 @@ export function PaymentsTable({ payments }: { payments: Payment[] }) {
 									{payment.memberFirstName} {payment.memberLastName}
 								</TableCell>
 								<TableCell className="text-muted-foreground text-sm">
-									{payment.memberEmail}
+									{payment.memberEmail ?? "—"}
 								</TableCell>
 								<TableCell className="text-right">
 									{formatCurrency(payment.membershipAmount)}
