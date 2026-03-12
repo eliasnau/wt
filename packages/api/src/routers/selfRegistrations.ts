@@ -1,6 +1,9 @@
 import { randomBytes } from "node:crypto";
 import { ORPCError } from "@orpc/server";
+import { syncAutumnUsage } from "@repo/autumn/backend";
+import { and, count, db, eq, sql } from "@repo/db";
 import { DB } from "@repo/db/functions";
+import { clubMember, contract } from "@repo/db/schema";
 import { z } from "zod";
 import { protectedProcedure, publicProcedure } from "../index";
 import { loadSepaModule } from "../lib/sepa";
@@ -21,6 +24,29 @@ const codeSchema = z
   .max(80)
   .regex(/^[a-z0-9-]+$/)
   .transform((value) => value.toLowerCase());
+
+async function syncOrganizationMembersUsage(organizationId: string) {
+  const todayInBerlin = getTodayInBerlinDateString();
+  const [{ count: memberCount = 0 } = { count: 0 }] = await db
+    .select({ count: count() })
+    .from(clubMember)
+    .innerJoin(contract, eq(contract.memberId, clubMember.id))
+    .where(
+      and(
+        eq(clubMember.organizationId, organizationId),
+        sql`(
+          ${contract.cancellationEffectiveDate} IS NULL
+          OR ${contract.cancellationEffectiveDate} >= ${todayInBerlin}
+        )`,
+      ),
+    );
+
+  await syncAutumnUsage({
+    customerId: organizationId,
+    featureId: "members",
+    value: memberCount,
+  });
+}
 
 const configGroupSchema = z.object({
   groupId: z.string().min(1),
@@ -677,6 +703,8 @@ export const selfRegistrationsRouter = {
         organizationId,
         memberId: created.member.id,
       });
+
+      await syncOrganizationMembersUsage(organizationId);
 
       return {
         registrationId: registration.id,

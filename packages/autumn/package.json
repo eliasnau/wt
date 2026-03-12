@@ -1,0 +1,33 @@
+{
+	"name": "@repo/autumn",
+	"type": "module",
+	"exports": {
+		".": {
+			"default": "./src/index.ts"
+		},
+		"./backend": {
+			"default": "./src/backend.ts"
+		},
+		"./next": {
+			"default": "./src/next.ts"
+		},
+		"./react": {
+			"default": "./src/react.ts"
+		}
+	},
+	"scripts": {
+		"check-types": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@repo/auth": "workspace:*",
+		"atmn": "^1.1.3",
+		"autumn-js": "^0.1.85"
+	},
+	"devDependencies": {
+		"@repo/config": "workspace:*",
+		"typescript": "catalog:"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	}
+}

@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { ORPCError } from "@orpc/server";
+import { syncAutumnUsage } from "@repo/autumn/backend";
 import { and, count, db, desc, eq, ilike, inArray, or, sql } from "@repo/db";
 import { DB } from "@repo/db/functions";
 import {
@@ -243,6 +244,29 @@ function normalizeRequiredText(value: string | null | undefined): string {
 function normalizeOptionalText(value: string | null | undefined): string | undefined {
 	const normalized = value?.trim();
 	return normalized ? normalized : undefined;
+}
+
+async function syncOrganizationMembersUsage(organizationId: string) {
+	const todayInBerlin = getTodayInBerlinDateString();
+	const [{ count: memberCount = 0 } = { count: 0 }] = await db
+		.select({ count: count() })
+		.from(clubMember)
+		.innerJoin(contract, eq(contract.memberId, clubMember.id))
+		.where(
+			and(
+				eq(clubMember.organizationId, organizationId),
+				sql`(
+					${contract.cancellationEffectiveDate} IS NULL
+					OR ${contract.cancellationEffectiveDate} >= ${todayInBerlin}
+				)`,
+			),
+		);
+
+	await syncAutumnUsage({
+		customerId: organizationId,
+		featureId: "members",
+		value: memberCount,
+	});
 }
 
 /**
@@ -811,6 +835,8 @@ export const membersRouter = {
 						member_id: result.member.id,
 					},
 				});
+
+				await syncOrganizationMembersUsage(organizationId);
 
 				after(() => posthog.shutdown());
 

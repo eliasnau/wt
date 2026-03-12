@@ -29,6 +29,7 @@
 		"@orpc/openapi": "catalog:",
 		"@orpc/server": "catalog:",
 		"@orpc/zod": "catalog:",
+		"@repo/autumn": "workspace:*",
 		"@repo/auth": "workspace:*",
 		"@repo/db": "workspace:*",
 		"@repo/env": "workspace:*",
