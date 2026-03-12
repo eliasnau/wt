@@ -93,6 +93,7 @@ import {
 } from "@/components/ui/dialog";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 type ModelData = ChatModelOption;
 type AttachmentData = ReturnType<
@@ -103,6 +104,21 @@ type PreviewAttachmentData = {
 	mediaType?: string;
 	url: string;
 };
+
+function formatChatErrorMessage(error: Error | undefined) {
+	if (!error?.message) {
+		return null;
+	}
+
+	try {
+		const parsed = JSON.parse(error.message) as { error?: string };
+		if (typeof parsed.error === "string" && parsed.error.trim().length > 0) {
+			return parsed.error;
+		}
+	} catch {}
+
+	return error.message;
+}
 
 interface AttachmentItemProps {
 	attachment: AttachmentData;
@@ -296,7 +312,12 @@ const AiChat = () => {
 		useState<PreviewAttachmentData | null>(null);
 	const [isPromptDropActive, setIsPromptDropActive] = useState(false);
 	const promptDragDepthRef = useRef(0);
-	const { messages, sendMessage, status } = useChat();
+	const { clearError, error, messages, sendMessage, status } = useChat({
+		onError: (chatError) => {
+			toast.error(formatChatErrorMessage(chatError) ?? "Anfrage fehlgeschlagen.");
+		},
+	});
+	const formattedErrorMessage = formatChatErrorMessage(error);
 
 	const handleOpenAttachmentPreview = useCallback(
 		(attachment: PreviewAttachmentData) => {
@@ -341,6 +362,8 @@ const AiChat = () => {
 			if (!(hasText || hasAttachments)) {
 				return;
 			}
+
+			clearError();
 
 			sendMessage(
 				{
@@ -555,6 +578,13 @@ const AiChat = () => {
 								</Message>
 							))
 						)}
+						{formattedErrorMessage ? (
+							<Message from="assistant">
+								<MessageContent>
+									<MessageResponse>{formattedErrorMessage}</MessageResponse>
+								</MessageContent>
+							</Message>
+						) : null}
 						{/* {status === "submitted" ? (
               <Message from="assistant">
                 <MessageContent>
