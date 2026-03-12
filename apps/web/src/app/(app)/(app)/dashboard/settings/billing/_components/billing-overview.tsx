@@ -57,6 +57,14 @@ const PLAN_META = {
 	},
 } as const;
 
+type UsageFeature = {
+	id: (typeof FEATURE_META)[number]["id"];
+	label: string;
+	used: number;
+	included: number | undefined;
+	remaining: number | undefined;
+};
+
 function formatNumber(value: number | undefined) {
 	return typeof value === "number" ? value.toLocaleString("de-DE") : "0";
 }
@@ -109,10 +117,10 @@ export function BillingOverview() {
 				product.id !== "ai_credits" &&
 				product.id !== "ai-credits",
 		) ?? [];
-	const usageFeatures = FEATURE_META.map((meta) => {
+	const usageFeatures: UsageFeature[] = FEATURE_META.flatMap((meta) => {
 		const feature = customer.features?.[meta.id];
 		if (!feature) {
-			return null;
+			return [];
 		}
 
 		const used = feature.usage ?? 0;
@@ -124,13 +132,15 @@ export function BillingOverview() {
 					? Math.max(included - used, 0)
 					: undefined;
 
-		return {
-			...meta,
-			used,
-			included,
-			remaining,
-		};
-	}).filter(Boolean);
+		return [
+			{
+				...meta,
+				used,
+				included,
+				remaining,
+			},
+		];
+	});
 
 	return (
 		<div className="space-y-6">
