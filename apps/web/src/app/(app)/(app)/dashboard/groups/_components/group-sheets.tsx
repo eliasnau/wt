@@ -83,13 +83,13 @@ const groupFormSchema = z.object({
 	}),
 	description: z.string().optional(),
 	color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, {
-		message: "Please enter a valid hex color (e.g., #000000)",
+		message: "Bitte gib eine gültige Hex-Farbe ein (z. B. #000000)",
 	}),
 	defaultMembershipPrice: z
 		.string()
 		.optional()
 		.refine((val) => !val || /^\d+(\.\d{1,2})?$/.test(val), {
-			message: "Please enter a valid price (e.g., 10 or 10.99)",
+			message: "Bitte gib einen gültigen Preis ein (z. B. 10 oder 10.99)",
 		}),
 });
 
@@ -151,7 +151,7 @@ function EnrollMemberDialog({
 			});
 		},
 		onSuccess: () => {
-			toast.success("Member enrolled successfully");
+			toast.success("Mitglied erfolgreich aufgenommen");
 			queryClient.invalidateQueries({
 				queryKey: orpc.members.list.queryKey({
 					input: {
@@ -185,12 +185,14 @@ function EnrollMemberDialog({
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>Mitglied aufnehmen</DialogTitle>
-					<DialogDescription>Add a member to "{group.name}".</DialogDescription>
+					<DialogDescription>
+						Füge der Gruppe "{group.name}" ein Mitglied hinzu.
+					</DialogDescription>
 				</DialogHeader>
 				<DialogPanel className="space-y-4">
 					<div className="space-y-2">
 						<label className="font-medium text-sm" htmlFor="member-search">
-							Search Members
+							Mitglieder suchen
 						</label>
 						<Input
 							id="member-search"
@@ -206,11 +208,11 @@ function EnrollMemberDialog({
 								<div className="flex flex-col p-2">
 									{isPending ? (
 										<div className="flex items-center justify-center py-6 text-muted-foreground text-sm">
-											Loading members...
+											Mitglieder werden geladen...
 										</div>
 									) : availableMembers.length === 0 ? (
 										<div className="flex items-center justify-center py-6 text-muted-foreground text-sm">
-											No available members found.
+											Keine verfügbaren Mitglieder gefunden.
 										</div>
 									) : (
 										availableMembers.map((member) => (
@@ -239,7 +241,7 @@ function EnrollMemberDialog({
 					</div>
 					<div className="space-y-1">
 						<label className="font-medium text-sm" htmlFor="membership-price">
-							Custom Monthly Price (Optional)
+							Individueller Monatsbeitrag (optional)
 						</label>
 						<Input
 							id="membership-price"
@@ -247,13 +249,13 @@ function EnrollMemberDialog({
 							onChange={(event) => setMembershipPrice(event.target.value)}
 							placeholder={
 								group.defaultMembershipPrice
-									? `Default: ${group.defaultMembershipPrice}`
+									? `Standard: ${group.defaultMembershipPrice}`
 									: "Leer lassen, um den Standard zu verwenden"
 							}
 						/>
 						{group.defaultMembershipPrice && (
 							<p className="text-muted-foreground text-xs">
-								Default price: €{group.defaultMembershipPrice}
+								Standardbeitrag: €{group.defaultMembershipPrice}
 							</p>
 						)}
 						{priceError && (
@@ -263,13 +265,15 @@ function EnrollMemberDialog({
 				</DialogPanel>
 				<DialogFooter>
 					<DialogClose render={<Button variant="outline" />}>
-						Cancel
+						Abbrechen
 					</DialogClose>
 					<Button
 						onClick={handleSubmit}
 						disabled={enrollMutation.isPending || !selectedMemberId}
 					>
-						{enrollMutation.isPending ? "Enrolling..." : "Mitglied aufnehmen"}
+						{enrollMutation.isPending
+							? "Wird aufgenommen..."
+							: "Mitglied aufnehmen"}
 					</Button>
 				</DialogFooter>
 			</DialogContent>
@@ -307,7 +311,7 @@ export function EditGroupSheet({
 			defaultMembershipPrice?: string;
 		}) => client.groups.update(data),
 		onSuccess: () => {
-			toast.success("Group updated successfully");
+			toast.success("Gruppe erfolgreich aktualisiert");
 			onSuccess?.();
 			onOpenChange(false);
 		},
@@ -350,7 +354,7 @@ export function EditGroupSheet({
 						<SheetHeader>
 							<SheetTitle>Gruppe bearbeiten</SheetTitle>
 							<SheetDescription>
-								Update the group name, description, and default price.
+								Aktualisiere den Gruppennamen und den Standardbeitrag.
 							</SheetDescription>
 						</SheetHeader>
 						<SheetPanel className="grid flex-1 gap-4">
@@ -370,7 +374,7 @@ export function EditGroupSheet({
 											/>
 										</FormControl>
 										<FormDescription>
-											This is the group's display name.
+											Das ist der Anzeigename der Gruppe.
 										</FormDescription>
 										<FormMessage />
 									</FormItem>
@@ -381,18 +385,15 @@ export function EditGroupSheet({
 								name="description"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Description</FormLabel>
+										<FormLabel>Beschreibung</FormLabel>
 										<FormControl>
 											<Textarea
-												placeholder="Group description (optional)"
+												placeholder="Beschreibung der Gruppe (optional)"
 												rows={3}
 												{...field}
 												disabled={updateGroupMutation.isPending}
 											/>
 										</FormControl>
-										<FormDescription>
-											Describe the group (optional).
-										</FormDescription>
 										<FormMessage />
 									</FormItem>
 								)}
@@ -403,7 +404,7 @@ export function EditGroupSheet({
 								render={({ field }) => (
 									<FormItem>
 										<div className="flex items-center justify-between gap-2">
-											<FormLabel>Color *</FormLabel>
+											<FormLabel>Farbe *</FormLabel>
 											<Button
 												type="button"
 												size="sm"
@@ -413,7 +414,7 @@ export function EditGroupSheet({
 												}
 												disabled={updateGroupMutation.isPending}
 											>
-												Surprise me
+												Zufällig
 											</Button>
 										</div>
 										<FormControl>
@@ -436,7 +437,7 @@ export function EditGroupSheet({
 																}`}
 																style={{ backgroundColor: preset.hex }}
 																title={preset.name}
-																aria-label={`Select ${preset.name} color`}
+																aria-label={`${preset.name} auswählen`}
 															/>
 														);
 													})}
@@ -463,7 +464,7 @@ export function EditGroupSheet({
 											</div>
 										</FormControl>
 										<FormDescription>
-											Pick a preset color or enter any hex value.
+											Wähle eine Farbe oder gib einen Hex-Wert ein.
 										</FormDescription>
 										<FormMessage />
 									</FormItem>
@@ -480,7 +481,7 @@ export function EditGroupSheet({
 												<InputGroupInput
 													placeholder={
 														group?.defaultMembershipPrice
-															? `Current: ${group.defaultMembershipPrice}`
+															? `Aktuell: ${group.defaultMembershipPrice}`
 															: "0.00"
 													}
 													type="text"
@@ -494,7 +495,7 @@ export function EditGroupSheet({
 											</InputGroup>
 										</FormControl>
 										<FormDescription>
-											Leave empty to keep the current price.
+											Leer lassen, um den aktuellen Preis beizubehalten.
 										</FormDescription>
 										<FormMessage />
 									</FormItem>
@@ -506,13 +507,13 @@ export function EditGroupSheet({
 								render={<Button variant="ghost" />}
 								disabled={updateGroupMutation.isPending}
 							>
-								Cancel
+								Abbrechen
 							</SheetClose>
 							<Button type="submit" disabled={updateGroupMutation.isPending}>
 								{updateGroupMutation.isPending ? (
 									<>
 										<Spinner />
-										Saving...
+										Wird gespeichert...
 									</>
 								) : (
 									"Änderungen speichern"
@@ -574,9 +575,9 @@ export function GroupMembersSheet({
 				<SheetHeader>
 					<div className="flex items-start justify-between gap-4">
 						<div className="space-y-1">
-							<SheetTitle>{group.name} Members</SheetTitle>
+							<SheetTitle>{group.name} Mitglieder</SheetTitle>
 							<SheetDescription>
-								View and manage members in this group.
+								Zeige und verwalte Mitglieder in dieser Gruppe.
 							</SheetDescription>
 						</div>
 						<Button size="sm" onClick={() => setEnrollOpen(true)}>
@@ -640,8 +641,8 @@ export function GroupMembersSheet({
 										<TableRow className="hover:bg-transparent">
 											<TableHead>Name</TableHead>
 											<TableHead>E-Mail</TableHead>
-											<TableHead>Phone</TableHead>
-											<TableHead className="text-right">Actions</TableHead>
+											<TableHead>Telefon</TableHead>
+											<TableHead className="text-right">Aktionen</TableHead>
 										</TableRow>
 									</TableHeader>
 									<TableBody>
@@ -658,7 +659,7 @@ export function GroupMembersSheet({
 										) : members.length === 0 ? (
 											<TableRow>
 												<TableCell colSpan={4} className="h-24 text-center">
-													No members found.
+													Keine Mitglieder gefunden.
 												</TableCell>
 											</TableRow>
 										) : (
@@ -679,7 +680,7 @@ export function GroupMembersSheet({
 															variant="outline"
 															render={
 																<Link href={`/dashboard/members/${member.id}`}>
-																	View
+																	Ansehen
 																</Link>
 															}
 														/>
@@ -695,7 +696,7 @@ export function GroupMembersSheet({
 
 					<div className="flex items-center justify-between">
 						<span className="text-muted-foreground text-sm">
-							Page {page} of {totalPages}
+							Seite {page} von {totalPages}
 						</span>
 						<div className="flex items-center gap-2">
 							<Button
@@ -704,7 +705,7 @@ export function GroupMembersSheet({
 								disabled={page <= 1}
 								onClick={() => setPage((prev) => Math.max(1, prev - 1))}
 							>
-								Previous
+								Zurück
 							</Button>
 							<Button
 								size="sm"
@@ -714,7 +715,7 @@ export function GroupMembersSheet({
 									setPage((prev) => Math.min(totalPages, prev + 1))
 								}
 							>
-								Next
+								Weiter
 							</Button>
 						</div>
 					</div>

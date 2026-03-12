@@ -54,13 +54,13 @@ const formSchema = z.object({
 	}),
 	description: z.string().optional(),
 	color: z.string().regex(/^#[0-9A-Fa-f]{6}$/, {
-		message: "Please enter a valid hex color (e.g., #000000)",
+		message: "Bitte gib eine gültige Hex-Farbe ein (z. B. #000000)",
 	}),
 	defaultMembershipPrice: z
 		.string()
 		.optional()
 		.refine((val) => !val || /^\d+(\.\d{1,2})?$/.test(val), {
-			message: "Please enter a valid price (e.g., 10 or 10.99)",
+			message: "Bitte gib einen gültigen Preis ein (z. B. 10 oder 10.99)",
 		}),
 });
 
@@ -111,7 +111,7 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 		<Sheet open={open} onOpenChange={setOpen}>
 			<SheetTrigger render={<Button variant="default" />}>
 				<Plus className="mr-2 h-4 w-4" />
-				New Group
+				Neue Gruppe
 			</SheetTrigger>
 			<SheetPopup inset>
 				<Form {...form}>
@@ -122,7 +122,8 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 						<SheetHeader>
 							<SheetTitle>Gruppe erstellen</SheetTitle>
 							<SheetDescription>
-								Create a new group with name, description, and membership price
+								Erstelle eine neue Gruppe mit Name, Beschreibung und
+								Mitgliedsbeitrag
 							</SheetDescription>
 						</SheetHeader>
 						<SheetPanel className="grid flex-1 gap-4">
@@ -142,7 +143,7 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 											/>
 										</FormControl>
 										<FormDescription>
-											This is the group's display name.
+											Das ist der Anzeigename der Gruppe.
 										</FormDescription>
 										<FormMessage />
 									</FormItem>
@@ -153,18 +154,15 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 								name="description"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Description</FormLabel>
+										<FormLabel>Beschreibung</FormLabel>
 										<FormControl>
 											<Textarea
-												placeholder="Group description (optional)"
+												placeholder="Beschreibung der Gruppe (optional)"
 												rows={3}
 												{...field}
 												disabled={createGroupMutation.isPending}
 											/>
 										</FormControl>
-										<FormDescription>
-											Describe the group (optional).
-										</FormDescription>
 										<FormMessage />
 									</FormItem>
 								)}
@@ -175,7 +173,7 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 								render={({ field }) => (
 									<FormItem>
 										<div className="flex items-center justify-between gap-2">
-											<FormLabel>Color *</FormLabel>
+											<FormLabel>Farbe *</FormLabel>
 											<Button
 												type="button"
 												size="sm"
@@ -185,7 +183,7 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 												}
 												disabled={createGroupMutation.isPending}
 											>
-												Surprise me
+												Zufällig
 											</Button>
 										</div>
 										<FormControl>
@@ -208,7 +206,7 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 																}`}
 																style={{ backgroundColor: preset.hex }}
 																title={preset.name}
-																aria-label={`Select ${preset.name} color`}
+																aria-label={`${preset.name} auswählen`}
 															/>
 														);
 													})}
@@ -235,7 +233,7 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 											</div>
 										</FormControl>
 										<FormDescription>
-											Pick a preset color or enter any hex value.
+											Wähle eine Farbe oder gib einen Hex-Wert ein.
 										</FormDescription>
 										<FormMessage />
 									</FormItem>
@@ -262,7 +260,7 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 											</InputGroup>
 										</FormControl>
 										<FormDescription>
-											Optional. Enter a default price for new memberships.
+											Optional. Gib einen Standardpreis für neue Mitgliedschaften ein.
 										</FormDescription>
 										<FormMessage />
 									</FormItem>
@@ -274,13 +272,13 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 								render={<Button variant="ghost" />}
 								disabled={createGroupMutation.isPending}
 							>
-								Cancel
+								Abbrechen
 							</SheetClose>
 							<Button type="submit" disabled={createGroupMutation.isPending}>
 								{createGroupMutation.isPending ? (
 									<>
 										<Spinner />
-										Creating...
+										Wird erstellt...
 									</>
 								) : (
 									"Gruppe erstellen"

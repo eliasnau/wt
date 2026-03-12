@@ -76,7 +76,7 @@ export function TotalMembersChart({
 				<div>
 					<div className="flex items-center gap-2">
 						<FrameTitle>
-							Total Members
+							Mitglieder gesamt
 							<Badge variant="outline" className={trendClass}>
 								{isPositive ? (
 									<TrendingUp className="h-4 w-4" />
@@ -95,14 +95,13 @@ export function TotalMembersChart({
 								<InfoIcon className="h-3.5 w-3.5 text-muted-foreground" />
 							</TooltipTrigger>
 							<TooltipContent className="max-w-xs">
-								Shows the cumulative total number of active members over time.
-								This metric reflects your organization's overall membership
-								growth trajectory.
+								Zeigt die gesamte Anzahl aktiver Mitglieder im Zeitverlauf. So
+								wird das langfristige Wachstum der Organisation sichtbar.
 							</TooltipContent>
 						</Tooltip>
 					</div>
 					<FrameDescription>
-						Total member count growth over time
+						Entwicklung der Gesamtzahl an Mitgliedern im Zeitverlauf
 					</FrameDescription>
 				</div>
 				<div className="flex gap-1 rounded-lg border p-1">

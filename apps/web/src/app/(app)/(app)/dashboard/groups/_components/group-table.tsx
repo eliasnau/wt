@@ -125,8 +125,8 @@ function DeleteGroupDialog({
 				<AlertDialogHeader>
 					<AlertDialogTitle>Gruppe löschen</AlertDialogTitle>
 					<AlertDialogDescription>
-						Are you sure you want to delete "{group?.name}"? This action cannot
-						be undone.
+						Möchtest du "{group?.name}" wirklich löschen? Diese Aktion kann
+						nicht rückgängig gemacht werden.
 					</AlertDialogDescription>
 				</AlertDialogHeader>
 				<AlertDialogFooter>
@@ -134,7 +134,7 @@ function DeleteGroupDialog({
 						render={<Button variant="outline" />}
 						disabled={deleteGroupMutation.isPending}
 					>
-						Cancel
+						Abbrechen
 					</AlertDialogClose>
 					<Button
 						variant="destructive"
@@ -144,7 +144,7 @@ function DeleteGroupDialog({
 						{deleteGroupMutation.isPending ? (
 							<>
 								<Spinner />
-								Deleting...
+								Wird gelöscht...
 							</>
 						) : (
 							"Löschen"
@@ -163,7 +163,7 @@ export const columns: ColumnDef<GroupRow>[] = [
 	},
 	{
 		accessorKey: "color",
-		header: "Color",
+		header: "Farbe",
 		enableSorting: false,
 		cell: ({ row }) => {
 			const color = row.original.color ?? "#000000";
@@ -180,7 +180,7 @@ export const columns: ColumnDef<GroupRow>[] = [
 	},
 	{
 		accessorKey: "description",
-		header: "Description",
+		header: "Beschreibung",
 		enableSorting: false,
 	},
 	{
@@ -189,7 +189,7 @@ export const columns: ColumnDef<GroupRow>[] = [
 	},
 	{
 		id: "actions",
-		header: "Actions",
+		header: "Aktionen",
 		enableSorting: false,
 		cell: ({ row, table }) => {
 			const group = row.original;
@@ -208,7 +208,7 @@ export const columns: ColumnDef<GroupRow>[] = [
 						onClick={() => onViewMembers(group)}
 					>
 						<UserIcon />
-						Members
+						Mitglieder
 					</Button>
 					<Menu>
 						<MenuTrigger
@@ -221,7 +221,7 @@ export const columns: ColumnDef<GroupRow>[] = [
 						<MenuPopup align="end">
 							<MenuItem onClick={() => onEditGroup(group)}>
 								<EditIcon />
-								Edit
+								Bearbeiten
 							</MenuItem>
 							<MenuSeparator />
 							<MenuItem
@@ -229,7 +229,7 @@ export const columns: ColumnDef<GroupRow>[] = [
 								onClick={() => onDeleteGroup(group)}
 							>
 								<TrashIcon />
-								Delete Group
+								Gruppe löschen
 							</MenuItem>
 						</MenuPopup>
 					</Menu>
@@ -321,7 +321,7 @@ export default function GroupTable({
 							</EmptyMedia>
 							<EmptyTitle>Noch keine Gruppen</EmptyTitle>
 							<EmptyDescription>
-								Get started by creating your first group.
+								Erstelle deine erste Gruppe, um loszulegen.
 							</EmptyDescription>
 						</EmptyHeader>
 					</Empty>
@@ -428,7 +428,7 @@ export default function GroupTable({
 					) : !table.getRowModel().rows?.length ? (
 						<TableRow>
 							<TableCell colSpan={columns.length} className="h-24 text-center">
-								No results found.
+								Keine Ergebnisse gefunden.
 							</TableCell>
 						</TableRow>
 					) : (
@@ -451,7 +451,7 @@ export default function GroupTable({
 						<TableCell colSpan={columns.length} className="p-2">
 							<div className="flex items-center justify-between gap-2">
 								<div className="flex items-center gap-2 whitespace-nowrap">
-									<p className="text-muted-foreground text-sm">Showing</p>
+									<p className="text-muted-foreground text-sm">Zeige</p>
 									<Select
 										items={[
 											{ label: "10", value: 10 },
@@ -465,7 +465,7 @@ export default function GroupTable({
 										value={table.getState().pagination.pageSize}
 									>
 										<SelectTrigger
-											aria-label="Rows per page"
+											aria-label="Zeilen pro Seite"
 											className="w-fit min-w-none"
 											size="sm"
 										>
@@ -479,7 +479,7 @@ export default function GroupTable({
 										</SelectPopup>
 									</Select>
 									<span className="text-muted-foreground text-sm">
-										of{" "}
+										von{" "}
 										<strong className="font-medium text-foreground">
 											{table.getRowCount()}
 										</strong>
@@ -497,7 +497,7 @@ export default function GroupTable({
 														size="sm"
 														variant="outline"
 													>
-														Previous
+														Zurück
 													</Button>
 												}
 											/>
@@ -512,7 +512,7 @@ export default function GroupTable({
 														size="sm"
 														variant="outline"
 													>
-														Next
+														Weiter
 													</Button>
 												}
 											/>

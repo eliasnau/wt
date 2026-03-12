@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { eachMonthOfInterval, format, startOfMonth, subMonths } from "date-fns";
+import { de } from "date-fns/locale";
 import { AlertCircle, ChevronDownIcon } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -68,7 +69,7 @@ function getPeriodChartLabel(
 		return period.key.split("-")[1] ?? period.key;
 	}
 
-	return format(parseMonthValue(period.startMonth), "MMM");
+	return format(parseMonthValue(period.startMonth), "MMM", { locale: de });
 }
 
 export default function RangeComparisonPage() {
@@ -91,7 +92,7 @@ export default function RangeComparisonPage() {
 	const endMonthValue = endMonth;
 
 	const getRangeText = (start: string, end: string) => {
-		return `${format(parseMonthValue(start), "MMM yyyy")} - ${format(parseMonthValue(end), "MMM yyyy")}`;
+		return `${format(parseMonthValue(start), "MMM yyyy", { locale: de })} - ${format(parseMonthValue(end), "MMM yyyy", { locale: de })}`;
 	};
 
 	const timelineQueryOptions = orpc.statistics.timeline.queryOptions({
@@ -221,9 +222,10 @@ export default function RangeComparisonPage() {
 		<div className="flex flex-col gap-8">
 			<Header>
 				<HeaderContent>
-					<HeaderTitle>Compare Months</HeaderTitle>
+					<HeaderTitle>Monate vergleichen</HeaderTitle>
 					<HeaderDescription>
-						Analyze membership and revenue trends across a custom month range
+						Analysiere Mitglieder- und Umsatztrends in einem frei wählbaren
+						Zeitraum
 					</HeaderDescription>
 				</HeaderContent>
 				<HeaderActions>
@@ -241,14 +243,14 @@ export default function RangeComparisonPage() {
 							}}
 						>
 							<SelectTrigger className="w-[150px]" size="sm">
-								<SelectValue placeholder="Start month" />
+								<SelectValue placeholder="Startmonat" />
 							</SelectTrigger>
 							<SelectPopup>
 								{monthOptions.map((month) => {
 									const value = format(month, "yyyy-MM");
 									return (
 										<SelectItem key={value} value={value}>
-											{format(month, "MMM yyyy")}
+											{format(month, "MMM yyyy", { locale: de })}
 										</SelectItem>
 									);
 								})}
@@ -268,14 +270,14 @@ export default function RangeComparisonPage() {
 							}}
 						>
 							<SelectTrigger className="w-[150px]" size="sm">
-								<SelectValue placeholder="End month" />
+								<SelectValue placeholder="Endmonat" />
 							</SelectTrigger>
 							<SelectPopup>
 								{monthOptions.map((month) => {
 									const value = format(month, "yyyy-MM");
 									return (
 										<SelectItem key={value} value={value}>
-											{format(month, "MMM yyyy")}
+											{format(month, "MMM yyyy", { locale: de })}
 										</SelectItem>
 									);
 								})}
@@ -292,12 +294,12 @@ export default function RangeComparisonPage() {
 							}}
 						>
 							<SelectTrigger className="w-[140px]" size="sm">
-								<SelectValue placeholder="Group by" />
+								<SelectValue placeholder="Gruppieren nach" />
 							</SelectTrigger>
 							<SelectPopup>
-								<SelectItem value="month">Monthly</SelectItem>
-								<SelectItem value="quarter">Quarterly</SelectItem>
-								<SelectItem value="year">Yearly</SelectItem>
+								<SelectItem value="month">Monatlich</SelectItem>
+								<SelectItem value="quarter">Quartalsweise</SelectItem>
+								<SelectItem value="year">Jährlich</SelectItem>
 							</SelectPopup>
 						</Select>
 						<p className="text-muted-foreground text-sm tabular-nums">
@@ -341,7 +343,7 @@ export default function RangeComparisonPage() {
 										<Button variant="ghost" {...props}>
 											<ChevronDownIcon className="mr-2 size-4" />
 											<span className="font-semibold text-sm">
-												Membership Analytics
+												Mitgliederanalyse
 											</span>
 										</Button>
 									)}
@@ -378,7 +380,7 @@ export default function RangeComparisonPage() {
 										<Button variant="ghost" {...props}>
 											<ChevronDownIcon className="mr-2 size-4" />
 											<span className="font-semibold text-sm">
-												Financial Analytics
+												Finanzanalyse
 											</span>
 										</Button>
 									)}
