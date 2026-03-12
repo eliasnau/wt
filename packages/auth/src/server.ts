@@ -220,6 +220,9 @@ export const auth = betterAuth({
     adminPlugin(),
     organization({
       ac,
+      allowUserToCreateOrganization: async (user) => {
+        return user.role === "admin";
+      },
       requireEmailVerificationOnInvitation: true,
       roles: {
         owner,

@@ -53,6 +53,7 @@ export function OrganizationsFrame() {
 	} = authClient.useListOrganizations();
 	const organizations = organizationsData as Organization[] | undefined;
 	const { session, switchOrganization } = useAuth();
+	const canCreateOrganization = session?.user?.role === "admin";
 	const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
 	const [isCreating, setIsCreating] = useState(false);
 	const [orgName, setOrgName] = useState("");
@@ -193,22 +194,28 @@ export function OrganizationsFrame() {
 								</EmptyMedia>
 								<EmptyTitle>Organisationen</EmptyTitle>
 								<EmptyDescription>
-									Erstelle eine Organisation, um mit deinem Team
-									zusammenzuarbeiten
+									{canCreateOrganization
+										? "Erstelle eine Organisation, um mit deinem Team zusammenzuarbeiten"
+										: "Ein Admin muss zuerst eine Organisation fuer dich erstellen"}
 								</EmptyDescription>
 							</EmptyHeader>
 						</Empty>
 					</FramePanel>
 
-					<FrameFooter className="flex-row justify-end">
-						<Button onClick={() => setIsCreateDialogOpen(true)} size="sm">
-							<Plus className="mr-2 size-4" />
-							Organisation erstellen
-						</Button>
-					</FrameFooter>
+					{canCreateOrganization && (
+						<FrameFooter className="flex-row justify-end">
+							<Button onClick={() => setIsCreateDialogOpen(true)} size="sm">
+								<Plus className="mr-2 size-4" />
+								Organisation erstellen
+							</Button>
+						</FrameFooter>
+					)}
 				</Frame>
 
-				<Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+				<Dialog
+					open={canCreateOrganization && isCreateDialogOpen}
+					onOpenChange={setIsCreateDialogOpen}
+				>
 					<DialogPopup>
 						<DialogHeader>
 							<DialogTitle>Organisation erstellen</DialogTitle>
@@ -364,15 +371,20 @@ export function OrganizationsFrame() {
 					</div>
 				</FramePanel>
 
-				<FrameFooter className="flex-row justify-end">
-					<Button onClick={() => setIsCreateDialogOpen(true)} size="sm">
-						<Plus className="mr-2 size-4" />
-						Organisation erstellen
-					</Button>
-				</FrameFooter>
+				{canCreateOrganization && (
+					<FrameFooter className="flex-row justify-end">
+						<Button onClick={() => setIsCreateDialogOpen(true)} size="sm">
+							<Plus className="mr-2 size-4" />
+							Organisation erstellen
+						</Button>
+					</FrameFooter>
+				)}
 			</Frame>
 
-			<Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+			<Dialog
+				open={canCreateOrganization && isCreateDialogOpen}
+				onOpenChange={setIsCreateDialogOpen}
+			>
 				<DialogPopup>
 					<DialogHeader>
 						<DialogTitle>Organisation erstellen</DialogTitle>
