@@ -213,9 +213,8 @@ export function MemberRegistrationForm({
       return (
         values.firstName.trim().length > 0 &&
         values.lastName.trim().length > 0 &&
-        values.email.trim().length > 0 &&
-        /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email) &&
-        values.phone.trim().length > 0 &&
+        (values.email.trim().length === 0 ||
+          /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email.trim())) &&
         values.birthdate.trim().length > 0
       );
     }
@@ -246,7 +245,7 @@ export function MemberRegistrationForm({
     if (!canContinueStep) {
       if (currentStep === 1) {
         setStepError(
-          "Bitte vervollständige die persönlichen Daten mit gültiger E-Mail und Geburtsdatum.",
+          "Bitte vervollständige Vorname, Nachname und Geburtsdatum. Falls du eine E-Mail angibst, muss sie gültig sein.",
         );
       } else if (currentStep === 2) {
         setStepError("Bitte fülle alle Adressfelder aus.");
@@ -514,7 +513,6 @@ export function MemberRegistrationForm({
                           onChange={(event) =>
                             setValues((prev) => ({ ...prev, email: event.target.value }))
                           }
-                          required
                         />
                       </InputGroup>
                       <InputGroup>
@@ -528,7 +526,6 @@ export function MemberRegistrationForm({
                           onChange={(event) =>
                             setValues((prev) => ({ ...prev, phone: event.target.value }))
                           }
-                          required
                         />
                       </InputGroup>
                       <InputGroup className="md:col-span-2">

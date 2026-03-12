@@ -203,14 +203,14 @@ export function SelfServiceRegistrationDetailPageClient({ id }: Props) {
               }
             />
             <Input
-              placeholder="E-Mail"
+              placeholder="E-Mail (optional)"
               value={hydratedForm?.email || ""}
               onChange={(event) =>
                 setForm((prev) => ({ ...(prev || (hydratedForm as RegistrationFormState)), email: event.target.value }))
               }
             />
             <Input
-              placeholder="Telefon"
+              placeholder="Telefon (optional)"
               value={hydratedForm?.phone || ""}
               onChange={(event) =>
                 setForm((prev) => ({ ...(prev || (hydratedForm as RegistrationFormState)), phone: event.target.value }))

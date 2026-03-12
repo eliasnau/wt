@@ -41,8 +41,13 @@ const birthdateSchema = z
 	.regex(/^\d{4}-\d{2}-\d{2}$/, "Ungültiges Datumsformat")
 	.optional()
 	.or(z.literal(""));
-const emailSchema = z.string().email("Ungültige E-Mail-Adresse");
-const phoneSchema = z.string().min(1, "Telefonnummer ist erforderlich");
+const emailSchema = z
+  .string()
+  .trim()
+  .email("Ungültige E-Mail-Adresse")
+  .or(z.string().trim().length(0));
+
+const phoneSchema = z.string().trim().max(255, "Telefon ist zu lang");
 const streetSchema = z.string().min(1, "Straße ist erforderlich");
 const citySchema = z.string().min(1, "Stadt ist erforderlich");
 const stateSchema = z.string().min(1, "Bundesland ist erforderlich");
@@ -253,8 +258,8 @@ export function NewMemberForm() {
 				firstName: value.firstName,
 				lastName: value.lastName,
 				birthdate: value.birthdate || undefined,
-				email: value.email,
-				phone: value.phone,
+				email: value.email.trim(),
+				phone: value.phone.trim(),
 				guardianName: value.guardianName,
 				guardianEmail: value.guardianEmail,
 				guardianPhone: value.guardianPhone,
@@ -414,7 +419,7 @@ export function NewMemberForm() {
 											field.state.meta.isTouched && !field.state.meta.isValid;
 										return (
 											<Field data-invalid={isInvalid}>
-												<FieldLabel htmlFor="email">E-Mail *</FieldLabel>
+												<FieldLabel htmlFor="email">E-Mail</FieldLabel>
 												<Input
 													id="email"
 													name={field.name}
@@ -465,7 +470,7 @@ export function NewMemberForm() {
 											field.state.meta.isTouched && !field.state.meta.isValid;
 										return (
 											<Field data-invalid={isInvalid}>
-												<FieldLabel htmlFor="phone">Telefon *</FieldLabel>
+												<FieldLabel htmlFor="phone">Telefon</FieldLabel>
 												<Input
 													id="phone"
 													name={field.name}

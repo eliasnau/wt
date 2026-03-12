@@ -43,8 +43,8 @@ export const clubMember = pgTable("club_member", {
 	firstName: text("first_name").notNull(),
 	lastName: text("last_name").notNull(),
 	birthdate: date("birthdate"),
-	email: text("email").notNull(),
-	phone: text("phone").notNull(),
+	email: text("email"),
+	phone: text("phone"),
 	// Address fields
 	street: text("street").notNull(),
 	city: text("city").notNull(),

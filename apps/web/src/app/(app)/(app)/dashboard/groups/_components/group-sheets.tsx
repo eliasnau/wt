@@ -230,7 +230,7 @@ function EnrollMemberDialog({
 													{member.firstName} {member.lastName}
 												</span>
 												<span className="text-muted-foreground text-xs">
-													{member.email}
+													{member.email || "—"}
 												</span>
 											</button>
 										))
@@ -672,8 +672,8 @@ export function GroupMembersSheet({
 															</span>
 														</div>
 													</TableCell>
-													<TableCell>{member.email}</TableCell>
-													<TableCell>{member.phone}</TableCell>
+													<TableCell>{member.email || "—"}</TableCell>
+													<TableCell>{member.phone || "—"}</TableCell>
 													<TableCell className="text-right">
 														<Button
 															size="sm"

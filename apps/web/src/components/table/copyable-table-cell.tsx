@@ -7,13 +7,18 @@ import { toast } from "sonner";
 import { Tooltip, TooltipPopup, TooltipTrigger } from "@/components/ui/tooltip";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 
-export function CopyableTableCell({ value }: { value: string }) {
+export function CopyableTableCell({
+	value,
+}: { value: string | null | undefined }) {
 	const toastTimeout = 2000;
+	const normalizedValue = value?.trim() ?? "";
+	const canCopy = normalizedValue.length > 0;
+	const displayValue = canCopy ? normalizedValue : "—";
 
 	const { copyToClipboard, isCopied } = useCopyToClipboard({
 		onCopy: () => {
 			toast.success("Copied to clipboard", {
-				description: value,
+				description: normalizedValue,
 			});
 		},
 		timeout: toastTimeout,
@@ -22,7 +27,8 @@ export function CopyableTableCell({ value }: { value: string }) {
 	async function handleCopy(e: React.MouseEvent) {
 		e.preventDefault();
 		e.stopPropagation();
-		await copyToClipboard(value);
+		if (!canCopy) return;
+		await copyToClipboard(normalizedValue);
 	}
 
 	return (
@@ -32,12 +38,12 @@ export function CopyableTableCell({ value }: { value: string }) {
 					<button
 						type="button"
 						onClick={handleCopy}
-						disabled={isCopied}
+						disabled={!canCopy || isCopied}
 						className="group inline-flex cursor-pointer items-center gap-2 text-left transition-colors hover:text-foreground disabled:cursor-default disabled:opacity-70"
 					/>
 				}
 			>
-				<span className="truncate">{value}</span>
+				<span className="truncate">{displayValue}</span>
 				<AnimatePresence mode="popLayout">
 					<motion.span
 						key={isCopied ? "check" : "copy"}
@@ -56,7 +62,7 @@ export function CopyableTableCell({ value }: { value: string }) {
 				</AnimatePresence>
 			</TooltipTrigger>
 			<TooltipPopup>
-				<p>Click to copy</p>
+				<p>{canCopy ? "Click to copy" : "No value"}</p>
 			</TooltipPopup>
 		</Tooltip>
 	);
