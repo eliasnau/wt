@@ -115,7 +115,7 @@ export default function StatisticsOverviewPage() {
 	});
 
 	const formatCurrency = (value: string | number | null | undefined) => {
-		if (!value) return "€0.00";
+		if (!value) return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(0);
 		const numeric = typeof value === "number" ? value : Number(value);
 		return new Intl.NumberFormat("de-DE", {
 			style: "currency",
