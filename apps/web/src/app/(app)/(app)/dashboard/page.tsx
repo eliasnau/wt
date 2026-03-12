@@ -150,14 +150,14 @@ export default async function DashboardPage() {
 							<ArrowRight className="size-4 text-muted-foreground transition group-hover:text-foreground" />
 						</Link>
 						<Link
-							href="/dashboard/finance/sepa"
+							href="/dashboard/finance/batches"
 							className="group flex items-center justify-between rounded-lg border bg-background px-4 py-3 text-sm transition hover:border-foreground/20 hover:bg-accent"
 						>
 							<span className="flex items-center gap-3">
 								<span className="flex size-8 items-center justify-center rounded-full bg-sky-100 text-sky-700 dark:bg-sky-500/10 dark:text-sky-300">
 									<CreditCard className="size-4" />
 								</span>
-								Generate SEPA file
+								Open finance workspace
 							</span>
 							<ArrowRight className="size-4 text-muted-foreground transition group-hover:text-foreground" />
 						</Link>

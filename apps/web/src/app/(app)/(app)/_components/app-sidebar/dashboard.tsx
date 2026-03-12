@@ -97,10 +97,6 @@ const routes: NavRoute[] = [
 		title: "Finanzen",
 		icon: <DollarSign className="size-4" />,
 		link: "/dashboard/finance/batches",
-		subs: [
-			{ title: "Zahlungsläufe", link: "/dashboard/finance/batches" },
-			{ title: "SEPA erstellen", link: "/dashboard/finance/sepa" },
-		],
 	},
 	{
 		id: "self-service",
