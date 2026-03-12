@@ -808,7 +808,7 @@ export const membersRouter = {
 						organization: organizationId,
 					},
 					properties: {
-						member_id: result.id,
+						member_id: result.member.id,
 					},
 				});
 
@@ -888,7 +888,7 @@ export const membersRouter = {
 						organization: organizationId,
 					},
 					properties: {
-						member_id: result.id,
+						member_id: result.member.id,
 					},
 				});
 
