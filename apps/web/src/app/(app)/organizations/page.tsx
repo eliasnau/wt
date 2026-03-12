@@ -35,6 +35,7 @@ export default function OrganizationsPage() {
     refetch,
   } = authClient.useListOrganizations();
   const { session, switchOrganization } = useAuth();
+  const canCreateOrganization = session?.user?.role === "admin";
 
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
@@ -209,15 +210,19 @@ export default function OrganizationsPage() {
                   </div>
                   <p className="font-medium">Noch keine Organisationen</p>
                   <p className="mt-1 text-muted-foreground text-sm">
-                    Lege los, indem du deine erste Organisation erstellst.
+                    {canCreateOrganization
+                      ? "Lege los, indem du deine erste Organisation erstellst."
+                      : "Ein Admin muss zuerst eine Organisation fuer dich erstellen."}
                   </p>
-                  <Button
-                    className="mt-4"
-                    onClick={() => setIsCreateDialogOpen(true)}
-                  >
-                    <Plus className="size-4" />
-                    <span className="ml-2">Organisation erstellen</span>
-                  </Button>
+                  {canCreateOrganization && (
+                    <Button
+                      className="mt-4"
+                      onClick={() => setIsCreateDialogOpen(true)}
+                    >
+                      <Plus className="size-4" />
+                      <span className="ml-2">Organisation erstellen</span>
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -263,7 +268,9 @@ export default function OrganizationsPage() {
                 </div>
               )}
 
-              {organizations && organizations.length > 0 && (
+              {canCreateOrganization &&
+                organizations &&
+                organizations.length > 0 && (
                 <div className="flex flex-wrap items-center justify-end gap-3 pt-2">
                   <Button
                     variant="outline"
@@ -279,7 +286,10 @@ export default function OrganizationsPage() {
         </div>
       </div>
 
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+      <Dialog
+        open={canCreateOrganization && isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+      >
         <DialogPopup>
           <DialogHeader>
             <DialogTitle>Organisation erstellen</DialogTitle>
