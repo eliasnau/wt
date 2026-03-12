@@ -20,6 +20,7 @@
     "@paralleldrive/cuid2": "^2.2.2",
     "@repo/db": "workspace:*",
     "@repo/emails": "workspace:*",
+    "autumn-js": "^0.1.85",
     "better-auth": "^1.5.5",
     "botid": "^1.5.10",
     "dotenv": "catalog:",

@@ -1,6 +1,7 @@
 "use client";
 
 import { authClient } from "@repo/auth/client";
+import { useCustomer } from "@repo/autumn/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { User } from "lucide-react";
 import { useState } from "react";
@@ -47,6 +48,7 @@ type Member = {
 
 export function MembersSection() {
 	const { data: activeOrg } = authClient.useActiveOrganization();
+	const { refetch: refetchCustomer } = useCustomer();
 	const [roleConfirmOpen, setRoleConfirmOpen] = useState(false);
 	const [removeConfirmOpen, setRemoveConfirmOpen] = useState(false);
 	const [selectedMember, setSelectedMember] = useState<Member | null>(null);
@@ -127,6 +129,7 @@ export function MembersSection() {
 		onSuccess: () => {
 			toast.success("Member removed");
 			refetch();
+			void refetchCustomer();
 			setRemoveConfirmOpen(false);
 			setSelectedMember(null);
 		},

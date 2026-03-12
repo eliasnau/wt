@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/empty";
 import { InvitationsSection } from "./invitations-section";
 import { MembersSection } from "./members-section";
+import { MembersUsageCard } from "./members-usage-card";
 import { RolesPermissionsSection } from "./roles-permissions-section";
 
 export function MembersContent() {
@@ -88,6 +89,7 @@ export function MembersContent() {
 
 	return (
 		<div className="flex flex-col gap-6">
+			<MembersUsageCard />
 			<MembersSection />
 			<InvitationsSection />
 			<RolesPermissionsSection />
