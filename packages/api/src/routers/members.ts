@@ -730,6 +730,7 @@ export const membersRouter = {
 		.input(createMemberSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
+			const posthog = getPostHogServer();
 
 			const sepa = await loadSepaModule();
 			if (!sepa.validateIBAN(input.iban)) {
@@ -788,9 +789,33 @@ export const membersRouter = {
 					},
 				});
 
+				posthog.capture({
+					distinctId: context.userId,
+					event: "members:create",
+					groups: {
+						organization: organizationId,
+					},
+					properties: {
+						member_id: result.id,
+					},
+				});
+
+				after(() => posthog.shutdown());
+
 				return result;
 			} catch (error) {
+				posthog.captureException(error, context.userId, {
+					context: "members:create",
+					groups: {
+						organization: organizationId,
+					},
+					input_email: input.email,
+					trace_id: context.wideEvent.trace_id,
+					request_id: context.wideEvent.request_id,
+				});
+
 				after(() => {
+					posthog.shutdown();
 					logger.error("Failed to create member", {
 						error,
 						organizationId,
@@ -814,6 +839,7 @@ export const membersRouter = {
 		.input(updateMemberSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
+			const posthog = getPostHogServer();
 
 			try {
 				const result = await DB.mutation.members.updateMember({
@@ -843,11 +869,35 @@ export const membersRouter = {
 					},
 				});
 
+				posthog.capture({
+					distinctId: context.userId,
+					event: "members:update",
+					groups: {
+						organization: organizationId,
+					},
+					properties: {
+						member_id: result.id,
+					},
+				});
+
+				after(() => posthog.shutdown());
+
 				return result;
 			} catch (error) {
 				if (error instanceof ORPCError) throw error;
 
+				posthog.captureException(error, context.userId, {
+					context: "members:update",
+					groups: {
+						organization: organizationId,
+					},
+					member_id: input.memberId,
+					trace_id: context.wideEvent.trace_id,
+					request_id: context.wideEvent.request_id,
+				});
+
 				after(() => {
+					posthog.shutdown();
 					logger.error("Failed to update member", {
 						error,
 						organizationId,
@@ -869,6 +919,7 @@ export const membersRouter = {
 		.input(cancelContractSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
+			const posthog = getPostHogServer();
 
 			const effectiveDateParts = parseDateOnly(input.cancellationEffectiveDate);
 			if (!effectiveDateParts) {
@@ -894,51 +945,93 @@ export const membersRouter = {
 				});
 			}
 
-			const [existingContract] = await db
-				.select()
-				.from(contract)
-				.where(
-					and(
-						eq(contract.memberId, input.memberId),
-						eq(contract.organizationId, organizationId),
-					),
-				)
-				.limit(1);
+			try {
+				const [existingContract] = await db
+					.select()
+					.from(contract)
+					.where(
+						and(
+							eq(contract.memberId, input.memberId),
+							eq(contract.organizationId, organizationId),
+						),
+					)
+					.limit(1);
 
-			if (!existingContract) {
-				throw new ORPCError("NOT_FOUND", {
-					message: "Contract not found for this member",
-				});
-			}
-
-			if (existingContract.cancelledAt) {
-				throw new ORPCError("BAD_REQUEST", {
-					message: "Contract is already cancelled",
-				});
-			}
-
-			if (existingContract.initialPeriodEndDate) {
-				if (
-					input.cancellationEffectiveDate <
-					existingContract.initialPeriodEndDate
-				) {
-					throw new ORPCError("BAD_REQUEST", {
-						message: `Initial period ends on ${existingContract.initialPeriodEndDate}. Cancellation effective date must be on or after that date.`,
+				if (!existingContract) {
+					throw new ORPCError("NOT_FOUND", {
+						message: "Contract not found for this member",
 					});
 				}
+
+				if (existingContract.cancelledAt) {
+					throw new ORPCError("BAD_REQUEST", {
+						message: "Contract is already cancelled",
+					});
+				}
+
+				if (existingContract.initialPeriodEndDate) {
+					if (
+						input.cancellationEffectiveDate <
+						existingContract.initialPeriodEndDate
+					) {
+						throw new ORPCError("BAD_REQUEST", {
+							message: `Initial period ends on ${existingContract.initialPeriodEndDate}. Cancellation effective date must be on or after that date.`,
+						});
+					}
+				}
+
+				const [updatedContract] = await db
+					.update(contract)
+					.set({
+						cancelledAt: new Date(),
+						cancelReason: input.cancelReason,
+						cancellationEffectiveDate: input.cancellationEffectiveDate,
+					})
+					.where(eq(contract.id, existingContract.id))
+					.returning();
+
+				posthog.capture({
+					distinctId: context.userId,
+					event: "members:cancel-contract",
+					groups: {
+						organization: organizationId,
+					},
+					properties: {
+						member_id: input.memberId,
+						cancellation_effective_date: input.cancellationEffectiveDate,
+					},
+				});
+
+				after(() => posthog.shutdown());
+
+				return updatedContract;
+			} catch (error) {
+				if (error instanceof ORPCError) throw error;
+
+				posthog.captureException(error, context.userId, {
+					context: "members:cancel-contract",
+					groups: {
+						organization: organizationId,
+					},
+					member_id: input.memberId,
+					trace_id: context.wideEvent.trace_id,
+					request_id: context.wideEvent.request_id,
+				});
+
+				after(() => {
+					posthog.shutdown();
+					logger.error("Failed to cancel contract", {
+						error,
+						organizationId,
+						memberId: input.memberId,
+						userId: context.user.id,
+					});
+				});
+
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: "Failed to cancel contract",
+				});
 			}
-
-			const [updatedContract] = await db
-				.update(contract)
-				.set({
-					cancelledAt: new Date(),
-					cancelReason: input.cancelReason,
-					cancellationEffectiveDate: input.cancellationEffectiveDate,
-				})
-				.where(eq(contract.id, existingContract.id))
-				.returning();
-
-			return updatedContract;
 		})
 		.route({ method: "POST", path: "/members/:memberId/cancel-contract" }),
 
@@ -976,13 +1069,12 @@ export const membersRouter = {
 
 				posthog.capture({
 					distinctId: context.userId,
-					event: "groups:assign-member",
+					event: "member:assign-group",
 					groups: {
 						organization: organizationId,
 					},
 					properties: {
 						member_id: input.memberId,
-						member_email: member.email,
 						group_id: input.groupId,
 						group_name: group.name,
 						membership_price: result.membershipPrice,
@@ -1002,7 +1094,7 @@ export const membersRouter = {
 				}
 
 				posthog.captureException(error, context.userId, {
-					context: "groups:assign-member",
+					context: "member:assign-group",
 					groups: {
 						organization: organizationId,
 					},
@@ -1036,6 +1128,7 @@ export const membersRouter = {
 		.input(updateGroupMembershipSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
+			const posthog = getPostHogServer();
 
 			const [member, group] = await Promise.all([
 				DB.query.members.getMemberById({
@@ -1066,11 +1159,39 @@ export const membersRouter = {
 					});
 				}
 
+				posthog.capture({
+					distinctId: context.userId,
+					event: "member:update-group",
+					groups: {
+						organization: organizationId,
+					},
+					properties: {
+						member_id: input.memberId,
+						group_id: input.groupId,
+						group_name: group.name,
+						membership_price: result.membershipPrice,
+					},
+				});
+
+				after(() => posthog.shutdown());
+
 				return result;
 			} catch (error) {
 				if (error instanceof ORPCError) throw error;
 
+				posthog.captureException(error, context.userId, {
+					context: "member:update-group",
+					groups: {
+						organization: organizationId,
+					},
+					member_id: input.memberId,
+					group_id: input.groupId,
+					trace_id: context.wideEvent.trace_id,
+					request_id: context.wideEvent.request_id,
+				});
+
 				after(() => {
+					posthog.shutdown();
 					logger.error("Failed to update group membership", {
 						error,
 						organizationId,
@@ -1123,13 +1244,12 @@ export const membersRouter = {
 
 				posthog.capture({
 					distinctId: context.userId,
-					event: "groups:remove-member",
+					event: "member:remove-group",
 					groups: {
 						organization: organizationId,
 					},
 					properties: {
 						member_id: input.memberId,
-						member_email: member.email,
 						group_id: input.groupId,
 						group_name: group.name,
 					},
@@ -1145,7 +1265,7 @@ export const membersRouter = {
 				}
 
 				posthog.captureException(error, context.userId, {
-					context: "groups:remove-member",
+					context: "member:remove-group",
 					groups: {
 						organization: organizationId,
 					},
