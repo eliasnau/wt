@@ -56,7 +56,7 @@ export function EditMemberSheet({
 							<FieldLabel>E-Mail</FieldLabel>
 							<Input
 								type="email"
-								defaultValue={member?.email}
+								defaultValue={member?.email ?? ""}
 								placeholder="email@example.com"
 							/>
 						</Field>
@@ -64,7 +64,7 @@ export function EditMemberSheet({
 							<FieldLabel>Phone</FieldLabel>
 							<Input
 								type="tel"
-								defaultValue={member?.phone}
+								defaultValue={member?.phone ?? ""}
 								placeholder="+1 (555) 000-0000"
 							/>
 						</Field>
