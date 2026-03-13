@@ -12,7 +12,6 @@ const memberFilterFieldSchema = z.enum([
 	"birthdate",
 	"email",
 	"phone",
-	"city",
 	"notes",
 	"startDate",
 	"cancellationEffectiveDate",
@@ -60,7 +59,7 @@ const queryMembersInputSchema = z.object({
 		.min(1)
 		.max(100)
 		.describe(
-			"Free text search across member names, email, phone, city, notes, and contract fields.",
+			"Free text search across member names, email, phone, notes, and contract fields.",
 		)
 		.optional(),
 	groupIds: z
@@ -87,7 +86,6 @@ const queryMembersInputSchema = z.object({
 					"fullName",
 					"birthdate",
 					"email",
-					"city",
 					"startDate",
 					"cancellationEffectiveDate",
 					"cancelledAt",
@@ -164,7 +162,6 @@ function mapMember(
 		birthdate: member.birthdate,
 		email: member.email,
 		phone: member.phone,
-		city: member.city,
 		membershipStatus: member.membershipStatus,
 		contract: {
 			startDate: member.contract.startDate,

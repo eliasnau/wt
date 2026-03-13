@@ -37,13 +37,6 @@ export const createGetMemberInfoTool = (organizationId: string) =>
 					birthdate: member.birthdate,
 					email: member.email,
 					phone: member.phone,
-					address: {
-						street: member.street,
-						city: member.city,
-						state: member.state,
-						postalCode: member.postalCode,
-						country: member.country,
-					},
 					guardian: {
 						name: member.guardianName,
 						email: member.guardianEmail,
