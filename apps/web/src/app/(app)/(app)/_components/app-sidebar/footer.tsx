@@ -3,7 +3,7 @@ import { UserButton } from "./user-button";
 
 export function SidebarFooter() {
 	return (
-		<SidebarFooterPrimitive className="px-2 py-2">
+		<SidebarFooterPrimitive className="px-2 py-4">
 			<UserButton />
 		</SidebarFooterPrimitive>
 	);
