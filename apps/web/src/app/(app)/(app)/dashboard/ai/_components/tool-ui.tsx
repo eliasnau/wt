@@ -10,7 +10,6 @@ import {
 	LayersIcon,
 	LoaderCircleIcon,
 	MailIcon,
-	MapPinIcon,
 	PhoneIcon,
 	UserIcon,
 	UsersIcon,
@@ -111,7 +110,6 @@ type QueryMember = {
 	name: string;
 	email?: string | null;
 	phone?: string | null;
-	city?: string | null;
 	membershipStatus?: string | null;
 	contract?: MemberContract | null;
 	groups?: MemberGroup[];
@@ -125,17 +123,8 @@ type MemberDetail = {
 	phone?: string | null;
 	createdAt?: string | null;
 	notes?: string | null;
-	address?: {
-		street?: string | null;
-		city?: string | null;
-		state?: string | null;
-		postalCode?: string | null;
-		country?: string | null;
-	};
 	guardian?: {
 		name?: string | null;
-		email?: string | null;
-		phone?: string | null;
 	};
 	contract?: MemberContract | null;
 	groups?: Array<{ id: string; name: string; color?: string | null }>;
@@ -186,7 +175,7 @@ function MemberListSheet({
 							<div className="min-w-0 flex-1">
 								<p className="truncate font-medium text-sm">{m.name}</p>
 								<p className="truncate text-muted-foreground text-xs">
-									{m.email ?? m.city ?? ""}
+									{m.email ?? m.phone ?? m.membershipStatus ?? ""}
 								</p>
 							</div>
 							{isCancelled ? (
@@ -209,12 +198,12 @@ function MemberListSheet({
 
 function MemberDetailSheet({ member }: { member: MemberDetail }) {
 	const isCancelled = Boolean(member.contract?.cancellationEffectiveDate);
-	const hasGuardian =
-		member.guardian?.name || member.guardian?.email || member.guardian?.phone;
-	const hasAddress =
-		member.address?.street ||
-		member.address?.city ||
-		member.address?.postalCode;
+	const hasGuardian = member.guardian?.name;
+	const hasContactInfo =
+		Boolean(member.email) ||
+		Boolean(member.phone) ||
+		Boolean(member.createdAt) ||
+		Boolean(member.birthdate);
 
 	return (
 		<div className="space-y-6">
@@ -237,21 +226,22 @@ function MemberDetailSheet({ member }: { member: MemberDetail }) {
 			</div>
 
 			{/* Contact */}
-			<div className="space-y-2.5 rounded-xl border bg-card px-4 py-3">
-				<InfoRow icon={MailIcon} label="E-Mail" value={member.email} />
-				<InfoRow icon={PhoneIcon} label="Telefon" value={member.phone} />
-				<InfoRow icon={MapPinIcon} label="Stadt" value={member.address?.city} />
-				<InfoRow
-					icon={CalendarIcon}
-					label="Beigetreten"
-					value={formatDate(member.createdAt)}
-				/>
-				<InfoRow
-					icon={CalendarIcon}
-					label="Geburtsdatum"
-					value={formatDate(member.birthdate)}
-				/>
-			</div>
+			{hasContactInfo && (
+				<div className="space-y-2.5 rounded-xl border bg-card px-4 py-3">
+					<InfoRow icon={MailIcon} label="E-Mail" value={member.email} />
+					<InfoRow icon={PhoneIcon} label="Telefon" value={member.phone} />
+					<InfoRow
+						icon={CalendarIcon}
+						label="Beigetreten"
+						value={formatDate(member.createdAt)}
+					/>
+					<InfoRow
+						icon={CalendarIcon}
+						label="Geburtsdatum"
+						value={formatDate(member.birthdate)}
+					/>
+				</div>
+			)}
 
 			{/* Groups */}
 			{member.groups && member.groups.length > 0 && (
@@ -297,25 +287,6 @@ function MemberDetailSheet({ member }: { member: MemberDetail }) {
 				</div>
 			)}
 
-			{/* Address */}
-			{hasAddress && (
-				<div className="space-y-1.5">
-					<p className="font-medium text-muted-foreground text-xs uppercase tracking-wide">
-						Adresse
-					</p>
-					<p className="text-sm">
-						{[
-							member.address?.street,
-							member.address?.postalCode,
-							member.address?.city,
-							member.address?.country,
-						]
-							.filter(Boolean)
-							.join(", ")}
-					</p>
-				</div>
-			)}
-
 			{/* Guardian */}
 			{hasGuardian && (
 				<div className="space-y-2.5 rounded-xl border bg-card px-4 py-3">
@@ -323,16 +294,6 @@ function MemberDetailSheet({ member }: { member: MemberDetail }) {
 						Erziehungsberechtigte/r
 					</p>
 					<InfoRow icon={UserIcon} label="Name" value={member.guardian?.name} />
-					<InfoRow
-						icon={MailIcon}
-						label="E-Mail"
-						value={member.guardian?.email}
-					/>
-					<InfoRow
-						icon={PhoneIcon}
-						label="Telefon"
-						value={member.guardian?.phone}
-					/>
 				</div>
 			)}
 
@@ -503,6 +464,69 @@ function buildSheetContent(
 	return null;
 }
 
+function getRequestedSensitiveFields(input: unknown) {
+	const includeFields = Array.isArray(
+		(input as { includeFields?: unknown } | undefined)?.includeFields,
+	)
+		? ((input as { includeFields: unknown[] }).includeFields as string[])
+		: [];
+
+	return includeFields.filter(
+		(field) => field === "email" || field === "phone",
+	);
+}
+
+function getRequestedSensitiveFieldsLabel(requestedFields: string[]) {
+	return requestedFields.includes("email") && requestedFields.includes("phone")
+		? "E-Mail-Adressen und Telefonnummern"
+		: requestedFields.includes("email")
+			? "E-Mail-Adressen"
+			: requestedFields.includes("phone")
+				? "Telefonnummern"
+				: "Kontaktdaten";
+}
+
+function buildApprovedSheetContent({ input }: { input: unknown }) {
+	const requestedFields = getRequestedSensitiveFields(input);
+
+	if (requestedFields.length === 0) {
+		return null;
+	}
+
+	const requestedLabel = getRequestedSensitiveFieldsLabel(requestedFields);
+
+	return (
+		<div className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-emerald-950">
+			<p className="font-medium text-sm">Freigabe erteilt</p>
+			<p className="mt-1 text-sm">
+				Die angeforderten {requestedLabel} wurden für diese Anfrage freigegeben
+				und gelesen.
+			</p>
+		</div>
+	);
+}
+
+function buildDeniedSheetContent({ input }: { input: unknown }) {
+	const requestedFields = getRequestedSensitiveFields(input);
+	const requestedLabel = getRequestedSensitiveFieldsLabel(requestedFields);
+
+	return (
+		<div className="space-y-4">
+			<div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-amber-950">
+				<p className="font-medium text-sm">Zugriff abgelehnt</p>
+				<p className="mt-1 text-sm">
+					Die angeforderten {requestedLabel} wurden nicht gelesen.
+				</p>
+				<p className="mt-1 text-xs leading-relaxed text-amber-900">
+					Die Anfrage wurde nach der Ablehnung nicht ausgeführt. Wenn die KI
+					diese Daten später doch lesen soll, muss sie erneut und explizit
+					freigegeben werden.
+				</p>
+			</div>
+		</div>
+	);
+}
+
 // ─── Per-tool config ──────────────────────────────────────────────────────────
 
 type ToolConfig = {
@@ -518,7 +542,7 @@ const TOOL_CONFIG: Record<string, ToolConfig> = {
 		loadingLabel: "Suche Mitglieder…",
 		doneLabel: (d) => {
 			const total =
-				(d.pagination as { total?: number } | undefined)?.total ??
+				(d.pagination as { totalCount?: number } | undefined)?.totalCount ??
 				(d.members as unknown[] | undefined)?.length ??
 				0;
 			return `${total} Mitglied${total !== 1 ? "er" : ""} gefunden`;
@@ -619,16 +643,30 @@ export function ToolCollapsible({
 	input,
 	output,
 	errorText,
+	approval,
 }: {
 	toolName: string;
 	state: string;
 	input: unknown;
 	output: unknown;
 	errorText?: string | null;
+	approval?: {
+		id: string;
+		approved?: boolean;
+		reason?: string;
+	};
 }): ReactNode {
 	const done = state === "output-available";
 	const hasError = state === "output-error";
-	const isLoading = !done && !hasError;
+	const isDenied = state === "output-denied";
+	const isAwaitingApproval = state === "approval-requested";
+	const isApprovalResponded = state === "approval-responded";
+	const isLoading =
+		!done &&
+		!hasError &&
+		!isAwaitingApproval &&
+		!isDenied &&
+		!isApprovalResponded;
 	const config = TOOL_CONFIG[toolName] ?? FALLBACK_CONFIG;
 	const Icon = config.icon;
 
@@ -637,26 +675,48 @@ export function ToolCollapsible({
 			? (output as Record<string, unknown>)
 			: {};
 
-	const label = done
-		? config.doneLabel(data)
-		: hasError
-			? "Fehler aufgetreten"
-			: config.loadingLabel;
+	let label = config.loadingLabel;
+
+	if (done) {
+		label = config.doneLabel(data);
+	} else if (hasError) {
+		label = "Fehler aufgetreten";
+	} else if (isDenied) {
+		label = "Zugriff abgelehnt";
+	} else if (isAwaitingApproval) {
+		label = "Warte auf Freigabe…";
+	} else if (isApprovalResponded) {
+		label = "Verarbeite Freigabe…";
+	}
 
 	const sheetTitle = config.sheetTitle({ ...data, _toolName: toolName });
-	const canOpen = done || hasError;
-	const sheetContent = done ? buildSheetContent(toolName, data) : null;
+	const canOpen = done || hasError || isDenied;
+	const approvedSheetContent =
+		done && approval?.approved === true
+			? buildApprovedSheetContent({ input })
+			: null;
+	const sheetContent = done
+		? buildSheetContent(toolName, data)
+		: isDenied
+			? buildDeniedSheetContent({ input })
+			: null;
 
 	const innerContent = (
 		<span
 			className={cn(
 				"inline-flex items-center gap-1.5 text-sm transition-colors",
-				hasError ? "text-destructive" : "text-muted-foreground",
+				hasError
+					? "text-destructive"
+					: isDenied
+						? "text-amber-700"
+						: "text-muted-foreground",
 			)}
 		>
 			{isLoading ? (
 				<LoaderCircleIcon className="size-4 shrink-0 animate-spin" />
 			) : hasError ? (
+				<XCircleIcon className="size-4 shrink-0" />
+			) : isDenied ? (
 				<XCircleIcon className="size-4 shrink-0" />
 			) : (
 				<Icon className="size-4 shrink-0" />
@@ -691,6 +751,7 @@ export function ToolCollapsible({
 				<SheetPanel>
 					<div className="space-y-5">
 						<ParamsSection input={input} />
+						{approvedSheetContent}
 						{hasError && errorText ? (
 							<div className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3">
 								<p className="mb-1 font-medium text-destructive text-xs uppercase tracking-wide">

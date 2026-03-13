@@ -1,6 +1,11 @@
 import { DB } from "@repo/db/functions";
 import { tool } from "ai";
 import { z } from "zod";
+import {
+	memberSensitiveFieldsInputSchema,
+	shouldRequireMemberContactApproval,
+	type MemberSensitiveField,
+} from "./member-sensitive-fields";
 
 const getMemberInfoInputSchema = z.object({
 	memberId: z
@@ -10,15 +15,19 @@ const getMemberInfoInputSchema = z.object({
 		.describe(
 			"Exact member ID. Resolve the member with queryMembers first if needed.",
 		),
+	includeFields: memberSensitiveFieldsInputSchema,
 });
 
 export const createGetMemberInfoTool = (organizationId: string) =>
 	tool({
 		description:
-			"Get detailed information for a single member by exact member ID. Use only after you have resolved the correct member ID.",
+			"Get detailed information for a single member by exact member ID. Use only after you have resolved the correct member ID. Member email and phone are sensitive and must be explicitly requested via includeFields only when needed.",
 		inputSchema: getMemberInfoInputSchema,
-		execute: async ({ memberId }) => {
+		needsApproval: ({ includeFields }) =>
+			shouldRequireMemberContactApproval(includeFields),
+		execute: async ({ memberId, includeFields }) => {
 			const member = await DB.query.members.getMemberWithDetails({ memberId });
+			const includeFieldSet = new Set<MemberSensitiveField>(includeFields ?? []);
 
 			if (!member || member.organizationId !== organizationId) {
 				return {
@@ -35,12 +44,10 @@ export const createGetMemberInfoTool = (organizationId: string) =>
 					firstName: member.firstName,
 					lastName: member.lastName,
 					birthdate: member.birthdate,
-					email: member.email,
-					phone: member.phone,
+					email: includeFieldSet.has("email") ? member.email : undefined,
+					phone: includeFieldSet.has("phone") ? member.phone : undefined,
 					guardian: {
 						name: member.guardianName,
-						email: member.guardianEmail,
-						phone: member.guardianPhone,
 					},
 					notes: member.notes,
 					createdAt: member.createdAt,

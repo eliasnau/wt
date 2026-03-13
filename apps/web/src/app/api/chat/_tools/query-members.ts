@@ -4,6 +4,11 @@ import {
 } from "@repo/api/routers/members/listMembersAdvanced";
 import { tool } from "ai";
 import { z } from "zod";
+import {
+	memberSensitiveFieldsInputSchema,
+	shouldRequireMemberContactApproval,
+	type MemberSensitiveField,
+} from "./member-sensitive-fields";
 
 const memberFilterFieldSchema = z.enum([
 	"firstName",
@@ -54,14 +59,17 @@ const queryMembersInputSchema = z.object({
 	page: z.number().int().min(1).max(50).default(1).optional(),
 	limit: z.number().int().min(1).max(25).default(10).optional(),
 	search: z
-		.string()
-		.trim()
-		.min(1)
-		.max(100)
+		.preprocess((value) => {
+			if (typeof value !== "string") {
+				return value;
+			}
+
+			const trimmed = value.trim();
+			return trimmed.length === 0 ? undefined : trimmed;
+		}, z.string().max(100).optional())
 		.describe(
 			"Free text search across member names, email, phone, notes, and contract fields.",
-		)
-		.optional(),
+		),
 	groupIds: z
 		.array(z.string().trim().min(1))
 		.max(10)
@@ -115,6 +123,7 @@ const queryMembersInputSchema = z.object({
 		.regex(/^\d{4}-\d{2}-\d{2}$/)
 		.describe("Inclusive end date for contract current period end date.")
 		.optional(),
+	includeFields: memberSensitiveFieldsInputSchema,
 });
 
 type QueryMembersInput = z.infer<typeof queryMembersInputSchema>;
@@ -153,6 +162,7 @@ function addDays(dateString: string, days: number) {
 
 function mapMember(
 	member: Awaited<ReturnType<typeof listMembersAdvanced>>["data"][number],
+	includeFieldSet: Set<MemberSensitiveField>,
 ) {
 	return {
 		id: member.id,
@@ -160,8 +170,8 @@ function mapMember(
 		firstName: member.firstName,
 		lastName: member.lastName,
 		birthdate: member.birthdate,
-		email: member.email,
-		phone: member.phone,
+		email: includeFieldSet.has("email") ? member.email : undefined,
+		phone: includeFieldSet.has("phone") ? member.phone : undefined,
 		membershipStatus: member.membershipStatus,
 		contract: {
 			startDate: member.contract.startDate,
@@ -184,9 +194,12 @@ function mapMember(
 export const createQueryMembersTool = (organizationId: string) =>
 	tool({
 		description:
-			"Search and filter members for the current organization. Use this for member lists, lookups by name/email/phone, group-filtered searches, paginated filtering, and contract end date queries. If the user names a group, resolve it with listGroups first and then pass the group ID here.",
+			"Search and filter members for the current organization. Use this for member lists, lookups by name/email/phone, group-filtered searches, paginated filtering, and contract end date queries. If the user names a group, resolve it with listGroups first and then pass the group ID here. Member email and phone are sensitive and must be explicitly requested via includeFields only when needed.",
 		inputSchema: queryMembersInputSchema,
 		execute: async (input: QueryMembersInput) => {
+			const includeFieldSet = new Set<MemberSensitiveField>(
+				input.includeFields ?? [],
+			);
 			const contractEndDateFrom =
 				input.contractEndDateFrom ??
 				(typeof input.contractEndingWithinDays === "number"
@@ -265,7 +278,9 @@ export const createQueryMembersTool = (organizationId: string) =>
 						from: contractEndDateFrom,
 						to: contractEndDateTo,
 					},
-					members: paginatedMembers.map(mapMember),
+					members: paginatedMembers.map((member) =>
+						mapMember(member, includeFieldSet),
+					),
 				};
 			}
 
@@ -286,7 +301,11 @@ export const createQueryMembersTool = (organizationId: string) =>
 
 			return {
 				pagination: result.pagination,
-				members: result.data.map(mapMember),
+				members: result.data.map((member) =>
+					mapMember(member, includeFieldSet),
+				),
 			};
 		},
+		needsApproval: ({ includeFields }) =>
+			shouldRequireMemberContactApproval(includeFields),
 	});

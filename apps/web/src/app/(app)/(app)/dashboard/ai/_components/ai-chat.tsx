@@ -2,7 +2,10 @@
 
 import { useChat } from "@ai-sdk/react";
 import { useHotkey } from "@tanstack/react-hotkeys";
-import type { FileUIPart } from "ai";
+import {
+	lastAssistantMessageIsCompleteWithApprovalResponses,
+	type FileUIPart,
+} from "ai";
 import {
 	ArrowDownIcon,
 	ArrowUpIcon,
@@ -122,6 +125,111 @@ function formatChatErrorMessage(error: Error | undefined) {
 	} catch {}
 
 	return error.message;
+}
+
+function getApprovalRequestedSensitiveFields(input: unknown) {
+	if (!input || typeof input !== "object") {
+		return [] as string[];
+	}
+
+	const includeFields = (input as { includeFields?: unknown }).includeFields;
+	if (!Array.isArray(includeFields)) {
+		return [] as string[];
+	}
+
+	return includeFields.filter(
+		(field): field is string => field === "email" || field === "phone",
+	);
+}
+
+function getApprovalMessage(toolName: string, input: unknown, providerName: string) {
+	const requestedFields = getApprovalRequestedSensitiveFields(input);
+	const targetLabel =
+		toolName === "getMemberInfo" ? "dieses Mitglieds" : "deiner Mitglieder";
+
+	if (requestedFields.includes("email") && requestedFields.includes("phone")) {
+		return {
+			title: `Die KI möchte die E-Mail-Adressen und Telefonnummern ${targetLabel} lesen.`,
+			detail: `Diese Kontaktdaten werden an ${providerName} gesendet, damit die Anfrage beantwortet werden kann.`,
+		};
+	}
+
+	if (requestedFields.includes("email")) {
+		return {
+			title: `Die KI möchte die E-Mail-Adressen ${targetLabel} lesen.`,
+			detail: `Die E-Mail-Adressen werden an ${providerName} gesendet, damit die Anfrage beantwortet werden kann.`,
+		};
+	}
+
+	if (requestedFields.includes("phone")) {
+		return {
+			title: `Die KI möchte die Telefonnummern ${targetLabel} lesen.`,
+			detail: `Die Telefonnummern werden an ${providerName} gesendet, damit die Anfrage beantwortet werden kann.`,
+		};
+	}
+
+	return {
+		title: "Die KI möchte auf sensible Kontaktdaten zugreifen.",
+		detail: `Diese Daten werden an ${providerName} gesendet, damit die Anfrage beantwortet werden kann.`,
+	};
+}
+
+function getApprovalDeniedReason(toolName: string, input: unknown) {
+	const requestedFields = getApprovalRequestedSensitiveFields(input);
+	const requestedLabel =
+		requestedFields.includes("email") && requestedFields.includes("phone")
+			? "member contact info (email and phone)"
+			: requestedFields.includes("email")
+				? "member email addresses"
+				: requestedFields.includes("phone")
+					? "member phone numbers"
+					: "member contact info";
+
+	const targetLabel =
+		toolName === "getMemberInfo" ? "for this member" : "for the requested members";
+
+	return `User denied reading ${requestedLabel} ${targetLabel}. Do not retry this contact-data request unless the user explicitly asks again and wants to approve it.`;
+}
+
+type PendingApproval = {
+	approvalId: string;
+	toolName: string;
+	input: unknown;
+};
+
+function PendingApprovalPanel({
+	approval,
+	onApprove,
+	onDeny,
+	providerName,
+}: {
+	approval: PendingApproval;
+	onApprove: () => void;
+	onDeny: () => void;
+	providerName: string;
+}) {
+	const copy = getApprovalMessage(
+		approval.toolName,
+		approval.input,
+		providerName,
+	);
+
+	return (
+		<div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3">
+			<p className="font-medium text-amber-950 text-sm">{copy.title}</p>
+			<p className="mt-1 text-amber-900 text-xs leading-relaxed">
+				{copy.detail}
+			</p>
+			<div className="mt-3 flex items-center justify-end gap-2">
+				<Button onClick={onDeny} size="sm" type="button" variant="outline">
+					Ablehnen
+				</Button>
+				<Button onClick={onApprove} size="sm" type="button">
+					Freigeben
+				</Button>
+			</div>
+		</div>
+	);
 }
 
 // ─── Suggestion chips shown in the empty state ────────────────────────────────
@@ -375,16 +483,27 @@ function EmptyState({ onSuggestion }: EmptyStateProps) {
 const AiChat = () => {
 	const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
 	const [model, setModel] = useState(DEFAULT_CHAT_MODEL_ID);
+	const [lastRequestedModel, setLastRequestedModel] =
+		useState(DEFAULT_CHAT_MODEL_ID);
 	const [previewAttachment, setPreviewAttachment] =
 		useState<PreviewAttachmentData | null>(null);
 	const [isPromptDropActive, setIsPromptDropActive] = useState(false);
 	const promptDragDepthRef = useRef(0);
-	const { clearError, error, messages, sendMessage, status, setMessages } =
-		useChat({
-			onError: (chatError) => {
-				toast.error(formatChatErrorMessage(chatError) ?? "Request failed.");
-			},
-		});
+	const {
+		addToolApprovalResponse,
+		clearError,
+		error,
+		messages,
+		sendMessage,
+		status,
+		setMessages,
+	} = useChat({
+		sendAutomaticallyWhen:
+			lastAssistantMessageIsCompleteWithApprovalResponses,
+		onError: (chatError) => {
+			toast.error(formatChatErrorMessage(chatError) ?? "Request failed.");
+		},
+	});
 	const formattedErrorMessage = formatChatErrorMessage(error);
 
 	const handleNewChat = useCallback(() => {
@@ -405,6 +524,34 @@ const AiChat = () => {
 
 	const modelItems = CHAT_MODEL_OPTIONS;
 	const selectedModelData = modelItems.find((m) => m.id === model);
+	const lastRequestedModelData = modelItems.find(
+		(modelItem) => modelItem.id === lastRequestedModel,
+	);
+	const pendingApprovals = useMemo(() => {
+		const lastAssistantMessage = [...messages]
+			.reverse()
+			.find((message) => message.role === "assistant");
+
+		if (!lastAssistantMessage) {
+			return [] as PendingApproval[];
+		}
+
+		return lastAssistantMessage.parts
+			.filter(
+				(part): part is ToolPart =>
+					(part.type.startsWith("tool-") || part.type === "dynamic-tool") &&
+					part.state === "approval-requested" &&
+					Boolean(part.approval?.id),
+			)
+			.map((part) => ({
+				approvalId: part.approval.id,
+				toolName:
+					part.type === "dynamic-tool"
+						? part.toolName
+						: part.type.split("-").slice(1).join("-"),
+				input: part.input,
+			}));
+	}, [messages]);
 	const groupedModels = useMemo(() => {
 		const groupedMap = new Map<string, ModelData[]>();
 
@@ -432,30 +579,32 @@ const AiChat = () => {
 			const hasText = Boolean(text);
 			const hasAttachments = Boolean(message.files?.length);
 
-			if (!(hasText || hasAttachments)) {
-				return;
-			}
+				if (!(hasText || hasAttachments)) {
+					return;
+				}
 
-			clearError();
+				clearError();
+				setLastRequestedModel(model);
 
-			sendMessage(
-				{
-					text: text || "Sent with attachments",
-					files: message.files,
+				sendMessage(
+					{
+						text: text || "Sent with attachments",
+						files: message.files,
 				},
 				{
 					body: {
 						model,
+						},
 					},
-				},
-			);
-		},
-		[model, sendMessage, clearError],
-	);
+				);
+			},
+			[model, sendMessage, clearError],
+		);
 
 	const handleSuggestion = useCallback(
 		(suggestion: string) => {
 			clearError();
+			setLastRequestedModel(model);
 			sendMessage({ text: suggestion }, { body: { model } });
 		},
 		[model, sendMessage, clearError],
@@ -653,6 +802,7 @@ const AiChat = () => {
 														input={toolPart.input}
 														output={toolPart.output}
 														errorText={toolPart.errorText}
+														approval={toolPart.approval}
 													/>
 												);
 											}
@@ -679,6 +829,36 @@ const AiChat = () => {
 				{/* Input bar — pinned to bottom */}
 				<PromptInputProvider>
 					<div className="space-y-2 pb-1">
+						{pendingApprovals.length > 0 ? (
+							<div className="space-y-2">
+								{pendingApprovals.map((approval) => (
+									<PendingApprovalPanel
+										approval={approval}
+										key={approval.approvalId}
+										onApprove={() => {
+											void addToolApprovalResponse({
+												id: approval.approvalId,
+												approved: true,
+											});
+										}}
+										onDeny={() => {
+											void addToolApprovalResponse({
+												id: approval.approvalId,
+												approved: false,
+												reason: getApprovalDeniedReason(
+													approval.toolName,
+													approval.input,
+												),
+											});
+										}}
+										providerName={
+											lastRequestedModelData?.providerName ??
+											"dem Modellanbieter"
+										}
+									/>
+								))}
+							</div>
+						) : null}
 						<PromptInputAttachmentsDisplay
 							onPreview={handleOpenAttachmentPreview}
 						/>
