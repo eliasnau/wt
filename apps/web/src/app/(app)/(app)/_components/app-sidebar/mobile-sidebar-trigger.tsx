@@ -1,7 +1,6 @@
 "use client";
 
 import { haptic } from "ios-haptics";
-import { Plus } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
 import { useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
@@ -21,40 +20,31 @@ export function MobileSidebarTrigger() {
 	const content = (
 		<div className="fixed right-6 bottom-6 z-[100] md:hidden">
 			<AnimatePresence>
-				{openMobile && (
+				{!openMobile && (
 					<motion.div
-						initial={{ opacity: 0, y: 0 }}
-						animate={{ opacity: 1, y: -50 }}
-						exit={{ opacity: 0, y: 0 }}
-						className="absolute right-0 bottom-0 -z-10"
+						initial={{ opacity: 0, y: 10, scale: 0.96 }}
+						animate={{ opacity: 1, y: 0, scale: 1 }}
+						exit={{ opacity: 0, y: 10, scale: 0.96 }}
+						transition={{ duration: 0.16, ease: "easeOut" }}
 					>
-						<Button
-							size="icon-lg"
-							variant="secondary"
-							onClick={() => {
-								haptic();
-							}}
-						>
-							<Plus />
-						</Button>
+						<AnimateIcon animate={openMobile}>
+							<Button
+								data-sidebar="trigger"
+								data-slot="sidebar-trigger"
+								size="icon-lg"
+								variant="outline"
+								className="bg-background shadow-lg dark:bg-sidebar"
+								onClick={() => {
+									haptic();
+									toggleSidebar();
+								}}
+							>
+								<Menu />
+							</Button>
+						</AnimateIcon>
 					</motion.div>
 				)}
 			</AnimatePresence>
-
-			<AnimateIcon animate={openMobile}>
-				<Button
-					data-sidebar="trigger"
-					data-slot="sidebar-trigger"
-					size="icon-lg"
-					variant="secondary"
-					onClick={() => {
-						haptic();
-						toggleSidebar();
-					}}
-				>
-					<Menu />
-				</Button>
-			</AnimateIcon>
 		</div>
 	);
 
