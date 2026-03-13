@@ -1,9 +1,13 @@
 import { createSearchDocsTool } from "./docs";
-import { createGroupsTool } from "./groups";
-import { createMembersTool } from "./members";
+import { createGetMemberInfoTool } from "./get-member-info";
+import { createGetNumbersTool } from "./get-numbers";
+import { createListGroupsTool } from "./list-groups";
+import { createQueryMembersTool } from "./query-members";
 
 export const createTools = (organizationId: string) => ({
-	members: createMembersTool(organizationId),
-	groups: createGroupsTool(organizationId),
+	queryMembers: createQueryMembersTool(organizationId),
+	getMemberInfo: createGetMemberInfoTool(organizationId),
+	listGroups: createListGroupsTool(organizationId),
+	getNumbers: createGetNumbersTool(organizationId),
 	searchDocs: createSearchDocsTool(),
 });

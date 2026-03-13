@@ -1,6 +1,6 @@
 import { withTracing } from "@posthog/ai";
-import { checkAutumnFeature, trackAutumnUsage } from "@repo/autumn/backend";
 import { auth } from "@repo/auth";
+import { checkAutumnFeature, trackAutumnUsage } from "@repo/autumn/backend";
 import { db, eq } from "@repo/db";
 import { organization } from "@repo/db/schema";
 import {
@@ -9,6 +9,7 @@ import {
 	streamText,
 	type UIMessage,
 } from "ai";
+import { after } from "next/server";
 import { PostHog } from "posthog-node";
 import { DEFAULT_CHAT_MODEL_ID, getChatModel } from "@/ai/models";
 
@@ -104,10 +105,17 @@ export async function POST(req: Request) {
 		);
 	}
 
-	const phClient = new PostHog(
-		process.env.NEXT_PUBLIC_POSTHOG_KEY!,
-		{ host: "https://eu.i.posthog.com" },
-	);
+	const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+	if (!posthogKey) {
+		return new Response(
+			JSON.stringify({ error: "PostHog is not configured." }),
+			{ status: 500, headers: { "Content-Type": "application/json" } },
+		);
+	}
+
+	const phClient = new PostHog(posthogKey, {
+		host: "https://eu.i.posthog.com",
+	});
 
 	const model = withTracing(selectedModel.model, phClient, {
 		posthogDistinctId: session.userId,
@@ -132,14 +140,14 @@ Scope and behavior:
 - Use tools to read data whenever data is needed; do not guess records.
 
 Tool usage:
-- Use \`members\` for member data with actions: \`search\`, \`count\`, \`byGroup\`, \`byId\`.
-- For member lists, call \`members\` with action \`search\` and no query.
-- For a member identified by name/email/phone, call \`members\` \`search\` first, then \`byId\` with the chosen \`memberId\`.
-- Use \`byId\` directly only when \`memberId\` is already known.
-- Use \`groups\` for group data with actions: \`search\`, \`count\`, \`byId\`, \`byMember\`.
-- For group lists, call \`groups\` with action \`search\` and no query.
-- For group totals, call \`groups\` with action \`count\`.
-- If asked which groups a member is in, call \`groups\` with action \`byMember\` (resolve \`memberId\` first if needed).
+- You can use a maximum of 10 reasoning or tool rounds. If that is not enough, ask a short clarification question.
+- Use \`queryMembers\` for member searches, filtered lists, pagination, and status-based filtering.
+- For member lists, call \`queryMembers\`.
+- For a member identified by name/email/phone or a fuzzy description, call \`queryMembers\` first, then \`getMemberInfo\` with the chosen \`memberId\`.
+- Use \`getMemberInfo\` directly only when the exact \`memberId\` is already known.
+- Use \`listGroups\` for group discovery, fuzzy group-name matching, and group listing.
+- If asked to search members for a specific group, first call \`listGroups\` to resolve the group name to the correct group id, then call \`queryMembers\` with that group id.
+- Use \`getNumbers\` for totals and summary counts like total groups and active members. Treat active members as including cancellations that are not yet effective.
 - Use \`searchDocs\` to find relevant MatDesk documentation pages.
 - For how-to, onboarding, troubleshooting, API, or feature-explainer questions, call \`searchDocs\` and include relevant docs links in the answer.
 
@@ -152,7 +160,7 @@ Formatting:
 - If the user asks to export a list, prefer a normal Markdown table (the UI can export tables as \`.md\` and \`.csv\`).
 - Users usually do not care about internal IDs; include IDs only when they are useful to the task.`,
 		messages: await convertToModelMessages(messages),
-		stopWhen: stepCountIs(5),
+		stopWhen: stepCountIs(10),
 		tools: createTools(session.organizationId),
 		onFinish: async ({ totalUsage }) => {
 			const totalTokens = totalUsage.totalTokens;
@@ -168,6 +176,14 @@ Formatting:
 				idempotencyKey: messages.at(-1)?.id,
 			});
 		},
+	});
+
+	after(() => {
+		void result.consumeStream({
+			onError: (error) => {
+				console.error("web chat stream consume failed", error);
+			},
+		});
 	});
 
 	return result.toUIMessageStreamResponse();
