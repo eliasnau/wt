@@ -197,6 +197,10 @@ type PendingApproval = {
 	input: unknown;
 };
 
+function isToolPartForApproval(part: { type: string }): part is ToolPart {
+	return part.type.startsWith("tool-") || part.type === "dynamic-tool";
+}
+
 function PendingApprovalPanel({
 	approval,
 	onApprove,
@@ -534,18 +538,18 @@ const AiChat = () => {
 
 		if (!lastAssistantMessage) {
 			return [] as PendingApproval[];
-		}
+			}
 
-		return lastAssistantMessage.parts
-			.filter(
-				(part): part is ToolPart =>
-					(part.type.startsWith("tool-") || part.type === "dynamic-tool") &&
-					part.state === "approval-requested" &&
-					Boolean(part.approval?.id),
-			)
-			.map((part) => ({
-				approvalId: part.approval.id,
-				toolName:
+			return lastAssistantMessage.parts
+				.filter(isToolPartForApproval)
+				.filter(
+					(part) =>
+						part.state === "approval-requested" &&
+						Boolean(part.approval?.id),
+				)
+				.map((part) => ({
+					approvalId: part.approval.id,
+					toolName:
 					part.type === "dynamic-tool"
 						? part.toolName
 						: part.type.split("-").slice(1).join("-"),
