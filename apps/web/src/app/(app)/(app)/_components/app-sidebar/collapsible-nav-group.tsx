@@ -3,7 +3,6 @@
 import type { Route } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { useState } from "react";
 import { AnimateIcon } from "@/components/animate-ui/icons/icon";
 import {
 	DropdownMenu,
@@ -46,66 +45,61 @@ export function CollapsibleNavGroup({
 }: CollapsibleNavGroupProps) {
 	const { state } = useSidebar();
 	const isCollapsed = state === "collapsed";
-	const [dropdownOpen, setDropdownOpen] = useState(false);
 
 	// When sidebar is icon-only, show a flyout dropdown instead
 	if (isCollapsed) {
 		return (
-			<DropdownMenu open={dropdownOpen} onOpenChange={setDropdownOpen}>
-				{/* No asChild — DropdownMenuTrigger renders its own button internally.
-				    We manage open state manually so we can wrap our visual button
-				    in a Tooltip without the two components fighting over the element. */}
-				<DropdownMenuTrigger className="sr-only" />
-				<Tooltip>
+			<Tooltip>
+				<DropdownMenu>
 					<TooltipTrigger
 						render={
-							<AnimateIcon animateOnHover asChild>
-								<button
-									type="button"
-									onClick={() => setDropdownOpen(true)}
-									className={cn(
-										"relative flex h-7 w-full cursor-pointer items-center justify-center",
-										"rounded-sm border border-transparent",
-										"text-muted-foreground transition-all duration-100",
-										"hover:bg-sidebar-accent hover:text-foreground",
-									)}
-								>
-									<span className="flex size-4 shrink-0 items-center justify-center">
-										{icon}
-									</span>
-								</button>
-							</AnimateIcon>
+							<DropdownMenuTrigger asChild>
+								<AnimateIcon animateOnHover asChild>
+									<button
+										type="button"
+										className={cn(
+											"relative flex h-7 w-full cursor-pointer items-center justify-center",
+											"rounded-sm border border-transparent",
+											"text-muted-foreground transition-all duration-100",
+											"hover:bg-sidebar-accent hover:text-foreground",
+										)}
+									>
+										<span className="flex size-4 shrink-0 items-center justify-center">
+											{icon}
+										</span>
+									</button>
+								</AnimateIcon>
+							</DropdownMenuTrigger>
 						}
 					/>
 					<TooltipPopup side="right" sideOffset={8}>
 						{title}
 					</TooltipPopup>
-				</Tooltip>
-				<DropdownMenuContent
-					side="right"
-					align="start"
-					sideOffset={6}
-					className="min-w-40 rounded-xl p-1 shadow-lg"
-				>
-					{subTabs.map((subTab) => (
-						<DropdownMenuItem key={subTab.href} asChild>
-							<Link
-								href={subTab.href as Route}
-								prefetch
-								className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm"
-								onClick={() => setDropdownOpen(false)}
-							>
-								{subTab.icon && (
-									<span className="flex size-4 shrink-0 items-center justify-center">
-										{subTab.icon}
-									</span>
-								)}
-								{subTab.title}
-							</Link>
-						</DropdownMenuItem>
-					))}
-				</DropdownMenuContent>
-			</DropdownMenu>
+					<DropdownMenuContent
+						side="right"
+						align="start"
+						sideOffset={6}
+						className="min-w-40 rounded-xl p-1 shadow-lg"
+					>
+						{subTabs.map((subTab) => (
+							<DropdownMenuItem key={subTab.href} asChild>
+								<Link
+									href={subTab.href as Route}
+									prefetch
+									className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-sm"
+								>
+									{subTab.icon && (
+										<span className="flex size-4 shrink-0 items-center justify-center">
+											{subTab.icon}
+										</span>
+									)}
+									{subTab.title}
+								</Link>
+							</DropdownMenuItem>
+						))}
+					</DropdownMenuContent>
+				</DropdownMenu>
+			</Tooltip>
 		);
 	}
 
