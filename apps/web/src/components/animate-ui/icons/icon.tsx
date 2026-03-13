@@ -632,6 +632,7 @@ export {
 	IconWrapper,
 	useAnimateIconContext,
 	useVariants,
+	useVariants as getVariants,
 	type IconProps,
 	type IconWrapperProps,
 	type AnimateIconProps,

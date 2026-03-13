@@ -1,13 +1,16 @@
 "use client";
 
-import { ClipboardCheck, DollarSign, PieChart, Sparkles } from "lucide-react";
+import { DollarSign, PieChart } from "lucide-react";
 import { usePathname } from "next/navigation";
 import type React from "react";
 import { useMemo, useState } from "react";
 import { Blocks } from "@/components/animate-ui/icons/blocks";
 import { ChartLine } from "@/components/animate-ui/icons/chart-line";
+import { ClipboardCheck } from "@/components/animate-ui/icons/clipboard-check";
+import { Layers } from "@/components/animate-ui/icons/layers";
 import { LayoutDashboard } from "@/components/animate-ui/icons/layout-dashboard";
 import { SlidersHorizontal } from "@/components/animate-ui/icons/sliders-horizontal";
+import { Sparkles } from "@/components/animate-ui/icons/sparkles";
 import { Users } from "@/components/animate-ui/icons/users";
 import { SidebarContent, SidebarGroup } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -42,7 +45,7 @@ const routes: RouteConfig[] = [
 	{
 		id: "groups",
 		title: "Gruppen",
-		icon: <Blocks className="size-4" />,
+		icon: <Layers className="size-4" />,
 		href: "/dashboard/groups",
 	},
 	{
