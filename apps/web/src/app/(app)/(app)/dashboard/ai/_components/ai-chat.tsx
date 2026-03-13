@@ -6,12 +6,18 @@ import type { FileUIPart } from "ai";
 import {
 	ArrowDownIcon,
 	ArrowUpIcon,
+	CalendarClockIcon,
 	CheckIcon,
 	CornerDownLeftIcon,
 	DownloadIcon,
-	MessageSquare,
+	LayoutListIcon,
+	MessageSquarePlusIcon,
+	SparklesIcon,
+	UserPlusIcon,
+	UsersIcon,
 } from "lucide-react";
 import { Fragment, memo, useCallback, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import { getModelProviderFromId } from "@/ai/model-icons";
 import {
 	CHAT_MODEL_OPTIONS,
@@ -27,7 +33,6 @@ import {
 import {
 	Conversation,
 	ConversationContent,
-	ConversationEmptyState,
 	ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
 import {
@@ -75,14 +80,7 @@ import {
 	ReasoningContent,
 	ReasoningTrigger,
 } from "@/components/ai-elements/reasoning";
-import {
-	Tool,
-	ToolContent,
-	ToolHeader,
-	ToolInput,
-	ToolOutput,
-	type ToolPart,
-} from "@/components/ai-elements/tool";
+import type { ToolPart } from "@/components/ai-elements/tool";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -93,7 +91,13 @@ import {
 } from "@/components/ui/dialog";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { cn } from "@/lib/utils";
-import { toast } from "sonner";
+import {
+	Header,
+	HeaderActions,
+	HeaderContent,
+	HeaderTitle,
+} from "../../_components/page-header";
+import { ToolCollapsible } from "./tool-ui";
 
 type ModelData = ChatModelOption;
 type AttachmentData = ReturnType<
@@ -119,6 +123,27 @@ function formatChatErrorMessage(error: Error | undefined) {
 
 	return error.message;
 }
+
+// ─── Suggestion chips shown in the empty state ────────────────────────────────
+
+const SUGGESTIONS = [
+	{
+		label: "Wie viele aktive Mitglieder haben wir?",
+		icon: UsersIcon,
+	},
+	{
+		label: "Zeig mir alle Gruppen",
+		icon: LayoutListIcon,
+	},
+	{
+		label: "Mitglieder mit auslaufenden Verträgen",
+		icon: CalendarClockIcon,
+	},
+	{
+		label: "Wer ist diesen Monat beigetreten?",
+		icon: UserPlusIcon,
+	},
+];
 
 interface AttachmentItemProps {
 	attachment: AttachmentData;
@@ -305,6 +330,48 @@ const PromptInputAttachmentsDisplay = ({
 	);
 };
 
+// ─── Empty state ──────────────────────────────────────────────────────────────
+
+interface EmptyStateProps {
+	onSuggestion: (text: string) => void;
+}
+
+function EmptyState({ onSuggestion }: EmptyStateProps) {
+	return (
+		<div className="flex flex-1 flex-col items-center justify-center gap-10 px-4 pb-4">
+			<div className="flex flex-col items-center gap-3 text-center">
+				<SparklesIcon className="size-7 text-primary" strokeWidth={1.5} />
+				<div className="space-y-1">
+					<h2 className="font-heading font-semibold text-xl tracking-tight">
+						Womit kann ich helfen?
+					</h2>
+					<p className="text-muted-foreground text-sm">
+						Stell mir eine Frage zu Mitgliedern, Gruppen oder dem Vereinsalltag.
+					</p>
+				</div>
+			</div>
+			<div className="grid w-full max-w-lg grid-cols-2 gap-2">
+				{SUGGESTIONS.map(({ label, icon: Icon }) => (
+					<button
+						key={label}
+						type="button"
+						onClick={() => onSuggestion(label)}
+						className="group flex cursor-pointer items-start gap-3 rounded-xl border bg-card px-4 py-3.5 text-left text-sm transition-colors hover:bg-accent hover:text-accent-foreground"
+					>
+						<Icon
+							className="mt-0.5 size-4 shrink-0 text-muted-foreground transition-colors group-hover:text-accent-foreground"
+							strokeWidth={1.75}
+						/>
+						<span className="font-medium leading-snug">{label}</span>
+					</button>
+				))}
+			</div>
+		</div>
+	);
+}
+
+// ─── Main chat component ──────────────────────────────────────────────────────
+
 const AiChat = () => {
 	const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
 	const [model, setModel] = useState(DEFAULT_CHAT_MODEL_ID);
@@ -312,12 +379,18 @@ const AiChat = () => {
 		useState<PreviewAttachmentData | null>(null);
 	const [isPromptDropActive, setIsPromptDropActive] = useState(false);
 	const promptDragDepthRef = useRef(0);
-	const { clearError, error, messages, sendMessage, status } = useChat({
-		onError: (chatError) => {
-			toast.error(formatChatErrorMessage(chatError) ?? "Anfrage fehlgeschlagen.");
-		},
-	});
+	const { clearError, error, messages, sendMessage, status, setMessages } =
+		useChat({
+			onError: (chatError) => {
+				toast.error(formatChatErrorMessage(chatError) ?? "Request failed.");
+			},
+		});
 	const formattedErrorMessage = formatChatErrorMessage(error);
+
+	const handleNewChat = useCallback(() => {
+		setMessages([]);
+		clearError();
+	}, [setMessages, clearError]);
 
 	const handleOpenAttachmentPreview = useCallback(
 		(attachment: PreviewAttachmentData) => {
@@ -377,7 +450,15 @@ const AiChat = () => {
 				},
 			);
 		},
-		[model, sendMessage],
+		[model, sendMessage, clearError],
+	);
+
+	const handleSuggestion = useCallback(
+		(suggestion: string) => {
+			clearError();
+			sendMessage({ text: suggestion }, { body: { model } });
+		},
+		[model, sendMessage, clearError],
 	);
 
 	const hasDraggedFiles = useCallback(
@@ -450,15 +531,28 @@ const AiChat = () => {
 
 	return (
 		<div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
-			<div className="flex min-h-0 flex-1 flex-col">
-				<Conversation>
+			<Header>
+				<HeaderContent>
+					<HeaderTitle>KI-Assistent</HeaderTitle>
+				</HeaderContent>
+				<HeaderActions>
+					<Button
+						onClick={handleNewChat}
+						size="sm"
+						type="button"
+						variant="outline"
+					>
+						<MessageSquarePlusIcon className="size-4" />
+						Neuer Chat
+					</Button>
+				</HeaderActions>
+			</Header>
+			<div className="flex min-h-0 flex-1 flex-col gap-2">
+				{/* Conversation area */}
+				<Conversation className="min-h-0 flex-1">
 					<ConversationContent>
 						{messages.length === 0 ? (
-							<ConversationEmptyState
-								icon={<MessageSquare className="size-12" />}
-								title="Start a conversation"
-								description="Type a message below to begin chatting"
-							/>
+							<EmptyState onSuggestion={handleSuggestion} />
 						) : (
 							messages.map((message, messageIndex) => (
 								<Message from={message.role} key={message.id}>
@@ -500,6 +594,11 @@ const AiChat = () => {
 											const isMessageStreaming =
 												isLastAssistantMessage &&
 												(status === "submitted" || status === "streaming");
+											const isLastCurrentPart = i === message.parts.length - 1;
+											const isTrailingStreamingReasoningPart =
+												part.type === "reasoning" &&
+												isMessageStreaming &&
+												isLastCurrentPart;
 
 											if (part.type === "text") {
 												return (
@@ -522,7 +621,7 @@ const AiChat = () => {
 												return (
 													<Reasoning
 														className="mb-1"
-														isStreaming={isMessageStreaming}
+														isStreaming={isTrailingStreamingReasoningPart}
 														key={`${message.id}-reasoning-${i}`}
 													>
 														<ReasoningTrigger
@@ -541,32 +640,20 @@ const AiChat = () => {
 												part.type === "dynamic-tool"
 											) {
 												const toolPart = part as ToolPart;
+												const toolName =
+													toolPart.type === "dynamic-tool"
+														? toolPart.toolName
+														: toolPart.type.split("-").slice(1).join("-");
 
 												return (
-													<Tool
+													<ToolCollapsible
 														key={`${message.id}-tool-${i}`}
-														defaultOpen={false}
-													>
-														{toolPart.type === "dynamic-tool" ? (
-															<ToolHeader
-																type="dynamic-tool"
-																state={toolPart.state}
-																toolName={toolPart.toolName}
-															/>
-														) : (
-															<ToolHeader
-																type={toolPart.type}
-																state={toolPart.state}
-															/>
-														)}
-														<ToolContent>
-															<ToolInput input={toolPart.input} />
-															<ToolOutput
-																output={toolPart.output}
-																errorText={toolPart.errorText}
-															/>
-														</ToolContent>
-													</Tool>
+														toolName={toolName}
+														state={toolPart.state}
+														input={toolPart.input}
+														output={toolPart.output}
+														errorText={toolPart.errorText}
+													/>
 												);
 											}
 											if (part.type === "file") {
@@ -585,22 +672,13 @@ const AiChat = () => {
 								</MessageContent>
 							</Message>
 						) : null}
-						{/* {status === "submitted" ? (
-              <Message from="assistant">
-                <MessageContent>
-                  <MessageResponse>
-                    <Shimmer>Thinking</Shimmer>
-                  </MessageResponse>
-                </MessageContent>
-              </Message>
-            ) : null} */}
 					</ConversationContent>
-					{/* <ConversationDownload messages={messages} /> */}
 					<ConversationScrollButton />
 				</Conversation>
 
+				{/* Input bar — pinned to bottom */}
 				<PromptInputProvider>
-					<div className="mt-4 space-y-2">
+					<div className="space-y-2 pb-1">
 						<PromptInputAttachmentsDisplay
 							onPreview={handleOpenAttachmentPreview}
 						/>
@@ -614,7 +692,7 @@ const AiChat = () => {
 						>
 							<PromptInput globalDrop multiple onSubmit={handleSubmit}>
 								<PromptInputBody>
-									<PromptInputTextarea placeholder="Ask MatDesk AI..." />
+									<PromptInputTextarea placeholder="Frag MatDesk AI..." />
 								</PromptInputBody>
 								<PromptInputFooter>
 									<PromptInputTools>
@@ -742,6 +820,8 @@ const AiChat = () => {
 						</fieldset>
 					</div>
 				</PromptInputProvider>
+
+				{/* Attachment preview dialog */}
 				<Dialog
 					onOpenChange={(open) => {
 						if (!open) {

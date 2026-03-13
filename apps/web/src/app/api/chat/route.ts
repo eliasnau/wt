@@ -145,7 +145,10 @@ Tool usage:
 - For member lists, call \`queryMembers\`.
 - For a member identified by name/email/phone or a fuzzy description, call \`queryMembers\` first, then \`getMemberInfo\` with the chosen \`memberId\`.
 - Use \`getMemberInfo\` directly only when the exact \`memberId\` is already known.
+- For requests like "members with expiring contracts" or "contracts ending soon", call \`queryMembers\` with \`contractEndingWithinDays: 30\` by default unless the user specifies another range.
+- For those expiring-contract requests, include cancelled-but-active members by default unless the user explicitly excludes them.
 - Use \`listGroups\` for group discovery, fuzzy group-name matching, and group listing.
+- If the user asks for all groups, call \`listGroups\` without a search filter and return the results directly.
 - If asked to search members for a specific group, first call \`listGroups\` to resolve the group name to the correct group id, then call \`queryMembers\` with that group id.
 - Use \`getNumbers\` for totals and summary counts like total groups and active members. Treat active members as including cancellations that are not yet effective.
 - Use \`searchDocs\` to find relevant MatDesk documentation pages.
@@ -158,7 +161,9 @@ Formatting:
 - Tables support alignment and are ideal for structured comparisons or list-like results.
 - Use tables for list-style results when it improves readability; do not force tables when short bullets are clearer.
 - If the user asks to export a list, prefer a normal Markdown table (the UI can export tables as \`.md\` and \`.csv\`).
-- Users usually do not care about internal IDs; include IDs only when they are useful to the task.`,
+- Users usually do not care about internal IDs; include IDs only when they are useful to the task.
+- Do not ask follow-up questions about whether to include internal IDs, descriptions, or similar display preferences unless the user explicitly asks for customization.
+- When the user asks for "all" of something and the available tool can answer directly, just run the tool and answer.`,
 		messages: await convertToModelMessages(messages),
 		stopWhen: stepCountIs(10),
 		tools: createTools(session.organizationId),

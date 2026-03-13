@@ -5,12 +5,17 @@ import { z } from "zod";
 
 const listGroupsInputSchema = z.object({
 	search: z
-		.string()
-		.trim()
-		.min(1)
-		.max(100)
-		.describe("Free-text search across group names and descriptions.")
-		.optional(),
+		.preprocess((value) => {
+			if (typeof value !== "string") {
+				return value;
+			}
+
+			const trimmed = value.trim();
+			return trimmed.length === 0 ? undefined : trimmed;
+		}, z.string().max(100).optional())
+		.describe(
+			"Free-text search across group names and descriptions. Omit for all groups.",
+		),
 	limit: z.number().int().min(1).max(25).default(10).optional(),
 });
 
