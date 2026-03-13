@@ -1,7 +1,7 @@
 "use client";
 
 import { authClient } from "@repo/auth/client";
-import { Building2, ChevronsUpDown, Plus } from "lucide-react";
+import { Building2, Check, ChevronsUpDown, Plus } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
+import { cn } from "@/lib/utils";
 
 type Organization = {
 	id: string;
@@ -34,7 +35,8 @@ type Organization = {
 };
 
 export const OrganizationSelector = () => {
-	const { isMobile } = useSidebar();
+	const { isMobile, state } = useSidebar();
+	const isCollapsed = state === "collapsed";
 	const router = useRouter();
 	const { session, switchOrganization } = useAuth();
 	const { data: organizationsData, isPending: isOrganizationsPending } =
@@ -49,12 +51,16 @@ export const OrganizationSelector = () => {
 		return (
 			<SidebarMenu>
 				<SidebarMenuItem>
-					<SidebarMenuButton size="default" disabled>
-						<Skeleton className="h-6 w-6 rounded-md" />
-						<div className="grid flex-1 text-left text-sm leading-tight">
-							<Skeleton className="h-4 w-32 rounded-md" />
-						</div>
-						<Skeleton className="h-4 w-4 rounded-sm" />
+					<SidebarMenuButton size="default" disabled className="h-9">
+						<Skeleton className="size-6 shrink-0 rounded-md" />
+						{!isCollapsed && (
+							<div className="flex flex-1 flex-col gap-1 text-left">
+								<Skeleton className="h-3.5 w-28 rounded" />
+							</div>
+						)}
+						{!isCollapsed && (
+							<Skeleton className="size-4 shrink-0 rounded-sm" />
+						)}
 					</SidebarMenuButton>
 				</SidebarMenuItem>
 			</SidebarMenu>
@@ -78,18 +84,20 @@ export const OrganizationSelector = () => {
 			<SidebarMenu>
 				<SidebarMenuItem>
 					<SidebarMenuButton
-						size="lg"
+						size="default"
+						className="h-9"
 						onClick={() => router.push("/account/organizations" as Route)}
 					>
-						<div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-							<Building2 className="size-4" />
+						<div className="flex size-6 shrink-0 items-center justify-center rounded-md border border-sidebar-border/60 bg-sidebar-accent">
+							<Building2 className="size-3.5 text-muted-foreground" />
 						</div>
-						<div className="grid flex-1 text-left text-sm leading-tight">
-							<span className="truncate font-semibold">Keine Organisation</span>
-							<span className="truncate text-muted-foreground text-xs">
-								Select an organization
-							</span>
-						</div>
+						{!isCollapsed && (
+							<div className="flex flex-1 flex-col text-left">
+								<span className="truncate font-medium text-muted-foreground text-sm">
+									Keine Organisation
+								</span>
+							</div>
+						)}
 					</SidebarMenuButton>
 				</SidebarMenuItem>
 			</SidebarMenu>
@@ -103,29 +111,37 @@ export const OrganizationSelector = () => {
 					<DropdownMenuTrigger asChild>
 						<SidebarMenuButton
 							size="default"
-							className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+							className={cn(
+								"h-9 transition-colors data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground",
+								isCollapsed && "justify-center px-0",
+							)}
 						>
 							<OrganizationAvatar
 								id={activeOrg.id}
 								name={activeOrg.name}
 								logo={activeOrg.logo}
-								className="size-6"
+								className="size-6 shrink-0 rounded-md"
 							/>
-							<div className="grid flex-1 text-left text-sm leading-tight">
-								<span className="truncate text-primary">{activeOrg.name}</span>
-							</div>
-							<ChevronsUpDown className="ml-auto" />
+							{!isCollapsed && (
+								<>
+									<div className="flex min-w-0 flex-1 flex-col text-left">
+										<span className="truncate font-semibold text-sm leading-tight">
+											{activeOrg.name}
+										</span>
+									</div>
+									<ChevronsUpDown className="size-3.5 shrink-0 text-muted-foreground/60" />
+								</>
+							)}
 						</SidebarMenuButton>
 					</DropdownMenuTrigger>
 					<DropdownMenuContent
-						className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+						className="w-(--radix-dropdown-menu-trigger-width) min-w-52 rounded-xl p-1 shadow-lg"
 						align="start"
 						side={isMobile ? "bottom" : "right"}
-						sideOffset={4}
+						sideOffset={6}
 					>
-						<DropdownMenuLabel className="flex items-center justify-between text-muted-foreground text-xs">
-							<span>Organisationen</span>
-							<span className="font-normal opacity-70">⌘⇧O</span>
+						<DropdownMenuLabel className="px-2 py-1 font-semibold text-[10px] text-muted-foreground/60 uppercase tracking-widest">
+							Organisationen
 						</DropdownMenuLabel>
 						{organizations?.map((org) => {
 							const isActive = org.id === activeOrgId;
@@ -133,34 +149,32 @@ export const OrganizationSelector = () => {
 								<DropdownMenuItem
 									key={org.id}
 									onClick={() => handleSelectOrg(org.id)}
-									className="gap-2 p-2"
+									className="flex items-center gap-2 rounded-lg px-2 py-1.5"
 								>
 									<OrganizationAvatar
 										id={org.id}
 										name={org.name}
 										logo={org.logo}
-										className="size-6 border"
+										className="size-5 rounded-md border border-border/40"
 									/>
-									<span className="flex-1">{org.name}</span>
+									<span className="flex-1 text-sm">{org.name}</span>
 									{isActive && (
-										<Badge variant="secondary" className="text-xs">
-											Active
-										</Badge>
+										<Check className="size-3.5 text-foreground/60" />
 									)}
 								</DropdownMenuItem>
 							);
 						})}
-						<DropdownMenuSeparator />
+						<DropdownMenuSeparator className="my-1" />
 						<DropdownMenuItem
-							className="gap-2 p-2"
+							className="flex items-center gap-2 rounded-lg px-2 py-1.5"
 							onClick={() => router.push("/account/organizations" as Route)}
 						>
-							<div className="flex size-6 items-center justify-center rounded-md border bg-background">
-								<Plus className="size-4" />
+							<div className="flex size-5 items-center justify-center rounded-md border border-border/60 border-dashed">
+								<Plus className="size-3 text-muted-foreground" />
 							</div>
-							<div className="font-medium text-muted-foreground">
-								Create organization
-							</div>
+							<span className="text-muted-foreground text-sm">
+								Organisation erstellen
+							</span>
 						</DropdownMenuItem>
 					</DropdownMenuContent>
 				</DropdownMenu>
