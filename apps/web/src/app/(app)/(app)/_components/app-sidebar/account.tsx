@@ -58,6 +58,7 @@ export function AccountSidebar() {
 							icon={route.icon}
 							title={route.title}
 							exact={route.exact}
+							layoutId="account-nav"
 						/>
 					))}
 				</SidebarGroup>

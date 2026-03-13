@@ -161,6 +161,7 @@ export function DashboardLayout() {
 									isOpen={isOpen}
 									onToggle={() => toggleGroup(route.id)}
 									subTabs={route.subs!}
+									layoutId="dashboard-nav"
 								/>
 							);
 						}
@@ -172,6 +173,7 @@ export function DashboardLayout() {
 								icon={route.icon}
 								title={route.title}
 								exact={route.href === "/dashboard"}
+								layoutId="dashboard-nav"
 							/>
 						);
 					})}

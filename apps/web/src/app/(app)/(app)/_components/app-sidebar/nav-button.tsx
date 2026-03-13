@@ -1,6 +1,7 @@
 "use client";
 
 import { ChevronRight } from "lucide-react";
+import { motion } from "motion/react";
 import type { Route } from "next";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -25,6 +26,8 @@ interface NavButtonProps {
 	/** Sub-nav — right-side-only radius, attaches to left border line */
 	isSubNav?: boolean;
 	className?: string;
+	/** Shared layoutId for the sliding active background */
+	layoutId?: string;
 }
 
 export function NavButton({
@@ -38,6 +41,7 @@ export function NavButton({
 	isOpen,
 	isSubNav = false,
 	className,
+	layoutId,
 }: NavButtonProps) {
 	const pathname = usePathname();
 	const { state } = useSidebar();
@@ -49,9 +53,9 @@ export function NavButton({
 		(exact ? pathname === href : Boolean(pathname?.startsWith(href)));
 
 	const baseClass = cn(
-		"flex h-7 w-full cursor-pointer items-center rounded-sm border border-transparent px-2 font-medium text-muted-foreground text-sm",
+		"relative flex h-7 w-full cursor-pointer items-center rounded-sm border border-transparent px-2 font-medium text-muted-foreground text-sm",
 		"hover:text-foreground",
-		isActive && "!text-foreground border-border bg-sidebar-active shadow-xs",
+		isActive && "!text-foreground",
 		isSubNav &&
 			"rounded-none rounded-tr-sm rounded-br-sm border-l-0 pl-4 font-normal",
 		className,
@@ -59,7 +63,21 @@ export function NavButton({
 
 	const innerContent = (
 		<>
-			<div className="flex items-center gap-2">
+			{/* Sliding active background */}
+			{isActive && layoutId && (
+				<motion.div
+					layoutId={layoutId}
+					className={cn(
+						"absolute inset-0 border border-border bg-sidebar-active shadow-xs",
+						isSubNav
+							? "rounded-none rounded-tr-sm rounded-br-sm"
+							: "rounded-sm",
+					)}
+					transition={{ type: "spring", stiffness: 400, damping: 35 }}
+				/>
+			)}
+
+			<div className="relative flex items-center gap-2">
 				{icon && (
 					<div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-sm">
 						{icon}
@@ -81,7 +99,7 @@ export function NavButton({
 				<ChevronRight
 					size={14}
 					className={cn(
-						"ml-1 text-muted-foreground/60 transition-all duration-100 ease-in-out",
+						"relative ml-1 text-muted-foreground/60 transition-all duration-100 ease-in-out",
 						isOpen ? "rotate-90" : "rotate-0",
 					)}
 				/>

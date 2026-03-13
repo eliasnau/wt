@@ -31,6 +31,8 @@ interface CollapsibleNavGroupProps {
 	isOpen: boolean;
 	onToggle: () => void;
 	subTabs: SubTab[];
+	/** Shared layoutId for the sliding active background */
+	layoutId?: string;
 }
 
 export function CollapsibleNavGroup({
@@ -40,6 +42,7 @@ export function CollapsibleNavGroup({
 	isOpen,
 	onToggle,
 	subTabs,
+	layoutId,
 }: CollapsibleNavGroupProps) {
 	const { state } = useSidebar();
 	const isCollapsed = state === "collapsed";
@@ -116,6 +119,7 @@ export function CollapsibleNavGroup({
 				isGroup
 				isOpen={isOpen}
 				onClick={onToggle}
+				layoutId={layoutId}
 			/>
 
 			{/* Autumn-style CSS grid-rows height animation — no JS height calculation */}
@@ -141,6 +145,7 @@ export function CollapsibleNavGroup({
 							icon={subTab.icon}
 							title={subTab.title}
 							isSubNav
+							layoutId={layoutId ? `${layoutId}-sub` : undefined}
 						/>
 					))}
 				</div>
