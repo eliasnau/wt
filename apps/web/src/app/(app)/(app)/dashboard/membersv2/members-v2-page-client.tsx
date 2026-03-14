@@ -237,6 +237,25 @@ const SYSTEM_MEMBERS_VIEWS: SystemMembersView[] = [
 			includeCancelled: true,
 		},
 	},
+	{
+		id: "system-members-missing-contact-info",
+		name: "Members without contact info",
+		description: "Shows members missing an email address or phone number.",
+		state: {
+			...DEFAULT_VIEW_STATE,
+			filterMode: "or",
+			filters: [
+				{
+					field: "email",
+					operator: "isNull",
+				},
+				{
+					field: "phone",
+					operator: "isNull",
+				},
+			],
+		},
+	},
 ];
 
 function createLocalId(): string {
@@ -490,6 +509,47 @@ function sanitizeSavedViewsPayload(raw: unknown): SavedMembersView[] {
 		.filter((entry): entry is SavedMembersView => entry !== null);
 }
 
+function normalizeFilterValue(value: string | string[]) {
+	if (Array.isArray(value)) {
+		return [...value].sort((left, right) => left.localeCompare(right, "de"));
+	}
+
+	return value;
+}
+
+function getCanonicalViewState(state: SavedMembersViewState) {
+	return {
+		...state,
+		groupIds: [...state.groupIds].sort((left, right) =>
+			left.localeCompare(right, "de"),
+		),
+		filters: [...state.filters]
+			.map((filter) =>
+				"value" in filter
+					? {
+							...filter,
+							value: normalizeFilterValue(filter.value),
+						}
+					: filter,
+			)
+			.sort((left, right) => {
+				const leftKey = JSON.stringify(left);
+				const rightKey = JSON.stringify(right);
+				return leftKey.localeCompare(rightKey, "de");
+			}),
+	};
+}
+
+function areViewStatesEqual(
+	left: SavedMembersViewState,
+	right: SavedMembersViewState,
+): boolean {
+	return (
+		JSON.stringify(getCanonicalViewState(left)) ===
+		JSON.stringify(getCanonicalViewState(right))
+	);
+}
+
 function toCompiledFilter(row: QueryBuilderRow): QueryFilter | null {
 	switch (row.operator) {
 		case "isNull":
@@ -598,7 +658,6 @@ export function MembersV2PageClient({
 			return [];
 		}
 	});
-	const [selectedSavedViewId, setSelectedSavedViewId] = useState("");
 	const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
 
 	const debouncedSetSearch = useDebounce((nextSearch: string) => {
@@ -863,10 +922,6 @@ export function MembersV2PageClient({
 		}
 	};
 
-	const selectedSavedView = savedViews.find(
-		(entry) => entry.id === selectedSavedViewId,
-	);
-
 	const buildCurrentViewState = (): SavedMembersViewState => ({
 		search: search || "",
 		groupIds: validGroupIds,
@@ -879,6 +934,23 @@ export function MembersV2PageClient({
 		filters: compiledFilters,
 		limit,
 	});
+	const currentViewState = buildCurrentViewState();
+	const matchedSystemView = useMemo(
+		() =>
+			SYSTEM_MEMBERS_VIEWS.find((entry) =>
+				areViewStatesEqual(entry.state, currentViewState),
+			) ?? null,
+		[currentViewState],
+	);
+	const matchedSavedView = useMemo(
+		() =>
+			savedViews.find((entry) =>
+				areViewStatesEqual(entry.state, currentViewState),
+			) ?? null,
+		[savedViews, currentViewState],
+	);
+	const selectedSystemViewId = matchedSystemView?.id ?? "";
+	const selectedSavedViewId = matchedSavedView?.id ?? "";
 
 	const saveAsNewView = () => {
 		const suggestedName = `Ansicht ${savedViews.length + 1}`;
@@ -889,71 +961,96 @@ export function MembersV2PageClient({
 		}
 
 		const name = enteredName.trim() || suggestedName;
+		const existingViewWithSameState = savedViews.find((entry) =>
+			areViewStatesEqual(entry.state, currentViewState),
+		);
+		if (existingViewWithSameState) {
+			toast.error("Ansicht bereits vorhanden", {
+				description: `"${existingViewWithSameState.name}" hat bereits diese Filter.`,
+			});
+			return;
+		}
+
 		const now = new Date().toISOString();
 		const newView: SavedMembersView = {
 			id: createLocalId(),
 			name,
 			createdAt: now,
 			updatedAt: now,
-			state: buildCurrentViewState(),
+			state: currentViewState,
 		};
 
 		const nextViews = [newView, ...savedViews];
 		persistSavedViews(nextViews);
-		setSelectedSavedViewId(newView.id);
 
 		toast.success("Ansicht gespeichert", {
 			description: `"${name}" wurde gespeichert.`,
 		});
 	};
 
-	const updateSelectedView = () => {
-		if (!selectedSavedView) {
+	const requestSaveView = () => {
+		saveAsNewView();
+	};
+
+	const renameSelectedView = () => {
+		if (!matchedSavedView) {
 			toast.error("Keine Ansicht ausgewählt");
+			return;
+		}
+
+		const enteredName = window.prompt(
+			"Ansicht umbenennen",
+			matchedSavedView.name,
+		);
+		if (enteredName === null) {
+			return;
+		}
+
+		const name = enteredName.trim() || matchedSavedView.name;
+		if (name === matchedSavedView.name) {
+			return;
+		}
+
+		const duplicateName = savedViews.find(
+			(entry) =>
+				entry.id !== matchedSavedView.id &&
+				entry.name.localeCompare(name, "de", { sensitivity: "base" }) === 0,
+		);
+		if (duplicateName) {
+			toast.error("Name bereits vergeben", {
+				description: `"${duplicateName.name}" existiert bereits.`,
+			});
 			return;
 		}
 
 		const now = new Date().toISOString();
 		const nextViews = savedViews.map((entry) =>
-			entry.id === selectedSavedView.id
+			entry.id === matchedSavedView.id
 				? {
 						...entry,
+						name,
 						updatedAt: now,
-						state: buildCurrentViewState(),
 					}
 				: entry,
 		);
 
 		persistSavedViews(nextViews);
-		toast.success("Ansicht aktualisiert", {
-			description: `"${selectedSavedView.name}" wurde aktualisiert.`,
+		toast.success("Ansicht umbenannt", {
+			description: `"${matchedSavedView.name}" heißt jetzt "${name}".`,
 		});
-	};
-
-	const requestSaveView = () => {
-		if (selectedSavedView) {
-			updateSelectedView();
-			return;
-		}
-
-		saveAsNewView();
 	};
 
 	const applyViewState = ({
 		name,
 		state,
-		selectedViewId,
 	}: {
 		name: string;
 		state: SavedMembersViewState;
-		selectedViewId?: string;
 	}) => {
 		const nextFilters = state.filters.map(queryFilterToBuilderRow);
 		setLocalSearch(state.search);
 		setFilters(nextFilters);
 		setFilterMode(state.filterMode);
-		setAdvancedOpen(nextFilters.length > 0);
-		setSelectedSavedViewId(selectedViewId ?? "");
 		setQueryState({
 			page: 1,
 			limit: state.limit,
@@ -980,7 +1077,7 @@ export function MembersV2PageClient({
 	};
 
 	const deleteSelectedView = () => {
-		const view = selectedSavedView;
+		const view = matchedSavedView;
 		if (!view) {
 			toast.error("Keine Ansicht ausgewählt");
 			return;
@@ -988,9 +1085,6 @@ export function MembersV2PageClient({
 
 		const nextViews = savedViews.filter((entry) => entry.id !== view.id);
 		persistSavedViews(nextViews);
-		setSelectedSavedViewId((current) =>
-			current === view.id ? (nextViews[0]?.id ?? "") : current,
-		);
 
 		toast.success("Ansicht gelöscht", {
 			description: `"${view.name}" wurde entfernt.`,
@@ -1295,6 +1389,7 @@ export function MembersV2PageClient({
 						advancedFilterCount={compiledFilters.length}
 						systemViews={SYSTEM_MEMBERS_VIEWS}
 						savedViews={savedViews}
+						selectedSystemViewId={selectedSystemViewId}
 						selectedSavedViewId={selectedSavedViewId}
 						onApplySystemView={(id) => {
 							const view = SYSTEM_MEMBERS_VIEWS.find((v) => v.id === id);
@@ -1306,10 +1401,10 @@ export function MembersV2PageClient({
 							applyViewState({
 								name: view.name,
 								state: view.state,
-								selectedViewId: view.id,
 							});
 						}}
 						onSaveView={requestSaveView}
+						onRenameView={renameSelectedView}
 						onDeleteSavedView={deleteSelectedView}
 						includeActive={includeActive}
 						includeCancelled={includeCancelled}

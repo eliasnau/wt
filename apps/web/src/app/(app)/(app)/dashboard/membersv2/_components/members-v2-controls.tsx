@@ -133,10 +133,12 @@ type MembersV2ControlsProps = {
 	// Saved views
 	systemViews: SystemView[];
 	savedViews: SavedView[];
+	selectedSystemViewId: string;
 	selectedSavedViewId: string;
 	onApplySystemView: (id: string) => void;
 	onApplySavedView: (id: string) => void;
 	onSaveView: () => void;
+	onRenameView: () => void;
 	onDeleteSavedView: () => void;
 	// Include filter (3 switches)
 	includeActive: boolean;
@@ -178,10 +180,12 @@ export function MembersV2Controls({
 	advancedFilterCount,
 	systemViews,
 	savedViews,
+	selectedSystemViewId,
 	selectedSavedViewId,
 	onApplySystemView,
 	onApplySavedView,
 	onSaveView,
+	onRenameView,
 	onDeleteSavedView,
 	includeActive,
 	includeCancelled,
@@ -209,6 +213,8 @@ export function MembersV2Controls({
 
 	const inlineViews = savedViews.slice(0, MAX_INLINE_VIEWS);
 	const overflowViews = savedViews.slice(MAX_INLINE_VIEWS);
+	const hasMatchedView =
+		selectedSystemViewId.length > 0 || selectedSavedViewId.length > 0;
 
 	return (
 		<TooltipProvider>
@@ -277,7 +283,7 @@ export function MembersV2Controls({
 									}
 								>
 									<XIcon />
-									Alles zurücksetzen
+									Filter zurücksetzen
 								</TooltipTrigger>
 								<TooltipContent>
 									Setzt alle aktiven Filter zurück
@@ -480,19 +486,27 @@ export function MembersV2Controls({
 								/>
 								<MenuPopup align="end" className="w-[260px]">
 									{/* Save current */}
-									<MenuItem onClick={onSaveView}>
-										<SaveIcon />
-										Aktuelle Ansicht speichern
-									</MenuItem>
+									{!hasMatchedView && (
+										<MenuItem onClick={onSaveView}>
+											<SaveIcon />
+											Neue Ansicht speichern
+										</MenuItem>
+									)}
 
 									{selectedSavedViewId && (
-										<MenuItem
-											onClick={onDeleteSavedView}
-											className="text-destructive-foreground"
-										>
-											<XIcon />
-											Aktuelle Ansicht löschen
-										</MenuItem>
+										<>
+											<MenuItem onClick={onRenameView}>
+												<SaveIcon />
+												Aktuelle Ansicht umbenennen
+											</MenuItem>
+											<MenuItem
+												onClick={onDeleteSavedView}
+												className="text-destructive-foreground"
+											>
+												<XIcon />
+												Aktuelle Ansicht löschen
+											</MenuItem>
+										</>
 									)}
 
 									<MenuSeparator />
@@ -505,7 +519,11 @@ export function MembersV2Controls({
 												key={view.id}
 												onClick={() => onApplySystemView(view.id)}
 											>
-												<GlobeIcon />
+												{selectedSystemViewId === view.id ? (
+													<CheckIcon />
+												) : (
+													<GlobeIcon />
+												)}
 												{view.name}
 											</MenuItem>
 										))}
