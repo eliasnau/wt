@@ -126,6 +126,7 @@ type MembersV2ControlsProps = {
 	canExportCsv: boolean;
 	onExportCsv: () => void;
 	exportPending: boolean;
+	onOpenPrintSheet: () => void;
 	onOpenAdvancedSheet: () => void;
 	onToggleAdvancedDesktop: () => void;
 	advancedFilterCount: number;
@@ -171,6 +172,7 @@ export function MembersV2Controls({
 	canExportCsv,
 	onExportCsv,
 	exportPending,
+	onOpenPrintSheet,
 	onOpenAdvancedSheet,
 	onToggleAdvancedDesktop,
 	advancedFilterCount,
@@ -613,7 +615,7 @@ export function MembersV2Controls({
 											)}
 											CSV-Liste exportieren
 										</MenuItem>
-										<MenuItem disabled>
+										<MenuItem onClick={onOpenPrintSheet}>
 											<PrinterIcon />
 											Liste drucken
 										</MenuItem>
