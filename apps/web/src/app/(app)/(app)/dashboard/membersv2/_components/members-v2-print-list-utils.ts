@@ -208,49 +208,65 @@ export function buildMembersPrintListHtml({
 				margin: 12mm;
 			}
 
+			:root {
+				--ink: #111827;
+				--muted-ink: #4b5563;
+				--grid: #9ca3af;
+				--grid-strong: #6b7280;
+				--header-fill: #e5e7eb;
+				--stripe-fill: #f9fafb;
+			}
+
 			* {
 				box-sizing: border-box;
 			}
 
 			body {
 				font-family: "Helvetica Neue", Arial, sans-serif;
-				color: #111827;
+				color: var(--ink);
 				margin: 0;
 				background: #ffffff;
+				-webkit-print-color-adjust: exact;
+				print-color-adjust: exact;
+				line-height: 1.35;
 			}
 
 			.print-shell {
 				display: grid;
-				gap: 12px;
+				gap: 14px;
 			}
 
 			.print-meta {
 				display: flex;
 				flex-wrap: wrap;
-				gap: 6px 16px;
+				gap: 8px 12px;
 				align-items: baseline;
+				padding-bottom: 2px;
 			}
 
 			h1 {
 				font-size: ${density.titleSize};
 				margin: 0;
+				font-weight: 700;
+				letter-spacing: -0.02em;
 			}
 
 			.print-summary {
 				margin: 0;
 				font-size: ${density.metaSize};
-				color: #4b5563;
+				color: var(--muted-ink);
 			}
 
 			table {
 				width: 100%;
 				border-collapse: collapse;
 				table-layout: fixed;
+				border: 1.5px solid var(--grid-strong);
 			}
 
 			th,
 			td {
-				border: 1px solid #9ca3af;
+				border: 1px solid var(--grid);
 				padding: ${density.cellPadding};
 				height: ${density.cellHeight};
 				font-size: ${density.cellFontSize};
@@ -258,9 +274,14 @@ export function buildMembersPrintListHtml({
 			}
 
 			th {
-				background: #f3f4f6;
+				background: var(--header-fill);
 				text-align: left;
 				font-weight: 600;
+				letter-spacing: 0.01em;
+			}
+
+			tbody tr:nth-child(even) td:not(:first-child) {
+				background: var(--stripe-fill);
 			}
 
 			.member-name {
