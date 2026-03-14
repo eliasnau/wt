@@ -951,6 +951,10 @@ export function MembersV2PageClient({
 	);
 	const selectedSystemViewId = matchedSystemView?.id ?? "";
 	const selectedSavedViewId = matchedSavedView?.id ?? "";
+	const canSaveView =
+		!areViewStatesEqual(currentViewState, DEFAULT_VIEW_STATE) &&
+		!matchedSystemView &&
+		!matchedSavedView;
 
 	const saveAsNewView = () => {
 		const suggestedName = `Ansicht ${savedViews.length + 1}`;
@@ -1389,6 +1393,7 @@ export function MembersV2PageClient({
 						advancedFilterCount={compiledFilters.length}
 						systemViews={SYSTEM_MEMBERS_VIEWS}
 						savedViews={savedViews}
+						canSaveView={canSaveView}
 						selectedSystemViewId={selectedSystemViewId}
 						selectedSavedViewId={selectedSavedViewId}
 						onApplySystemView={(id) => {

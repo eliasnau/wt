@@ -133,6 +133,7 @@ type MembersV2ControlsProps = {
 	// Saved views
 	systemViews: SystemView[];
 	savedViews: SavedView[];
+	canSaveView: boolean;
 	selectedSystemViewId: string;
 	selectedSavedViewId: string;
 	onApplySystemView: (id: string) => void;
@@ -180,6 +181,7 @@ export function MembersV2Controls({
 	advancedFilterCount,
 	systemViews,
 	savedViews,
+	canSaveView,
 	selectedSystemViewId,
 	selectedSavedViewId,
 	onApplySystemView,
@@ -213,8 +215,6 @@ export function MembersV2Controls({
 
 	const inlineViews = savedViews.slice(0, MAX_INLINE_VIEWS);
 	const overflowViews = savedViews.slice(MAX_INLINE_VIEWS);
-	const hasMatchedView =
-		selectedSystemViewId.length > 0 || selectedSavedViewId.length > 0;
 
 	return (
 		<TooltipProvider>
@@ -486,10 +486,15 @@ export function MembersV2Controls({
 								/>
 								<MenuPopup align="end" className="w-[260px]">
 									{/* Save current */}
-									{!hasMatchedView && (
-										<MenuItem onClick={onSaveView}>
+									{!selectedSavedViewId && (
+										<MenuItem
+											disabled={!canSaveView}
+											onClick={canSaveView ? onSaveView : undefined}
+										>
 											<SaveIcon />
-											Neue Ansicht speichern
+											{canSaveView
+												? "Neue Ansicht speichern"
+												: "Filter anpassen zum Speichern"}
 										</MenuItem>
 									)}
 
