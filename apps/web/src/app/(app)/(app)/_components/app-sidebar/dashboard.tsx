@@ -98,7 +98,7 @@ const routes: RouteConfig[] = [
     subs: [
       { title: "Allgemein", href: "/dashboard/settings/general" },
       { title: "Abrechnung", href: "/dashboard/settings/billing" },
-      { title: "Benutzer", href: "/dashboard/settings/members" },
+      { title: "Benutzer", href: "/dashboard/settings/users" },
       { title: "SEPA", href: "/dashboard/settings/sepa" },
     ],
   },
