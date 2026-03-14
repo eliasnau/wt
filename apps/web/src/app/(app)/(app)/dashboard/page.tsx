@@ -162,7 +162,7 @@ export default async function DashboardPage() {
 							<ArrowRight className="size-4 text-muted-foreground transition group-hover:text-foreground" />
 						</Link>
 						<Link
-							href="/dashboard/settings/members"
+							href="/dashboard/settings/users"
 							className="group flex items-center justify-between rounded-lg border bg-background px-4 py-3 text-sm transition hover:border-foreground/20 hover:bg-accent"
 						>
 							<span className="flex items-center gap-3">
