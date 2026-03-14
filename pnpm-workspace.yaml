@@ -3,7 +3,7 @@ packages:
   - packages/*
 
 catalog:
-  '@orpc/client': ^1.13.4
+  '@orpc/client': 1.13.6
   '@orpc/openapi': ^1.13.4
   '@orpc/server': ^1.13.4
   '@orpc/zod': ^1.13.4
