@@ -24,18 +24,18 @@
 	},
 	"devDependencies": {
 		"@repo/config": "workspace:*",
-		"@types/pg": "^8.16.0",
-		"drizzle-kit": "^0.31.8"
+		"@types/pg": "^8.18.0",
+		"drizzle-kit": "^0.31.9"
 	},
 	"peerDependencies": {
 		"typescript": "^5"
 	},
 	"dependencies": {
 		"@neondatabase/serverless": "^1.0.2",
-		"@upstash/redis": "^1.36.2",
+		"@upstash/redis": "^1.37.0",
 		"dotenv": "catalog:",
 		"drizzle-orm": "^0.45.1",
-		"pg": "^8.18.0",
+		"pg": "^8.20.0",
 		"zod": "catalog:"
 	}
 }

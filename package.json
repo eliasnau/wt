@@ -25,13 +25,13 @@
   },
   "dependencies": {
     "dotenv": "catalog:",
-    "pg": "^8.18.0",
+    "pg": "^8.20.0",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.4.2",
-    "@types/node": "^25.3.0",
-    "turbo": "^2.8.10"
+    "@biomejs/biome": "^2.4.7",
+    "@types/node": "^25.5.0",
+    "turbo": "^2.8.17"
   },
   "pnpm": {
     "overrides": {

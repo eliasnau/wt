@@ -21,7 +21,7 @@
 	"dependencies": {
 		"@repo/auth": "workspace:*",
 		"atmn": "^1.1.3",
-		"autumn-js": "^0.1.85"
+		"autumn-js": "^1.0.0"
 	},
 	"devDependencies": {
 		"@repo/config": "workspace:*",
