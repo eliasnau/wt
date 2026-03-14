@@ -56,7 +56,11 @@ import {
 } from "../_components/page-header";
 import { CreateMemberButton } from "../members/_components/create-member-button";
 import { MembersV2Controls } from "./_components/members-v2-controls";
+import {
+	MembersV2PrintListSheet,
+} from "./_components/members-v2-print-list-sheet";
 import { MembersV2Table } from "./_components/members-v2-table";
+import { useMembersV2PrintList } from "./_components/use-members-v2-print-list";
 
 type MembersV2PageClientProps = {
 	canExportMembers: boolean;
@@ -578,6 +582,7 @@ export function MembersV2PageClient({
 	const [filterMode, setFilterMode] = useState<"and" | "or">("and");
 	const [advancedOpen, setAdvancedOpen] = useState(false);
 	const [advancedSheetOpen, setAdvancedSheetOpen] = useState(false);
+	const [printSheetOpen, setPrintSheetOpen] = useState(false);
 	const [localSearch, setLocalSearch] = useState(search);
 	const [savedViews, setSavedViews] = useState<SavedMembersView[]>(() => {
 		if (typeof window === "undefined") {
@@ -672,7 +677,6 @@ export function MembersV2PageClient({
 			input: queryInput,
 		}),
 	);
-
 	const handleRowSelectionChange: OnChangeFn<RowSelectionState> = (updater) => {
 		const visibleMemberIds = new Set(
 			(data?.data ?? []).map((member) => member.id),
@@ -740,6 +744,11 @@ export function MembersV2PageClient({
 			},
 		}),
 	);
+
+	const printListMutation = useMembersV2PrintList({
+		exportInput,
+		onPrintReady: () => setPrintSheetOpen(false),
+	});
 
 	const hasActiveFilters =
 		Boolean(search) ||
@@ -1280,6 +1289,7 @@ export function MembersV2PageClient({
 						canExportCsv={canExportMembers}
 						onExportCsv={exportMembersCsv}
 						exportPending={exportCsvMutation.isPending}
+						onOpenPrintSheet={() => setPrintSheetOpen(true)}
 						onOpenAdvancedSheet={() => setAdvancedSheetOpen(true)}
 						onToggleAdvancedDesktop={() => setAdvancedOpen((open) => !open)}
 						advancedFilterCount={compiledFilters.length}
@@ -1329,6 +1339,13 @@ export function MembersV2PageClient({
 						advancedSheetOpen={advancedSheetOpen}
 						onAdvancedSheetOpenChange={setAdvancedSheetOpen}
 						advancedFiltersPanel={advancedFiltersPanel}
+					/>
+
+					<MembersV2PrintListSheet
+						open={printSheetOpen}
+						onOpenChange={setPrintSheetOpen}
+						onPrintList={(options) => printListMutation.mutate(options)}
+						printPending={printListMutation.isPending}
 					/>
 
 					<div className="min-w-0 max-w-full">

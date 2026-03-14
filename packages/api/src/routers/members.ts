@@ -69,11 +69,13 @@ const createMemberSchema = z.object({
 	joiningFeeAmount: z
 		.string()
 		.regex(/^\d+(\.\d{1,2})?$/)
-		.optional(),
+		.optional()
+		.or(z.literal("")),
 	yearlyFeeAmount: z
 		.string()
 		.regex(/^\d+(\.\d{1,2})?$/)
-		.optional(),
+		.optional()
+		.or(z.literal("")),
 
 	// Optional notes
 	memberNotes: z.string().max(1000).optional(),
@@ -242,6 +244,11 @@ function normalizeRequiredText(value: string | null | undefined): string {
 }
 
 function normalizeOptionalText(value: string | null | undefined): string | undefined {
+	const normalized = value?.trim();
+	return normalized ? normalized : undefined;
+}
+
+function normalizeOptionalAmount(value: string | null | undefined): string | undefined {
 	const normalized = value?.trim();
 	return normalized ? normalized : undefined;
 }
@@ -760,6 +767,31 @@ export const membersRouter = {
 		})
 		.route({ method: "POST", path: "/members/query/export" }),
 
+	printList: protectedProcedure
+		.use(rateLimitMiddleware(1))
+		.use(requirePermission({ member: ["view"] }))
+		.input(listMembersAdvancedExportSchema)
+		.handler(async ({ input, context }) => {
+			const organizationId = context.session.activeOrganizationId!;
+			const result = await listMembersAdvancedForExport({
+				organizationId,
+				input,
+				maxRows: MAX_MEMBERS_EXPORT_ROWS,
+			});
+
+			if (result.exceededMaxRows) {
+				throw new ORPCError("BAD_REQUEST", {
+					message: `Printing is limited to ${MAX_MEMBERS_EXPORT_ROWS.toLocaleString("en-US")} rows. Please narrow your filters.`,
+				});
+			}
+
+			return {
+				rowCount: result.data.length,
+				members: result.data,
+			};
+		})
+		.route({ method: "POST", path: "/members/query/print" }),
+
 	create: protectedProcedure
 		.use(rateLimitMiddleware(10))
 		.use(requirePermission({ member: ["create"] }))
@@ -819,8 +851,8 @@ export const membersRouter = {
 						nextBillingDate,
 						mandateId: generateMandateId(),
 						mandateSignatureDate,
-						joiningFeeAmount: input.joiningFeeAmount,
-						yearlyFeeAmount: input.yearlyFeeAmount,
+						joiningFeeAmount: normalizeOptionalAmount(input.joiningFeeAmount),
+						yearlyFeeAmount: normalizeOptionalAmount(input.yearlyFeeAmount),
 						notes: input.contractNotes,
 					},
 				});
@@ -901,8 +933,8 @@ export const membersRouter = {
 					},
 					contractData: {
 						// initialPeriod: input.initialPeriod,
-						joiningFeeAmount: input.joiningFeeAmount?.trim() || undefined,
-						yearlyFeeAmount: input.yearlyFeeAmount?.trim() || undefined,
+						joiningFeeAmount: normalizeOptionalAmount(input.joiningFeeAmount),
+						yearlyFeeAmount: normalizeOptionalAmount(input.yearlyFeeAmount),
 						notes: input.contractNotes,
 					},
 				});
