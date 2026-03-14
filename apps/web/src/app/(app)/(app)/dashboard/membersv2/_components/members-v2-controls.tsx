@@ -3,13 +3,20 @@
 import {
 	ArrowDownAZIcon,
 	ArrowDownZAIcon,
+	BookmarkIcon,
+	CheckIcon,
 	ClockArrowDownIcon,
 	ClockArrowUpIcon,
+	Columns3Icon,
 	DownloadIcon,
-	EyeIcon,
+	GlobeIcon,
+	ListFilterIcon,
 	Loader2,
-	MoreVerticalIcon,
+	MoreHorizontalIcon,
+	PrinterIcon,
+	SaveIcon,
 	SearchIcon,
+	Share2Icon,
 	SlidersHorizontalIcon,
 	XIcon,
 } from "lucide-react";
@@ -26,7 +33,14 @@ import {
 import {
 	Menu,
 	MenuCheckboxItem,
+	MenuGroup,
+	MenuGroupLabel,
+	MenuItem,
 	MenuPopup,
+	MenuSeparator,
+	MenuSub,
+	MenuSubPopup,
+	MenuSubTrigger,
 	MenuTrigger,
 } from "@/components/ui/menu";
 import {
@@ -63,6 +77,17 @@ type Option = {
 	value: string;
 };
 
+type SystemView = {
+	id: string;
+	name: string;
+	description: string;
+};
+
+type SavedView = {
+	id: string;
+	name: string;
+};
+
 const DATE_SORT_FIELDS = new Set([
 	"createdAt",
 	"updatedAt",
@@ -70,6 +95,18 @@ const DATE_SORT_FIELDS = new Set([
 	"cancellationEffectiveDate",
 	"cancelledAt",
 ]);
+
+// Show up to this many views inline; the rest go into a submenu
+const MAX_INLINE_VIEWS = 5;
+
+// Columns that can be toggled (non-functional placeholders)
+const COLUMN_OPTIONS = [
+	{ label: "Vorname", value: "firstName" },
+	{ label: "Nachname", value: "lastName" },
+	{ label: "E-Mail", value: "email" },
+	{ label: "Telefon", value: "phone" },
+	{ label: "Gruppen", value: "groups" },
+];
 
 type MembersV2ControlsProps = {
 	localSearch: string;
@@ -92,7 +129,15 @@ type MembersV2ControlsProps = {
 	onOpenAdvancedSheet: () => void;
 	onToggleAdvancedDesktop: () => void;
 	advancedFilterCount: number;
-	onOpenSavedViews: () => void;
+	// Saved views
+	systemViews: SystemView[];
+	savedViews: SavedView[];
+	selectedSavedViewId: string;
+	onApplySystemView: (id: string) => void;
+	onApplySavedView: (id: string) => void;
+	onSaveView: () => void;
+	onDeleteSavedView: () => void;
+	// Include filter (3 switches)
 	includeActive: boolean;
 	includeCancelled: boolean;
 	includeCancelledButActive: boolean;
@@ -100,7 +145,6 @@ type MembersV2ControlsProps = {
 	onIncludeCancelledChange: (checked: boolean) => void;
 	onIncludeCancelledButActiveChange: (checked: boolean) => void;
 	hasActiveFilters: boolean;
-	onSaveView: () => void;
 	onResetAllFilters: () => void;
 	advancedOpen: boolean;
 	onAdvancedOpenChange: (open: boolean) => void;
@@ -130,7 +174,13 @@ export function MembersV2Controls({
 	onOpenAdvancedSheet,
 	onToggleAdvancedDesktop,
 	advancedFilterCount,
-	onOpenSavedViews,
+	systemViews,
+	savedViews,
+	selectedSavedViewId,
+	onApplySystemView,
+	onApplySavedView,
+	onSaveView,
+	onDeleteSavedView,
 	includeActive,
 	includeCancelled,
 	includeCancelledButActive,
@@ -138,7 +188,6 @@ export function MembersV2Controls({
 	onIncludeCancelledChange,
 	onIncludeCancelledButActiveChange,
 	hasActiveFilters,
-	onSaveView,
 	onResetAllFilters,
 	advancedOpen,
 	onAdvancedOpenChange,
@@ -156,288 +205,465 @@ export function MembersV2Controls({
 				? ClockArrowDownIcon
 				: ArrowDownZAIcon;
 
+	const inlineViews = savedViews.slice(0, MAX_INLINE_VIEWS);
+	const overflowViews = savedViews.slice(MAX_INLINE_VIEWS);
+
 	return (
 		<TooltipProvider>
 			<div className="min-w-0 max-w-full space-y-2">
+				{/* Row 1: Search + Group filter + contextual reset */}
 				<div className="flex flex-wrap items-center justify-between gap-2">
-				<div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-					<InputGroup className="w-[260px] max-w-full sm:w-[320px] lg:w-[360px]">
-						<InputGroupAddon>
-							<SearchIcon className="size-4" />
-						</InputGroupAddon>
-						<InputGroupInput
-							type="text"
-							placeholder="Suche über Name, E-Mail, Telefon, Adresse, Vertragsfelder..."
-							value={localSearch}
-							onChange={(event) => onSearchChange(event.target.value)}
-						/>
-						{localSearch !== "" && (
-							<InputGroupAddon
-								align="inline-end"
-								className="cursor-pointer"
-								onClick={onClearSearch}
-							>
-								<XIcon className="size-4" />
+					<div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+						<InputGroup className="w-[260px] max-w-full sm:w-[320px] lg:w-[360px]">
+							<InputGroupAddon>
+								<SearchIcon className="size-4" />
 							</InputGroupAddon>
-						)}
-					</InputGroup>
-
-					<DataTableFacetedFilter
-						title="Gruppen"
-						options={groupOptions}
-						selectedValues={groupIds}
-						buttonSize="default"
-						onValueChange={onGroupIdsChange}
-					/>
-				</div>
-				<div className="flex flex-wrap items-center justify-end gap-2">
-					{showSelectedOnly && (
-						<Tooltip>
-							<TooltipTrigger
-								render={
-									<Button variant="outline" size="sm" onClick={onShowAllMembers} />
-								}
-							>
-								Alle Mitglieder anzeigen
-							</TooltipTrigger>
-							<TooltipContent>Hebt die interne Auswahlansicht auf</TooltipContent>
-						</Tooltip>
-					)}
-					{hasActiveFilters && (
-						<Tooltip>
-							<TooltipTrigger
-								render={
-									<Button variant="ghost" size="sm" onClick={onResetAllFilters} />
-								}
-							>
-								<XIcon />
-								Alles zurücksetzen
-							</TooltipTrigger>
-							<TooltipContent>Setzt sichtbare Filter zurück</TooltipContent>
-						</Tooltip>
-					)}
-				</div>
-			</div>
-
-			<div className="flex flex-wrap items-center justify-between gap-2">
-				<div className="flex flex-wrap items-center gap-2">
-					<Tooltip>
-						<Popover>
-							<PopoverTrigger
-								render={
-									<TooltipTrigger render={<Button variant="outline" size="sm" />}>
-										<SortDirectionIcon />
-										Sortierung
-									</TooltipTrigger>
-								}
+							<InputGroupInput
+								type="text"
+								placeholder="Suche über Name, E-Mail, Telefon, Adresse, Vertragsfelder..."
+								value={localSearch}
+								onChange={(event) => onSearchChange(event.target.value)}
 							/>
-							<PopoverPopup align="end" className="w-[320px]">
-								<div className="grid gap-3">
-									<div className="space-y-1">
-										<PopoverTitle className="text-base">Sortierung</PopoverTitle>
-										<PopoverDescription>
-											Feld und Reihenfolge wählen.
-										</PopoverDescription>
-									</div>
-									<Select
-										items={sortFieldOptions}
-										value={sortField}
-										onValueChange={(value) => {
-											if (!value) return;
-											onSortFieldChange(value);
-										}}
-									>
-										<SelectTrigger>
-											<SelectValue />
-										</SelectTrigger>
-										<SelectPopup>
-											{sortFieldOptions.map((option) => (
-												<SelectItem key={option.value} value={option.value}>
-													{option.label}
-												</SelectItem>
-											))}
-										</SelectPopup>
-									</Select>
-									<Select
-										items={sortDirectionOptions}
-										value={sortDirection}
-										onValueChange={(value) => {
-											if (!value) return;
-											onSortDirectionChange(value);
-										}}
-									>
-										<SelectTrigger>
-											<SortDirectionIcon />
-											<SelectValue />
-										</SelectTrigger>
-										<SelectPopup>
-											{sortDirectionOptions.map((option) => (
-												<SelectItem key={option.value} value={option.value}>
-													<span className="inline-flex items-center gap-2">
-														{option.value === "asc" ? (
-															isDateSort ? (
-																<ClockArrowUpIcon />
-															) : (
-																<ArrowDownAZIcon />
-															)
-														) : isDateSort ? (
-															<ClockArrowDownIcon />
-														) : (
-															<ArrowDownZAIcon />
-														)}
-														<span>{option.label}</span>
-													</span>
-												</SelectItem>
-											))}
-										</SelectPopup>
-									</Select>
-								</div>
-							</PopoverPopup>
-						</Popover>
-						<TooltipContent>Sortierung und Reihenfolge anpassen</TooltipContent>
-					</Tooltip>
-					<Tooltip>
-						<TooltipTrigger
-							render={
-								<Button
-									disabled={!canExportCsv || exportPending}
-									variant="outline"
-									size="sm"
-									className="px-2 sm:px-3"
-									onClick={onExportCsv}
-								/>
-							}
-						>
-							{exportPending ? (
-								<Loader2 className="size-4 animate-spin" />
-							) : (
-								<DownloadIcon />
+							{localSearch !== "" && (
+								<InputGroupAddon
+									align="inline-end"
+									className="cursor-pointer"
+									onClick={onClearSearch}
+								>
+									<XIcon className="size-4" />
+								</InputGroupAddon>
 							)}
-							<span className="hidden sm:inline">CSV-Export</span>
-						</TooltipTrigger>
-						<TooltipContent>Aktuelle Mitgliederliste exportieren</TooltipContent>
-					</Tooltip>
-					<Tooltip>
-						<TooltipTrigger
-							render={
-								<Button
-									variant="outline"
-									size="icon-sm"
-									className="sm:hidden"
-									onClick={onOpenAdvancedSheet}
-								/>
-							}
-						>
-							<SlidersHorizontalIcon />
-							<span className="sr-only">Advanced Builder öffnen</span>
-						</TooltipTrigger>
-						<TooltipContent>Erweiterte Filter auf Mobilgeräten</TooltipContent>
-					</Tooltip>
-					<Tooltip>
-						<TooltipTrigger
-							render={
-								<Button
-									variant="outline"
-									size="sm"
-									className="hidden sm:inline-flex"
-									onClick={onToggleAdvancedDesktop}
-								/>
-							}
-						>
-							<SlidersHorizontalIcon />
-							Advanced Builder
-							{advancedFilterCount > 0 ? ` (${advancedFilterCount})` : ""}
-						</TooltipTrigger>
-						<TooltipContent>Erweiterte Filter ein- oder ausblenden</TooltipContent>
-					</Tooltip>
+						</InputGroup>
+
+						<DataTableFacetedFilter
+							title="Gruppen"
+							options={groupOptions}
+							selectedValues={groupIds}
+							buttonSize="default"
+							onValueChange={onGroupIdsChange}
+						/>
+					</div>
+
+					<div className="flex flex-wrap items-center justify-end gap-2">
+						{showSelectedOnly && (
+							<Tooltip>
+								<TooltipTrigger
+									render={
+										<Button
+											variant="outline"
+											size="sm"
+											onClick={onShowAllMembers}
+										/>
+									}
+								>
+									Alle Mitglieder anzeigen
+								</TooltipTrigger>
+								<TooltipContent>
+									Hebt die interne Auswahlansicht auf
+								</TooltipContent>
+							</Tooltip>
+						)}
+						{hasActiveFilters && (
+							<Tooltip>
+								<TooltipTrigger
+									render={
+										<Button
+											variant="ghost"
+											size="sm"
+											onClick={onResetAllFilters}
+										/>
+									}
+								>
+									<XIcon />
+									Alles zurücksetzen
+								</TooltipTrigger>
+								<TooltipContent>
+									Setzt alle aktiven Filter zurück
+								</TooltipContent>
+							</Tooltip>
+						)}
+					</div>
 				</div>
-				<div className="flex flex-wrap items-center gap-2">
-					{hasActiveFilters && (
+
+				{/* Row 2: Tool controls */}
+				<div className="flex flex-wrap items-center justify-between gap-2">
+					<div className="flex flex-wrap items-center gap-2">
+						{/* Sort popover */}
+						<Tooltip>
+							<Popover>
+								<PopoverTrigger
+									render={
+										<TooltipTrigger
+											render={<Button variant="outline" size="sm" />}
+										>
+											<SortDirectionIcon />
+											Sortierung
+										</TooltipTrigger>
+									}
+								/>
+								<PopoverPopup align="start" className="w-[320px]">
+									<div className="grid gap-3">
+										<div className="space-y-1">
+											<PopoverTitle className="text-base">
+												Sortierung
+											</PopoverTitle>
+											<PopoverDescription>
+												Feld und Reihenfolge wählen.
+											</PopoverDescription>
+										</div>
+										<Select
+											items={sortFieldOptions}
+											value={sortField}
+											onValueChange={(value) => {
+												if (!value) return;
+												onSortFieldChange(value);
+											}}
+										>
+											<SelectTrigger>
+												<SelectValue />
+											</SelectTrigger>
+											<SelectPopup>
+												{sortFieldOptions.map((option) => (
+													<SelectItem key={option.value} value={option.value}>
+														{option.label}
+													</SelectItem>
+												))}
+											</SelectPopup>
+										</Select>
+										<Select
+											items={sortDirectionOptions}
+											value={sortDirection}
+											onValueChange={(value) => {
+												if (!value) return;
+												onSortDirectionChange(value);
+											}}
+										>
+											<SelectTrigger>
+												<SortDirectionIcon />
+												<SelectValue />
+											</SelectTrigger>
+											<SelectPopup>
+												{sortDirectionOptions.map((option) => (
+													<SelectItem key={option.value} value={option.value}>
+														<span className="inline-flex items-center gap-2">
+															{option.value === "asc" ? (
+																isDateSort ? (
+																	<ClockArrowUpIcon />
+																) : (
+																	<ArrowDownAZIcon />
+																)
+															) : isDateSort ? (
+																<ClockArrowDownIcon />
+															) : (
+																<ArrowDownZAIcon />
+															)}
+															<span>{option.label}</span>
+														</span>
+													</SelectItem>
+												))}
+											</SelectPopup>
+										</Select>
+									</div>
+								</PopoverPopup>
+							</Popover>
+							<TooltipContent>
+								Sortierung und Reihenfolge anpassen
+							</TooltipContent>
+						</Tooltip>
+
+						{/* Advanced builder toggle — mobile */}
 						<Tooltip>
 							<TooltipTrigger
-								render={<Button variant="outline" size="sm" onClick={onSaveView} />}
-							>
-								Speichern
-							</TooltipTrigger>
-							<TooltipContent>Aktuelle Filter als Ansicht speichern</TooltipContent>
-						</Tooltip>
-					)}
-					<Tooltip>
-						<TooltipTrigger
-							render={
-								<Button size="icon-sm" variant="outline" onClick={onOpenSavedViews} />
-							}
-						>
-							<EyeIcon />
-						</TooltipTrigger>
-						<TooltipContent>Gespeicherte Ansichten öffnen</TooltipContent>
-					</Tooltip>
-
-					<Tooltip>
-						<Menu>
-							<MenuTrigger
 								render={
-									<TooltipTrigger render={<Button size="icon-sm" variant="outline" />}>
-										<MoreVerticalIcon />
-									</TooltipTrigger>
+									<Button
+										variant="outline"
+										size="icon-sm"
+										className="sm:hidden"
+										onClick={onOpenAdvancedSheet}
+									/>
 								}
-							/>
-							<MenuPopup align="end" className="w-[280px]">
-								<MenuCheckboxItem
-									variant="switch"
-									checked={includeActive}
-									onCheckedChange={(checked) => onIncludeActiveChange(Boolean(checked))}
-								>
-									Aktive Mitglieder
-								</MenuCheckboxItem>
-								<MenuCheckboxItem
-									variant="switch"
-									checked={includeCancelled}
-									onCheckedChange={(checked) =>
-										onIncludeCancelledChange(Boolean(checked))
+							>
+								<SlidersHorizontalIcon />
+								<span className="sr-only">Advanced Builder öffnen</span>
+							</TooltipTrigger>
+							<TooltipContent>
+								Erweiterte Filter auf Mobilgeräten
+							</TooltipContent>
+						</Tooltip>
+
+						{/* Advanced builder toggle — desktop */}
+						<Tooltip>
+							<TooltipTrigger
+								render={
+									<Button
+										variant="outline"
+										size="sm"
+										className="hidden sm:inline-flex"
+										onClick={onToggleAdvancedDesktop}
+									/>
+								}
+							>
+								<SlidersHorizontalIcon />
+								Advanced Builder
+								{advancedFilterCount > 0 ? ` (${advancedFilterCount})` : ""}
+							</TooltipTrigger>
+							<TooltipContent>
+								Erweiterte Filter ein- oder ausblenden
+							</TooltipContent>
+						</Tooltip>
+					</div>
+
+					<div className="flex flex-wrap items-center gap-2">
+						{/* What-to-include filter — now with ListFilterIcon instead of 3-dots */}
+						<Tooltip>
+							<Menu>
+								<MenuTrigger
+									render={
+										<TooltipTrigger
+											render={<Button size="sm" variant="outline" />}
+										>
+											<ListFilterIcon />
+											<span className="hidden sm:inline">Mitglieder</span>
+										</TooltipTrigger>
 									}
-								>
-									Gekündigte Mitglieder
-								</MenuCheckboxItem>
-								<MenuCheckboxItem
-									variant="switch"
-									checked={includeCancelledButActive}
-									onCheckedChange={(checked) =>
-										onIncludeCancelledButActiveChange(Boolean(checked))
+								/>
+								<MenuPopup align="end" className="w-[280px]">
+									<MenuGroup>
+										<MenuGroupLabel>Anzuzeigende Mitglieder</MenuGroupLabel>
+										<MenuCheckboxItem
+											variant="switch"
+											checked={includeActive}
+											onCheckedChange={(checked) =>
+												onIncludeActiveChange(Boolean(checked))
+											}
+										>
+											Aktive Mitglieder
+										</MenuCheckboxItem>
+										<MenuCheckboxItem
+											variant="switch"
+											checked={includeCancelled}
+											onCheckedChange={(checked) =>
+												onIncludeCancelledChange(Boolean(checked))
+											}
+										>
+											Gekündigte Mitglieder
+										</MenuCheckboxItem>
+										<MenuCheckboxItem
+											variant="switch"
+											checked={includeCancelledButActive}
+											onCheckedChange={(checked) =>
+												onIncludeCancelledButActiveChange(Boolean(checked))
+											}
+										>
+											Gekündigt, noch aktiv
+										</MenuCheckboxItem>
+									</MenuGroup>
+								</MenuPopup>
+							</Menu>
+							<TooltipContent>Angezeigte Mitglieder filtern</TooltipContent>
+						</Tooltip>
+
+						{/* Saved views menu — inline, no dialog */}
+						<Tooltip>
+							<Menu>
+								<MenuTrigger
+									render={
+										<TooltipTrigger
+											render={<Button size="sm" variant="outline" />}
+										>
+											<BookmarkIcon />
+											<span className="hidden sm:inline">Ansichten</span>
+										</TooltipTrigger>
 									}
-								>
-									Gekündigt, noch aktiv
-								</MenuCheckboxItem>
-							</MenuPopup>
-						</Menu>
-						<TooltipContent>Weitere Filteroptionen</TooltipContent>
-					</Tooltip>
+								/>
+								<MenuPopup align="end" className="w-[260px]">
+									{/* Save current */}
+									<MenuItem onClick={onSaveView}>
+										<SaveIcon />
+										Aktuelle Ansicht speichern
+									</MenuItem>
+
+									{selectedSavedViewId && (
+										<MenuItem
+											onClick={onDeleteSavedView}
+											className="text-destructive-foreground"
+										>
+											<XIcon />
+											Aktuelle Ansicht löschen
+										</MenuItem>
+									)}
+
+									<MenuSeparator />
+
+									{/* System views */}
+									<MenuGroup>
+										<MenuGroupLabel>Systemansichten</MenuGroupLabel>
+										{systemViews.map((view) => (
+											<MenuItem
+												key={view.id}
+												onClick={() => onApplySystemView(view.id)}
+											>
+												<GlobeIcon />
+												{view.name}
+											</MenuItem>
+										))}
+									</MenuGroup>
+
+									{/* User saved views */}
+									{savedViews.length > 0 && (
+										<>
+											<MenuSeparator />
+											<MenuGroup>
+												<MenuGroupLabel>Eigene Ansichten</MenuGroupLabel>
+												{inlineViews.map((view) => (
+													<MenuItem
+														key={view.id}
+														onClick={() => onApplySavedView(view.id)}
+													>
+														{selectedSavedViewId === view.id ? (
+															<CheckIcon />
+														) : (
+															<BookmarkIcon />
+														)}
+														{view.name}
+													</MenuItem>
+												))}
+												{overflowViews.length > 0 && (
+													<MenuSub>
+														<MenuSubTrigger>
+															<MoreHorizontalIcon />
+															Mehr ({overflowViews.length})
+														</MenuSubTrigger>
+														<MenuSubPopup>
+															{overflowViews.map((view) => (
+																<MenuItem
+																	key={view.id}
+																	onClick={() => onApplySavedView(view.id)}
+																>
+																	{selectedSavedViewId === view.id ? (
+																		<CheckIcon />
+																	) : (
+																		<BookmarkIcon />
+																	)}
+																	{view.name}
+																</MenuItem>
+															))}
+														</MenuSubPopup>
+													</MenuSub>
+												)}
+											</MenuGroup>
+										</>
+									)}
+								</MenuPopup>
+							</Menu>
+							<TooltipContent>Gespeicherte Ansichten</TooltipContent>
+						</Tooltip>
+
+						{/* Column visibility menu */}
+						<Tooltip>
+							<Menu>
+								<MenuTrigger
+									render={
+										<TooltipTrigger
+											render={<Button size="sm" variant="outline" />}
+										>
+											<Columns3Icon />
+											<span className="hidden sm:inline">Spalten</span>
+										</TooltipTrigger>
+									}
+								/>
+								<MenuPopup align="end" className="w-[220px]">
+									<MenuGroup>
+										<MenuGroupLabel>Spalten ein-/ausblenden</MenuGroupLabel>
+										{COLUMN_OPTIONS.map((col) => (
+											<MenuCheckboxItem key={col.value} checked disabled>
+												{col.label}
+											</MenuCheckboxItem>
+										))}
+									</MenuGroup>
+								</MenuPopup>
+							</Menu>
+							<TooltipContent>Spalten ein- oder ausblenden</TooltipContent>
+						</Tooltip>
+
+						{/* Actions menu */}
+						<Tooltip>
+							<Menu>
+								<MenuTrigger
+									render={
+										<TooltipTrigger
+											render={<Button size="icon-sm" variant="outline" />}
+										>
+											<MoreHorizontalIcon />
+										</TooltipTrigger>
+									}
+								/>
+								<MenuPopup align="end" className="w-[240px]">
+									{/* Export */}
+									<MenuGroup>
+										<MenuGroupLabel>Export</MenuGroupLabel>
+										<MenuItem
+											disabled={!canExportCsv || exportPending}
+											onClick={onExportCsv}
+										>
+											{exportPending ? (
+												<Loader2 className="animate-spin" />
+											) : (
+												<DownloadIcon />
+											)}
+											CSV-Liste exportieren
+										</MenuItem>
+										<MenuItem disabled>
+											<PrinterIcon />
+											Liste drucken
+										</MenuItem>
+									</MenuGroup>
+
+									<MenuSeparator />
+
+									{/* Share */}
+									<MenuGroup>
+										<MenuGroupLabel>Teilen</MenuGroupLabel>
+										<MenuItem disabled>
+											<Share2Icon />
+											Aktuelle Ansicht teilen
+										</MenuItem>
+									</MenuGroup>
+								</MenuPopup>
+							</Menu>
+							<TooltipContent>Weitere Aktionen</TooltipContent>
+						</Tooltip>
+					</div>
 				</div>
-			</div>
 
-			<Collapsible
-				className="hidden sm:block"
-				open={advancedOpen}
-				onOpenChange={onAdvancedOpenChange}
-			>
-				<CollapsibleContent>
-					<Frame>
-						<FramePanel>{advancedFiltersPanel}</FramePanel>
-					</Frame>
-				</CollapsibleContent>
-			</Collapsible>
+				{/* Desktop advanced filter panel */}
+				<Collapsible
+					className="hidden sm:block"
+					open={advancedOpen}
+					onOpenChange={onAdvancedOpenChange}
+				>
+					<CollapsibleContent>
+						<Frame>
+							<FramePanel>{advancedFiltersPanel}</FramePanel>
+						</Frame>
+					</CollapsibleContent>
+				</Collapsible>
 
-			<Sheet open={advancedSheetOpen} onOpenChange={onAdvancedSheetOpenChange}>
-				<SheetContent side="right" className="sm:hidden">
-					<SheetHeader>
-						<SheetTitle>Advanced Builder</SheetTitle>
-						<SheetDescription>
-							Erweiterte Filter für Mitglieder konfigurieren.
-						</SheetDescription>
-					</SheetHeader>
-					<SheetPanel>{advancedFiltersPanel}</SheetPanel>
-				</SheetContent>
-			</Sheet>
+				{/* Mobile advanced filter sheet */}
+				<Sheet
+					open={advancedSheetOpen}
+					onOpenChange={onAdvancedSheetOpenChange}
+				>
+					<SheetContent side="right" className="sm:hidden">
+						<SheetHeader>
+							<SheetTitle>Advanced Builder</SheetTitle>
+							<SheetDescription>
+								Erweiterte Filter für Mitglieder konfigurieren.
+							</SheetDescription>
+						</SheetHeader>
+						<SheetPanel>{advancedFiltersPanel}</SheetPanel>
+					</SheetContent>
+				</Sheet>
 			</div>
 		</TooltipProvider>
 	);
