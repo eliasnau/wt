@@ -23,6 +23,7 @@ import {
 	UserIcon,
 	XIcon,
 } from "lucide-react";
+import Link from "next/link";
 import { useState } from "react";
 import { toast } from "sonner";
 import {
@@ -37,14 +38,12 @@ import {
 import { Button } from "@/components/ui/button";
 import {
 	Empty,
-	EmptyContent,
 	EmptyDescription,
 	EmptyHeader,
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
 import { Frame, FramePanel } from "@/components/ui/frame";
-import { Input } from "@/components/ui/input";
 import {
 	InputGroup,
 	InputGroupAddon,
@@ -83,7 +82,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { client } from "@/utils/orpc";
-import { EditGroupSheet, GroupMembersSheet } from "./group-sheets";
+import { EditGroupSheet } from "./group-sheets";
 
 type GroupsList = InferClientOutputs<typeof client>["groups"]["list"];
 type GroupRow = GroupsList[number];
@@ -193,11 +192,9 @@ export const columns: ColumnDef<GroupRow>[] = [
 		enableSorting: false,
 		cell: ({ row, table }) => {
 			const group = row.original;
-			const { onDeleteGroup, onEditGroup, onViewMembers } = table.options
-				.meta as {
+			const { onDeleteGroup, onEditGroup } = table.options.meta as {
 				onDeleteGroup: (group: GroupRow) => void;
 				onEditGroup: (group: GroupRow) => void;
-				onViewMembers: (group: GroupRow) => void;
 			};
 
 			return (
@@ -205,7 +202,11 @@ export const columns: ColumnDef<GroupRow>[] = [
 					<Button
 						size="sm"
 						variant="outline"
-						onClick={() => onViewMembers(group)}
+						render={
+							<Link
+								href={`/dashboard/members?groupIds=${encodeURIComponent(group.id)}`}
+							/>
+						}
 					>
 						<UserIcon />
 						Mitglieder
@@ -268,7 +269,6 @@ export default function GroupTable({
 	const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 	const [groupToDelete, setGroupToDelete] = useState<GroupRow | null>(null);
 	const [editGroupOpen, setEditGroupOpen] = useState(false);
-	const [membersSheetOpen, setMembersSheetOpen] = useState(false);
 	const [activeGroup, setActiveGroup] = useState<GroupRow | null>(null);
 
 	const handleDeleteGroup = (group: GroupRow) => {
@@ -279,11 +279,6 @@ export default function GroupTable({
 	const handleEditGroup = (group: GroupRow) => {
 		setActiveGroup(group);
 		setEditGroupOpen(true);
-	};
-
-	const handleViewMembers = (group: GroupRow) => {
-		setActiveGroup(group);
-		setMembersSheetOpen(true);
 	};
 
 	const table = useReactTable({
@@ -300,13 +295,32 @@ export default function GroupTable({
 		meta: {
 			onDeleteGroup: handleDeleteGroup,
 			onEditGroup: handleEditGroup,
-			onViewMembers: handleViewMembers,
 		},
 		state: {
 			pagination,
 			sorting,
 			columnFilters,
 		},
+	});
+	const skeletonRowKeys = Array.from(
+		{ length: table.getState().pagination.pageSize },
+		(_, index) =>
+			`skeleton-row-${table.getState().pagination.pageSize}-${index}`,
+	);
+	const skeletonColumnKeys = columns.map((column, index) => {
+		if ("id" in column && typeof column.id === "string") {
+			return column.id;
+		}
+
+		if (
+			"accessorKey" in column &&
+			typeof column.accessorKey === "string" &&
+			column.accessorKey.length > 0
+		) {
+			return column.accessorKey;
+		}
+
+		return `column-${index}`;
 	});
 
 	// If there are no groups at all, show empty state
@@ -369,17 +383,10 @@ export default function GroupTable({
 										className={isLast ? "text-right" : undefined}
 									>
 										{header.isPlaceholder ? null : header.column.getCanSort() ? (
-											<div
-												className="flex h-full cursor-pointer select-none items-center justify-between gap-2"
+											<button
+												type="button"
+												className="flex h-full w-full cursor-pointer select-none items-center justify-between gap-2"
 												onClick={header.column.getToggleSortingHandler()}
-												onKeyDown={(e) => {
-													if (e.key === "Enter" || e.key === " ") {
-														e.preventDefault();
-														header.column.getToggleSortingHandler()?.(e);
-													}
-												}}
-												role="button"
-												tabIndex={0}
 											>
 												{flexRender(
 													header.column.columnDef.header,
@@ -399,7 +406,7 @@ export default function GroupTable({
 														/>
 													),
 												}[header.column.getIsSorted() as string] ?? null}
-											</div>
+											</button>
 										) : (
 											flexRender(
 												header.column.columnDef.header,
@@ -414,17 +421,15 @@ export default function GroupTable({
 				</TableHeader>
 				<TableBody>
 					{loading ? (
-						Array.from({ length: table.getState().pagination.pageSize }).map(
-							(_, idx) => (
-								<TableRow key={`skeleton-${idx}`}>
-									{columns.map((column, colIdx) => (
-										<TableCell key={`skeleton-${idx}-${colIdx}`}>
-											<Skeleton className="h-5 w-full" />
-										</TableCell>
-									))}
-								</TableRow>
-							),
-						)
+						skeletonRowKeys.map((rowKey) => (
+							<TableRow key={rowKey}>
+								{skeletonColumnKeys.map((columnKey) => (
+									<TableCell key={`${rowKey}-${columnKey}`}>
+										<Skeleton className="h-5 w-full" />
+									</TableCell>
+								))}
+							</TableRow>
+						))
 					) : !table.getRowModel().rows?.length ? (
 						<TableRow>
 							<TableCell colSpan={columns.length} className="h-24 text-center">
@@ -537,12 +542,6 @@ export default function GroupTable({
 				open={editGroupOpen}
 				onOpenChange={setEditGroupOpen}
 				onSuccess={onRefetch}
-			/>
-
-			<GroupMembersSheet
-				group={activeGroup}
-				open={membersSheetOpen}
-				onOpenChange={setMembersSheetOpen}
 			/>
 		</div>
 	);
