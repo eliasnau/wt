@@ -128,6 +128,25 @@ const queryMembersInputSchema = z.object({
 
 type QueryMembersInput = z.infer<typeof queryMembersInputSchema>;
 
+function normalizeContractEndDateFilter(
+	value: string | undefined,
+): string | undefined {
+	if (!value) {
+		return undefined;
+	}
+
+	const trimmed = value.trim();
+	if (
+		trimmed.length === 0 ||
+		trimmed === "0000-00-00" ||
+		trimmed === "9999-12-31"
+	) {
+		return undefined;
+	}
+
+	return trimmed;
+}
+
 function getTodayInBerlinDateString(): string {
 	const parts = new Intl.DateTimeFormat("en-CA", {
 		timeZone: "Europe/Berlin",
@@ -169,7 +188,9 @@ function mapMember(
 		name: `${member.firstName} ${member.lastName}`.trim(),
 		firstName: member.firstName,
 		lastName: member.lastName,
-		birthdate: member.birthdate,
+		birthdate: includeFieldSet.has("birthdate")
+			? member.birthdate
+			: undefined,
 		email: includeFieldSet.has("email") ? member.email : undefined,
 		phone: includeFieldSet.has("phone") ? member.phone : undefined,
 		membershipStatus: member.membershipStatus,
@@ -194,23 +215,34 @@ function mapMember(
 export const createQueryMembersTool = (organizationId: string) =>
 	tool({
 		description:
-			"Search and filter members for the current organization. Use this for member lists, lookups by name/email/phone, group-filtered searches, paginated filtering, and contract end date queries. If the user names a group, resolve it with listGroups first and then pass the group ID here. Member email and phone are sensitive and must be explicitly requested via includeFields only when needed.",
+			"Search and filter members for the current organization. Use this for member lists, lookups by name/email/phone, group-filtered searches, paginated filtering, and contract end date queries. For questions about a member's birthday or birth month/day, first resolve the member with search or filters, and only request includeFields: ['birthdate'] when the user explicitly wants the birthdate returned. If the user names a group, resolve it with listGroups first and then pass the group ID here. Member birthdate, email, and phone are sensitive and must be explicitly requested via includeFields only when needed.",
 		inputSchema: queryMembersInputSchema,
 		execute: async (input: QueryMembersInput) => {
 			const includeFieldSet = new Set<MemberSensitiveField>(
 				input.includeFields ?? [],
 			);
+			const normalizedContractEndDateFrom = normalizeContractEndDateFilter(
+				input.contractEndDateFrom,
+			);
+			const normalizedContractEndDateTo = normalizeContractEndDateFilter(
+				input.contractEndDateTo,
+			);
+			const contractEndingWithinDays =
+				typeof input.contractEndingWithinDays === "number" &&
+				input.contractEndingWithinDays > 0
+					? input.contractEndingWithinDays
+					: undefined;
 			const contractEndDateFrom =
-				input.contractEndDateFrom ??
-				(typeof input.contractEndingWithinDays === "number"
+				normalizedContractEndDateFrom ??
+				(typeof contractEndingWithinDays === "number"
 					? getTodayInBerlinDateString()
 					: undefined);
 			const contractEndDateTo =
-				input.contractEndDateTo ??
-				(typeof input.contractEndingWithinDays === "number"
+				normalizedContractEndDateTo ??
+				(typeof contractEndingWithinDays === "number"
 					? addDays(
 							getTodayInBerlinDateString(),
-							input.contractEndingWithinDays,
+							contractEndingWithinDays,
 						)
 					: undefined);
 

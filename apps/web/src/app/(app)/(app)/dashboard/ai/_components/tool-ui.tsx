@@ -472,18 +472,34 @@ function getRequestedSensitiveFields(input: unknown) {
 		: [];
 
 	return includeFields.filter(
-		(field) => field === "email" || field === "phone",
+		(field) =>
+			field === "birthdate" || field === "email" || field === "phone",
 	);
 }
 
 function getRequestedSensitiveFieldsLabel(requestedFields: string[]) {
-	return requestedFields.includes("email") && requestedFields.includes("phone")
-		? "E-Mail-Adressen und Telefonnummern"
-		: requestedFields.includes("email")
-			? "E-Mail-Adressen"
-			: requestedFields.includes("phone")
-				? "Telefonnummern"
-				: "Kontaktdaten";
+	const labels = requestedFields.map((field) => {
+		switch (field) {
+			case "birthdate":
+				return "Geburtsdaten";
+			case "email":
+				return "E-Mail-Adressen";
+			case "phone":
+				return "Telefonnummern";
+			default:
+				return "sensible Mitgliedsdaten";
+		}
+	});
+
+	if (labels.length <= 1) {
+		return labels[0] ?? "sensible Mitgliedsdaten";
+	}
+
+	if (labels.length === 2) {
+		return `${labels[0]} und ${labels[1]}`;
+	}
+
+	return `${labels.slice(0, -1).join(", ")} und ${labels.at(-1)}`;
 }
 
 function buildApprovedSheetContent({ input }: { input: unknown }) {

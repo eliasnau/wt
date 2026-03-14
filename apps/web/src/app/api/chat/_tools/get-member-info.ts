@@ -21,7 +21,7 @@ const getMemberInfoInputSchema = z.object({
 export const createGetMemberInfoTool = (organizationId: string) =>
 	tool({
 		description:
-			"Get detailed information for a single member by exact member ID. Use only after you have resolved the correct member ID. Member email and phone are sensitive and must be explicitly requested via includeFields only when needed.",
+			"Get detailed information for a single member by exact member ID. Use only after you have resolved the correct member ID. Member birthdate, email, and phone are sensitive and must be explicitly requested via includeFields only when needed.",
 		inputSchema: getMemberInfoInputSchema,
 		needsApproval: ({ includeFields }) =>
 			shouldRequireMemberContactApproval(includeFields),
@@ -43,7 +43,9 @@ export const createGetMemberInfoTool = (organizationId: string) =>
 					name: `${member.firstName} ${member.lastName}`.trim(),
 					firstName: member.firstName,
 					lastName: member.lastName,
-					birthdate: member.birthdate,
+					birthdate: includeFieldSet.has("birthdate")
+						? member.birthdate
+						: undefined,
 					email: includeFieldSet.has("email") ? member.email : undefined,
 					phone: includeFieldSet.has("phone") ? member.phone : undefined,
 					guardian: {

@@ -1,13 +1,17 @@
 import { z } from "zod";
 
-export const memberSensitiveFieldSchema = z.enum(["email", "phone"]);
+export const memberSensitiveFieldSchema = z.enum([
+	"birthdate",
+	"email",
+	"phone",
+]);
 
 export const memberSensitiveFieldsInputSchema = z
 	.array(memberSensitiveFieldSchema)
-	.max(2)
+	.max(3)
 	.optional()
 	.describe(
-		"Optional sensitive member fields to reveal in the result. Only request email or phone when the user explicitly needs contact details.",
+		"Optional sensitive member fields to reveal in the result. Only request birthdate, email, or phone when the user explicitly needs those details.",
 	);
 
 export type MemberSensitiveField = z.infer<typeof memberSensitiveFieldSchema>;
@@ -16,7 +20,9 @@ export function shouldRequireMemberContactApproval(
 	includeFields: MemberSensitiveField[] | undefined,
 ) {
 	return Boolean(
-		includeFields?.some((field) => field === "email" || field === "phone"),
+		includeFields?.some(
+			(field) =>
+				field === "birthdate" || field === "email" || field === "phone",
+		),
 	);
 }
-

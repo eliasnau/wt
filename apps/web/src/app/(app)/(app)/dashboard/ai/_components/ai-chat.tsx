@@ -138,57 +138,81 @@ function getApprovalRequestedSensitiveFields(input: unknown) {
 	}
 
 	return includeFields.filter(
-		(field): field is string => field === "email" || field === "phone",
+		(field): field is string =>
+			field === "birthdate" || field === "email" || field === "phone",
 	);
+}
+
+function formatRequestedSensitiveFields(fields: string[]) {
+	const labels = fields.map((field) => {
+		switch (field) {
+			case "birthdate":
+				return "Geburtsdaten";
+			case "email":
+				return "E-Mail-Adressen";
+			case "phone":
+				return "Telefonnummern";
+			default:
+				return "sensible Mitgliedsdaten";
+		}
+	});
+
+	if (labels.length <= 1) {
+		return labels[0] ?? "sensible Mitgliedsdaten";
+	}
+
+	if (labels.length === 2) {
+		return `${labels[0]} und ${labels[1]}`;
+	}
+
+	return `${labels.slice(0, -1).join(", ")} und ${labels.at(-1)}`;
+}
+
+function formatDeniedSensitiveFields(fields: string[]) {
+	const labels = fields.map((field) => {
+		switch (field) {
+			case "birthdate":
+				return "member birthdates";
+			case "email":
+				return "member email addresses";
+			case "phone":
+				return "member phone numbers";
+			default:
+				return "sensitive member data";
+		}
+	});
+
+	if (labels.length <= 1) {
+		return labels[0] ?? "sensitive member data";
+	}
+
+	if (labels.length === 2) {
+		return `${labels[0]} and ${labels[1]}`;
+	}
+
+	return `${labels.slice(0, -1).join(", ")} and ${labels.at(-1)}`;
 }
 
 function getApprovalMessage(toolName: string, input: unknown, providerName: string) {
 	const requestedFields = getApprovalRequestedSensitiveFields(input);
 	const targetLabel =
 		toolName === "getMemberInfo" ? "dieses Mitglieds" : "deiner Mitglieder";
-
-	if (requestedFields.includes("email") && requestedFields.includes("phone")) {
-		return {
-			title: `Die KI möchte die E-Mail-Adressen und Telefonnummern ${targetLabel} lesen.`,
-			detail: `Diese Kontaktdaten werden an ${providerName} gesendet, damit die Anfrage beantwortet werden kann.`,
-		};
-	}
-
-	if (requestedFields.includes("email")) {
-		return {
-			title: `Die KI möchte die E-Mail-Adressen ${targetLabel} lesen.`,
-			detail: `Die E-Mail-Adressen werden an ${providerName} gesendet, damit die Anfrage beantwortet werden kann.`,
-		};
-	}
-
-	if (requestedFields.includes("phone")) {
-		return {
-			title: `Die KI möchte die Telefonnummern ${targetLabel} lesen.`,
-			detail: `Die Telefonnummern werden an ${providerName} gesendet, damit die Anfrage beantwortet werden kann.`,
-		};
-	}
+	const requestedLabel = formatRequestedSensitiveFields(requestedFields);
 
 	return {
-		title: "Die KI möchte auf sensible Kontaktdaten zugreifen.",
+		title: `Die KI möchte die ${requestedLabel} ${targetLabel} lesen.`,
 		detail: `Diese Daten werden an ${providerName} gesendet, damit die Anfrage beantwortet werden kann.`,
 	};
 }
 
 function getApprovalDeniedReason(toolName: string, input: unknown) {
 	const requestedFields = getApprovalRequestedSensitiveFields(input);
-	const requestedLabel =
-		requestedFields.includes("email") && requestedFields.includes("phone")
-			? "member contact info (email and phone)"
-			: requestedFields.includes("email")
-				? "member email addresses"
-				: requestedFields.includes("phone")
-					? "member phone numbers"
-					: "member contact info";
+	const requestedLabel = formatDeniedSensitiveFields(requestedFields);
 
 	const targetLabel =
 		toolName === "getMemberInfo" ? "for this member" : "for the requested members";
 
-	return `User denied reading ${requestedLabel} ${targetLabel}. Do not retry this contact-data request unless the user explicitly asks again and wants to approve it.`;
+	return `User denied reading ${requestedLabel} ${targetLabel}. Do not retry this sensitive-member-data request unless the user explicitly asks again and wants to approve it.`;
 }
 
 type PendingApproval = {
