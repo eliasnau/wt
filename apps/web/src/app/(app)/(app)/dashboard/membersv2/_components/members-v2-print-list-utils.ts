@@ -71,29 +71,44 @@ export function sortMembersForPrint<T extends PrintMember>(
 		return members;
 	}
 
+	const compareValues = (left: string, right: string) =>
+		left.localeCompare(right, "de", {
+			sensitivity: "base",
+		});
+
 	const sorted = [...members];
 	sorted.sort((left, right) => {
-		const leftValue =
+		const leftPrimaryValue =
 			sortOverride === "first-name-asc"
 				? (left.firstName ?? "").trim()
 				: (left.lastName ?? "").trim();
-		const rightValue =
+		const rightPrimaryValue =
 			sortOverride === "first-name-asc"
 				? (right.firstName ?? "").trim()
 				: (right.lastName ?? "").trim();
 
-		const primaryComparison = leftValue.localeCompare(rightValue, "de", {
-			sensitivity: "base",
-		});
+		const primaryComparison = compareValues(leftPrimaryValue, rightPrimaryValue);
 		if (primaryComparison !== 0) {
 			return primaryComparison;
 		}
 
-		return getBaseMemberPrintName(left).localeCompare(
-			getBaseMemberPrintName(right),
-			"de",
-			{ sensitivity: "base" },
+		const leftSecondaryValue =
+			sortOverride === "first-name-asc"
+				? (left.lastName ?? "").trim()
+				: (left.firstName ?? "").trim();
+		const rightSecondaryValue =
+			sortOverride === "first-name-asc"
+				? (right.lastName ?? "").trim()
+				: (right.firstName ?? "").trim();
+		const secondaryComparison = compareValues(
+			leftSecondaryValue,
+			rightSecondaryValue,
 		);
+		if (secondaryComparison !== 0) {
+			return secondaryComparison;
+		}
+
+		return compareValues(getBaseMemberPrintName(left), getBaseMemberPrintName(right));
 	});
 
 	return sorted;

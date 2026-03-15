@@ -60,7 +60,7 @@ export function MembersV2PrintListSheet({
 		MembersPrintListOptions["memberDetailColumns"]
 	>([]);
 	const [sortOverride, setSortOverride] =
-		useState<MembersPrintListOptions["sortOverride"]>("current");
+		useState<MembersPrintListOptions["sortOverride"]>("last-name-asc");
 
 	const parsedColumnCount = Number.parseInt(columnCount, 10);
 	const safeColumnCount =
