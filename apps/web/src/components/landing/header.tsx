@@ -1,26 +1,13 @@
 "use client";
 
-import { authClient } from "@repo/auth/client";
-import { LayoutDashboardIcon, LogOutIcon, UserIcon } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import { MobileNav } from "@/components/landing/mobile-nav";
 import { Logo } from "@/components/logo";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-	Menu,
-	MenuItem,
-	MenuPopup,
-	MenuSeparator,
-	MenuTrigger,
-} from "@/components/ui/menu";
 import { useScroll } from "@/hooks/use-scroll";
 import type { getServerSession } from "@/lib/auth";
 import { cn } from "@/lib/utils";
-import { Kbd, KbdGroup } from "../ui/kbd";
 
 export const navLinks = [
 	{
@@ -85,14 +72,11 @@ export function Header({ className, session }: HeaderProps) {
 						))}
 					</div>
 					{isSignedIn && session.user ? (
-						<div className="flex items-center gap-2">
-							<Link href={"/dashboard" as Route}>
-								<Button variant="default" size="sm">
-									Dashboard
-								</Button>
-							</Link>
-							<UserMenu user={session.user} />
-						</div>
+						<Link href={"/dashboard" as Route}>
+							<Button variant="default" size="sm">
+								Dashboard
+							</Button>
+						</Link>
 					) : (
 						<>
 							<Link href={"/sign-in" as Route}>
@@ -109,78 +93,5 @@ export function Header({ className, session }: HeaderProps) {
 				<MobileNav session={session} />
 			</nav>
 		</header>
-	);
-}
-
-function UserMenu({
-	user,
-}: {
-	user: { id: string; name: string | null; image?: string | null };
-}) {
-	const router = useRouter();
-
-	const handleSignOut = async () => {
-		await authClient.signOut({
-			fetchOptions: {
-				onSuccess: () => {
-					router.push("/sign-in" as Route);
-				},
-				onError(context: { error: { message: string } }) {
-					toast.error(context.error.message);
-				},
-			},
-		});
-	};
-
-	const initials = user.name
-		? user.name
-				.split(" ")
-				.map((n) => n[0])
-				.join("")
-				.toUpperCase()
-				.slice(0, 2)
-		: "U";
-
-	return (
-		<Menu>
-			<MenuTrigger
-				className="cursor-pointer rounded-full outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-				render={<button type="button" />}
-			>
-				<Avatar className="size-7">
-					<AvatarImage
-						src={
-							user.image || `https://avatar.vercel.sh/${user.id}` || undefined
-						}
-						alt={user.name || "User"}
-					/>
-					<AvatarFallback className="text-xs">{initials}</AvatarFallback>
-				</Avatar>
-			</MenuTrigger>
-			<MenuPopup align="end" sideOffset={8}>
-				<MenuItem
-					className="gap-2"
-					onClick={() => router.push("/dashboard" as Route)}
-				>
-					<LayoutDashboardIcon className="size-4" />
-					<span>Dashboard</span>
-				</MenuItem>
-				<MenuItem
-					className="gap-2"
-					onClick={() => router.push("/account" as Route)}
-				>
-					<UserIcon className="size-4" />
-					<span>Konto</span>
-				</MenuItem>
-				<MenuSeparator />
-				<MenuItem
-					className="gap-2 text-destructive focus:text-destructive"
-					onClick={handleSignOut}
-				>
-					<LogOutIcon className="size-4" />
-					<span>Abmelden</span>
-				</MenuItem>
-			</MenuPopup>
-		</Menu>
 	);
 }
