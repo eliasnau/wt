@@ -16,7 +16,7 @@ function formatUsageValue(value: number | undefined) {
 
 export function MembersUsageCard() {
 	const { data: customer } = useCustomer();
-	const usersFeature = customer?.features?.users;
+	const usersFeature = customer?.balances?.users;
 
 	if (!usersFeature) {
 		return null;
@@ -24,10 +24,10 @@ export function MembersUsageCard() {
 
 	const used = formatUsageValue(usersFeature.usage);
 	const included =
-		typeof usersFeature.included_usage === "number"
-			? usersFeature.included_usage
-			: typeof usersFeature.balance === "number"
-				? used + usersFeature.balance
+		typeof usersFeature.granted === "number"
+			? usersFeature.granted
+			: typeof usersFeature.remaining === "number"
+				? used + usersFeature.remaining
 				: undefined;
 
 	if (typeof included !== "number") {

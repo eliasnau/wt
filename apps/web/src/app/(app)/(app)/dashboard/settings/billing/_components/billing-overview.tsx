@@ -65,21 +65,25 @@ type UsageFeature = {
 	remaining: number | undefined;
 };
 
+type CustomerSubscription = NonNullable<
+	Awaited<ReturnType<typeof useCustomer>>["data"]
+>["subscriptions"][number];
+
+type CustomerBalance = NonNullable<
+	Awaited<ReturnType<typeof useCustomer>>["data"]
+>["balances"][string];
+
 function formatNumber(value: number | undefined) {
 	return typeof value === "number" ? value.toLocaleString("de-DE") : "0";
 }
 
-function getIncludedUsage(feature: {
-	included_usage?: number;
-	balance?: number | null;
-	usage?: number;
-}) {
-	if (typeof feature.included_usage === "number") {
-		return feature.included_usage;
+function getIncludedUsage(balance: CustomerBalance) {
+	if (typeof balance.granted === "number") {
+		return balance.granted;
 	}
 
-	if (typeof feature.balance === "number") {
-		return (feature.usage ?? 0) + feature.balance;
+	if (typeof balance.remaining === "number") {
+		return (balance.usage ?? 0) + balance.remaining;
 	}
 
 	return undefined;
@@ -111,23 +115,23 @@ export function BillingOverview() {
 	}
 
 	const activeProducts =
-		customer.products?.filter(
-			(product) =>
-				product.status === "active" &&
-				product.id !== "ai_credits" &&
-				product.id !== "ai-credits",
+		customer.subscriptions?.filter(
+			(subscription) =>
+				subscription.status === "active" &&
+				subscription.planId !== "ai_credits" &&
+				subscription.planId !== "ai-credits",
 		) ?? [];
 	const usageFeatures: UsageFeature[] = FEATURE_META.flatMap((meta) => {
-		const feature = customer.features?.[meta.id];
-		if (!feature) {
+		const balance = customer.balances?.[meta.id];
+		if (!balance) {
 			return [];
 		}
 
-		const used = feature.usage ?? 0;
-		const included = getIncludedUsage(feature);
+		const used = balance.usage ?? 0;
+		const included = getIncludedUsage(balance);
 		const remaining =
-			typeof feature.balance === "number"
-				? Math.max(feature.balance, 0)
+			typeof balance.remaining === "number"
+				? Math.max(balance.remaining, 0)
 				: typeof included === "number"
 					? Math.max(included - used, 0)
 					: undefined;
@@ -163,9 +167,9 @@ export function BillingOverview() {
 
 					{activeProducts.length > 0 ? (
 						<div className="flex flex-wrap gap-2">
-							{activeProducts.map((product) => {
+							{activeProducts.map((product: CustomerSubscription) => {
 								const meta =
-									PLAN_META[product.id as keyof typeof PLAN_META];
+									PLAN_META[product.planId as keyof typeof PLAN_META];
 
 								return (
 									<Badge
@@ -173,7 +177,7 @@ export function BillingOverview() {
 										variant={meta?.variant ?? "outline"}
 										size="lg"
 									>
-										{meta?.label || product.name || product.id}
+										{meta?.label || product.plan?.name || product.planId}
 									</Badge>
 								);
 							})}
