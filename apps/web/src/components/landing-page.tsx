@@ -1,18 +1,17 @@
 import { LandingHotkeys } from "@/components/hotkeys/landing-hotkeys";
-import { CallToAction } from "@/components/landing/call-to-action";
 import { Footer } from "@/components/landing/footer";
 import { Header } from "@/components/landing/header";
 import { HeroSection } from "@/components/landing/hero";
 import { SimpleFeatures } from "@/components/landing/simple-features";
-// import { SwitchingSection } from "@/components/landing/switching";
-// import { FeaturesSection } from "@/components/landing/features";
-import { getServerSession } from "@/lib/auth";
+import type { getServerSession } from "@/lib/auth";
 
 const LAYOUT_CLASSNAME = "max-w-5xl mx-auto";
 
-export default async function Home() {
-	const session = await getServerSession();
+interface LandingPageProps {
+	session?: Awaited<ReturnType<typeof getServerSession>>;
+}
 
+export function LandingPage({ session }: LandingPageProps) {
 	return (
 		<div>
 			<LandingHotkeys />
@@ -22,11 +21,7 @@ export default async function Home() {
 				<div id="features">
 					<SimpleFeatures />
 				</div>
-				{/* <SwitchingSection /> */}
 			</main>
-			{/*<div id="cta">
-        <CallToAction />
-      </div>*/}
 			<div id="footer">
 				<Footer className={LAYOUT_CLASSNAME} />
 			</div>
