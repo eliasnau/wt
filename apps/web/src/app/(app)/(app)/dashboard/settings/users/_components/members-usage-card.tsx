@@ -15,7 +15,7 @@ function formatUsageValue(value: number | undefined) {
 }
 
 export function MembersUsageCard() {
-	const { customer } = useCustomer();
+	const { data: customer } = useCustomer();
 	const usersFeature = customer?.features?.users;
 
 	if (!usersFeature) {

@@ -86,7 +86,7 @@ function getIncludedUsage(feature: {
 }
 
 export function BillingOverview() {
-	const { customer, refetch, isLoading } = useCustomer();
+	const { data: customer, refetch, isLoading } = useCustomer();
 
 	if (isLoading && !customer) {
 		return (
