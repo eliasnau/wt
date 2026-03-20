@@ -450,182 +450,171 @@ export function MembersV2Table({
 
 	return (
 		<>
-			<div className="w-full rounded-xl border bg-background">
-				<div className="relative w-full overflow-x-auto">
-					<table className="w-full min-w-[1040px] caption-bottom text-sm">
-						<thead className="[&_tr]:border-b">
-							{table.getHeaderGroups().map((headerGroup) => (
-								<tr key={headerGroup.id}>
-									{headerGroup.headers.map((header, index) => {
-										const isLast = index === headerGroup.headers.length - 1;
-										return (
-											<TableHead
-												key={header.id}
-												className={`${header.column.id === "select" ? "w-px" : ""} ${isLast ? "text-right" : ""}`}
-											>
-												{header.isPlaceholder
-													? null
-													: flexRender(
-															header.column.columnDef.header,
-															header.getContext(),
-														)}
-											</TableHead>
-										);
-									})}
-								</tr>
-							))}
-						</thead>
-						<tbody className="[&_tr:last-child]:border-0">
-							{loading ? (
-								skeletonRowKeys.map((rowKey) => (
-									<tr key={rowKey} className="border-b">
-										{skeletonColumnKeys.map((columnKey) => (
-											<TableCell
-												key={`${rowKey}-${columnKey}`}
-												className="py-3"
-											>
-												<Skeleton className="h-5 w-full" />
-											</TableCell>
-										))}
-									</tr>
-								))
-							) : !table.getRowModel().rows.length ? (
-								<tr className="border-b">
-									<TableCell
-										colSpan={columns.length}
-										className="h-32 text-center"
-									>
-										<div className="flex flex-col items-center justify-center gap-2">
-											<p className="text-muted-foreground">
-												Keine Mitglieder entsprechen den aktuellen Filtern.
-											</p>
-											{hasActiveFilters && (
-												<Button
-													size="sm"
-													variant="outline"
-													onClick={onClearFilters}
+			<div className="w-full min-w-0 max-w-[calc(100dvw-2rem)] overflow-hidden rounded-xl border bg-background sm:max-w-full">
+				<div className="w-full max-w-full overflow-x-auto overscroll-x-contain">
+					<div className="min-w-[1040px]">
+						<table className="w-full caption-bottom text-sm">
+							<thead className="[&_tr]:border-b">
+								{table.getHeaderGroups().map((headerGroup) => (
+									<tr key={headerGroup.id}>
+										{headerGroup.headers.map((header, index) => {
+											const isLast = index === headerGroup.headers.length - 1;
+											return (
+												<TableHead
+													key={header.id}
+													className={`${header.column.id === "select" ? "w-px" : ""} ${isLast ? "text-right" : ""}`}
 												>
-													Filter zurücksetzen
-												</Button>
-											)}
-										</div>
-									</TableCell>
-								</tr>
-							) : (
-								table.getRowModel().rows.map((row) => (
-									<tr
-										key={row.id}
-										className={
-											row.getIsSelected()
-												? "border-b bg-primary/4 transition-colors hover:bg-primary/6"
-												: "border-b transition-colors hover:bg-muted/50"
-										}
-									>
-										{row.getVisibleCells().map((cell) => (
-											<TableCell
-												key={cell.id}
-												className={cell.column.id === "select" ? "w-px" : ""}
-											>
-												{flexRender(
-													cell.column.columnDef.cell,
-													cell.getContext(),
+													{header.isPlaceholder
+														? null
+														: flexRender(
+																header.column.columnDef.header,
+																header.getContext(),
+															)}
+												</TableHead>
+											);
+										})}
+									</tr>
+								))}
+							</thead>
+							<tbody className="[&_tr:last-child]:border-0">
+								{loading ? (
+									skeletonRowKeys.map((rowKey) => (
+										<tr key={rowKey} className="border-b">
+											{skeletonColumnKeys.map((columnKey) => (
+												<TableCell
+													key={`${rowKey}-${columnKey}`}
+													className="py-3"
+												>
+													<Skeleton className="h-5 w-full" />
+												</TableCell>
+											))}
+										</tr>
+									))
+								) : !table.getRowModel().rows.length ? (
+									<tr className="border-b">
+										<TableCell
+											colSpan={columns.length}
+											className="h-32 text-center"
+										>
+											<div className="flex flex-col items-center justify-center gap-2">
+												<p className="text-muted-foreground">
+													Keine Mitglieder entsprechen den aktuellen Filtern.
+												</p>
+												{hasActiveFilters && (
+													<Button
+														size="sm"
+														variant="outline"
+														onClick={onClearFilters}
+													>
+														Filter zurücksetzen
+													</Button>
 												)}
-											</TableCell>
-										))}
+											</div>
+										</TableCell>
 									</tr>
-								))
-							)}
-						</tbody>
-						<tfoot className="border-t bg-muted/50 font-medium [&>tr]:last:border-b-0">
-							<tr>
-								<TableCell colSpan={columns.length} className="p-2">
-									<div className="flex items-center justify-between gap-2">
-										<div className="flex items-center gap-2 whitespace-nowrap">
-											<p className="text-muted-foreground text-sm">Zeige</p>
-											<Select
-												items={[
-													{ label: "10", value: 10 },
-													{ label: "20", value: 20 },
-													{ label: "30", value: 30 },
-													{ label: "50", value: 50 },
-												]}
-												onValueChange={(value) => {
-													onLimitChange(value as number);
-												}}
-												value={pagination.limit}
-											>
-												<SelectTrigger
-													aria-label="Rows per page"
-													className="w-fit min-w-none"
-													size="sm"
+								) : (
+									table.getRowModel().rows.map((row) => (
+										<tr
+											key={row.id}
+											className={
+												row.getIsSelected()
+													? "border-b bg-primary/4 transition-colors hover:bg-primary/6"
+													: "border-b transition-colors hover:bg-muted/50"
+											}
+										>
+											{row.getVisibleCells().map((cell) => (
+												<TableCell
+													key={cell.id}
+													className={cell.column.id === "select" ? "w-px" : ""}
 												>
-													<SelectValue />
-												</SelectTrigger>
-												<SelectPopup>
-													<SelectItem value={10}>10</SelectItem>
-													<SelectItem value={20}>20</SelectItem>
-													<SelectItem value={30}>30</SelectItem>
-													<SelectItem value={50}>50</SelectItem>
-												</SelectPopup>
-											</Select>
+													{flexRender(
+														cell.column.columnDef.cell,
+														cell.getContext(),
+													)}
+												</TableCell>
+											))}
+										</tr>
+									))
+								)}
+							</tbody>
+						</table>
+
+						<div className="border-t bg-muted/50 p-2">
+							<div className="flex items-center justify-between gap-2">
+								<div className="flex min-w-0 items-center gap-2 whitespace-nowrap">
+									<p className="text-muted-foreground text-sm">Zeige</p>
+									<Select
+										items={[
+											{ label: "10", value: 10 },
+											{ label: "20", value: 20 },
+											{ label: "30", value: 30 },
+											{ label: "50", value: 50 },
+										]}
+										onValueChange={(value) => {
+											onLimitChange(value as number);
+										}}
+										value={pagination.limit}
+									>
+										<SelectTrigger
+											aria-label="Rows per page"
+											className="w-fit min-w-none"
+											size="sm"
+										>
+											<SelectValue />
+										</SelectTrigger>
+										<SelectPopup>
+											<SelectItem value={10}>10</SelectItem>
+											<SelectItem value={20}>20</SelectItem>
+											<SelectItem value={30}>30</SelectItem>
+											<SelectItem value={50}>50</SelectItem>
+										</SelectPopup>
+									</Select>
+									<span className="text-muted-foreground text-sm">
+										von{" "}
+										<strong className="font-medium text-foreground">
+											{pagination.totalCount}
+										</strong>{" "}
+										{pagination.totalCount === 1 ? "Mitglied" : "Mitgliedern"}
+									</span>
+								</div>
+								<Pagination className="justify-end">
+									<PaginationContent>
+										<PaginationItem>
 											<span className="text-muted-foreground text-sm">
-												von{" "}
-												<strong className="font-medium text-foreground">
-													{pagination.totalCount}
-												</strong>{" "}
-												{pagination.totalCount === 1
-													? "Mitglied"
-													: "Mitgliedern"}
+												Seite {pagination.page} von {pagination.totalPages}
 											</span>
-										</div>
-										<Pagination className="justify-end">
-											<PaginationContent>
-												<PaginationItem>
-													<span className="text-muted-foreground text-sm">
-														Seite {pagination.page} von {pagination.totalPages}
-													</span>
-												</PaginationItem>
-												<PaginationItem>
-													<PaginationPrevious
-														className="sm:*:[svg]:hidden"
-														render={
-															<Button
-																disabled={!pagination.hasPreviousPage}
-																onClick={() =>
-																	onPageChange(pagination.page - 1)
-																}
-																size="sm"
-																variant="outline"
-															>
-																Zurück
-															</Button>
-														}
+										</PaginationItem>
+										<PaginationItem>
+											<PaginationPrevious
+												className="sm:*:[svg]:hidden"
+												render={
+													<Button
+														disabled={!pagination.hasPreviousPage}
+														onClick={() => onPageChange(pagination.page - 1)}
+														size="sm"
+														variant="outline"
 													/>
-												</PaginationItem>
-												<PaginationItem>
-													<PaginationNext
-														className="sm:*:[svg]:hidden"
-														render={
-															<Button
-																disabled={!pagination.hasNextPage}
-																onClick={() =>
-																	onPageChange(pagination.page + 1)
-																}
-																size="sm"
-																variant="outline"
-															>
-																Weiter
-															</Button>
-														}
+												}
+											/>
+										</PaginationItem>
+										<PaginationItem>
+											<PaginationNext
+												className="sm:*:[svg]:hidden"
+												render={
+													<Button
+														disabled={!pagination.hasNextPage}
+														onClick={() => onPageChange(pagination.page + 1)}
+														size="sm"
+														variant="outline"
 													/>
-												</PaginationItem>
-											</PaginationContent>
-										</Pagination>
-									</div>
-								</TableCell>
-							</tr>
-						</tfoot>
-					</table>
+												}
+											/>
+										</PaginationItem>
+									</PaginationContent>
+								</Pagination>
+							</div>
+						</div>
+					</div>
 				</div>
 			</div>
 

@@ -1311,7 +1311,7 @@ export function MembersV2PageClient({
 	);
 
 	return (
-		<div className="flex w-full flex-col gap-6">
+		<div className="flex w-full min-w-0 max-w-full flex-col gap-6 overflow-x-hidden">
 			<Header>
 				<HeaderContent>
 					<HeaderTitle>Mitglieder</HeaderTitle>
@@ -1446,7 +1446,7 @@ export function MembersV2PageClient({
 						printPending={printListMutation.isPending}
 					/>
 
-					<div className="w-full overflow-x-auto">
+					<div className="w-full min-w-0 overflow-hidden">
 						<MembersV2Table
 							canExportCsv={canExportMembers}
 							data={data?.data ?? []}
