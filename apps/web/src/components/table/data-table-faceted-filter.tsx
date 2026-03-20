@@ -16,6 +16,7 @@ interface DataTableFacetedFilterProps {
 	selectedValues: string[];
 	onValueChange: (values: string[]) => void;
 	buttonSize?: "sm" | "default";
+	className?: string;
 }
 
 export function DataTableFacetedFilter({
@@ -24,6 +25,7 @@ export function DataTableFacetedFilter({
 	selectedValues,
 	onValueChange,
 	buttonSize = "sm",
+	className,
 }: DataTableFacetedFilterProps) {
 	const selectedSet = new Set(selectedValues);
 	const [open, setOpen] = useState(false);
@@ -50,7 +52,7 @@ export function DataTableFacetedFilter({
 					<Button
 						variant="outline"
 						size={buttonSize}
-						className="border-dashed font-normal"
+						className={cn("border-dashed font-normal", className)}
 					>
 						{selectedSet.size > 0 ? (
 							<button
