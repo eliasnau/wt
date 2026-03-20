@@ -2,22 +2,14 @@
 
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useQueryState } from "nuqs";
-import { Suspense, useEffect } from "react";
+import { Suspense } from "react";
 import { SystemBanner } from "@/components/ui/system-banner";
 // import { TanStackDevtools } from "@tanstack/react-devtools";
 // import { hotkeysDevtoolsPlugin } from "@tanstack/react-hotkeys-devtools";
-// import { scan } from "react-scan/all-environments";
 
 function DevModeContent() {
   const [devParam] = useQueryState("dev");
   const showDev = devParam === "true" || process.env.NODE_ENV === "development";
-
-  // useEffect(() => {
-  //   scan({
-  //     enabled: showDev,
-  //     animationSpeed: "off",
-  //   });
-  // }, [showDev]);
 
   if (!showDev) return null;
 
