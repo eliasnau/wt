@@ -1,9 +1,8 @@
 "use client";
 
 import { useCustomer } from "@repo/autumn/react";
-import { Loader2, RefreshCw } from "lucide-react";
+import { CalendarClock, Loader2, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
 	Empty,
 	EmptyDescription,
@@ -12,6 +11,7 @@ import {
 } from "@/components/ui/empty";
 import {
 	Frame,
+	FrameDescription,
 	FrameHeader,
 	FramePanel,
 	FrameTitle,
@@ -73,6 +73,16 @@ type CustomerBalance = NonNullable<
 	Awaited<ReturnType<typeof useCustomer>>["data"]
 >["balances"][string];
 
+function formatDate(value: number | null) {
+	if (!value) return null;
+
+	return new Date(value).toLocaleDateString("de-DE", {
+		day: "2-digit",
+		month: "short",
+		year: "numeric",
+	});
+}
+
 function formatNumber(value: number | undefined) {
 	return typeof value === "number" ? value.toLocaleString("de-DE") : "0";
 }
@@ -90,7 +100,7 @@ function getIncludedUsage(balance: CustomerBalance) {
 }
 
 export function BillingOverview() {
-	const { data: customer, refetch, isLoading } = useCustomer();
+	const { data: customer, isLoading } = useCustomer();
 
 	if (isLoading && !customer) {
 		return (
@@ -151,34 +161,70 @@ export function BillingOverview() {
 			<Frame className="w-full">
 				<FramePanel>
 					<FrameHeader className="px-0 pt-0">
-						<div className="flex items-start justify-between gap-4">
-							<FrameTitle>Aktiver Tarif</FrameTitle>
-							<Button
-								variant="outline"
-								size="sm"
-								onClick={() => void refetch()}
-								disabled={isLoading}
-							>
-								<RefreshCw className="size-4" />
-								Aktualisieren
-							</Button>
-						</div>
+						<FrameTitle>Aktiver Tarif</FrameTitle>
+						<FrameDescription>
+							Dein aktueller Plan und die laufende Abrechnungsperiode.
+						</FrameDescription>
 					</FrameHeader>
 
 					{activeProducts.length > 0 ? (
-						<div className="flex flex-wrap gap-2">
+						<div className="grid gap-3">
 							{activeProducts.map((product: CustomerSubscription) => {
 								const meta =
 									PLAN_META[product.planId as keyof typeof PLAN_META];
+								const renewsAt = formatDate(product.currentPeriodEnd);
+								const trialEndsAt = formatDate(product.trialEndsAt);
 
 								return (
-									<Badge
+									<div
 										key={`${product.id}-${product.status}`}
-										variant={meta?.variant ?? "outline"}
-										size="lg"
+										className="rounded-xl border bg-muted/40 p-4"
 									>
-										{meta?.label || product.plan?.name || product.planId}
-									</Badge>
+										<div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+											<div className="space-y-1">
+												<div className="flex items-center gap-2">
+													<Badge
+														variant={meta?.variant ?? "outline"}
+														size="sm"
+													>
+														<Sparkles className="size-3" />
+														{meta?.label || product.plan?.name || product.planId}
+													</Badge>
+													<Badge variant="outline" size="sm">
+														{product.status === "active" ? "Aktiv" : product.status}
+													</Badge>
+												</div>
+												<p className="font-medium text-base">
+													{product.plan?.name || meta?.label || product.planId}
+												</p>
+												<p className="text-muted-foreground text-sm">
+													{product.quantity > 1
+														? `${product.quantity} Einheiten aktiv`
+														: "1 Einheit aktiv"}
+												</p>
+											</div>
+
+											<div className="flex items-start gap-2 rounded-lg bg-background px-3 py-2 text-sm">
+												<CalendarClock className="mt-0.5 size-4 text-muted-foreground" />
+												<div className="space-y-1">
+													{trialEndsAt ? (
+														<p className="font-medium">Test endet am {trialEndsAt}</p>
+													) : renewsAt ? (
+														<p className="font-medium">
+															Nächste Verlängerung am {renewsAt}
+														</p>
+													) : (
+														<p className="font-medium">Plan ist aktuell aktiv</p>
+													)}
+													{product.pastDue && (
+														<p className="text-destructive text-xs">
+															Zahlung ist überfällig
+														</p>
+													)}
+												</div>
+											</div>
+										</div>
+									</div>
 								);
 							})}
 						</div>

@@ -64,7 +64,7 @@ export function GroupMixPieChart({
 						fontSize={11}
 						fontWeight={500}
 						fill="currentColor"
-						formatter={(value: number) => value.toString()}
+						formatter={(value) => String(value ?? "")}
 					/>
 				</Pie>
 			</PieChart>
