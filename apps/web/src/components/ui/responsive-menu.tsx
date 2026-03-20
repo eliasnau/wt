@@ -206,14 +206,25 @@ function ResponsiveItem({
 	const isMobile = useMediaQuery(breakpoint);
 
 	if (isMobile) {
-		const Component = closeOnClick ? DrawerClose : "div";
+		if (closeOnClick) {
+			return (
+				<DrawerClose
+					render={
+						<DrawerMenuItem
+							className={className}
+							variant={variant}
+							onClick={onClick}
+						/>
+					}
+				>
+					{children}
+				</DrawerClose>
+			);
+		}
 		return (
-			<Component
-				render={<DrawerMenuItem variant={variant} />}
-				onClick={onClick}
-			>
+			<DrawerMenuItem className={className} onClick={onClick} variant={variant}>
 				{children}
-			</Component>
+			</DrawerMenuItem>
 		);
 	}
 

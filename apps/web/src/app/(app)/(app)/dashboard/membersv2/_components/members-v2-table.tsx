@@ -10,12 +10,12 @@ import {
 	useReactTable,
 } from "@tanstack/react-table";
 import {
-	FilterIcon,
 	BotIcon,
 	DownloadIcon,
 	EditIcon,
-	EyeIcon,
 	ExternalLinkIcon,
+	EyeIcon,
+	FilterIcon,
 	MailIcon,
 	MoreVerticalIcon,
 	PhoneIcon,
@@ -45,8 +45,8 @@ import {
 	MenuItem,
 	MenuPopup,
 	MenuSeparator,
-	MenuTrigger,
 	MenuShortcut,
+	MenuTrigger,
 } from "@/components/ui/menu";
 import {
 	Pagination,
@@ -63,16 +63,13 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { TableCell, TableHead } from "@/components/ui/table";
 import {
 	Toolbar,
 	ToolbarButton,
 	ToolbarGroup,
 	ToolbarSeparator,
 } from "@/components/ui/toolbar";
-import {
-	TableCell,
-	TableHead,
-} from "@/components/ui/table";
 import {
 	Tooltip,
 	TooltipContent,
@@ -191,16 +188,16 @@ const createColumns = (
 			const dotClass = status === "cancelled" ? "bg-amber-500" : "bg-red-500";
 			const label = status === "cancelled" ? "Beendet" : "Gekündigt (aktiv)";
 
-				return (
-					<div className="flex items-center gap-2">
-						<Link
-							href={memberHref}
-							className="font-medium hover:underline focus-visible:underline"
-						>
-							{member.firstName}
-						</Link>
-						<TooltipProvider>
-							<Tooltip>
+			return (
+				<div className="flex items-center gap-2">
+					<Link
+						href={memberHref}
+						className="font-medium hover:underline focus-visible:underline"
+					>
+						{member.firstName}
+					</Link>
+					<TooltipProvider>
+						<Tooltip>
 							<TooltipTrigger render={<Badge variant={variant} />}>
 								<span
 									aria-hidden="true"
@@ -225,24 +222,24 @@ const createColumns = (
 		accessorKey: "lastName",
 		header: "Nachname",
 	},
-		{
-			accessorKey: "email",
-			header: "E-Mail",
-			cell: ({ row }) => (
-				<div className="max-w-[260px]">
-					<CopyableTableCell value={row.original.email} />
-				</div>
-			),
-		},
-		{
-			accessorKey: "phone",
-			header: "Telefon",
-			cell: ({ row }) => (
-				<div className="max-w-[180px]">
-					<CopyableTableCell value={row.original.phone} />
-				</div>
-			),
-		},
+	{
+		accessorKey: "email",
+		header: "E-Mail",
+		cell: ({ row }) => (
+			<div className="max-w-[260px]">
+				<CopyableTableCell value={row.original.email} />
+			</div>
+		),
+	},
+	{
+		accessorKey: "phone",
+		header: "Telefon",
+		cell: ({ row }) => (
+			<div className="max-w-[180px]">
+				<CopyableTableCell value={row.original.phone} />
+			</div>
+		),
+	},
 	{
 		accessorKey: "groups",
 		header: "Gruppen",
@@ -271,74 +268,74 @@ const createColumns = (
 		id: "actions",
 		header: "Aktionen",
 		enableSorting: false,
-			cell: ({ row }) => {
-				const member = row.original;
-				const isCancelled = member.contract?.cancelledAt !== null;
-				const memberHref = `/dashboard/members/${member.id}` as Route;
-				const hasEmail =
-					typeof member.email === "string" && member.email.trim().length > 0;
-				const hasPhone =
-					typeof member.phone === "string" && member.phone.trim().length > 0;
+		cell: ({ row }) => {
+			const member = row.original;
+			const isCancelled = member.contract?.cancelledAt !== null;
+			const memberHref = `/dashboard/members/${member.id}` as Route;
+			const hasEmail =
+				typeof member.email === "string" && member.email.trim().length > 0;
+			const hasPhone =
+				typeof member.phone === "string" && member.phone.trim().length > 0;
 
-				return (
-					<div className="flex items-center justify-end gap-2">
+			return (
+				<div className="flex items-center justify-end gap-2">
 					<Button
 						size="sm"
 						variant="outline"
 						onClick={() => onViewMember(member)}
-						>
-							<EyeIcon />
-							Info
-						</Button>
-						<Menu>
+					>
+						<EyeIcon />
+						Info
+					</Button>
+					<Menu>
 						<MenuTrigger
 							render={
 								<Button size="sm" variant="outline">
 									<MoreVerticalIcon />
 								</Button>
 							}
-							/>
-								<MenuPopup align="end">
-									<MenuItem
-										onClick={() =>
-											window.open(memberHref, "_blank", "noopener,noreferrer")
-										}
-									>
-										<ExternalLinkIcon />
-										Open in new tab
-									</MenuItem>
-									<MenuItem
-										onClick={() => {
-											window.location.href = memberHref;
-										}}
-									>
-										<EditIcon />
-										Bearbeiten
-									</MenuItem>
-									<MenuSeparator />
-									<MenuItem
-										disabled={!hasEmail}
-										onClick={() => {
-											if (!hasEmail) return;
-										window.location.href = `mailto:${member.email}`;
-									}}
-								>
-									<MailIcon />
-									E-Mail senden
-								</MenuItem>
-								<MenuItem
-									disabled={!hasPhone}
-									onClick={() => {
-										if (!hasPhone) return;
-										window.location.href = `tel:${member.phone}`;
-									}}
-								>
-										<PhoneIcon />
-										Anrufen
-									</MenuItem>
-									<MenuItem
-									variant="destructive"
-									disabled={isCancelled}
+						/>
+						<MenuPopup align="end">
+							<MenuItem
+								onClick={() =>
+									window.open(memberHref, "_blank", "noopener,noreferrer")
+								}
+							>
+								<ExternalLinkIcon />
+								Open in new tab
+							</MenuItem>
+							<MenuItem
+								onClick={() => {
+									window.location.href = memberHref;
+								}}
+							>
+								<EditIcon />
+								Bearbeiten
+							</MenuItem>
+							<MenuSeparator />
+							<MenuItem
+								disabled={!hasEmail}
+								onClick={() => {
+									if (!hasEmail) return;
+									window.location.href = `mailto:${member.email}`;
+								}}
+							>
+								<MailIcon />
+								E-Mail senden
+							</MenuItem>
+							<MenuItem
+								disabled={!hasPhone}
+								onClick={() => {
+									if (!hasPhone) return;
+									window.location.href = `tel:${member.phone}`;
+								}}
+							>
+								<PhoneIcon />
+								Anrufen
+							</MenuItem>
+							<MenuItem
+								variant="destructive"
+								disabled={isCancelled}
 								onClick={() => onCancelMember(member)}
 							>
 								<UserXIcon />
@@ -453,8 +450,8 @@ export function MembersV2Table({
 
 	return (
 		<>
-			<div className="w-full min-w-0 max-w-full overflow-hidden rounded-xl border bg-background">
-				<div className="relative w-full min-w-0 max-w-full overflow-x-auto">
+			<div className="w-full rounded-xl border bg-background">
+				<div className="relative w-full overflow-x-auto">
 					<table className="w-full min-w-[1040px] caption-bottom text-sm">
 						<thead className="[&_tr]:border-b">
 							{table.getHeaderGroups().map((headerGroup) => (
@@ -468,8 +465,8 @@ export function MembersV2Table({
 											>
 												{header.isPlaceholder
 													? null
-												: flexRender(
-														header.column.columnDef.header,
+													: flexRender(
+															header.column.columnDef.header,
 															header.getContext(),
 														)}
 											</TableHead>
@@ -483,7 +480,10 @@ export function MembersV2Table({
 								skeletonRowKeys.map((rowKey) => (
 									<tr key={rowKey} className="border-b">
 										{skeletonColumnKeys.map((columnKey) => (
-											<TableCell key={`${rowKey}-${columnKey}`} className="py-3">
+											<TableCell
+												key={`${rowKey}-${columnKey}`}
+												className="py-3"
+											>
 												<Skeleton className="h-5 w-full" />
 											</TableCell>
 										))}
@@ -494,19 +494,19 @@ export function MembersV2Table({
 									<TableCell
 										colSpan={columns.length}
 										className="h-32 text-center"
-								>
-									<div className="flex flex-col items-center justify-center gap-2">
-										<p className="text-muted-foreground">
-											Keine Mitglieder entsprechen den aktuellen Filtern.
-										</p>
-										{hasActiveFilters && (
-											<Button
-												size="sm"
-												variant="outline"
-												onClick={onClearFilters}
-											>
-												Filter zurücksetzen
-											</Button>
+									>
+										<div className="flex flex-col items-center justify-center gap-2">
+											<p className="text-muted-foreground">
+												Keine Mitglieder entsprechen den aktuellen Filtern.
+											</p>
+											{hasActiveFilters && (
+												<Button
+													size="sm"
+													variant="outline"
+													onClick={onClearFilters}
+												>
+													Filter zurücksetzen
+												</Button>
 											)}
 										</div>
 									</TableCell>
@@ -527,8 +527,8 @@ export function MembersV2Table({
 												className={cell.column.id === "select" ? "w-px" : ""}
 											>
 												{flexRender(
-												cell.column.columnDef.cell,
-												cell.getContext(),
+													cell.column.columnDef.cell,
+													cell.getContext(),
 												)}
 											</TableCell>
 										))}
@@ -540,80 +540,86 @@ export function MembersV2Table({
 							<tr>
 								<TableCell colSpan={columns.length} className="p-2">
 									<div className="flex items-center justify-between gap-2">
-									<div className="flex items-center gap-2 whitespace-nowrap">
-										<p className="text-muted-foreground text-sm">Zeige</p>
-										<Select
-											items={[
-												{ label: "10", value: 10 },
-												{ label: "20", value: 20 },
-												{ label: "30", value: 30 },
-												{ label: "50", value: 50 },
-											]}
-											onValueChange={(value) => {
-												onLimitChange(value as number);
-											}}
-											value={pagination.limit}
-										>
-											<SelectTrigger
-												aria-label="Rows per page"
-												className="w-fit min-w-none"
-												size="sm"
+										<div className="flex items-center gap-2 whitespace-nowrap">
+											<p className="text-muted-foreground text-sm">Zeige</p>
+											<Select
+												items={[
+													{ label: "10", value: 10 },
+													{ label: "20", value: 20 },
+													{ label: "30", value: 30 },
+													{ label: "50", value: 50 },
+												]}
+												onValueChange={(value) => {
+													onLimitChange(value as number);
+												}}
+												value={pagination.limit}
 											>
-												<SelectValue />
-											</SelectTrigger>
-											<SelectPopup>
-												<SelectItem value={10}>10</SelectItem>
-												<SelectItem value={20}>20</SelectItem>
-												<SelectItem value={30}>30</SelectItem>
-												<SelectItem value={50}>50</SelectItem>
-											</SelectPopup>
-										</Select>
-										<span className="text-muted-foreground text-sm">
-											von{" "}
-											<strong className="font-medium text-foreground">
-												{pagination.totalCount}
-											</strong>{" "}
-											{pagination.totalCount === 1 ? "Mitglied" : "Mitgliedern"}
-										</span>
-									</div>
-									<Pagination className="justify-end">
-										<PaginationContent>
-											<PaginationItem>
-												<span className="text-muted-foreground text-sm">
-													Seite {pagination.page} von {pagination.totalPages}
-												</span>
-											</PaginationItem>
-											<PaginationItem>
-												<PaginationPrevious
-													className="sm:*:[svg]:hidden"
-													render={
-														<Button
-															disabled={!pagination.hasPreviousPage}
-															onClick={() => onPageChange(pagination.page - 1)}
-															size="sm"
-															variant="outline"
-														>
-															Zurück
-														</Button>
-													}
-												/>
-											</PaginationItem>
-											<PaginationItem>
-												<PaginationNext
-													className="sm:*:[svg]:hidden"
-													render={
-														<Button
-															disabled={!pagination.hasNextPage}
-															onClick={() => onPageChange(pagination.page + 1)}
-															size="sm"
-															variant="outline"
-														>
-															Weiter
-														</Button>
-													}
-												/>
-											</PaginationItem>
-										</PaginationContent>
+												<SelectTrigger
+													aria-label="Rows per page"
+													className="w-fit min-w-none"
+													size="sm"
+												>
+													<SelectValue />
+												</SelectTrigger>
+												<SelectPopup>
+													<SelectItem value={10}>10</SelectItem>
+													<SelectItem value={20}>20</SelectItem>
+													<SelectItem value={30}>30</SelectItem>
+													<SelectItem value={50}>50</SelectItem>
+												</SelectPopup>
+											</Select>
+											<span className="text-muted-foreground text-sm">
+												von{" "}
+												<strong className="font-medium text-foreground">
+													{pagination.totalCount}
+												</strong>{" "}
+												{pagination.totalCount === 1
+													? "Mitglied"
+													: "Mitgliedern"}
+											</span>
+										</div>
+										<Pagination className="justify-end">
+											<PaginationContent>
+												<PaginationItem>
+													<span className="text-muted-foreground text-sm">
+														Seite {pagination.page} von {pagination.totalPages}
+													</span>
+												</PaginationItem>
+												<PaginationItem>
+													<PaginationPrevious
+														className="sm:*:[svg]:hidden"
+														render={
+															<Button
+																disabled={!pagination.hasPreviousPage}
+																onClick={() =>
+																	onPageChange(pagination.page - 1)
+																}
+																size="sm"
+																variant="outline"
+															>
+																Zurück
+															</Button>
+														}
+													/>
+												</PaginationItem>
+												<PaginationItem>
+													<PaginationNext
+														className="sm:*:[svg]:hidden"
+														render={
+															<Button
+																disabled={!pagination.hasNextPage}
+																onClick={() =>
+																	onPageChange(pagination.page + 1)
+																}
+																size="sm"
+																variant="outline"
+															>
+																Weiter
+															</Button>
+														}
+													/>
+												</PaginationItem>
+											</PaginationContent>
 										</Pagination>
 									</div>
 								</TableCell>
@@ -635,7 +641,9 @@ export function MembersV2Table({
 					<ToolbarGroup>
 						<p className="px-1.5 font-medium text-sm leading-none sm:px-2">
 							<span className="sm:hidden">{selectedCount}</span>
-							<span className="hidden sm:inline">{selectedCount} ausgewählt</span>
+							<span className="hidden sm:inline">
+								{selectedCount} ausgewählt
+							</span>
 						</p>
 					</ToolbarGroup>
 					<ToolbarSeparator />
@@ -654,13 +662,7 @@ export function MembersV2Table({
 							<span className="hidden sm:inline">Export CSV</span>
 						</ToolbarButton>
 						<ToolbarButton
-							render={
-								<Button
-									disabled
-									size="sm"
-									variant="outline"
-								/>
-							}
+							render={<Button disabled size="sm" variant="outline" />}
 						>
 							<MailIcon />
 							<span className="hidden sm:inline">E-Mail</span>
@@ -669,13 +671,7 @@ export function MembersV2Table({
 							</Badge>
 						</ToolbarButton>
 						<ToolbarButton
-							render={
-								<Button
-									disabled
-									size="sm"
-									variant="outline"
-								/>
-							}
+							render={<Button disabled size="sm" variant="outline" />}
 						>
 							<BotIcon />
 							<span className="hidden sm:inline">KI fragen</span>
@@ -686,7 +682,11 @@ export function MembersV2Table({
 						<Menu>
 							<MenuTrigger
 								render={
-									<Button aria-label="Weitere Aktionen" size="sm" variant="outline">
+									<Button
+										aria-label="Weitere Aktionen"
+										size="sm"
+										variant="outline"
+									>
 										<MoreVerticalIcon />
 									</Button>
 								}
@@ -713,11 +713,7 @@ export function MembersV2Table({
 					<ToolbarGroup>
 						<ToolbarButton
 							render={
-								<Button
-									size="sm"
-									variant="ghost"
-									onClick={onClearSelection}
-								/>
+								<Button size="sm" variant="ghost" onClick={onClearSelection} />
 							}
 						>
 							<XIcon />

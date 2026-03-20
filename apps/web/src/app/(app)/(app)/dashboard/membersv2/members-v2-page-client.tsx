@@ -56,9 +56,7 @@ import {
 } from "../_components/page-header";
 import { CreateMemberButton } from "../members/_components/create-member-button";
 import { MembersV2Controls } from "./_components/members-v2-controls";
-import {
-	MembersV2PrintListSheet,
-} from "./_components/members-v2-print-list-sheet";
+import { MembersV2PrintListSheet } from "./_components/members-v2-print-list-sheet";
 import { MembersV2Table } from "./_components/members-v2-table";
 import { useMembersV2PrintList } from "./_components/use-members-v2-print-list";
 
@@ -1313,7 +1311,7 @@ export function MembersV2PageClient({
 	);
 
 	return (
-		<div className="flex w-full min-w-0 max-w-full flex-col gap-6 overflow-x-hidden">
+		<div className="flex w-full flex-col gap-6">
 			<Header>
 				<HeaderContent>
 					<HeaderTitle>Mitglieder</HeaderTitle>
@@ -1448,7 +1446,7 @@ export function MembersV2PageClient({
 						printPending={printListMutation.isPending}
 					/>
 
-					<div className="min-w-0 max-w-full">
+					<div className="w-full overflow-x-auto">
 						<MembersV2Table
 							canExportCsv={canExportMembers}
 							data={data?.data ?? []}

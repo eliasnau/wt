@@ -20,10 +20,24 @@ import {
 	SlidersHorizontalIcon,
 	XIcon,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { DataTableFacetedFilter } from "@/components/table/data-table-faceted-filter";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
+import {
+	Drawer,
+	DrawerClose,
+	DrawerMenu,
+	DrawerMenuCheckboxItem,
+	DrawerMenuGroup,
+	DrawerMenuGroupLabel,
+	DrawerMenuItem,
+	DrawerMenuSeparator,
+	DrawerMenuTrigger,
+	DrawerPanel,
+	DrawerPopup,
+	DrawerTrigger,
+} from "@/components/ui/drawer";
 import { Frame, FramePanel } from "@/components/ui/frame";
 import {
 	InputGroup,
@@ -71,6 +85,7 @@ import {
 	TooltipProvider,
 	TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 type Option = {
 	label: string;
@@ -203,6 +218,7 @@ export function MembersV2Controls({
 	onAdvancedSheetOpenChange,
 	advancedFiltersPanel,
 }: MembersV2ControlsProps) {
+	const isMobile = useIsMobile();
 	const isDateSort = DATE_SORT_FIELDS.has(sortField);
 	const SortDirectionIcon =
 		sortDirection === "asc"
@@ -215,14 +231,410 @@ export function MembersV2Controls({
 
 	const inlineViews = savedViews.slice(0, MAX_INLINE_VIEWS);
 	const overflowViews = savedViews.slice(MAX_INLINE_VIEWS);
+	const mobileFilterSnapPoints = ["320px", 1] as const;
+	const [mobileFilterSnapPoint, setMobileFilterSnapPoint] = useState<
+		(typeof mobileFilterSnapPoints)[number] | null
+	>(mobileFilterSnapPoints[0]);
 
+	// Mobile layout
+	if (isMobile) {
+		return (
+			<TooltipProvider>
+				<div className="w-full space-y-2">
+					<InputGroup className="w-full">
+						<InputGroupAddon>
+							<SearchIcon className="size-4" />
+						</InputGroupAddon>
+						<InputGroupInput
+							type="text"
+							placeholder="Suche..."
+							value={localSearch}
+							onChange={(event) => onSearchChange(event.target.value)}
+						/>
+						{localSearch !== "" && (
+							<InputGroupAddon
+								align="inline-end"
+								className="cursor-pointer"
+								onClick={onClearSearch}
+							>
+								<XIcon className="size-4" />
+							</InputGroupAddon>
+						)}
+					</InputGroup>
+
+					<div className="flex w-full gap-2">
+						<div className="min-w-0 flex-1">
+							<DataTableFacetedFilter
+								title="Gruppen"
+								options={groupOptions}
+								selectedValues={groupIds}
+								buttonSize="default"
+								onValueChange={onGroupIdsChange}
+								className="w-full"
+							/>
+						</div>
+
+						<Drawer
+							onSnapPointChange={(point) =>
+								setMobileFilterSnapPoint(
+									point as (typeof mobileFilterSnapPoints)[number] | null,
+								)
+							}
+							position="bottom"
+							snapPoint={mobileFilterSnapPoint}
+							snapPoints={[...mobileFilterSnapPoints]}
+							snapToSequentialPoints
+						>
+							<DrawerTrigger
+								render={<Button variant="outline" size="default" />}
+							>
+								<SlidersHorizontalIcon />
+								Filter
+							</DrawerTrigger>
+							<DrawerPopup showBar>
+								<DrawerPanel>
+									<DrawerMenu>
+										<DrawerMenuGroup>
+											<DrawerMenuGroupLabel>Filter</DrawerMenuGroupLabel>
+										</DrawerMenuGroup>
+
+										<Drawer>
+											<DrawerMenuTrigger>
+												<SortDirectionIcon />
+												Sortierung
+											</DrawerMenuTrigger>
+											<DrawerPopup showBar>
+												<DrawerPanel>
+													<DrawerMenu>
+														<DrawerMenuGroup>
+															<DrawerMenuGroupLabel>
+																Sortierfeld
+															</DrawerMenuGroupLabel>
+														</DrawerMenuGroup>
+														{sortFieldOptions.map((option) => (
+															<DrawerClose
+																key={option.value}
+																render={
+																	<DrawerMenuItem
+																		onClick={() =>
+																			onSortFieldChange(option.value)
+																		}
+																	/>
+																}
+															>
+																{sortField === option.value && <CheckIcon />}
+																{option.label}
+															</DrawerClose>
+														))}
+														<DrawerMenuSeparator />
+														<DrawerMenuGroup>
+															<DrawerMenuGroupLabel>
+																Reihenfolge
+															</DrawerMenuGroupLabel>
+														</DrawerMenuGroup>
+														{sortDirectionOptions.map((option) => (
+															<DrawerClose
+																key={option.value}
+																render={
+																	<DrawerMenuItem
+																		onClick={() =>
+																			onSortDirectionChange(option.value)
+																		}
+																	/>
+																}
+															>
+																{sortDirection === option.value && (
+																	<CheckIcon />
+																)}
+																{option.label}
+															</DrawerClose>
+														))}
+													</DrawerMenu>
+												</DrawerPanel>
+											</DrawerPopup>
+										</Drawer>
+
+										<DrawerMenuSeparator />
+
+										<Drawer>
+											<DrawerMenuTrigger>
+												<ListFilterIcon />
+												Anzuzeigende Mitglieder
+											</DrawerMenuTrigger>
+											<DrawerPopup showBar>
+												<DrawerPanel>
+													<DrawerMenu>
+														<DrawerMenuGroup>
+															<DrawerMenuGroupLabel>
+																Anzuzeigende Mitglieder
+															</DrawerMenuGroupLabel>
+														</DrawerMenuGroup>
+														<DrawerMenuCheckboxItem
+															variant="switch"
+															checked={includeActive}
+															onCheckedChange={(checked) =>
+																onIncludeActiveChange(Boolean(checked))
+															}
+														>
+															Aktive Mitglieder
+														</DrawerMenuCheckboxItem>
+														<DrawerMenuCheckboxItem
+															variant="switch"
+															checked={includeCancelled}
+															onCheckedChange={(checked) =>
+																onIncludeCancelledChange(Boolean(checked))
+															}
+														>
+															Gekündigte Mitglieder
+														</DrawerMenuCheckboxItem>
+														<DrawerMenuCheckboxItem
+															variant="switch"
+															checked={includeCancelledButActive}
+															onCheckedChange={(checked) =>
+																onIncludeCancelledButActiveChange(
+																	Boolean(checked),
+																)
+															}
+														>
+															Gekündigt, noch aktiv
+														</DrawerMenuCheckboxItem>
+													</DrawerMenu>
+												</DrawerPanel>
+											</DrawerPopup>
+										</Drawer>
+
+										<DrawerMenuSeparator />
+
+										<Drawer>
+											<DrawerMenuTrigger>
+												<SlidersHorizontalIcon />
+												Advanced Builder
+												{advancedFilterCount > 0
+													? ` (${advancedFilterCount})`
+													: ""}
+											</DrawerMenuTrigger>
+											<DrawerPopup showBar>
+												<DrawerPanel>
+													<DrawerMenu>
+														<DrawerMenuGroup>
+															<DrawerMenuGroupLabel>
+																Advanced Builder
+															</DrawerMenuGroupLabel>
+														</DrawerMenuGroup>
+														<div className="px-4 py-2">
+															{advancedFiltersPanel}
+														</div>
+													</DrawerMenu>
+												</DrawerPanel>
+											</DrawerPopup>
+										</Drawer>
+
+										<DrawerMenuSeparator />
+
+										<Drawer>
+											<DrawerMenuTrigger>
+												<BookmarkIcon />
+												Voreinstellungen
+											</DrawerMenuTrigger>
+											<DrawerPopup showBar>
+												<DrawerPanel>
+													<DrawerMenu>
+														<DrawerMenuGroup>
+															<DrawerMenuGroupLabel>
+																Aktionen
+															</DrawerMenuGroupLabel>
+														</DrawerMenuGroup>
+														{!selectedSavedViewId && (
+															<DrawerClose
+																render={
+																	<DrawerMenuItem
+																		disabled={!canSaveView}
+																		onClick={
+																			canSaveView ? onSaveView : undefined
+																		}
+																	/>
+																}
+															>
+																<SaveIcon />
+																{canSaveView
+																	? "Neue Ansicht speichern"
+																	: "Filter anpassen zum Speichern"}
+															</DrawerClose>
+														)}
+														{selectedSavedViewId && (
+															<>
+																<DrawerClose
+																	render={
+																		<DrawerMenuItem onClick={onRenameView} />
+																	}
+																>
+																	<SaveIcon />
+																	Aktuelle Ansicht umbenennen
+																</DrawerClose>
+																<DrawerClose
+																	render={
+																		<DrawerMenuItem
+																			variant="destructive"
+																			onClick={onDeleteSavedView}
+																		/>
+																	}
+																>
+																	<XIcon />
+																	Aktuelle Ansicht löschen
+																</DrawerClose>
+															</>
+														)}
+														<DrawerMenuSeparator />
+														<DrawerMenuGroup>
+															<DrawerMenuGroupLabel>
+																Systemansichten
+															</DrawerMenuGroupLabel>
+														</DrawerMenuGroup>
+														{systemViews.map((view) => (
+															<DrawerClose
+																key={view.id}
+																render={
+																	<DrawerMenuItem
+																		onClick={() => onApplySystemView(view.id)}
+																	/>
+																}
+															>
+																{selectedSystemViewId === view.id ? (
+																	<CheckIcon />
+																) : (
+																	<GlobeIcon />
+																)}
+																{view.name}
+															</DrawerClose>
+														))}
+														{savedViews.length > 0 && (
+															<>
+																<DrawerMenuSeparator />
+																<DrawerMenuGroup>
+																	<DrawerMenuGroupLabel>
+																		Eigene Ansichten
+																	</DrawerMenuGroupLabel>
+																</DrawerMenuGroup>
+																{savedViews.map((view) => (
+																	<DrawerClose
+																		key={view.id}
+																		render={
+																			<DrawerMenuItem
+																				onClick={() =>
+																					onApplySavedView(view.id)
+																				}
+																			/>
+																		}
+																	>
+																		{selectedSavedViewId === view.id ? (
+																			<CheckIcon />
+																		) : (
+																			<BookmarkIcon />
+																		)}
+																		{view.name}
+																	</DrawerClose>
+																))}
+															</>
+														)}
+													</DrawerMenu>
+												</DrawerPanel>
+											</DrawerPopup>
+										</Drawer>
+
+										{hasActiveFilters && (
+											<>
+												<DrawerMenuSeparator />
+												<DrawerMenuGroup>
+													<DrawerMenuGroupLabel>Aktionen</DrawerMenuGroupLabel>
+												</DrawerMenuGroup>
+												<DrawerClose
+													render={
+														<DrawerMenuItem
+															variant="destructive"
+															onClick={onResetAllFilters}
+														/>
+													}
+												>
+													<XIcon />
+													Filter zurücksetzen
+												</DrawerClose>
+											</>
+										)}
+									</DrawerMenu>
+								</DrawerPanel>
+							</DrawerPopup>
+						</Drawer>
+
+						<Menu>
+							<MenuTrigger render={<Button size="icon" variant="outline" />}>
+								<MoreHorizontalIcon />
+							</MenuTrigger>
+							<MenuPopup align="end" className="w-[240px]">
+								<MenuGroup>
+									<MenuGroupLabel>Spalten ein-/ausblenden</MenuGroupLabel>
+									{COLUMN_OPTIONS.map((col) => (
+										<MenuCheckboxItem key={col.value} checked disabled>
+											{col.label}
+										</MenuCheckboxItem>
+									))}
+								</MenuGroup>
+
+								<MenuSeparator />
+
+								<MenuGroup>
+									<MenuGroupLabel>Export</MenuGroupLabel>
+									<MenuItem
+										disabled={!canExportCsv || exportPending}
+										onClick={onExportCsv}
+									>
+										{exportPending ? (
+											<Loader2 className="animate-spin" />
+										) : (
+											<DownloadIcon />
+										)}
+										CSV-Liste exportieren
+									</MenuItem>
+									<MenuItem onClick={onOpenPrintSheet}>
+										<PrinterIcon />
+										Liste drucken
+									</MenuItem>
+								</MenuGroup>
+
+								<MenuSeparator />
+
+								<MenuGroup>
+									<MenuGroupLabel>Teilen</MenuGroupLabel>
+									<MenuItem disabled>
+										<Share2Icon />
+										Aktuelle Ansicht teilen
+									</MenuItem>
+								</MenuGroup>
+							</MenuPopup>
+						</Menu>
+					</div>
+
+					{showSelectedOnly && (
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={onShowAllMembers}
+							className="w-full"
+						>
+							Alle Mitglieder anzeigen
+						</Button>
+					)}
+				</div>
+			</TooltipProvider>
+		);
+	}
+	// Desktop layout (unchanged)
 	return (
 		<TooltipProvider>
-			<div className="min-w-0 max-w-full space-y-2">
+			<div className="w-full space-y-2">
 				{/* Row 1: Search + Group filter + contextual reset */}
 				<div className="flex flex-wrap items-center justify-between gap-2">
-					<div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
-						<InputGroup className="w-[260px] max-w-full sm:w-[320px] lg:w-[360px]">
+					<div className="flex w-full min-w-0 flex-1 flex-wrap items-center gap-2">
+						<InputGroup className="w-full max-w-full sm:w-[320px] lg:w-[360px]">
 							<InputGroupAddon>
 								<SearchIcon className="size-4" />
 							</InputGroupAddon>
