@@ -31,13 +31,13 @@ export async function syncAutumnUsage({
 		return;
 	}
 
-	const { error } = await autumn.usage({
-		customer_id: customerId,
-		feature_id: featureId,
-		value,
-	});
-
-	if (error) {
+	try {
+		await autumn.track({
+			customerId,
+			featureId,
+			value,
+		});
+	} catch (error) {
 		console.error("Failed to sync Autumn usage", {
 			customerId,
 			featureId,
@@ -62,13 +62,18 @@ export async function checkAutumnFeature({
 		return { allowed: true, balance: undefined };
 	}
 
-	const { data, error } = await autumn.check({
-		customer_id: customerId,
-		feature_id: featureId,
-		required_balance: requiredBalance,
-	});
+	try {
+		const data = await autumn.check({
+			customerId,
+			featureId,
+			requiredBalance,
+		});
 
-	if (error) {
+		return {
+			allowed: data.allowed,
+			balance: data.balance,
+		};
+	} catch (error) {
 		console.error("Failed to check Autumn feature access", {
 			customerId,
 			featureId,
@@ -77,11 +82,6 @@ export async function checkAutumnFeature({
 		});
 		return { allowed: false, balance: undefined };
 	}
-
-	return {
-		allowed: data.allowed,
-		balance: data.balance,
-	};
 }
 
 export async function trackAutumnUsage({
@@ -101,14 +101,13 @@ export async function trackAutumnUsage({
 		return;
 	}
 
-	const { error } = await autumn.track({
-		customer_id: customerId,
-		feature_id: featureId,
-		value,
-		idempotency_key: idempotencyKey,
-	});
-
-	if (error) {
+	try {
+		await autumn.track({
+			customerId,
+			featureId,
+			value,
+		});
+	} catch (error) {
 		console.error("Failed to track Autumn usage", {
 			customerId,
 			featureId,

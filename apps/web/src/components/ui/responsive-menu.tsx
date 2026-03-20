@@ -58,8 +58,8 @@ function ResponsiveMenu({
 	return <Menu>{children}</Menu>;
 }
 
-interface ResponsiveTriggerProps
-	extends Omit<React.ComponentProps<typeof MenuTrigger>, "render"> {
+interface ResponsiveTriggerProps {
+	children: React.ReactNode;
 	render?: React.ComponentProps<typeof MenuTrigger>["render"];
 	breakpoint?: string;
 }
@@ -68,20 +68,19 @@ function ResponsiveTrigger({
 	children,
 	render,
 	breakpoint = "max-md",
-	...props
 }: ResponsiveTriggerProps) {
 	const isMobile = useMediaQuery(breakpoint);
 
 	if (isMobile) {
 		return (
-			<DrawerTrigger render={render} {...props}>
+			<DrawerTrigger render={render}>
 				{children}
 			</DrawerTrigger>
 		);
 	}
 
 	return (
-		<MenuTrigger render={render} {...props}>
+		<MenuTrigger render={render}>
 			{children}
 		</MenuTrigger>
 	);

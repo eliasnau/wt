@@ -87,13 +87,13 @@ async function syncOrganizationUsersUsage(organizationId: string) {
 	}
 
 	const memberCount = await getOrganizationMemberCount(organizationId);
-	const { error } = await autumn.usage({
-		customer_id: organizationId,
-		feature_id: "users",
-		value: memberCount,
-	});
-
-	if (error) {
+	try {
+		await autumn.track({
+			customerId: organizationId,
+			featureId: "users",
+			value: memberCount,
+		});
+	} catch (error) {
 		console.error("Failed to sync Autumn users usage", {
 			organizationId,
 			memberCount,
@@ -112,13 +112,13 @@ async function setOrganizationUsersUsage(
 		return;
 	}
 
-	const { error } = await autumn.usage({
-		customer_id: organizationId,
-		feature_id: "users",
-		value: memberCount,
-	});
-
-	if (error) {
+	try {
+		await autumn.track({
+			customerId: organizationId,
+			featureId: "users",
+			value: memberCount,
+		});
+	} catch (error) {
 		console.error("Failed to set Autumn users usage", {
 			organizationId,
 			memberCount,
@@ -136,13 +136,14 @@ async function ensureOrganizationCanAddUser(organizationId: string) {
 
 	await syncOrganizationUsersUsage(organizationId);
 
-	const { data, error } = await autumn.check({
-		customer_id: organizationId,
-		feature_id: "users",
-		required_balance: 1,
-	});
-
-	if (error) {
+	let response;
+	try {
+		response = await autumn.check({
+			customerId: organizationId,
+			featureId: "users",
+			requiredBalance: 1,
+		});
+	} catch (error) {
 		console.error("Failed to check Autumn users access", {
 			organizationId,
 			error,
@@ -152,7 +153,7 @@ async function ensureOrganizationCanAddUser(organizationId: string) {
 		});
 	}
 
-	if (!data.allowed) {
+	if (!response.allowed) {
 		throw new APIError("BAD_REQUEST", {
 			message: "Organization has reached its user limit",
 		});
