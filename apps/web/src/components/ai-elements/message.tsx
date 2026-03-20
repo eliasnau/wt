@@ -318,7 +318,12 @@ export const MessageBranchPage = ({
 
 export type MessageResponseProps = StreamdownProps;
 
-const streamdownPlugins = { cjk, code, math, mermaid };
+const streamdownPlugins = {
+  cjk,
+  code,
+  math,
+  mermaid,
+} as NonNullable<StreamdownProps["plugins"]>;
 const defaultStreamAnimation: NonNullable<StreamdownProps["animated"]> = {
   animation: "blurIn",
   duration: 250,
