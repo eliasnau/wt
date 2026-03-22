@@ -1,3 +1,5 @@
+import { and, db, eq, isNotNull } from "@repo/db";
+import { account } from "@repo/db/schema";
 import { auth } from "@repo/auth/server";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
@@ -6,10 +8,6 @@ import SetupPassword from "./setup-password";
 
 type SetupPasswordState = {
 	error?: string;
-};
-
-type AuthAccount = {
-	providerId?: string | null;
 };
 
 function getErrorMessage(error: unknown) {
@@ -65,15 +63,19 @@ export default async function SetupPasswordPage() {
 		redirect("/sign-in?redirectUrl=%2Fsetup-password");
 	}
 
-	const accounts = await auth.api.listAccounts({
-		headers: await headers(),
-	});
+	const [credentialAccount] = await db
+		.select({ id: account.id })
+		.from(account)
+		.where(
+			and(
+				eq(account.userId, session.user.id),
+				eq(account.providerId, "credential"),
+				isNotNull(account.password),
+			),
+		)
+		.limit(1);
 
-	const typedAccounts = Array.isArray(accounts) ? (accounts as AuthAccount[]) : [];
-
-	const hasPassword = typedAccounts.some(
-		(account) => account.providerId === "credential",
-	);
+	const hasPassword = Boolean(credentialAccount);
 
 	if (hasPassword) {
 		redirect("/account/security");
