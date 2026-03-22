@@ -26,6 +26,7 @@ export const env = createEnv({
 		// PostHog Analytics
 		NEXT_PUBLIC_POSTHOG_KEY: z.string(),
 		NEXT_PUBLIC_POSTHOG_HOST: z.url(),
+		NEXT_PUBLIC_MATDESK_DOCS_URL: z.url().optional(),
 	},
 	runtimeEnv: {
 		// Server
@@ -45,6 +46,8 @@ export const env = createEnv({
 		// Client
 		NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
 		NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
+		NEXT_PUBLIC_MATDESK_DOCS_URL:
+			process.env.NEXT_PUBLIC_MATDESK_DOCS_URL ?? process.env.MATDESK_DOCS_URL,
 
 		RESEND_API_KEY: process.env.RESEND_API_KEY,
 	},

@@ -1,7 +1,8 @@
 "use client";
 
 import { authClient } from "@repo/auth/client";
-import { ChevronsUpDown } from "lucide-react";
+import { env } from "@repo/env/web";
+import { BookOpen, ChevronsUpDown } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
@@ -43,6 +44,7 @@ export const UserButton = () => {
 		session?.user?.hideSensitiveInformatoin,
 	);
 	const displayName = session?.user?.name ?? "User";
+	const docsUrl = env.NEXT_PUBLIC_MATDESK_DOCS_URL?.trim();
 
 	const handleSignOut = async () => {
 		posthog.capture("auth:sign-out");
@@ -138,6 +140,18 @@ export const UserButton = () => {
 							<span>Konto</span>
 						</MenuItem>
 					</AnimateIcon>
+					{docsUrl ? (
+						<AnimateIcon animateOnHover>
+							<MenuItem
+								onClick={() =>
+									window.open(docsUrl, "_blank", "noopener,noreferrer")
+								}
+							>
+								<BookOpen className="size-4" />
+								<span>Dokumentation</span>
+							</MenuItem>
+						</AnimateIcon>
+					) : null}
 				</MenuGroup>
 
 				<MenuSub>
