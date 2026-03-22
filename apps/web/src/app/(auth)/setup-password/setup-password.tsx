@@ -76,7 +76,7 @@ export default function SetupPassword({
 							Passwort festlegen
 						</h1>
 						<p className="text-base text-muted-foreground">
-							Lege ein Passwort fest, damit du dich kuenftig auch mit E-Mail
+							Lege ein Passwort fest, damit du dich künftig auch mit E-Mail
 							und Passwort anmelden kannst.
 						</p>
 					</div>
@@ -114,7 +114,7 @@ export default function SetupPassword({
 								</InputGroupAddon>
 								<InputGroupInput
 									name="confirmPassword"
-									placeholder="Passwort bestaetigen"
+									placeholder="Passwort bestätigen"
 									type="password"
 									autoComplete="new-password"
 									required
