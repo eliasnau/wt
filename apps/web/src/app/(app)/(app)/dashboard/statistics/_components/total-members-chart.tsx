@@ -4,13 +4,10 @@ import {
 	AreaChartIcon,
 	BarChartIcon,
 	InfoIcon,
-	TrendingDown,
-	TrendingUp,
 } from "lucide-react";
 import { useState } from "react";
 import { AreaChart } from "@/components/charts/area-chart";
 import { BarChart } from "@/components/charts/bar-chart";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { ChartConfig } from "@/components/ui/chart";
 import {
@@ -52,40 +49,13 @@ export function TotalMembersChart({
 }: TotalMembersChartProps) {
 	const [chartType, setChartType] = useState<ChartType>("area");
 	const chartData = data;
-	const firstValue = chartData[0]?.total ?? 0;
-	const lastValue = chartData.at(-1)?.total ?? 0;
-	const hasData = chartData.length > 1;
-	const changePercent = hasData
-		? firstValue === 0
-			? lastValue === 0
-				? 0
-				: 100
-			: ((lastValue - firstValue) / Math.abs(firstValue)) * 100
-		: 0;
-	const isPositive = changePercent >= 0;
-	const trendClass = isPositive
-		? "ml-2 border-none bg-green-500/10 text-green-500"
-		: "ml-2 border-none bg-red-500/10 text-red-500";
-	const trendText = hasData
-		? `${isPositive ? "+" : ""}${changePercent.toFixed(1)}%`
-		: "—";
 
 	return (
 		<Frame>
 			<FrameHeader className="flex-row items-start justify-between">
 				<div>
 					<div className="flex items-center gap-2">
-						<FrameTitle>
-							Mitglieder gesamt
-							<Badge variant="outline" className={trendClass}>
-								{isPositive ? (
-									<TrendingUp className="h-4 w-4" />
-								) : (
-									<TrendingDown className="h-4 w-4" />
-								)}
-								<span>{isPending ? "…" : trendText}</span>
-							</Badge>
-						</FrameTitle>
+						<FrameTitle>Mitglieder gesamt</FrameTitle>
 						<Tooltip>
 							<TooltipTrigger
 								render={
