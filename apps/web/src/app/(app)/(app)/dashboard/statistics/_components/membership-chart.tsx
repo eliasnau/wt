@@ -30,11 +30,11 @@ import { cn } from "@/lib/utils";
 const chartConfig = {
 	newMembers: {
 		label: "Neue Mitglieder",
-		color: "var(--chart-1)",
+		color: "#16a34a",
 	},
 	cancellations: {
 		label: "Kündigungen",
-		color: "var(--chart-2)",
+		color: "#dc2626",
 	},
 } satisfies ChartConfig;
 

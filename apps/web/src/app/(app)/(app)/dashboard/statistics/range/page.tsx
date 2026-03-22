@@ -81,6 +81,22 @@ export default function RangeComparisonPage() {
 			end: currentMonth,
 		});
 	}, [currentMonth]);
+	const monthSelectItems = useMemo(
+		() =>
+			monthOptions.map((month) => ({
+				value: format(month, "yyyy-MM"),
+				label: format(month, "MMM yyyy", { locale: de }),
+			})),
+		[monthOptions],
+	);
+	const groupByItems = useMemo(
+		() => [
+			{ value: "month", label: "Monatlich" },
+			{ value: "quarter", label: "Quartalsweise" },
+			{ value: "year", label: "Jährlich" },
+		],
+		[],
+	);
 	const [startMonth, setStartMonth] = useState(
 		format(startOfMonth(subMonths(currentMonth, 5)), "yyyy-MM"),
 	);
@@ -231,6 +247,7 @@ export default function RangeComparisonPage() {
 				<HeaderActions>
 					<div className="flex items-center gap-2">
 						<Select
+							items={monthSelectItems}
 							value={startMonth}
 							onValueChange={(value) => {
 								if (!value) {
@@ -258,6 +275,7 @@ export default function RangeComparisonPage() {
 						</Select>
 
 						<Select
+							items={monthSelectItems}
 							value={endMonth}
 							onValueChange={(value) => {
 								if (!value) {
@@ -285,6 +303,7 @@ export default function RangeComparisonPage() {
 						</Select>
 
 						<Select
+							items={groupByItems}
 							value={groupBy}
 							onValueChange={(value) => {
 								if (!value) {
