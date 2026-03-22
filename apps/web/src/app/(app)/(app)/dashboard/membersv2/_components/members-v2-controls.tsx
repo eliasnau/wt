@@ -58,6 +58,19 @@ import {
 	MenuTrigger,
 } from "@/components/ui/menu";
 import {
+	Menu as ResponsiveMenu,
+	MenuCheckboxItem as ResponsiveMenuCheckboxItem,
+	MenuGroup as ResponsiveMenuGroup,
+	MenuGroupLabel as ResponsiveMenuGroupLabel,
+	MenuItem as ResponsiveMenuItem,
+	MenuPopup as ResponsiveMenuPopup,
+	MenuSeparator as ResponsiveMenuSeparator,
+	MenuSub as ResponsiveMenuSub,
+	MenuSubPopup as ResponsiveMenuSubPopup,
+	MenuSubTrigger as ResponsiveMenuSubTrigger,
+	MenuTrigger as ResponsiveMenuTrigger,
+} from "@/components/ui/responsive-menu";
+import {
 	Popover,
 	PopoverDescription,
 	PopoverPopup,
@@ -262,38 +275,38 @@ export function MembersV2Controls({
 						)}
 					</InputGroup>
 
-					<div className="flex w-full gap-2">
-						<div className="min-w-0 flex-1">
+					<div className="flex w-full items-center justify-between gap-2">
+						<div className="shrink-0">
 							<DataTableFacetedFilter
 								title="Gruppen"
 								options={groupOptions}
 								selectedValues={groupIds}
 								buttonSize="default"
 								onValueChange={onGroupIdsChange}
-								className="w-full"
 							/>
 						</div>
 
-						<Drawer
-							onSnapPointChange={(point) =>
-								setMobileFilterSnapPoint(
-									point as (typeof mobileFilterSnapPoints)[number] | null,
-								)
-							}
-							position="bottom"
-							snapPoint={mobileFilterSnapPoint}
-							snapPoints={[...mobileFilterSnapPoints]}
-							snapToSequentialPoints
-						>
-							<DrawerTrigger
-								render={<Button variant="outline" size="default" />}
+						<div className="flex items-center gap-2">
+							<Drawer
+								onSnapPointChange={(point) =>
+									setMobileFilterSnapPoint(
+										point as (typeof mobileFilterSnapPoints)[number] | null,
+									)
+								}
+								position="bottom"
+								snapPoint={mobileFilterSnapPoint}
+								snapPoints={[...mobileFilterSnapPoints]}
+								snapToSequentialPoints
 							>
-								<SlidersHorizontalIcon />
-								Filter
-							</DrawerTrigger>
-							<DrawerPopup showBar>
-								<DrawerPanel>
-									<DrawerMenu>
+								<DrawerTrigger
+									render={<Button variant="outline" size="default" />}
+								>
+									<SlidersHorizontalIcon />
+									Filter
+								</DrawerTrigger>
+								<DrawerPopup showBar>
+									<DrawerPanel>
+										<DrawerMenu>
 										<DrawerMenuGroup>
 											<DrawerMenuGroupLabel>Filter</DrawerMenuGroupLabel>
 										</DrawerMenuGroup>
@@ -560,57 +573,74 @@ export function MembersV2Controls({
 												</DrawerClose>
 											</>
 										)}
-									</DrawerMenu>
-								</DrawerPanel>
-							</DrawerPopup>
-						</Drawer>
+										</DrawerMenu>
+									</DrawerPanel>
+								</DrawerPopup>
+							</Drawer>
 
-						<Menu>
-							<MenuTrigger render={<Button size="icon" variant="outline" />}>
-								<MoreHorizontalIcon />
-							</MenuTrigger>
-							<MenuPopup align="end" className="w-[240px]">
-								<MenuGroup>
-									<MenuGroupLabel>Spalten ein-/ausblenden</MenuGroupLabel>
-									{COLUMN_OPTIONS.map((col) => (
-										<MenuCheckboxItem key={col.value} checked disabled>
-											{col.label}
-										</MenuCheckboxItem>
-									))}
-								</MenuGroup>
+							<ResponsiveMenu>
+								<ResponsiveMenuTrigger
+									render={<Button size="icon" variant="outline" />}
+								>
+									<MoreHorizontalIcon />
+								</ResponsiveMenuTrigger>
+								<ResponsiveMenuPopup align="end" className="w-[240px]">
+									<ResponsiveMenuSub>
+										<ResponsiveMenuSubTrigger>
+											<Columns3Icon />
+											Spalten ein-/ausblenden
+										</ResponsiveMenuSubTrigger>
+										<ResponsiveMenuSubPopup className="w-[220px]">
+											<ResponsiveMenuGroup>
+												<ResponsiveMenuGroupLabel>
+													Spalten ein-/ausblenden
+												</ResponsiveMenuGroupLabel>
+												{COLUMN_OPTIONS.map((col) => (
+													<ResponsiveMenuCheckboxItem
+														key={col.value}
+														checked
+														disabled
+													>
+														{col.label}
+													</ResponsiveMenuCheckboxItem>
+												))}
+											</ResponsiveMenuGroup>
+										</ResponsiveMenuSubPopup>
+									</ResponsiveMenuSub>
 
-								<MenuSeparator />
+									<ResponsiveMenuSeparator />
 
-								<MenuGroup>
-									<MenuGroupLabel>Export</MenuGroupLabel>
-									<MenuItem
-										disabled={!canExportCsv || exportPending}
-										onClick={onExportCsv}
-									>
-										{exportPending ? (
-											<Loader2 className="animate-spin" />
-										) : (
-											<DownloadIcon />
-										)}
-										CSV-Liste exportieren
-									</MenuItem>
-									<MenuItem onClick={onOpenPrintSheet}>
-										<PrinterIcon />
-										Liste drucken
-									</MenuItem>
-								</MenuGroup>
+									<ResponsiveMenuGroup>
+										<ResponsiveMenuGroupLabel>Export</ResponsiveMenuGroupLabel>
+										<ResponsiveMenuItem
+											disabled={!canExportCsv || exportPending}
+											onClick={onExportCsv}
+										>
+											{exportPending ? (
+												<Loader2 className="animate-spin" />
+											) : (
+												<DownloadIcon />
+											)}
+											CSV-Liste exportieren
+										</ResponsiveMenuItem>
+										<ResponsiveMenuItem onClick={onOpenPrintSheet}>
+											<PrinterIcon />
+											Liste drucken
+										</ResponsiveMenuItem>
+									</ResponsiveMenuGroup>
 
-								<MenuSeparator />
+									<ResponsiveMenuSeparator />
 
-								<MenuGroup>
-									<MenuGroupLabel>Teilen</MenuGroupLabel>
-									<MenuItem disabled>
-										<Share2Icon />
-										Aktuelle Ansicht teilen
-									</MenuItem>
-								</MenuGroup>
-							</MenuPopup>
-						</Menu>
+									<ResponsiveMenuGroup>
+										<ResponsiveMenuGroupLabel>Teilen</ResponsiveMenuGroupLabel>
+										<ResponsiveMenuItem disabled>
+											<Share2Icon />
+											Aktuelle Ansicht teilen
+										</ResponsiveMenuItem>
+									</ResponsiveMenuGroup>
+								</ResponsiveMenuPopup>
+							</ResponsiveMenu>
+						</div>
 					</div>
 
 					{showSelectedOnly && (

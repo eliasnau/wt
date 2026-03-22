@@ -190,6 +190,7 @@ interface ResponsiveItemProps {
 	className?: string;
 	onClick?: () => void;
 	closeOnClick?: boolean; // Auto-close drawer/menu on click
+	disabled?: boolean;
 }
 
 function ResponsiveItem({
@@ -200,6 +201,7 @@ function ResponsiveItem({
 	className,
 	onClick,
 	closeOnClick = true,
+	disabled,
 	...props
 }: ResponsiveItemProps) {
 	const isMobile = useMediaQuery(breakpoint);
@@ -211,6 +213,7 @@ function ResponsiveItem({
 					render={
 						<DrawerMenuItem
 							className={className}
+							disabled={disabled}
 							variant={variant}
 							onClick={onClick}
 						/>
@@ -221,7 +224,12 @@ function ResponsiveItem({
 			);
 		}
 		return (
-			<DrawerMenuItem className={className} onClick={onClick} variant={variant}>
+			<DrawerMenuItem
+				className={className}
+				disabled={disabled}
+				onClick={onClick}
+				variant={variant}
+			>
 				{children}
 			</DrawerMenuItem>
 		);
@@ -230,6 +238,7 @@ function ResponsiveItem({
 	return (
 		<MenuItem
 			className={className}
+			disabled={disabled}
 			inset={inset}
 			onClick={onClick}
 			variant={variant}
