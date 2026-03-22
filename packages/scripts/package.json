@@ -1,0 +1,28 @@
+{
+	"name": "@repo/scripts",
+	"private": true,
+	"type": "module",
+	"scripts": {
+		"build": "tsc -p tsconfig.json",
+		"check-types": "tsc --noEmit",
+		"matool:prepare": "node dist/src/prepare-matool.js",
+		"matool:cancelled": "node dist/src/prepare-matool-cancelled.js",
+		"matool:map": "node dist/src/map-matool-active.js",
+		"import:matool": "node dist/src/import-matool.js",
+		"import:matool-cancelled": "node dist/src/import-matool-cancelled.js",
+		"matool:patch-birthdates": "node dist/src/patch-matool-birthdates.js",
+		"matool:patch-guardians": "node dist/src/patch-matool-guardian-info.js",
+		"demo:seed-school": "tsx src/demo-seed-school.ts"
+	},
+	"dependencies": {
+		"@repo/db": "workspace:*",
+		"dotenv": "catalog:"
+	},
+	"devDependencies": {
+		"@repo/config": "workspace:*",
+		"tsx": "^4.20.6"
+	},
+	"peerDependencies": {
+		"typescript": "^5"
+	}
+}
