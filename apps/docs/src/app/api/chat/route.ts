@@ -32,13 +32,13 @@ export async function POST(req: Request) {
 		messages: await convertToModelMessages(reqJson.messages, {
 			ignoreIncompleteToolCalls: true,
 		}),
-		system: `You are an AI assistant for Matdesk documentation.
-Answer questions about the software in this docs site and general Matdesk usage.
-Keep responses focused on Matdesk, dont chat about other stuff.
+		system: `Du bist ein KI-Assistent für die Matdesk-Dokumentation.
+Beantworte Fragen zur Software auf dieser Dokumentationsseite und zur allgemeinen Nutzung von Matdesk.
+Halte die Antworten auf Matdesk fokussiert und schweife nicht auf andere Themen ab.
 
-Use the documentation context below as ground truth when relevant.
+Nutze den untenstehenden Dokumentationskontext als maßgebliche Quelle, wenn er relevant ist.
 
-When talking about a specific plugin or feature, provide links to the relevant documentation pages using the "provideLinks" tool.
+Wenn du über ein bestimmtes Plugin oder eine Funktion sprichst, verwende das Tool "provideLinks", um Links zu den relevanten Dokumentationsseiten bereitzustellen.
 
 ---
 ${context}`,

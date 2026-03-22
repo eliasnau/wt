@@ -29,7 +29,7 @@ export default async function Layout({
           )}
         >
           <MessageCircleIcon className="size-4.5" />
-          Ask AI
+          KI fragen
         </AISearchTrigger>
       </AISearch>
 

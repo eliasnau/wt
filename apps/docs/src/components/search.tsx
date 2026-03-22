@@ -43,14 +43,14 @@ export function AISearchPanelHeader({
       {...props}
     >
       <div className="px-3 py-2 flex-1">
-        <p className="text-sm font-medium mb-2">AI Chat</p>
+        <p className="text-sm font-medium mb-2">KI-Chat</p>
         <p className="text-xs text-fd-muted-foreground">
-          Ask anything about the software
+          Fragen Sie alles zur Software
         </p>
       </div>
 
       <button
-        aria-label="Close"
+        aria-label="Schließen"
         tabIndex={-1}
         className={cn(
           buttonVariants({
@@ -88,7 +88,7 @@ export function AISearchInputActions() {
           onClick={() => regenerate()}
         >
           <RefreshCw className="size-4" />
-          Retry
+          Erneut versuchen
         </button>
       )}
       <button
@@ -102,7 +102,7 @@ export function AISearchInputActions() {
         )}
         onClick={() => setMessages([])}
       >
-        Clear Chat
+        Chat löschen
       </button>
     </>
   );
@@ -135,7 +135,7 @@ export function AISearchInput(props: ComponentProps<"form">) {
     >
       <Input
         value={input}
-        placeholder={isLoading ? "AI is answering..." : "Ask a question"}
+        placeholder={isLoading ? "KI antwortet..." : "Frage eingeben"}
         autoFocus
         className="p-3"
         disabled={status === "streaming" || status === "submitted"}
@@ -161,7 +161,7 @@ export function AISearchInput(props: ComponentProps<"form">) {
           onClick={stop}
         >
           <Loader2 className="size-4 animate-spin text-fd-muted-foreground" />
-          Abort Answer
+          Antwort abbrechen
         </button>
       ) : (
         <button
@@ -247,8 +247,8 @@ function Input(props: ComponentProps<"textarea">) {
 }
 
 const roleName: Record<string, string> = {
-  user: "you",
-  assistant: "fumadocs",
+  user: "Sie",
+  assistant: "matdesk",
 };
 
 function Message({
@@ -291,7 +291,7 @@ function Message({
               className="block text-xs rounded-lg border p-3 hover:bg-fd-accent hover:text-fd-accent-foreground"
             >
               <p className="font-medium">{item.title}</p>
-              <p className="text-fd-muted-foreground">Reference {item.label}</p>
+              <p className="text-fd-muted-foreground">Verweis {item.label}</p>
             </Link>
           ))}
         </div>
@@ -421,7 +421,7 @@ export function AISearchPanelList({
       {messages.length === 0 ? (
         <div className="text-sm text-fd-muted-foreground/80 size-full flex flex-col items-center justify-center text-center gap-2">
           <MessageCircleIcon fill="currentColor" stroke="none" />
-          <p onClick={(e) => e.stopPropagation()}>Start a new chat below.</p>
+          <p onClick={(e) => e.stopPropagation()}>Starten Sie unten einen neuen Chat.</p>
         </div>
       ) : (
         <div className="flex flex-col px-3 gap-4">

@@ -4,7 +4,7 @@ import { i18n } from "@/lib/i18n";
 export function baseOptions(locale: string): BaseLayoutProps {
 	return {
 		nav: {
-			title: "My App",
+			title: "matdesk",
 		},
 		i18n,
 	};

@@ -35,7 +35,7 @@ export function generate({
 	title,
 	description,
 	logo,
-	site = "My App",
+	site = "matdesk",
 }: GenerateProps) {
 	const primaryTextColor = "rgb(240,240,240)";
 

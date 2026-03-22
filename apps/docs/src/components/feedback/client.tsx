@@ -108,7 +108,7 @@ export function Feedback({
 					}}
 				>
 					<ThumbsUp />
-					Good
+					Gut
 				</button>
 				<button
 					disabled={previous !== null}
@@ -122,13 +122,13 @@ export function Feedback({
 					}}
 				>
 					<ThumbsDown />
-					Bad
+					Schlecht
 				</button>
 			</div>
 			<CollapsibleContent className="mt-3">
 				{previous ? (
 					<div className="flex flex-col items-center gap-3 rounded-xl bg-fd-card px-3 py-6 text-center text-fd-muted-foreground text-sm">
-						<p>Thank you for your feedback!</p>
+						<p>Vielen Dank für Ihr Feedback!</p>
 						<div className="flex flex-row items-center gap-2">
 							<a
 								href={previous.response?.githubUrl}
@@ -141,7 +141,7 @@ export function Feedback({
 									"text-xs",
 								)}
 							>
-								View on GitHub
+								Auf GitHub ansehen
 							</a>
 
 							<button
@@ -156,7 +156,7 @@ export function Feedback({
 									setPrevious(null);
 								}}
 							>
-								Submit Again
+								Erneut senden
 							</button>
 						</div>
 					</div>
@@ -168,7 +168,7 @@ export function Feedback({
 							value={message}
 							onChange={(e) => setMessage(e.target.value)}
 							className="resize-none rounded-lg border bg-fd-secondary p-3 text-fd-secondary-foreground placeholder:text-fd-muted-foreground focus-visible:outline-none"
-							placeholder="Leave your feedback..."
+							placeholder="Feedback hinterlassen..."
 							onKeyDown={(e) => {
 								if (!e.shiftKey && e.key === "Enter") {
 									submit(e);
@@ -180,7 +180,7 @@ export function Feedback({
 							className={cn(buttonVariants({ color: "outline" }), "w-fit px-3")}
 							disabled={isPending}
 						>
-							Submit
+							Senden
 						</button>
 					</form>
 				)}
