@@ -8,6 +8,10 @@ type SetupPasswordState = {
 	error?: string;
 };
 
+type AuthAccount = {
+	providerId?: string | null;
+};
+
 function getErrorMessage(error: unknown) {
 	if (
 		error &&
@@ -65,7 +69,9 @@ export default async function SetupPasswordPage() {
 		headers: await headers(),
 	});
 
-	const hasPassword = accounts.some(
+	const typedAccounts = Array.isArray(accounts) ? (accounts as AuthAccount[]) : [];
+
+	const hasPassword = typedAccounts.some(
 		(account) => account.providerId === "credential",
 	);
 
