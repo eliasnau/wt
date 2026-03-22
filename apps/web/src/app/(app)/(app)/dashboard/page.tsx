@@ -1,6 +1,6 @@
 import { BarChart3, CreditCard, Settings, UserPlus, Users } from "lucide-react";
 import Link from "next/link";
-import type { ComponentType } from "react";
+import type { ComponentProps, ComponentType } from "react";
 import { Button } from "@/components/ui/button";
 import { requireActiveOrg } from "@/lib/auth";
 import {
@@ -82,7 +82,7 @@ function QuickAction({
 	label,
 	description,
 }: {
-	href: string;
+	href: ComponentProps<typeof Link>["href"];
 	icon: ComponentType<{ className?: string }>;
 	label: string;
 	description: string;
