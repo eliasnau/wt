@@ -1,6 +1,6 @@
 {
-	"name": "repo",
-	"short_name": "repo",
+	"name": "matdesk",
+	"short_name": "matdesk",
 	"icons": [
 		{
 			"src": "/web-app-manifest-192x192.png",

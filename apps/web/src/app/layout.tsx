@@ -16,8 +16,8 @@ const fontHeading = Cal_Sans({
 });
 
 export const metadata: Metadata = {
-	title: "repo",
-	description: "repo",
+	title: "matdesk",
+	description: "matdesk",
 };
 
 export default function RootLayout({

@@ -428,7 +428,7 @@ function buildMembersQueryContext({
 			.filter((value, index, values) => values.indexOf(value) === index) ??
 		undefined;
 
-	if (input.groupIds && (!groupIds || groupIds.length === 0)) {
+	if ((input.groupIds?.length ?? 0) > 0 && (!groupIds || groupIds.length === 0)) {
 		return {
 			emptyResult: true,
 			todayInBerlin,

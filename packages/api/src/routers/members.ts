@@ -453,7 +453,7 @@ export const membersRouter = {
 					.filter(Boolean)
 					.filter((v, i, a) => a.indexOf(v) === i) ?? undefined;
 
-			if (input.groupIds && (!groupIds || groupIds.length === 0)) {
+			if ((input.groupIds?.length ?? 0) > 0 && (!groupIds || groupIds.length === 0)) {
 				return {
 					data: [],
 					pagination: {
