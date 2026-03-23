@@ -17,7 +17,7 @@ export function LandingPage({ session }: LandingPageProps) {
 			<LandingHotkeys />
 			<Header className={LAYOUT_CLASSNAME} session={session} />
 			<main className={LAYOUT_CLASSNAME}>
-				<HeroSection />
+				<HeroSection session={session} />
 				<div id="features">
 					<SimpleFeatures />
 				</div>

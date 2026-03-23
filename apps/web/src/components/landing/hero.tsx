@@ -1,8 +1,15 @@
 import { ArrowRightIcon, PhoneCallIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { getServerSession } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
-export function HeroSection() {
+interface HeroSectionProps {
+	session?: Awaited<ReturnType<typeof getServerSession>>;
+}
+
+export function HeroSection({ session }: HeroSectionProps) {
+	const isSignedIn = !!session?.user;
+
 	return (
 		<section className="relative -mt-14 w-full overflow-hidden pt-28 md:-mt-12 md:pt-24">
 			{/* Shades */}
@@ -58,11 +65,13 @@ export function HeroSection() {
 					<br /> für Kampfsportschulen entwickelt.
 				</p>
 
-				<div className="fade-in slide-in-from-bottom-10 flex w-fit animate-in items-center justify-center gap-3 fill-mode-backwards pt-2 delay-300 duration-500 ease-out">
-					<Button variant="outline">
-						<PhoneCallIcon data-icon="inline-start" /> Termin buchen
-					</Button>
-				</div>
+				{!isSignedIn && (
+					<div className="fade-in slide-in-from-bottom-10 flex w-fit animate-in items-center justify-center gap-3 fill-mode-backwards pt-2 delay-300 duration-500 ease-out">
+						<Button variant="outline">
+							<PhoneCallIcon data-icon="inline-start" /> Termin buchen
+						</Button>
+					</div>
+				)}
 			</div>
 			<div className="relative">
 				<div
