@@ -1,6 +1,12 @@
 import { ORPCError } from "@orpc/server";
 import { and, count, db, eq, sql } from "@repo/db";
-import { contract, group, groupMember, payment } from "@repo/db/schema";
+import {
+	clubMember,
+	contract,
+	group,
+	groupMember,
+	payment,
+} from "@repo/db/schema";
 import { after } from "next/server";
 import { z } from "zod";
 import { protectedProcedure } from "../index";
@@ -66,6 +72,19 @@ type MonthlyOverviewData = {
 	};
 };
 
+type MemberMapData = {
+	generatedAt: string;
+	members: Array<{
+		memberId: string;
+		city: string;
+		postalCode: string;
+		country: string;
+		latitude: number | null;
+		longitude: number | null;
+		groupIds: string[];
+	}>;
+};
+
 function formatDateUTC(date: Date) {
 	const year = date.getUTCFullYear();
 	const month = String(date.getUTCMonth() + 1).padStart(2, "0");
@@ -78,7 +97,9 @@ function formatMonthUTC(date: Date) {
 }
 
 function parseMonthInput(monthInput: string) {
-	const [year, month] = monthInput.split("-").map(Number);
+	const parts = monthInput.split("-");
+	const year = Number(parts[0]);
+	const month = Number(parts[1]);
 	return new Date(Date.UTC(year, month - 1, 1));
 }
 
@@ -354,6 +375,85 @@ async function loadMonthlyOverviewData(params: {
 	} satisfies MonthlyOverviewData;
 }
 
+async function loadMemberMapData(params: { organizationId: string }) {
+	const { organizationId } = params;
+
+	const rows = await db
+		.select({
+			memberId: clubMember.id,
+			city: clubMember.city,
+			postalCode: clubMember.postalCode,
+			country: clubMember.country,
+			latitude: clubMember.latitude,
+			longitude: clubMember.longitude,
+			groupId: groupMember.groupId,
+		})
+		.from(clubMember)
+		.leftJoin(groupMember, eq(groupMember.memberId, clubMember.id))
+		.where(
+			and(
+				eq(clubMember.organizationId, organizationId),
+				sql`${clubMember.city} IS NOT NULL`,
+				sql`${clubMember.city} <> ''`,
+				sql`${clubMember.postalCode} IS NOT NULL`,
+				sql`${clubMember.postalCode} <> ''`,
+			),
+		);
+
+	const memberMap = new Map<
+		string,
+		{
+			memberId: string;
+			city: string;
+			postalCode: string;
+			country: string;
+			latitude: number | null;
+			longitude: number | null;
+			groupIds: Set<string>;
+		}
+	>();
+
+	for (const row of rows) {
+		const existing = memberMap.get(row.memberId);
+
+		if (existing) {
+			if (existing.latitude == null && row.latitude != null) {
+				existing.latitude = row.latitude;
+			}
+			if (existing.longitude == null && row.longitude != null) {
+				existing.longitude = row.longitude;
+			}
+			if (row.groupId) {
+				existing.groupIds.add(row.groupId);
+			}
+			continue;
+		}
+
+		memberMap.set(row.memberId, {
+			memberId: row.memberId,
+			city: row.city,
+			postalCode: row.postalCode,
+			country: row.country,
+			latitude: row.latitude,
+			longitude: row.longitude,
+			groupIds: new Set(row.groupId ? [row.groupId] : []),
+		});
+	}
+
+	return {
+		generatedAt: new Date().toISOString(),
+		members: Array.from(memberMap.values()).map((member) => ({
+			memberId: member.memberId,
+			city: member.city,
+			postalCode: member.postalCode,
+			country: member.country,
+			latitude: member.latitude,
+			longitude: member.longitude,
+			groupIds: Array.from(member.groupIds).sort(),
+		})),
+	} satisfies MemberMapData;
+}
+
 function buildTimelinePeriods(
 	monthlyData: MonthlyOverviewData[],
 	groupBy: TimelineGroupBy,
@@ -488,6 +588,32 @@ function buildTimelinePeriods(
 }
 
 export const statisticsRouter = {
+	memberMap: protectedProcedure
+		.use(rateLimitMiddleware(2))
+		.use(requirePermission({ statistics: ["view"] }))
+		.input(z.object({}))
+		.handler(async ({ context }) => {
+			const organizationId = getActiveOrganizationId(
+				context.session.activeOrganizationId,
+			);
+
+			try {
+				return await loadMemberMapData({ organizationId });
+			} catch (error) {
+				after(() => {
+					logger.error("Failed to get member map statistics", {
+						error,
+						organizationId,
+						userId: context.user.id,
+					});
+				});
+
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: "Failed to load member map data",
+				});
+			}
+		})
+		.route({ method: "GET", path: "/statistics/member-map" }),
 	monthlyOverview: protectedProcedure
 		.use(rateLimitMiddleware(2))
 		.use(

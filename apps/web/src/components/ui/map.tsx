@@ -1538,9 +1538,18 @@ function MapHeatmapLayer<
 		});
 
 		// Build heatmap weight expression
-		const heatmapWeight: MapLibreGL.ExpressionSpecification = weightProperty
-			? ["interpolate", ["linear"], ["get", weightProperty], 0, 0, 10, 1]
-			: 1;
+		const heatmapWeight: MapLibreGL.ExpressionSpecification | number =
+			weightProperty
+				? ([
+						"interpolate",
+						["linear"],
+						["get", weightProperty],
+						0,
+						0,
+						10,
+						1,
+					] as MapLibreGL.ExpressionSpecification)
+				: 1;
 
 		// Add heatmap layer
 		map.addLayer({

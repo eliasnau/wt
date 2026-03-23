@@ -449,6 +449,8 @@ export const DB = {
 					state: string;
 					postalCode: string;
 					country: string;
+					latitude?: number | null;
+					longitude?: number | null;
 					notes?: string;
 					guardianName?: string;
 					guardianEmail?: string;
@@ -475,6 +477,8 @@ export const DB = {
 							state: memberData.state,
 							postalCode: memberData.postalCode,
 							country: memberData.country,
+							latitude: memberData.latitude,
+							longitude: memberData.longitude,
 							notes: memberData.notes,
 							guardianName: memberData.guardianName,
 							guardianEmail: memberData.guardianEmail,
@@ -492,24 +496,49 @@ export const DB = {
 						throw new Error("Failed to update member");
 					}
 
-					const [updatedContract] = await tx
-						.update(contract)
-						.set({
+					const contractUpdateValues = Object.fromEntries(
+						Object.entries({
 							// initialPeriod: contractData.initialPeriod,
 							joiningFeeAmount: contractData.joiningFeeAmount,
 							yearlyFeeAmount: contractData.yearlyFeeAmount,
 							notes: contractData.notes,
-						})
-						.where(
-							and(
-								eq(contract.memberId, memberId),
-								eq(contract.organizationId, organizationId),
-							),
-						)
-						.returning();
+						}).filter(([, value]) => value !== undefined),
+					);
 
-					if (!updatedContract) {
-						throw new Error("Failed to update contract");
+					let updatedContract: typeof contract.$inferSelect | undefined;
+
+					if (Object.keys(contractUpdateValues).length > 0) {
+						const [nextContract] = await tx
+							.update(contract)
+							.set(contractUpdateValues)
+							.where(
+								and(
+									eq(contract.memberId, memberId),
+									eq(contract.organizationId, organizationId),
+								),
+							)
+							.returning();
+
+						if (!nextContract) {
+							throw new Error("Failed to update contract");
+						}
+
+						updatedContract = nextContract;
+					} else {
+						[updatedContract] = await tx
+							.select()
+							.from(contract)
+							.where(
+								and(
+									eq(contract.memberId, memberId),
+									eq(contract.organizationId, organizationId),
+								),
+							)
+							.limit(1);
+
+						if (!updatedContract) {
+							throw new Error("Failed to load contract");
+						}
 					}
 
 					return { member: updatedMember, contract: updatedContract };
@@ -534,6 +563,8 @@ export const DB = {
 					state: string;
 					postalCode: string;
 					country: string;
+					latitude?: number | null;
+					longitude?: number | null;
 					iban: string;
 					bic: string;
 					cardHolder: string;
@@ -569,6 +600,8 @@ export const DB = {
 							state: memberData.state,
 							postalCode: memberData.postalCode,
 							country: memberData.country,
+							latitude: memberData.latitude,
+							longitude: memberData.longitude,
 							iban: memberData.iban,
 							bic: memberData.bic,
 							cardHolder: memberData.cardHolder,

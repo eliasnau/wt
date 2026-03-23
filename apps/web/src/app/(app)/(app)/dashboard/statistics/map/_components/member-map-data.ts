@@ -3,6 +3,8 @@ export type MemberMapRecord = {
 	city: string;
 	postalCode: string;
 	country: string;
+	latitude: number | null;
+	longitude: number | null;
 	groupIds: string[];
 };
 
@@ -131,7 +133,11 @@ export function buildMemberFeatureCollection(
 		const cityKey = `${member.postalCode}:${member.city}`;
 		const memberCount = cityCounts.get(cityKey) ?? 1;
 		const [baseLng, baseLat] = lookupCityCenter(member.city, member.postalCode);
-		const spread = getCitySpread(memberCount);
+		const sourceLng = member.longitude ?? baseLng;
+		const sourceLat = member.latitude ?? baseLat;
+		const hasExactCoordinates =
+			member.latitude != null && member.longitude != null;
+		const spread = hasExactCoordinates ? 0 : getCitySpread(memberCount);
 		const spreadLng = spread / 85;
 		const spreadLat = spread / 111;
 		const hash = hashString(`${member.memberId}:${cityKey}`);
@@ -150,8 +156,12 @@ export function buildMemberFeatureCollection(
 			geometry: {
 				type: "Point",
 				coordinates: [
-					baseLng + Math.cos(angle) * distance * spreadLng + jitter * spreadLng,
-					baseLat + Math.sin(angle) * distance * spreadLat + jitter * spreadLat,
+					sourceLng +
+						Math.cos(angle) * distance * spreadLng +
+						jitter * spreadLng,
+					sourceLat +
+						Math.sin(angle) * distance * spreadLat +
+						jitter * spreadLat,
 				],
 			},
 		} satisfies GeoJSON.Feature<GeoJSON.Point, MemberFeatureProperties>;
