@@ -1181,6 +1181,8 @@ type MapClusterLayerProps<
 	clusterColors?: [string, string, string];
 	/** Point count thresholds for color/size steps: [medium, large] (default: [100, 750]) */
 	clusterThresholds?: [number, number];
+	/** Show text count inside cluster circles (default: true) */
+	showCount?: boolean;
 	/** Color for unclustered individual points (default: "#3b82f6") */
 	pointColor?: string;
 	/** Callback when an unclustered point is clicked */
@@ -1204,6 +1206,7 @@ function MapClusterLayer<
 	clusterRadius = 50,
 	clusterColors = ["#22c55e", "#eab308", "#ef4444"],
 	clusterThresholds = [100, 750],
+	showCount = true,
 	pointColor = "#3b82f6",
 	onPointClick,
 	onClusterClick,
@@ -1266,7 +1269,7 @@ function MapClusterLayer<
 			});
 		}
 
-		if (!map.getLayer(clusterCountLayerId)) {
+		if (showCount && !map.getLayer(clusterCountLayerId)) {
 			map.addLayer({
 				id: clusterCountLayerId,
 				type: "symbol",
@@ -1276,6 +1279,7 @@ function MapClusterLayer<
 					"text-field": "{point_count_abbreviated}",
 					"text-size": 12,
 					"text-allow-overlap": true,
+					"text-ignore-placement": true,
 				},
 				paint: {
 					"text-color": "#fff",
@@ -1325,6 +1329,7 @@ function MapClusterLayer<
 		clusterRadius,
 		clusterColors,
 		clusterThresholds,
+		showCount,
 		pointColor,
 	]);
 

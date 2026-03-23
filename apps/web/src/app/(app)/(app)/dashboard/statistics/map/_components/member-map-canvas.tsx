@@ -56,10 +56,9 @@ export function MemberMapCanvas({
 				{viewMode === "cluster" ? (
 					<MapClusterLayer<MemberFeatureProperties>
 						data={featureCollection}
-						clusterRadius={60}
-						clusterMaxZoom={12}
+						clusterRadius={50}
+						clusterMaxZoom={14}
 						clusterColors={["#3b82f6", "#8b5cf6", "#ec4899"]}
-						clusterThresholds={[50, 150]}
 						pointColor="#3b82f6"
 						onPointClick={(feature, coordinates) => {
 							setSelectedMember({
