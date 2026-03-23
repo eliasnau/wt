@@ -930,12 +930,44 @@ export const membersRouter = {
 			const posthog = getPostHogServer();
 
 			try {
-				const geocodedAddress = await geocodeAddress({
-					street: input.street,
-					postalCode: input.postalCode,
-					city: input.city,
-					country: input.country,
-				});
+				const [existingMember] = await db
+					.select({
+						street: clubMember.street,
+						city: clubMember.city,
+						state: clubMember.state,
+						postalCode: clubMember.postalCode,
+						country: clubMember.country,
+						latitude: clubMember.latitude,
+						longitude: clubMember.longitude,
+					})
+					.from(clubMember)
+					.where(
+						and(
+							eq(clubMember.id, input.memberId),
+							eq(clubMember.organizationId, organizationId),
+						),
+					)
+					.limit(1);
+
+				const addressChanged =
+					!existingMember ||
+					existingMember.street !== input.street ||
+					existingMember.city !== input.city ||
+					existingMember.state !== input.state ||
+					existingMember.postalCode !== input.postalCode ||
+					existingMember.country !== input.country;
+
+				const geocodedAddress = addressChanged
+					? await geocodeAddress({
+							street: input.street,
+							postalCode: input.postalCode,
+							city: input.city,
+							country: input.country,
+						})
+					: {
+							latitude: existingMember?.latitude ?? null,
+							longitude: existingMember?.longitude ?? null,
+						};
 
 				const result = await DB.mutation.members.updateMember({
 					memberId: input.memberId,
