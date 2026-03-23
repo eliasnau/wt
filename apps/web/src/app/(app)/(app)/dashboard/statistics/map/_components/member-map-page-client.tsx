@@ -49,7 +49,7 @@ const mapStyles = {
 type MapStyleKey = keyof typeof mapStyles;
 
 export function MemberMapPageClient() {
-	const [viewMode, setViewMode] = useState<ViewMode>("cluster");
+	const [viewMode, setViewMode] = useState<ViewMode>("heatmap");
 	const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
 	const [includeActive, setIncludeActive] = useState(true);
 	const [includeCancelled, setIncludeCancelled] = useState(false);
