@@ -1221,79 +1221,84 @@ function MapClusterLayer<
 		pointColor,
 	});
 
-	// Add source and layers on mount
 	useEffect(() => {
 		if (!isLoaded || !map) return;
 
-		// Add clustered GeoJSON source
-		map.addSource(sourceId, {
-			type: "geojson",
-			data,
-			cluster: true,
-			clusterMaxZoom,
-			clusterRadius,
-		});
+		if (!map.getSource(sourceId)) {
+			map.addSource(sourceId, {
+				type: "geojson",
+				data,
+				cluster: true,
+				clusterMaxZoom,
+				clusterRadius,
+			});
+		}
 
-		// Add cluster circles layer
-		map.addLayer({
-			id: clusterLayerId,
-			type: "circle",
-			source: sourceId,
-			filter: ["has", "point_count"],
-			paint: {
-				"circle-color": [
-					"step",
-					["get", "point_count"],
-					clusterColors[0],
-					clusterThresholds[0],
-					clusterColors[1],
-					clusterThresholds[1],
-					clusterColors[2],
-				],
-				"circle-radius": [
-					"step",
-					["get", "point_count"],
-					20,
-					clusterThresholds[0],
-					30,
-					clusterThresholds[1],
-					40,
-				],
-				"circle-stroke-width": 1,
-				"circle-stroke-color": "#fff",
-				"circle-opacity": 0.85,
-			},
-		});
+		if (!map.getLayer(clusterLayerId)) {
+			map.addLayer({
+				id: clusterLayerId,
+				type: "circle",
+				source: sourceId,
+				filter: ["has", "point_count"],
+				paint: {
+					"circle-color": [
+						"step",
+						["get", "point_count"],
+						clusterColors[0],
+						clusterThresholds[0],
+						clusterColors[1],
+						clusterThresholds[1],
+						clusterColors[2],
+					],
+					"circle-radius": [
+						"step",
+						["get", "point_count"],
+						20,
+						clusterThresholds[0],
+						30,
+						clusterThresholds[1],
+						40,
+					],
+					"circle-stroke-width": 1,
+					"circle-stroke-color": "#fff",
+					"circle-opacity": 0.85,
+				},
+			});
+		}
 
-		// Add cluster count text layer
-		map.addLayer({
-			id: clusterCountLayerId,
-			type: "symbol",
-			source: sourceId,
-			filter: ["has", "point_count"],
-			layout: {
-				"text-field": "{point_count_abbreviated}",
-				"text-font": ["Open Sans"],
-				"text-size": 12,
-			},
-			paint: {
-				"text-color": "#fff",
-			},
-		});
+		if (!map.getLayer(clusterCountLayerId)) {
+			map.addLayer({
+				id: clusterCountLayerId,
+				type: "symbol",
+				source: sourceId,
+				filter: ["has", "point_count"],
+				layout: {
+					"text-field": "{point_count_abbreviated}",
+					"text-size": 12,
+					"text-allow-overlap": true,
+				},
+				paint: {
+					"text-color": "#fff",
+				},
+			});
+		}
 
-		// Add unclustered point layer
-		map.addLayer({
-			id: unclusteredLayerId,
-			type: "circle",
-			source: sourceId,
-			filter: ["!", ["has", "point_count"]],
-			paint: {
-				"circle-color": pointColor,
-				"circle-radius": 5,
-				"circle-stroke-width": 2,
-				"circle-stroke-color": "#fff",
-			},
-		});
+		if (!map.getLayer(unclusteredLayerId)) {
+			map.addLayer({
+				id: unclusteredLayerId,
+				type: "circle",
+				source: sourceId,
+				filter: ["!", ["has", "point_count"]],
+				paint: {
+					"circle-color": pointColor,
+					"circle-radius": 5,
+					"circle-stroke-width": 2,
+					"circle-stroke-color": "#fff",
+				},
+			});
+		}
+
+		map.triggerRepaint();
 
 		return () => {
 			try {
@@ -1308,7 +1313,20 @@ function MapClusterLayer<
 			}
 		};
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [isLoaded, map, sourceId]);
+	}, [
+		isLoaded,
+		map,
+		sourceId,
+		clusterLayerId,
+		clusterCountLayerId,
+		unclusteredLayerId,
+		data,
+		clusterMaxZoom,
+		clusterRadius,
+		clusterColors,
+		clusterThresholds,
+		pointColor,
+	]);
 
 	// Update source data when data prop changes (only for non-URL data)
 	useEffect(() => {
@@ -1317,6 +1335,7 @@ function MapClusterLayer<
 		const source = map.getSource(sourceId) as MapLibreGL.GeoJSONSource;
 		if (source) {
 			source.setData(data);
+			map.triggerRepaint();
 		}
 	}, [isLoaded, map, data, sourceId]);
 
