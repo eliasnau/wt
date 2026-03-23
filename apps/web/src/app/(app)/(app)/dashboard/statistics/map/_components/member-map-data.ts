@@ -1,8 +1,9 @@
 export type MemberMapRecord = {
 	memberId: string;
+	firstName: string;
+	lastName: string;
 	city: string;
 	postalCode: string;
-	country: string;
 	latitude: number | null;
 	longitude: number | null;
 	groupIds: string[];
@@ -10,6 +11,8 @@ export type MemberMapRecord = {
 
 export type MemberFeatureProperties = {
 	memberId: string;
+	firstName: string;
+	lastName: string;
 	city: string;
 	postalCode: string;
 	groupIds: string[];
@@ -149,6 +152,8 @@ export function buildMemberFeatureCollection(
 			type: "Feature",
 			properties: {
 				memberId: member.memberId,
+				firstName: member.firstName,
+				lastName: member.lastName,
 				city: member.city,
 				postalCode: member.postalCode,
 				groupIds: member.groupIds,

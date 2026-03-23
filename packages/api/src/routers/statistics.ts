@@ -76,9 +76,10 @@ type MemberMapData = {
 	generatedAt: string;
 	members: Array<{
 		memberId: string;
+		firstName: string;
+		lastName: string;
 		city: string;
 		postalCode: string;
-		country: string;
 		latitude: number | null;
 		longitude: number | null;
 		groupIds: string[];
@@ -381,9 +382,10 @@ async function loadMemberMapData(params: { organizationId: string }) {
 	const rows = await db
 		.select({
 			memberId: clubMember.id,
+			firstName: clubMember.firstName,
+			lastName: clubMember.lastName,
 			city: clubMember.city,
 			postalCode: clubMember.postalCode,
-			country: clubMember.country,
 			latitude: clubMember.latitude,
 			longitude: clubMember.longitude,
 			groupId: groupMember.groupId,
@@ -404,9 +406,10 @@ async function loadMemberMapData(params: { organizationId: string }) {
 		string,
 		{
 			memberId: string;
+			firstName: string;
+			lastName: string;
 			city: string;
 			postalCode: string;
-			country: string;
 			latitude: number | null;
 			longitude: number | null;
 			groupIds: Set<string>;
@@ -431,9 +434,10 @@ async function loadMemberMapData(params: { organizationId: string }) {
 
 		memberMap.set(row.memberId, {
 			memberId: row.memberId,
+			firstName: row.firstName,
+			lastName: row.lastName,
 			city: row.city,
 			postalCode: row.postalCode,
-			country: row.country,
 			latitude: row.latitude,
 			longitude: row.longitude,
 			groupIds: new Set(row.groupId ? [row.groupId] : []),
@@ -444,9 +448,10 @@ async function loadMemberMapData(params: { organizationId: string }) {
 		generatedAt: new Date().toISOString(),
 		members: Array.from(memberMap.values()).map((member) => ({
 			memberId: member.memberId,
+			firstName: member.firstName,
+			lastName: member.lastName,
 			city: member.city,
 			postalCode: member.postalCode,
-			country: member.country,
 			latitude: member.latitude,
 			longitude: member.longitude,
 			groupIds: Array.from(member.groupIds).sort(),

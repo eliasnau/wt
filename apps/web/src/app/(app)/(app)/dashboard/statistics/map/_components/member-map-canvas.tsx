@@ -1,5 +1,7 @@
 "use client";
 
+import { ExternalLinkIcon } from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import {
 	MapClusterLayer,
@@ -94,8 +96,20 @@ export function MemberMapCanvas({
 						focusAfterOpen={false}
 						closeButton
 					>
-						<div className="space-y-1 p-1">
-							<p className="font-semibold text-sm">
+						<div className="space-y-2 p-1">
+							<Link
+								href={`/dashboard/members/${selectedMember.properties.memberId}`}
+								target="_blank"
+								rel="noreferrer"
+								className="group inline-flex items-center gap-1 font-semibold text-sm hover:underline hover:underline-offset-4"
+							>
+								<span>
+									{selectedMember.properties.firstName}{" "}
+									{selectedMember.properties.lastName}
+								</span>
+								<ExternalLinkIcon className="size-3 opacity-0 transition-opacity group-hover:opacity-100" />
+							</Link>
+							<p className="text-muted-foreground text-xs">
 								{selectedMember.properties.city}
 							</p>
 							<p className="text-muted-foreground text-xs">

@@ -185,13 +185,13 @@ export function MemberMapPageClient() {
 							<FrameHeader className="flex-row items-start justify-between">
 								<div>
 									<p className="text-muted-foreground text-xs uppercase">
-										Datenstand
+										Durchschnitt
 									</p>
 									<p className="font-semibold text-2xl">
-										{mapQuery.isPending ? "-" : "Live"}
+										{mapQuery.isPending ? "-" : "0 km"}
 									</p>
 									<p className="text-muted-foreground text-xs">
-										Aktive Verträge der Organisation
+										Entfernung zur Schule
 									</p>
 								</div>
 							</FrameHeader>
