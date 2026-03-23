@@ -51,10 +51,20 @@ type MapStyleKey = keyof typeof mapStyles;
 export function MemberMapPageClient() {
 	const [viewMode, setViewMode] = useState<ViewMode>("cluster");
 	const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+	const [includeActive, setIncludeActive] = useState(true);
+	const [includeCancelled, setIncludeCancelled] = useState(false);
+	const [includeCancelledButActive, setIncludeCancelledButActive] =
+		useState(true);
 	const [mapStyleKey, setMapStyleKey] = useState<MapStyleKey>("carto");
 
 	const mapQuery = useQuery(
-		orpc.statistics.memberMap.queryOptions({ input: {} }),
+		orpc.statistics.memberMap.queryOptions({
+			input: {
+				includeActive,
+				includeCancelled,
+				includeCancelledButActive,
+			},
+		}),
 	);
 	const groupsQuery = useQuery(orpc.groups.list.queryOptions({ input: {} }));
 
@@ -88,8 +98,8 @@ export function MemberMapPageClient() {
 				<HeaderContent>
 					<HeaderTitle>Mitgliederkarte</HeaderTitle>
 					<HeaderDescription>
-						Geografische Verteilung aktiver Mitglieder nach Wohnort mit Cluster-
-						und Heatmap-Ansicht.
+						Geografische Verteilung der Mitglieder nach Wohnort mit Cluster- und
+						Heatmap-Ansicht.
 					</HeaderDescription>
 				</HeaderContent>
 			</Header>
@@ -100,6 +110,12 @@ export function MemberMapPageClient() {
 				onSelectedGroupsChange={setSelectedGroups}
 				viewMode={viewMode}
 				onViewModeChange={setViewMode}
+				includeActive={includeActive}
+				includeCancelled={includeCancelled}
+				includeCancelledButActive={includeCancelledButActive}
+				onIncludeActiveChange={setIncludeActive}
+				onIncludeCancelledChange={setIncludeCancelled}
+				onIncludeCancelledButActiveChange={setIncludeCancelledButActive}
 				mapStyleKey={mapStyleKey}
 				mapStyles={mapStyles}
 				onMapStyleChange={(value) => setMapStyleKey(value as MapStyleKey)}

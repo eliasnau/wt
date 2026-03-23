@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server";
-import { and, count, db, eq, sql } from "@repo/db";
+import { and, count, db, eq, or, sql } from "@repo/db";
 import {
 	clubMember,
 	contract,
@@ -86,6 +86,12 @@ type MemberMapData = {
 	}>;
 };
 
+const memberMapFilterSchema = z.object({
+	includeActive: z.boolean().optional().default(true),
+	includeCancelled: z.boolean().optional().default(false),
+	includeCancelledButActive: z.boolean().optional().default(true),
+});
+
 function formatDateUTC(date: Date) {
 	const year = date.getUTCFullYear();
 	const month = String(date.getUTCMonth() + 1).padStart(2, "0");
@@ -113,6 +119,26 @@ function addUTCMonths(date: Date, months: number) {
 function getCurrentMonthUTC() {
 	const now = new Date();
 	return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+}
+
+function getTodayInBerlinDateString() {
+	const parts = new Intl.DateTimeFormat("en-CA", {
+		timeZone: "Europe/Berlin",
+		year: "numeric",
+		month: "2-digit",
+		day: "2-digit",
+	}).formatToParts(new Date());
+
+	const year = parts.find((part) => part.type === "year")?.value;
+	const month = parts.find((part) => part.type === "month")?.value;
+	const day = parts.find((part) => part.type === "day")?.value;
+
+	if (!year || !month || !day) {
+		const now = new Date();
+		return formatDateUTC(now);
+	}
+
+	return `${year}-${month}-${day}`;
 }
 
 function getMonthRangeFromDate(monthDate: Date) {
@@ -376,8 +402,37 @@ async function loadMonthlyOverviewData(params: {
 	} satisfies MonthlyOverviewData;
 }
 
-async function loadMemberMapData(params: { organizationId: string }) {
-	const { organizationId } = params;
+async function loadMemberMapData(
+	params: { organizationId: string } & z.infer<typeof memberMapFilterSchema>,
+) {
+	const {
+		organizationId,
+		includeActive,
+		includeCancelled,
+		includeCancelledButActive,
+	} = params;
+	const todayInBerlin = getTodayInBerlinDateString();
+	const statusConditions = [
+		includeActive ? sql`${contract.cancelledAt} IS NULL` : undefined,
+		includeCancelledButActive
+			? sql`${contract.cancelledAt} IS NOT NULL AND (
+          ${contract.cancellationEffectiveDate} IS NULL
+          OR ${contract.cancellationEffectiveDate} >= ${todayInBerlin}
+        )`
+			: undefined,
+		includeCancelled
+			? sql`${contract.cancelledAt} IS NOT NULL AND (
+          ${contract.cancellationEffectiveDate} < ${todayInBerlin}
+        )`
+			: undefined,
+	].filter(Boolean);
+
+	if (statusConditions.length === 0) {
+		return {
+			generatedAt: new Date().toISOString(),
+			members: [],
+		} satisfies MemberMapData;
+	}
 
 	const rows = await db
 		.select({
@@ -391,6 +446,7 @@ async function loadMemberMapData(params: { organizationId: string }) {
 			groupId: groupMember.groupId,
 		})
 		.from(clubMember)
+		.innerJoin(contract, eq(contract.memberId, clubMember.id))
 		.leftJoin(groupMember, eq(groupMember.memberId, clubMember.id))
 		.where(
 			and(
@@ -399,6 +455,7 @@ async function loadMemberMapData(params: { organizationId: string }) {
 				sql`${clubMember.city} <> ''`,
 				sql`${clubMember.postalCode} IS NOT NULL`,
 				sql`${clubMember.postalCode} <> ''`,
+				or(...statusConditions),
 			),
 		);
 
@@ -596,14 +653,14 @@ export const statisticsRouter = {
 	memberMap: protectedProcedure
 		.use(rateLimitMiddleware(2))
 		.use(requirePermission({ statistics: ["view"] }))
-		.input(z.object({}))
-		.handler(async ({ context }) => {
+		.input(memberMapFilterSchema)
+		.handler(async ({ input, context }) => {
 			const organizationId = getActiveOrganizationId(
 				context.session.activeOrganizationId,
 			);
 
 			try {
-				return await loadMemberMapData({ organizationId });
+				return await loadMemberMapData({ organizationId, ...input });
 			} catch (error) {
 				after(() => {
 					logger.error("Failed to get member map statistics", {

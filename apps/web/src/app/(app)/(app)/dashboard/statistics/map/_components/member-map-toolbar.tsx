@@ -1,10 +1,11 @@
 "use client";
 
-import { FlameIcon, GridIcon, MapIcon } from "lucide-react";
+import { FlameIcon, GridIcon, ListFilterIcon, MapIcon } from "lucide-react";
 import { DataTableFacetedFilter } from "@/components/table/data-table-faceted-filter";
 import { Button } from "@/components/ui/button";
 import {
 	Menu,
+	MenuCheckboxItem,
 	MenuGroup,
 	MenuGroupLabel,
 	MenuItem,
@@ -32,6 +33,12 @@ type MemberMapToolbarProps = {
 	onSelectedGroupsChange: (value: string[]) => void;
 	viewMode: ViewMode;
 	onViewModeChange: (value: ViewMode) => void;
+	includeActive: boolean;
+	includeCancelled: boolean;
+	includeCancelledButActive: boolean;
+	onIncludeActiveChange: (value: boolean) => void;
+	onIncludeCancelledChange: (value: boolean) => void;
+	onIncludeCancelledButActiveChange: (value: boolean) => void;
 	mapStyleKey: string;
 	mapStyles: Record<string, MapStyleOption>;
 	onMapStyleChange: (value: string) => void;
@@ -43,6 +50,12 @@ export function MemberMapToolbar({
 	onSelectedGroupsChange,
 	viewMode,
 	onViewModeChange,
+	includeActive,
+	includeCancelled,
+	includeCancelledButActive,
+	onIncludeActiveChange,
+	onIncludeCancelledChange,
+	onIncludeCancelledButActiveChange,
 	mapStyleKey,
 	mapStyles,
 	onMapStyleChange,
@@ -60,6 +73,45 @@ export function MemberMapToolbar({
 			</div>
 
 			<div className="flex flex-wrap items-center gap-2">
+				<Menu>
+					<MenuTrigger render={<Button variant="outline" size="default" />}>
+						<ListFilterIcon className="size-4" />
+						<span className="ml-1.5 hidden sm:inline">Mitglieder</span>
+					</MenuTrigger>
+					<MenuPopup align="end" className="w-[280px]">
+						<MenuGroup>
+							<MenuGroupLabel>Anzuzeigende Mitglieder</MenuGroupLabel>
+							<MenuCheckboxItem
+								variant="switch"
+								checked={includeActive}
+								onCheckedChange={(checked) =>
+									onIncludeActiveChange(Boolean(checked))
+								}
+							>
+								Aktive Mitglieder
+							</MenuCheckboxItem>
+							<MenuCheckboxItem
+								variant="switch"
+								checked={includeCancelled}
+								onCheckedChange={(checked) =>
+									onIncludeCancelledChange(Boolean(checked))
+								}
+							>
+								Gekuendigte Mitglieder
+							</MenuCheckboxItem>
+							<MenuCheckboxItem
+								variant="switch"
+								checked={includeCancelledButActive}
+								onCheckedChange={(checked) =>
+									onIncludeCancelledButActiveChange(Boolean(checked))
+								}
+							>
+								Gekuendigt, noch aktiv
+							</MenuCheckboxItem>
+						</MenuGroup>
+					</MenuPopup>
+				</Menu>
+
 				<Menu>
 					<MenuTrigger render={<Button variant="outline" size="default" />}>
 						{viewMode === "cluster" ? (
