@@ -1197,6 +1197,10 @@ export const membersRouter = {
 					membershipPrice: input.membershipPrice,
 				});
 
+				if (!result) {
+					throw new Error("Failed to assign member to group");
+				}
+
 				posthog.capture({
 					distinctId: context.userId,
 					event: "member:assign-group",
