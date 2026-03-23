@@ -12,6 +12,7 @@ import { rateLimitMiddleware } from "../../middleware/ratelimit";
 
 export const reGeocodeOrganizationSchema = z.object({
 	organizationId: z.string().min(1),
+	onlyMissing: z.boolean().optional().default(false),
 });
 
 function delay(ms: number) {
@@ -49,6 +50,9 @@ export const reGeocodeOrganizationProcedure = protectedProcedure
 						sql`${clubMember.postalCode} <> ''`,
 						sql`${clubMember.city} <> ''`,
 						sql`${clubMember.country} <> ''`,
+						input.onlyMissing
+							? sql`(${clubMember.latitude} IS NULL OR ${clubMember.longitude} IS NULL)`
+							: undefined,
 					),
 				);
 
@@ -62,7 +66,7 @@ export const reGeocodeOrganizationProcedure = protectedProcedure
 					postalCode: member.postalCode,
 					city: member.city,
 					country: member.country,
-				}).catch(() => null);
+				});
 
 				if (!geocodedAddress) {
 					failedCount += 1;
@@ -96,6 +100,7 @@ export const reGeocodeOrganizationProcedure = protectedProcedure
 				},
 				properties: {
 					organization_id: organizationId,
+					only_missing: input.onlyMissing,
 					updated_count: updatedCount,
 					failed_count: failedCount,
 					total_count: membersWithAddress.length,

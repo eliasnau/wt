@@ -57,6 +57,13 @@ export function AdminScriptsPageClient({
 		}),
 	);
 
+	const runReGeocode = (onlyMissing: boolean) => {
+		reGeocodeMutation.mutate({
+			organizationId: organizationId.trim(),
+			onlyMissing,
+		});
+	};
+
 	return (
 		<div className="flex flex-col gap-8">
 			<Header>
@@ -96,11 +103,7 @@ export function AdminScriptsPageClient({
 
 					<div className="flex items-center gap-3">
 						<Button
-							onClick={() =>
-								reGeocodeMutation.mutate({
-									organizationId: organizationId.trim(),
-								})
-							}
+							onClick={() => runReGeocode(false)}
 							disabled={
 								reGeocodeMutation.isPending || organizationId.trim() === ""
 							}
@@ -108,6 +111,17 @@ export function AdminScriptsPageClient({
 							{reGeocodeMutation.isPending
 								? "Rechne Adressen neu..."
 								: "Recalculate addresses"}
+						</Button>
+						<Button
+							variant="outline"
+							onClick={() => runReGeocode(true)}
+							disabled={
+								reGeocodeMutation.isPending || organizationId.trim() === ""
+							}
+						>
+							{reGeocodeMutation.isPending
+								? "Rechne fehlende neu..."
+								: "Recalculate missing only"}
 						</Button>
 					</div>
 
