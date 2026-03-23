@@ -16,6 +16,7 @@ import { SidebarContent, SidebarGroup } from "@/components/ui/sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { CollapsibleNavGroup } from "./collapsible-nav-group";
 import { NavButton } from "./nav-button";
+import { MapPin } from "@/components/animate-ui/icons/map-pin";
 
 type RouteConfig = {
   id: string;
@@ -69,6 +70,11 @@ const routes: RouteConfig[] = [
         title: "Monate vergleichen",
         href: "/dashboard/statistics/range",
         icon: <PieChart className="size-4" />,
+      },
+      {
+        title: "Karte",
+        href: "/dashboard/statistics/map",
+        icon: <MapPin className="size-4" />,
       },
     ],
   },

@@ -1,6 +1,12 @@
 import { ORPCError } from "@orpc/server";
-import { and, count, db, eq, sql } from "@repo/db";
-import { contract, group, groupMember, payment } from "@repo/db/schema";
+import { and, count, db, eq, or, sql } from "@repo/db";
+import {
+	clubMember,
+	contract,
+	group,
+	groupMember,
+	payment,
+} from "@repo/db/schema";
 import { after } from "next/server";
 import { z } from "zod";
 import { protectedProcedure } from "../index";
@@ -66,6 +72,26 @@ type MonthlyOverviewData = {
 	};
 };
 
+type MemberMapData = {
+	generatedAt: string;
+	members: Array<{
+		memberId: string;
+		firstName: string;
+		lastName: string;
+		city: string;
+		postalCode: string;
+		latitude: number | null;
+		longitude: number | null;
+		groupIds: string[];
+	}>;
+};
+
+const memberMapFilterSchema = z.object({
+	includeActive: z.boolean().optional().default(true),
+	includeCancelled: z.boolean().optional().default(false),
+	includeCancelledButActive: z.boolean().optional().default(true),
+});
+
 function formatDateUTC(date: Date) {
 	const year = date.getUTCFullYear();
 	const month = String(date.getUTCMonth() + 1).padStart(2, "0");
@@ -78,7 +104,9 @@ function formatMonthUTC(date: Date) {
 }
 
 function parseMonthInput(monthInput: string) {
-	const [year, month] = monthInput.split("-").map(Number);
+	const parts = monthInput.split("-");
+	const year = Number(parts[0]);
+	const month = Number(parts[1]);
 	return new Date(Date.UTC(year, month - 1, 1));
 }
 
@@ -91,6 +119,26 @@ function addUTCMonths(date: Date, months: number) {
 function getCurrentMonthUTC() {
 	const now = new Date();
 	return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
+}
+
+function getTodayInBerlinDateString() {
+	const parts = new Intl.DateTimeFormat("en-CA", {
+		timeZone: "Europe/Berlin",
+		year: "numeric",
+		month: "2-digit",
+		day: "2-digit",
+	}).formatToParts(new Date());
+
+	const year = parts.find((part) => part.type === "year")?.value;
+	const month = parts.find((part) => part.type === "month")?.value;
+	const day = parts.find((part) => part.type === "day")?.value;
+
+	if (!year || !month || !day) {
+		const now = new Date();
+		return formatDateUTC(now);
+	}
+
+	return `${year}-${month}-${day}`;
 }
 
 function getMonthRangeFromDate(monthDate: Date) {
@@ -354,6 +402,120 @@ async function loadMonthlyOverviewData(params: {
 	} satisfies MonthlyOverviewData;
 }
 
+async function loadMemberMapData(
+	params: { organizationId: string } & z.infer<typeof memberMapFilterSchema>,
+) {
+	const {
+		organizationId,
+		includeActive,
+		includeCancelled,
+		includeCancelledButActive,
+	} = params;
+	const todayInBerlin = getTodayInBerlinDateString();
+	const statusConditions = [
+		includeActive ? sql`${contract.cancelledAt} IS NULL` : undefined,
+		includeCancelledButActive
+			? sql`${contract.cancelledAt} IS NOT NULL AND (
+          ${contract.cancellationEffectiveDate} IS NULL
+          OR ${contract.cancellationEffectiveDate} >= ${todayInBerlin}
+        )`
+			: undefined,
+		includeCancelled
+			? sql`${contract.cancelledAt} IS NOT NULL AND (
+          ${contract.cancellationEffectiveDate} < ${todayInBerlin}
+        )`
+			: undefined,
+	].filter(Boolean);
+
+	if (statusConditions.length === 0) {
+		return {
+			generatedAt: new Date().toISOString(),
+			members: [],
+		} satisfies MemberMapData;
+	}
+
+	const rows = await db
+		.select({
+			memberId: clubMember.id,
+			firstName: clubMember.firstName,
+			lastName: clubMember.lastName,
+			city: clubMember.city,
+			postalCode: clubMember.postalCode,
+			latitude: clubMember.latitude,
+			longitude: clubMember.longitude,
+			groupId: groupMember.groupId,
+		})
+		.from(clubMember)
+		.innerJoin(contract, eq(contract.memberId, clubMember.id))
+		.leftJoin(groupMember, eq(groupMember.memberId, clubMember.id))
+		.where(
+			and(
+				eq(clubMember.organizationId, organizationId),
+				sql`${clubMember.city} IS NOT NULL`,
+				sql`${clubMember.city} <> ''`,
+				sql`${clubMember.postalCode} IS NOT NULL`,
+				sql`${clubMember.postalCode} <> ''`,
+				or(...statusConditions),
+			),
+		);
+
+	const memberMap = new Map<
+		string,
+		{
+			memberId: string;
+			firstName: string;
+			lastName: string;
+			city: string;
+			postalCode: string;
+			latitude: number | null;
+			longitude: number | null;
+			groupIds: Set<string>;
+		}
+	>();
+
+	for (const row of rows) {
+		const existing = memberMap.get(row.memberId);
+
+		if (existing) {
+			if (existing.latitude == null && row.latitude != null) {
+				existing.latitude = row.latitude;
+			}
+			if (existing.longitude == null && row.longitude != null) {
+				existing.longitude = row.longitude;
+			}
+			if (row.groupId) {
+				existing.groupIds.add(row.groupId);
+			}
+			continue;
+		}
+
+		memberMap.set(row.memberId, {
+			memberId: row.memberId,
+			firstName: row.firstName,
+			lastName: row.lastName,
+			city: row.city,
+			postalCode: row.postalCode,
+			latitude: row.latitude,
+			longitude: row.longitude,
+			groupIds: new Set(row.groupId ? [row.groupId] : []),
+		});
+	}
+
+	return {
+		generatedAt: new Date().toISOString(),
+		members: Array.from(memberMap.values()).map((member) => ({
+			memberId: member.memberId,
+			firstName: member.firstName,
+			lastName: member.lastName,
+			city: member.city,
+			postalCode: member.postalCode,
+			latitude: member.latitude,
+			longitude: member.longitude,
+			groupIds: Array.from(member.groupIds).sort(),
+		})),
+	} satisfies MemberMapData;
+}
+
 function buildTimelinePeriods(
 	monthlyData: MonthlyOverviewData[],
 	groupBy: TimelineGroupBy,
@@ -488,6 +650,32 @@ function buildTimelinePeriods(
 }
 
 export const statisticsRouter = {
+	memberMap: protectedProcedure
+		.use(rateLimitMiddleware(2))
+		.use(requirePermission({ statistics: ["view"] }))
+		.input(memberMapFilterSchema)
+		.handler(async ({ input, context }) => {
+			const organizationId = getActiveOrganizationId(
+				context.session.activeOrganizationId,
+			);
+
+			try {
+				return await loadMemberMapData({ organizationId, ...input });
+			} catch (error) {
+				after(() => {
+					logger.error("Failed to get member map statistics", {
+						error,
+						organizationId,
+						userId: context.user.id,
+					});
+				});
+
+				throw new ORPCError("INTERNAL_SERVER_ERROR", {
+					message: "Failed to load member map data",
+				});
+			}
+		})
+		.route({ method: "GET", path: "/statistics/member-map" }),
 	monthlyOverview: protectedProcedure
 		.use(rateLimitMiddleware(2))
 		.use(

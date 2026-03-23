@@ -51,6 +51,16 @@ export const clubMember = pgTable("club_member", {
 	state: text("state").notNull(),
 	postalCode: text("postal_code").notNull(),
 	country: text("country").notNull(),
+	latitude: decimal("latitude", {
+		precision: 10,
+		scale: 7,
+		mode: "number",
+	}),
+	longitude: decimal("longitude", {
+		precision: 10,
+		scale: 7,
+		mode: "number",
+	}),
 
 	iban: text("iban").notNull(),
 	bic: text("bic").notNull(),

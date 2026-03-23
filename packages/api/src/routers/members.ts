@@ -14,6 +14,7 @@ import {
 import { after } from "next/server";
 import { z } from "zod";
 import { protectedProcedure } from "../index";
+import { geocodeAddress } from "../lib/geocoding";
 import { logger } from "../lib/logger";
 import { getPostHogServer } from "../lib/posthog";
 import { loadSepaModule } from "../lib/sepa";
@@ -29,6 +30,7 @@ import {
 	buildMembersExportFilename,
 	serializeMembersCsv,
 } from "./members/membersCsvExport";
+import { reGeocodeOrganizationProcedure } from "./members/reGeocodeOrganization";
 
 const optionalEmailSchema = z
 	.string()
@@ -243,12 +245,16 @@ function normalizeRequiredText(value: string | null | undefined): string {
 	return (value ?? "").trim();
 }
 
-function normalizeOptionalText(value: string | null | undefined): string | undefined {
+function normalizeOptionalText(
+	value: string | null | undefined,
+): string | undefined {
 	const normalized = value?.trim();
 	return normalized ? normalized : undefined;
 }
 
-function normalizeOptionalAmount(value: string | null | undefined): string | undefined {
+function normalizeOptionalAmount(
+	value: string | null | undefined,
+): string | undefined {
 	const normalized = value?.trim();
 	return normalized ? normalized : undefined;
 }
@@ -453,7 +459,10 @@ export const membersRouter = {
 					.filter(Boolean)
 					.filter((v, i, a) => a.indexOf(v) === i) ?? undefined;
 
-			if ((input.groupIds?.length ?? 0) > 0 && (!groupIds || groupIds.length === 0)) {
+			if (
+				(input.groupIds?.length ?? 0) > 0 &&
+				(!groupIds || groupIds.length === 0)
+			) {
 				return {
 					data: [],
 					pagination: {
@@ -822,6 +831,13 @@ export const membersRouter = {
 			const nextBillingDate = getNextBillingDate(input.contractStartDate);
 			const mandateSignatureDate = getTodayInBerlinDateString();
 			try {
+				const geocodedAddress = await geocodeAddress({
+					street: input.street,
+					postalCode: input.postalCode,
+					city: input.city,
+					country: input.country,
+				});
+
 				const result = await DB.mutation.members.createMemberWithContract({
 					organizationId,
 					memberId: randomBytes(16).toString("hex"),
@@ -836,6 +852,8 @@ export const membersRouter = {
 						state: input.state,
 						postalCode: input.postalCode,
 						country: input.country,
+						latitude: geocodedAddress?.latitude ?? null,
+						longitude: geocodedAddress?.longitude ?? null,
 						iban: input.iban,
 						bic: input.bic,
 						cardHolder: input.cardHolder,
@@ -912,6 +930,45 @@ export const membersRouter = {
 			const posthog = getPostHogServer();
 
 			try {
+				const [existingMember] = await db
+					.select({
+						street: clubMember.street,
+						city: clubMember.city,
+						state: clubMember.state,
+						postalCode: clubMember.postalCode,
+						country: clubMember.country,
+						latitude: clubMember.latitude,
+						longitude: clubMember.longitude,
+					})
+					.from(clubMember)
+					.where(
+						and(
+							eq(clubMember.id, input.memberId),
+							eq(clubMember.organizationId, organizationId),
+						),
+					)
+					.limit(1);
+
+				const addressChanged =
+					!existingMember ||
+					existingMember.street !== input.street ||
+					existingMember.city !== input.city ||
+					existingMember.state !== input.state ||
+					existingMember.postalCode !== input.postalCode ||
+					existingMember.country !== input.country;
+
+				const geocodedAddress = addressChanged
+					? await geocodeAddress({
+							street: input.street,
+							postalCode: input.postalCode,
+							city: input.city,
+							country: input.country,
+						})
+					: {
+							latitude: existingMember?.latitude ?? null,
+							longitude: existingMember?.longitude ?? null,
+						};
+
 				const result = await DB.mutation.members.updateMember({
 					memberId: input.memberId,
 					organizationId,
@@ -926,6 +983,8 @@ export const membersRouter = {
 						state: input.state,
 						postalCode: input.postalCode,
 						country: input.country,
+						latitude: geocodedAddress?.latitude ?? null,
+						longitude: geocodedAddress?.longitude ?? null,
 						notes: input.memberNotes,
 						guardianName: input.guardianName,
 						guardianEmail: input.guardianEmail || undefined,
@@ -982,6 +1041,7 @@ export const membersRouter = {
 			}
 		})
 		.route({ method: "PATCH", path: "/members/:memberId" }),
+	reGeocodeOrganization: reGeocodeOrganizationProcedure,
 
 	cancelContract: protectedProcedure
 		.use(rateLimitMiddleware(10))
@@ -1136,6 +1196,10 @@ export const membersRouter = {
 					groupId: input.groupId,
 					membershipPrice: input.membershipPrice,
 				});
+
+				if (!result) {
+					throw new Error("Failed to assign member to group");
+				}
 
 				posthog.capture({
 					distinctId: context.userId,
