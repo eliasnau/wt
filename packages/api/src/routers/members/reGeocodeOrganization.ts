@@ -112,14 +112,8 @@ export const reGeocodeOrganizationProcedure = protectedProcedure
 				failures,
 			};
 		} catch (error) {
-			const message =
-				error instanceof Error
-					? error.message
-					: "Failed to recalculate member addresses";
-
 			logger.error("Failed to re-geocode organization members", {
 				error,
-				message,
 				organizationId,
 				userId: context.user.id,
 			});
@@ -127,7 +121,7 @@ export const reGeocodeOrganizationProcedure = protectedProcedure
 			after(() => posthog.shutdown());
 
 			throw new ORPCError("INTERNAL_SERVER_ERROR", {
-				message,
+				message: "Failed to recalculate member addresses",
 			});
 		}
 	})
