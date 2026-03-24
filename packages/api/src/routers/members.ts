@@ -1,15 +1,28 @@
 import { randomBytes } from "node:crypto";
 import { ORPCError } from "@orpc/server";
 import { syncAutumnUsage } from "@repo/autumn/backend";
-import { and, count, db, desc, eq, ilike, inArray, or, sql } from "@repo/db";
+import {
+	and,
+	count,
+	db,
+	desc,
+	eq,
+	ilike,
+	inArray,
+	isNull,
+	or,
+	sql,
+} from "@repo/db";
 import { DB } from "@repo/db/functions";
 import {
 	clubMember,
 	contract,
 	group,
 	groupMember,
-	payment,
-	paymentBatch,
+	invoice,
+	sepaBatch,
+	sepaBatchItem,
+	sepaMandate,
 } from "@repo/db/schema";
 import { after } from "next/server";
 import { z } from "zod";
@@ -68,14 +81,12 @@ const createMemberSchema = z.object({
 		.string()
 		.regex(/^\d{4}-\d{2}-01$/, "Must be 1st day of month (YYYY-MM-01)"),
 	initialPeriod: z.enum(["monthly", "half_yearly", "yearly"]),
-	joiningFeeAmount: z
+	joiningFeeCents: z.number().int().nonnegative().optional(),
+	yearlyFeeCents: z.number().int().nonnegative().optional(),
+	yearlyFeeMode: z.enum(["january", "anniversary"]).optional(),
+	settledThroughDate: z
 		.string()
-		.regex(/^\d+(\.\d{1,2})?$/)
-		.optional()
-		.or(z.literal("")),
-	yearlyFeeAmount: z
-		.string()
-		.regex(/^\d+(\.\d{1,2})?$/)
+		.regex(/^\d{4}-\d{2}-\d{2}$/, "Must be valid date format (YYYY-MM-DD)")
 		.optional()
 		.or(z.literal("")),
 
@@ -142,14 +153,12 @@ const updateMemberSchema = z.object({
 	guardianPhone: z.string().optional(),
 	// Contract details
 	initialPeriod: z.enum(["monthly", "half_yearly", "yearly"]),
-	joiningFeeAmount: z
+	joiningFeeCents: z.number().int().nonnegative().optional(),
+	yearlyFeeCents: z.number().int().nonnegative().optional(),
+	yearlyFeeMode: z.enum(["january", "anniversary"]).optional(),
+	settledThroughDate: z
 		.string()
-		.regex(/^\d+(\.\d{1,2})?$/)
-		.optional()
-		.or(z.literal("")),
-	yearlyFeeAmount: z
-		.string()
-		.regex(/^\d+(\.\d{1,2})?$/)
+		.regex(/^\d{4}-\d{2}-\d{2}$/, "Must be valid date format (YYYY-MM-DD)")
 		.optional()
 		.or(z.literal("")),
 	contractNotes: z.string().max(1000).optional(),
@@ -158,13 +167,13 @@ const updateMemberSchema = z.object({
 const assignGroupSchema = z.object({
 	memberId: z.string(),
 	groupId: z.string(),
-	membershipPrice: z.number().nonnegative().finite().optional(),
+	membershipPriceCents: z.number().int().nonnegative().optional(),
 });
 
 const updateGroupMembershipSchema = z.object({
 	memberId: z.string(),
 	groupId: z.string(),
-	membershipPrice: z.number().nonnegative().finite().nullable(),
+	membershipPriceCents: z.number().int().nonnegative().nullable(),
 });
 
 const removeGroupMembershipSchema = z.object({
@@ -246,13 +255,6 @@ function normalizeRequiredText(value: string | null | undefined): string {
 }
 
 function normalizeOptionalText(
-	value: string | null | undefined,
-): string | undefined {
-	const normalized = value?.trim();
-	return normalized ? normalized : undefined;
-}
-
-function normalizeOptionalAmount(
 	value: string | null | undefined,
 ): string | undefined {
 	const normalized = value?.trim();
@@ -406,31 +408,29 @@ export const membersRouter = {
 
 			const payments = await db
 				.select({
-					id: payment.id,
-					batchId: payment.batchId,
-					batchNumber: paymentBatch.batchNumber,
-					billingMonth: paymentBatch.billingMonth,
-					membershipAmount: payment.membershipAmount,
-					joiningFeeAmount: payment.joiningFeeAmount,
-					yearlyFeeAmount: payment.yearlyFeeAmount,
-					totalAmount: payment.totalAmount,
-					billingPeriodStart: payment.billingPeriodStart,
-					billingPeriodEnd: payment.billingPeriodEnd,
-					dueDate: payment.dueDate,
-					notes: payment.notes,
-					createdAt: payment.createdAt,
+					id: invoice.id,
+					status: invoice.status,
+					totalCents: invoice.totalCents,
+					billingPeriodStart: invoice.billingPeriodStart,
+					billingPeriodEnd: invoice.billingPeriodEnd,
+					dueDate: invoice.dueDate,
+					createdAt: invoice.createdAt,
+					batchId: sepaBatch.id,
+					batchNumber: sepaBatch.batchNumber,
+					collectionDate: sepaBatch.collectionDate,
 				})
-				.from(payment)
-				.innerJoin(contract, eq(payment.contractId, contract.id))
-				.innerJoin(paymentBatch, eq(payment.batchId, paymentBatch.id))
+				.from(invoice)
+				.innerJoin(contract, eq(invoice.contractId, contract.id))
+				.leftJoin(sepaBatchItem, eq(sepaBatchItem.invoiceId, invoice.id))
+				.leftJoin(sepaBatch, eq(sepaBatch.id, sepaBatchItem.sepaBatchId))
 				.where(
 					and(
 						eq(contract.memberId, input.memberId),
 						eq(contract.organizationId, organizationId),
-						eq(paymentBatch.organizationId, organizationId),
+						eq(invoice.organizationId, organizationId),
 					),
 				)
-				.orderBy(desc(payment.dueDate), desc(payment.createdAt));
+				.orderBy(desc(invoice.dueDate), desc(invoice.createdAt));
 
 			return {
 				memberId: input.memberId,
@@ -546,10 +546,11 @@ export const membersRouter = {
 					// Contract information (flat fields)
 					contractId: contract.id,
 					contractStartDate: contract.startDate,
+					contractStatus: contract.status,
 					contractInitialPeriod: contract.initialPeriod,
 					contractInitialPeriodEndDate: contract.initialPeriodEndDate,
-					contractJoiningFeeAmount: contract.joiningFeeAmount,
-					contractYearlyFeeAmount: contract.yearlyFeeAmount,
+					contractJoiningFeeCents: contract.joiningFeeCents,
+					contractYearlyFeeCents: contract.yearlyFeeCents,
 					contractNotes: contract.notes,
 					contractCancelledAt: contract.cancelledAt,
 					contractCancellationEffectiveDate: contract.cancellationEffectiveDate,
@@ -574,7 +575,7 @@ export const membersRouter = {
 				string,
 				{
 					groupId: string;
-					membershipPrice: number;
+					membershipPriceCents: number;
 					group: { id: string; name: string; color: string };
 				}[]
 			>();
@@ -583,7 +584,7 @@ export const membersRouter = {
 					.select({
 						memberId: groupMember.memberId,
 						groupId: groupMember.groupId,
-						membershipPrice: groupMember.membershipPrice,
+						membershipPriceCents: groupMember.membershipPriceCents,
 						gId: group.id,
 						gName: group.name,
 						gColor: group.color,
@@ -597,7 +598,7 @@ export const membersRouter = {
 						const list = acc.get(r.memberId) ?? [];
 						list.push({
 							groupId: r.groupId,
-							membershipPrice: r.membershipPrice,
+							membershipPriceCents: r.membershipPriceCents,
 							group: { id: r.gId, name: r.gName, color: r.gColor },
 						});
 						acc.set(r.memberId, list);
@@ -607,7 +608,7 @@ export const membersRouter = {
 						string,
 						{
 							groupId: string;
-							membershipPrice: number;
+							membershipPriceCents: number;
 							group: { id: string; name: string; color: string };
 						}[]
 					>(),
@@ -618,10 +619,11 @@ export const membersRouter = {
 				const {
 					contractId,
 					contractStartDate,
+					contractStatus,
 					contractInitialPeriod,
 					contractInitialPeriodEndDate,
-					contractJoiningFeeAmount,
-					contractYearlyFeeAmount,
+					contractJoiningFeeCents,
+					contractYearlyFeeCents,
 					contractNotes,
 					contractCancelledAt,
 					contractCancellationEffectiveDate,
@@ -633,10 +635,11 @@ export const membersRouter = {
 					contract: {
 						id: contractId,
 						startDate: contractStartDate,
+						status: contractStatus,
 						initialPeriod: contractInitialPeriod,
 						initialPeriodEndDate: contractInitialPeriodEndDate,
-						joiningFeeAmount: contractJoiningFeeAmount,
-						yearlyFeeAmount: contractYearlyFeeAmount,
+						joiningFeeCents: contractJoiningFeeCents,
+						yearlyFeeCents: contractYearlyFeeCents,
 						notes: contractNotes,
 						cancelledAt: contractCancelledAt,
 						cancellationEffectiveDate: contractCancellationEffectiveDate,
@@ -686,15 +689,23 @@ export const membersRouter = {
 					firstName: clubMember.firstName,
 					lastName: clubMember.lastName,
 					email: clubMember.email,
-					iban: clubMember.iban,
-					bic: clubMember.bic,
-					cardHolder: clubMember.cardHolder,
-					mandateId: contract.mandateId,
-					mandateSignatureDate: contract.mandateSignatureDate,
+					iban: sepaMandate.iban,
+					bic: sepaMandate.bic,
+					cardHolder: sepaMandate.accountHolder,
+					mandateId: sepaMandate.mandateReference,
+					mandateSignatureDate: sepaMandate.signatureDate,
 					contractCancelledAt: contract.cancelledAt,
 				})
 				.from(clubMember)
 				.innerJoin(contract, eq(contract.memberId, clubMember.id))
+				.leftJoin(
+					sepaMandate,
+					and(
+						eq(sepaMandate.contractId, contract.id),
+						eq(sepaMandate.isActive, true),
+						isNull(sepaMandate.revokedAt),
+					),
+				)
 				.where(
 					and(
 						eq(clubMember.organizationId, organizationId),
@@ -828,7 +839,6 @@ export const membersRouter = {
 				input.contractStartDate,
 				input.initialPeriod,
 			);
-			const nextBillingDate = getNextBillingDate(input.contractStartDate);
 			const mandateSignatureDate = getTodayInBerlinDateString();
 			try {
 				const geocodedAddress = await geocodeAddress({
@@ -866,12 +876,19 @@ export const membersRouter = {
 						initialPeriod: input.initialPeriod,
 						startDate: input.contractStartDate,
 						initialPeriodEndDate,
-						nextBillingDate,
-						mandateId: generateMandateId(),
-						mandateSignatureDate,
-						joiningFeeAmount: normalizeOptionalAmount(input.joiningFeeAmount),
-						yearlyFeeAmount: normalizeOptionalAmount(input.yearlyFeeAmount),
+						joiningFeeCents: input.joiningFeeCents,
+						yearlyFeeCents: input.yearlyFeeCents,
+						yearlyFeeMode: input.yearlyFeeMode ?? "january",
+						settledThroughDate:
+							normalizeOptionalText(input.settledThroughDate) ?? undefined,
 						notes: input.contractNotes,
+					},
+					sepaMandateData: {
+						mandateReference: generateMandateId(),
+						signatureDate: mandateSignatureDate,
+						accountHolder: input.cardHolder,
+						iban: input.iban,
+						bic: input.bic,
 					},
 				});
 
@@ -992,8 +1009,11 @@ export const membersRouter = {
 					},
 					contractData: {
 						// initialPeriod: input.initialPeriod,
-						joiningFeeAmount: normalizeOptionalAmount(input.joiningFeeAmount),
-						yearlyFeeAmount: normalizeOptionalAmount(input.yearlyFeeAmount),
+						joiningFeeCents: input.joiningFeeCents,
+						yearlyFeeCents: input.yearlyFeeCents,
+						yearlyFeeMode: input.yearlyFeeMode,
+						settledThroughDate:
+							normalizeOptionalText(input.settledThroughDate) ?? undefined,
 						notes: input.contractNotes,
 					},
 				});
@@ -1113,8 +1133,10 @@ export const membersRouter = {
 				const [updatedContract] = await db
 					.update(contract)
 					.set({
+						status: "cancelled",
 						cancelledAt: new Date(),
 						cancelReason: input.cancelReason,
+						cancellationReason: input.cancelReason,
 						cancellationEffectiveDate: input.cancellationEffectiveDate,
 					})
 					.where(eq(contract.id, existingContract.id))
@@ -1194,7 +1216,7 @@ export const membersRouter = {
 				const result = await DB.mutation.groups.assignMemberToGroup({
 					memberId: input.memberId,
 					groupId: input.groupId,
-					membershipPrice: input.membershipPrice,
+					membershipPriceCents: input.membershipPriceCents,
 				});
 
 				if (!result) {
@@ -1211,7 +1233,7 @@ export const membersRouter = {
 						member_id: input.memberId,
 						group_id: input.groupId,
 						group_name: group.name,
-						membership_price: result.membershipPrice,
+						membership_price_cents: result.membershipPriceCents,
 					},
 				});
 
@@ -1284,7 +1306,7 @@ export const membersRouter = {
 				const result = await DB.mutation.groups.updateGroupMember({
 					memberId: input.memberId,
 					groupId: input.groupId,
-					membershipPrice: input.membershipPrice ?? null,
+					membershipPriceCents: input.membershipPriceCents ?? null,
 				});
 
 				if (!result) {
@@ -1303,7 +1325,7 @@ export const membersRouter = {
 						member_id: input.memberId,
 						group_id: input.groupId,
 						group_name: group.name,
-						membership_price: result.membershipPrice,
+						membership_price_cents: result.membershipPriceCents,
 					},
 				});
 

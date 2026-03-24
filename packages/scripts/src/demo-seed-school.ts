@@ -13,11 +13,12 @@ type TargetGroup = GroupTemplate["name"];
 type SeededContract = {
 	contractId: string;
 	memberId: string;
-	monthlyMembershipAmount: number;
+	monthlyMembershipCents: number;
 	contractStartDate: string;
+	status: "active" | "cancelled" | "ended";
 	cancellationEffectiveDate: string | null;
-	joiningFeeAmount: string | null;
-	yearlyFeeAmount: string | null;
+	joiningFeeCents: number | null;
+	yearlyFeeCents: number | null;
 };
 
 type Args = {
@@ -214,19 +215,6 @@ function addMonths(date: Date, months: number): Date {
 	);
 }
 
-function monthsBetweenInclusive(startMonth: Date, endMonth: Date): Date[] {
-	const result: Date[] = [];
-	let cursor = firstDayOfMonth(startMonth);
-	const end = firstDayOfMonth(endMonth);
-
-	while (cursor.getTime() <= end.getTime()) {
-		result.push(cursor);
-		cursor = addMonths(cursor, 1);
-	}
-
-	return result;
-}
-
 function randomBirthdateForGroup(
 	rng: () => number,
 	group: TargetGroup,
@@ -266,11 +254,7 @@ function chooseGroup(rng: () => number): TargetGroup {
 	return "Erwachsene";
 }
 
-function toDecimalString(amount: number): string {
-	return amount.toFixed(2);
-}
-
-function generateMandateId(): string {
+function generateMandateReference(): string {
 	return `WT-${randomBytes(12).toString("hex").toUpperCase()}`;
 }
 
@@ -288,24 +272,19 @@ function dateAtNoonUtc(date: Date): Date {
 	);
 }
 
-function labelMonth(date: Date): string {
-	return `${date.getUTCFullYear()}-${pad2(date.getUTCMonth() + 1)}`;
-}
-
 async function run(): Promise<void> {
 	loadEnvForScripts();
 	const args = parseArgs(process.argv.slice(2));
 	const rng = createRng(hashSeed(`school-seed:${args.orgId}`));
 
-	const { and, db, eq, inArray, lte, wsDb } = await import("@repo/db");
+	const { db, eq, wsDb } = await import("@repo/db");
 	const {
 		clubMember,
 		contract,
 		group,
 		groupMember,
 		organization,
-		payment,
-		paymentBatch,
+		sepaMandate,
 	} = await import("@repo/db/schema");
 
 	const [org] = await db
@@ -340,7 +319,7 @@ async function run(): Promise<void> {
 					organizationId: args.orgId,
 					name: template.name,
 					color: template.color,
-					defaultMembershipPrice: template.defaultPrice,
+					defaultMembershipPriceCents: template.defaultPrice * 100,
 				})
 				.returning({ id: group.id });
 
@@ -365,7 +344,6 @@ async function run(): Promise<void> {
 	const today = new Date();
 	const currentMonth = firstDayOfMonth(today);
 	const oldestStartMonth = addMonths(currentMonth, -24);
-	const lastCompletedMonth = addMonths(currentMonth, -1);
 
 	let createdMembers = 0;
 	let endedContracts = 0;
@@ -428,26 +406,19 @@ async function run(): Promise<void> {
 					)
 				: null;
 
-		const currentPeriodEndDate =
-			willEndInPast && cancellationEffectiveDate
-				? cancellationEffectiveDate
-				: toDateString(
-						endOfMonth(addMonths(currentMonth, randomInt(rng, 0, 2))),
-					);
+		const status: SeededContract["status"] = willEndInPast
+			? "ended"
+			: cancelledButActive
+				? "cancelled"
+				: "active";
 
-		const nextBillingDate = willEndInPast
-			? (cancellationEffectiveDate ?? toDateString(currentMonth))
-			: toDateString(addMonths(currentMonth, 1));
+		const joiningFeeCents =
+			rng() < 0.7 ? randomInt(rng, 15, 40) * 100 : null;
+		const yearlyFeeCents =
+			rng() < 0.35 ? randomInt(rng, 25, 80) * 100 : null;
 
-		const joiningFeeAmount =
-			rng() < 0.7 ? toDecimalString(randomInt(rng, 15, 40)) : null;
-		const yearlyFeeAmount =
-			rng() < 0.35 ? toDecimalString(randomInt(rng, 25, 80)) : null;
-
-		const monthlyMembershipAmount = Math.max(
-			19,
-			groupTemplate.defaultPrice + randomInt(rng, -5, 6),
-		);
+		const monthlyMembershipCents =
+			Math.max(19, groupTemplate.defaultPrice + randomInt(rng, -5, 6)) * 100;
 
 		const memberNotesParts = [
 			"DEMO_SEED:SCHOOL_HISTORY",
@@ -471,11 +442,12 @@ async function run(): Promise<void> {
 			seededContracts.push({
 				contractId: `dry-run-contract-${i}`,
 				memberId: `dry-run-member-${i}`,
-				monthlyMembershipAmount,
+				monthlyMembershipCents,
 				contractStartDate: toDateString(contractStart),
+				status,
 				cancellationEffectiveDate,
-				joiningFeeAmount,
-				yearlyFeeAmount,
+				joiningFeeCents,
+				yearlyFeeCents,
 			});
 			continue;
 		}
@@ -517,27 +489,18 @@ async function run(): Promise<void> {
 				.values({
 					memberId: insertedMember.id,
 					organizationId: args.orgId,
+					status,
 					initialPeriod,
 					startDate: toDateString(contractStart),
 					initialPeriodEndDate,
-					currentPeriodEndDate,
-					nextBillingDate,
-					mandateId: generateMandateId(),
-					mandateSignatureDate: toDateString(contractStart),
-					joiningFeeAmount,
-					yearlyFeeAmount,
-					joiningFeePaidAt:
-						joiningFeeAmount && rng() < 0.85
-							? dateAtNoonUtc(addMonths(contractStart, randomInt(rng, 0, 1)))
-							: null,
-					lastYearlyFeePaidYear: yearlyFeeAmount
-						? randomInt(rng, today.getUTCFullYear() - 1, today.getUTCFullYear())
-						: null,
+					joiningFeeCents,
+					yearlyFeeCents,
+					yearlyFeeMode: rng() < 0.75 ? "january" : "anniversary",
 					cancelledAt:
 						willEndInPast || cancelledButActive
 							? cancellationRequestedAt
 							: null,
-					cancelReason:
+					cancellationReason:
 						willEndInPast || cancelledButActive
 							? pickOne(rng, CANCEL_REASONS)
 							: null,
@@ -551,20 +514,33 @@ async function run(): Promise<void> {
 				throw new Error("Failed to insert contract");
 			}
 
+			await tx.insert(sepaMandate).values({
+				organizationId: args.orgId,
+				memberId: insertedMember.id,
+				contractId: insertedContract.id,
+				mandateReference: generateMandateReference(),
+				accountHolder: `${firstName} ${lastName}`,
+				iban: buildIban(rng),
+				bic: pickOne(rng, BICS),
+				signatureDate: toDateString(contractStart),
+				isActive: true,
+			});
+
 			await tx.insert(groupMember).values({
 				groupId: targetGroupId,
 				memberId: insertedMember.id,
-				membershipPrice: monthlyMembershipAmount,
+				membershipPriceCents: monthlyMembershipCents,
 			});
 
 			seededContracts.push({
 				contractId: insertedContract.id,
 				memberId: insertedMember.id,
-				monthlyMembershipAmount,
+				monthlyMembershipCents,
 				contractStartDate: toDateString(contractStart),
+				status,
 				cancellationEffectiveDate,
-				joiningFeeAmount,
-				yearlyFeeAmount,
+				joiningFeeCents,
+				yearlyFeeCents,
 			});
 		});
 
@@ -574,187 +550,6 @@ async function run(): Promise<void> {
 		}
 		if (cancelledButActive) {
 			futureCancelledContracts += 1;
-		}
-	}
-
-	const monthsToSeed = monthsBetweenInclusive(
-		oldestStartMonth,
-		lastCompletedMonth,
-	);
-	const monthStrings = new Set(
-		monthsToSeed.map((month) => toDateString(month)),
-	);
-
-	const existingBatches = args.dryRun
-		? []
-		: await db
-				.select({
-					id: paymentBatch.id,
-					billingMonth: paymentBatch.billingMonth,
-				})
-				.from(paymentBatch)
-				.where(
-					and(
-						eq(paymentBatch.organizationId, args.orgId),
-						inArray(
-							paymentBatch.billingMonth,
-							Array.from(monthStrings.values()),
-						),
-					),
-				);
-
-	const existingMonthSet = new Set(
-		existingBatches.map((row) => row.billingMonth),
-	);
-
-	let createdBatches = 0;
-	let createdPayments = 0;
-
-	if (!args.dryRun) {
-		const seededContractIds = seededContracts.map((entry) => entry.contractId);
-		const seededContractSet = new Set(seededContractIds);
-
-		for (const billingMonthDate of monthsToSeed) {
-			const billingMonth = toDateString(billingMonthDate);
-			if (existingMonthSet.has(billingMonth)) {
-				continue;
-			}
-
-			const activeContractsForMonth = seededContracts.filter((entry) => {
-				if (entry.contractStartDate > billingMonth) {
-					return false;
-				}
-				if (!entry.cancellationEffectiveDate) {
-					return true;
-				}
-				return entry.cancellationEffectiveDate >= billingMonth;
-			});
-
-			if (activeContractsForMonth.length === 0) {
-				continue;
-			}
-
-			const insertedBatchRows = await wsDb
-				.insert(paymentBatch)
-				.values({
-					organizationId: args.orgId,
-					billingMonth,
-					batchNumber: `${labelMonth(billingMonthDate)}-${args.orgId.slice(0, 8).toUpperCase()}`,
-					notes: "Demo payment batch for seeded historical contracts",
-				})
-				.returning({ id: paymentBatch.id });
-
-			const insertedBatch = insertedBatchRows[0];
-			if (!insertedBatch) {
-				throw new Error(`Failed to create payment batch ${billingMonth}`);
-			}
-
-			createdBatches += 1;
-
-			const billingMonthEnd = toDateString(endOfMonth(billingMonthDate));
-			for (const contractRecord of activeContractsForMonth) {
-				if (!seededContractSet.has(contractRecord.contractId)) {
-					continue;
-				}
-
-				const joiningFeeAmount =
-					contractRecord.joiningFeeAmount &&
-					contractRecord.contractStartDate.slice(0, 7) ===
-						billingMonth.slice(0, 7)
-						? contractRecord.joiningFeeAmount
-						: "0.00";
-				const yearlyFeeAmount =
-					contractRecord.yearlyFeeAmount && billingMonth.endsWith("-01")
-						? contractRecord.yearlyFeeAmount
-						: "0.00";
-
-				const membershipAmount = toDecimalString(
-					contractRecord.monthlyMembershipAmount,
-				);
-				const totalAmount = toDecimalString(
-					Number.parseFloat(membershipAmount) +
-						Number.parseFloat(joiningFeeAmount) +
-						Number.parseFloat(yearlyFeeAmount),
-				);
-
-				await wsDb.insert(payment).values({
-					contractId: contractRecord.contractId,
-					batchId: insertedBatch.id,
-					membershipAmount,
-					joiningFeeAmount,
-					yearlyFeeAmount,
-					totalAmount,
-					billingPeriodStart: billingMonth,
-					billingPeriodEnd: billingMonthEnd,
-					dueDate: billingMonth,
-					notes: "Demo payment entry",
-				});
-
-				createdPayments += 1;
-			}
-		}
-
-		if (seededContractIds.length > 0) {
-			const totalByBatch = await db
-				.select({
-					batchId: payment.batchId,
-					totalAmount: payment.totalAmount,
-					membershipAmount: payment.membershipAmount,
-					joiningFeeAmount: payment.joiningFeeAmount,
-					yearlyFeeAmount: payment.yearlyFeeAmount,
-				})
-				.from(payment)
-				.where(
-					and(
-						inArray(payment.contractId, seededContractIds),
-						lte(payment.billingPeriodStart, toDateString(currentMonth)),
-					),
-				);
-
-			const aggregates = new Map<
-				string,
-				{
-					total: number;
-					membership: number;
-					joining: number;
-					yearly: number;
-					count: number;
-				}
-			>();
-
-			for (const row of totalByBatch) {
-				const existing =
-					aggregates.get(row.batchId) ??
-					({
-						total: 0,
-						membership: 0,
-						joining: 0,
-						yearly: 0,
-						count: 0,
-					} as const);
-
-				aggregates.set(row.batchId, {
-					total: existing.total + Number.parseFloat(row.totalAmount),
-					membership:
-						existing.membership + Number.parseFloat(row.membershipAmount),
-					joining: existing.joining + Number.parseFloat(row.joiningFeeAmount),
-					yearly: existing.yearly + Number.parseFloat(row.yearlyFeeAmount),
-					count: existing.count + 1,
-				});
-			}
-
-			for (const [batchId, values] of aggregates) {
-				await wsDb
-					.update(paymentBatch)
-					.set({
-						totalAmount: toDecimalString(values.total),
-						membershipTotal: toDecimalString(values.membership),
-						joiningFeeTotal: toDecimalString(values.joining),
-						yearlyFeeTotal: toDecimalString(values.yearly),
-						transactionCount: values.count,
-					})
-					.where(eq(paymentBatch.id, batchId));
-			}
 		}
 	}
 
@@ -770,12 +565,10 @@ async function run(): Promise<void> {
 	console.log(`Cancelled contracts (ended): ${endedContracts}`);
 	console.log(`Cancelled but still active: ${futureCancelledContracts}`);
 	console.log(
-		`Payment batches ${args.dryRun ? "to create" : "created"}: ${
-			args.dryRun ? monthsToSeed.length - existingMonthSet.size : createdBatches
-		}`,
+		`Contracts ${args.dryRun ? "to create" : "created"}: ${seededContracts.length}`,
 	);
 	console.log(
-		`Payments ${args.dryRun ? "to create" : "created"}: ${createdPayments}`,
+		`Active mandates ${args.dryRun ? "to create" : "created"}: ${seededContracts.length}`,
 	);
 }
 
