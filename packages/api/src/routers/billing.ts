@@ -480,6 +480,31 @@ async function applyCredits({
 	}
 }
 
+async function restoreCreditGrants(
+	tx: BillingTx,
+	lines: { type: string; totalAmountCents: number; creditGrantId: string | null }[],
+) {
+	for (const line of lines) {
+		if (!line.creditGrantId) continue;
+
+		if (line.type === "credit_money") {
+			await tx
+				.update(creditGrant)
+				.set({
+					remainingAmountCents: sql`${creditGrant.remainingAmountCents} + ${Math.abs(line.totalAmountCents)}`,
+				})
+				.where(eq(creditGrant.id, line.creditGrantId));
+		} else if (line.type === "credit_cycle") {
+			await tx
+				.update(creditGrant)
+				.set({
+					remainingCycles: sql`${creditGrant.remainingCycles} + 1`,
+				})
+				.where(eq(creditGrant.id, line.creditGrantId));
+		}
+	}
+}
+
 async function buildChargeLinesForMonth({
 	organizationId,
 	contractRow,
@@ -978,7 +1003,11 @@ export const billingRouter = {
 				}
 
 				const lines = await tx
-					.select({ type: invoiceLine.type })
+					.select({
+						type: invoiceLine.type,
+						totalAmountCents: invoiceLine.totalAmountCents,
+						creditGrantId: invoiceLine.creditGrantId,
+					})
 					.from(invoiceLine)
 					.where(eq(invoiceLine.invoiceId, input.id));
 
@@ -998,6 +1027,8 @@ export const billingRouter = {
 				if (lines.some((line) => line.type === "joining_fee")) {
 					await setJoiningFeePaidState(tx, invoiceRow.contractId, false);
 				}
+
+				await restoreCreditGrants(tx, lines);
 
 				return voided;
 			});
@@ -1036,6 +1067,8 @@ export const billingRouter = {
 					.update(invoice)
 					.set({ status: "void", voidReason: input.reason })
 					.where(eq(invoice.id, input.id));
+
+				await restoreCreditGrants(tx, currentLines);
 
 				const replacement = await createInvoiceWithLines(tx, {
 						invoice: {
