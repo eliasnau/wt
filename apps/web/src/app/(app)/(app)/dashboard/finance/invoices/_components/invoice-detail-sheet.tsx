@@ -26,6 +26,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import {
 	Sheet,
+	SheetClose,
 	SheetContent,
 	SheetDescription,
 	SheetFooter,
@@ -317,9 +318,9 @@ export function InvoiceDetailSheet({
 								Stornieren
 							</Button>
 						)}
-						<DialogClose render={<Button variant="outline" />}>
+						<SheetClose render={<Button variant="outline" />}>
 							Schließen
-						</DialogClose>
+						</SheetClose>
 					</SheetFooter>
 				</SheetContent>
 			</Sheet>
