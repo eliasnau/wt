@@ -50,7 +50,12 @@ function parsePriceValue(value: string) {
 		return undefined;
 	}
 
-	return Math.round(Number(normalizedValue) * 100);
+	const parsed = Number(normalizedValue);
+	if (Number.isNaN(parsed)) {
+		return undefined;
+	}
+
+	return Math.round(parsed * 100);
 }
 
 interface NewGroupSheetProps {

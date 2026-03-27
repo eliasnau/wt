@@ -299,14 +299,16 @@ export function SepaBatchDetailSheet({
 					)}
 					{isActive && (
 						<>
-							<Button
-								variant="outline"
-								onClick={() => supersedeMutation.mutate()}
-								disabled={supersedeMutation.isPending}
-							>
-								<RefreshCw className="size-4" />
-								Ersetzen
-							</Button>
+							{data?.batch?.status === "downloaded" && (
+								<Button
+									variant="outline"
+									onClick={() => supersedeMutation.mutate()}
+									disabled={supersedeMutation.isPending}
+								>
+									<RefreshCw className="size-4" />
+									Ersetzen
+								</Button>
+							)}
 							<Button
 								variant="destructive"
 								onClick={() => voidMutation.mutate()}

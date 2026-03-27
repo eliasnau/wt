@@ -420,8 +420,20 @@ export const membersRouter = {
 				})
 				.from(invoice)
 				.innerJoin(contract, eq(invoice.contractId, contract.id))
-				.leftJoin(sepaBatchItem, eq(sepaBatchItem.invoiceId, invoice.id))
-				.leftJoin(sepaBatch, eq(sepaBatch.id, sepaBatchItem.sepaBatchId))
+				.leftJoin(
+					sepaBatchItem,
+					and(
+						eq(sepaBatchItem.invoiceId, invoice.id),
+						sql`${sepaBatchItem.status} <> 'void'`,
+					),
+				)
+				.leftJoin(
+					sepaBatch,
+					and(
+						eq(sepaBatch.id, sepaBatchItem.sepaBatchId),
+						sql`${sepaBatch.status} <> 'void'`,
+					),
+				)
 					.where(
 						and(
 							eq(contract.memberId, input.memberId),
