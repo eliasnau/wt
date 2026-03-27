@@ -1481,11 +1481,17 @@ export const billingRouter = {
 			const [updated] = await db
 				.update(sepaBatch)
 				.set({ status: "void" })
-				.where(and(eq(sepaBatch.id, input.id), eq(sepaBatch.organizationId, organizationId)))
+				.where(
+					and(
+						eq(sepaBatch.id, input.id),
+						eq(sepaBatch.organizationId, organizationId),
+						or(eq(sepaBatch.status, "generated"), eq(sepaBatch.status, "downloaded")),
+					),
+				)
 				.returning();
 
 			if (!updated) {
-				throw new ORPCError("NOT_FOUND", { message: "SEPA batch not found" });
+				throw new ORPCError("NOT_FOUND", { message: "SEPA batch not found or already void/superseded" });
 			}
 
 			return updated;
@@ -1501,11 +1507,17 @@ export const billingRouter = {
 			const [updated] = await db
 				.update(sepaBatch)
 				.set({ status: "superseded" })
-				.where(and(eq(sepaBatch.id, input.id), eq(sepaBatch.organizationId, organizationId)))
+				.where(
+					and(
+						eq(sepaBatch.id, input.id),
+						eq(sepaBatch.organizationId, organizationId),
+						eq(sepaBatch.status, "downloaded"),
+					),
+				)
 				.returning();
 
 			if (!updated) {
-				throw new ORPCError("NOT_FOUND", { message: "SEPA batch not found" });
+				throw new ORPCError("NOT_FOUND", { message: "SEPA batch not found or not in downloaded state" });
 			}
 
 			return updated;
