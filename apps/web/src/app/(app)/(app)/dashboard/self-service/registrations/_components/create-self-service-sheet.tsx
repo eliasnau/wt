@@ -58,6 +58,15 @@ function makeGroupRow(): GroupRow {
   };
 }
 
+function parseAmountToCents(value: string) {
+  const normalizedValue = value.trim();
+  if (!normalizedValue) {
+    return undefined;
+  }
+
+  return Math.round(Number(normalizedValue) * 100);
+}
+
 export function CreateSelfServiceSheet({ onCreated }: CreateSelfServiceSheetProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -92,7 +101,7 @@ export function CreateSelfServiceSheet({ onCreated }: CreateSelfServiceSheetProp
         .filter((group) => group.groupId.trim().length > 0)
         .map((group) => ({
           groupId: group.groupId,
-          monthlyFee: group.monthlyFee.trim(),
+          monthlyFeeCents: Math.round(Number(group.monthlyFee.trim()) * 100),
           schedule: group.schedule.trim() || undefined,
         }));
 
@@ -101,7 +110,7 @@ export function CreateSelfServiceSheet({ onCreated }: CreateSelfServiceSheetProp
       }
 
       for (const item of payloadGroups) {
-        if (!item.monthlyFee.match(/^\d+(\.\d{1,2})?$/)) {
+        if (!Number.isFinite(item.monthlyFeeCents)) {
           throw new Error("Gruppenpreis muss ein gueltiger Betrag sein (z.B. 69 oder 69.00)");
         }
       }
@@ -118,8 +127,8 @@ export function CreateSelfServiceSheet({ onCreated }: CreateSelfServiceSheetProp
         name: name.trim(),
         description: description.trim() || undefined,
         billingCycle,
-        joiningFeeAmount: joiningFeeAmount.trim() || undefined,
-        yearlyFeeAmount: yearlyFeeAmount.trim() || undefined,
+        joiningFeeCents: parseAmountToCents(joiningFeeAmount),
+        yearlyFeeCents: parseAmountToCents(yearlyFeeAmount),
         contractStartDate: contractStartMonth ? `${contractStartMonth}-01` : undefined,
         notes: notes.trim() || undefined,
         groups: payloadGroups,

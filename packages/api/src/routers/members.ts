@@ -406,31 +406,30 @@ export const membersRouter = {
 				});
 			}
 
-			const payments = await db
-				.select({
-					id: invoice.id,
-					status: invoice.status,
-					totalCents: invoice.totalCents,
-					billingPeriodStart: invoice.billingPeriodStart,
-					billingPeriodEnd: invoice.billingPeriodEnd,
-					dueDate: invoice.dueDate,
-					createdAt: invoice.createdAt,
-					batchId: sepaBatch.id,
-					batchNumber: sepaBatch.batchNumber,
+				const payments = await db
+					.select({
+						id: invoice.id,
+						status: invoice.status,
+						totalCents: invoice.totalCents,
+						billingPeriodStart: invoice.billingPeriodStart,
+						billingPeriodEnd: invoice.billingPeriodEnd,
+						createdAt: invoice.createdAt,
+						batchId: sepaBatch.id,
+						batchNumber: sepaBatch.batchNumber,
 					collectionDate: sepaBatch.collectionDate,
 				})
 				.from(invoice)
 				.innerJoin(contract, eq(invoice.contractId, contract.id))
 				.leftJoin(sepaBatchItem, eq(sepaBatchItem.invoiceId, invoice.id))
 				.leftJoin(sepaBatch, eq(sepaBatch.id, sepaBatchItem.sepaBatchId))
-				.where(
-					and(
-						eq(contract.memberId, input.memberId),
-						eq(contract.organizationId, organizationId),
-						eq(invoice.organizationId, organizationId),
-					),
-				)
-				.orderBy(desc(invoice.dueDate), desc(invoice.createdAt));
+					.where(
+						and(
+							eq(contract.memberId, input.memberId),
+							eq(contract.organizationId, organizationId),
+							eq(invoice.organizationId, organizationId),
+						),
+					)
+					.orderBy(desc(invoice.billingPeriodStart), desc(invoice.createdAt));
 
 			return {
 				memberId: input.memberId,
@@ -1135,7 +1134,6 @@ export const membersRouter = {
 					.set({
 						status: "cancelled",
 						cancelledAt: new Date(),
-						cancelReason: input.cancelReason,
 						cancellationReason: input.cancelReason,
 						cancellationEffectiveDate: input.cancellationEffectiveDate,
 					})

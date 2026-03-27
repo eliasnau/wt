@@ -205,6 +205,7 @@ export const contract = pgTable(
 		yearlyFeeMode: text("yearly_fee_mode").notNull().default("january"),
 		settledThroughDate: date("settled_through_date"),
 		joiningFeeCents: integer("joining_fee_cents"),
+		joiningFeePaid: boolean("joining_fee_paid").notNull().default(false),
 		yearlyFeeCents: integer("yearly_fee_cents"),
 
 		cancelledAt: timestamp("cancelled_at"),
@@ -309,7 +310,6 @@ export const invoice = pgTable(
 			.references(() => contract.id, { onDelete: "restrict" }),
 		billingPeriodStart: date("billing_period_start").notNull(),
 		billingPeriodEnd: date("billing_period_end").notNull(),
-		dueDate: date("due_date").notNull(),
 		status: text("status").notNull().default("draft"), // draft | finalized | void
 		currency: text("currency").notNull().default("EUR"),
 		totalCents: integer("total_cents").notNull().default(0),
@@ -326,7 +326,6 @@ export const invoice = pgTable(
 		index("invoice_org_idx").on(table.organizationId),
 		index("invoice_member_idx").on(table.memberId),
 		index("invoice_contract_idx").on(table.contractId),
-		index("invoice_due_date_idx").on(table.dueDate),
 		index("invoice_period_idx").on(table.contractId, table.billingPeriodStart),
 	],
 );

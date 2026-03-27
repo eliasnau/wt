@@ -133,6 +133,7 @@ ALTER TABLE IF EXISTS "contract"
 	ADD COLUMN IF NOT EXISTS "yearly_fee_mode" text DEFAULT 'january',
 	ADD COLUMN IF NOT EXISTS "settled_through_date" date,
 	ADD COLUMN IF NOT EXISTS "joining_fee_cents" integer,
+	ADD COLUMN IF NOT EXISTS "joining_fee_paid" boolean DEFAULT false,
 	ADD COLUMN IF NOT EXISTS "yearly_fee_cents" integer,
 	ADD COLUMN IF NOT EXISTS "cancellation_reason" text;
 
@@ -150,6 +151,20 @@ BEGIN
 			SET "joining_fee_cents" = ROUND("joining_fee_amount"::numeric * 100)::integer
 			WHERE "joining_fee_amount" IS NOT NULL
 				AND "joining_fee_cents" IS NULL
+		';
+	END IF;
+
+	IF EXISTS (
+		SELECT 1
+		FROM information_schema.columns
+		WHERE table_schema = 'public'
+			AND table_name = 'contract'
+			AND column_name = 'joining_fee_paid_at'
+	) THEN
+		EXECUTE '
+			UPDATE "contract"
+			SET "joining_fee_paid" = true
+			WHERE "joining_fee_paid_at" IS NOT NULL
 		';
 	END IF;
 
@@ -202,6 +217,10 @@ UPDATE "contract"
 SET "cancellation_notice_days" = 0
 WHERE "cancellation_notice_days" IS NULL;
 
+UPDATE "contract"
+SET "joining_fee_paid" = false
+WHERE "joining_fee_paid" IS NULL;
+
 ALTER TABLE IF EXISTS "contract"
 	ALTER COLUMN "status" SET DEFAULT 'active';
 
@@ -219,6 +238,12 @@ ALTER TABLE IF EXISTS "contract"
 
 ALTER TABLE IF EXISTS "contract"
 	ALTER COLUMN "cancellation_notice_days" SET NOT NULL;
+
+ALTER TABLE IF EXISTS "contract"
+	ALTER COLUMN "joining_fee_paid" SET DEFAULT false;
+
+ALTER TABLE IF EXISTS "contract"
+	ALTER COLUMN "joining_fee_paid" SET NOT NULL;
 
 CREATE TABLE IF NOT EXISTS "sepa_mandate" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
@@ -261,7 +286,6 @@ CREATE TABLE IF NOT EXISTS "invoice" (
 	"contract_id" uuid NOT NULL,
 	"billing_period_start" date NOT NULL,
 	"billing_period_end" date NOT NULL,
-	"due_date" date NOT NULL,
 	"status" text DEFAULT 'draft' NOT NULL,
 	"currency" text DEFAULT 'EUR' NOT NULL,
 	"total_cents" integer DEFAULT 0 NOT NULL,
@@ -356,7 +380,6 @@ BEGIN
 			"contract_id",
 			"billing_period_start",
 			"billing_period_end",
-			"due_date",
 			"status",
 			"currency",
 			"total_cents",
@@ -371,7 +394,6 @@ BEGIN
 			p."contract_id",
 			p."billing_period_start",
 			p."billing_period_end",
-			p."due_date",
 			'finalized',
 			'EUR',
 			ROUND(p."total_amount"::numeric * 100)::integer,
@@ -484,6 +506,17 @@ BEGIN
 	END IF;
 END $$;
 
+UPDATE "contract" c
+SET "joining_fee_paid" = true
+WHERE EXISTS (
+	SELECT 1
+	FROM "invoice" i
+	INNER JOIN "invoice_line" il ON il."invoice_id" = i."id"
+	WHERE i."contract_id" = c."id"
+		AND i."status" <> 'void'
+		AND il."type" = 'joining_fee'
+);
+
 DO $$
 BEGIN
 	IF EXISTS (
@@ -569,6 +602,9 @@ ALTER TABLE IF EXISTS "contract"
 	DROP COLUMN IF EXISTS "joining_fee_paid_at",
 	DROP COLUMN IF EXISTS "last_yearly_fee_paid_year",
 	DROP COLUMN IF EXISTS "cancel_reason";
+
+ALTER TABLE IF EXISTS "invoice"
+	DROP COLUMN IF EXISTS "due_date";
 
 DROP TABLE IF EXISTS "payment";
 DROP TABLE IF EXISTS "payment_batch";
@@ -697,7 +733,6 @@ CREATE INDEX IF NOT EXISTS "credit_grant_contract_idx" ON "credit_grant" USING b
 CREATE INDEX IF NOT EXISTS "invoice_org_idx" ON "invoice" USING btree ("organization_id");
 CREATE INDEX IF NOT EXISTS "invoice_member_idx" ON "invoice" USING btree ("member_id");
 CREATE INDEX IF NOT EXISTS "invoice_contract_idx" ON "invoice" USING btree ("contract_id");
-CREATE INDEX IF NOT EXISTS "invoice_due_date_idx" ON "invoice" USING btree ("due_date");
 CREATE INDEX IF NOT EXISTS "invoice_period_idx" ON "invoice" USING btree ("contract_id", "billing_period_start");
 CREATE INDEX IF NOT EXISTS "invoice_line_org_idx" ON "invoice_line" USING btree ("organization_id");
 CREATE INDEX IF NOT EXISTS "invoice_line_invoice_idx" ON "invoice_line" USING btree ("invoice_id");

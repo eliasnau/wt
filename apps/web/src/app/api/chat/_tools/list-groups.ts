@@ -42,7 +42,7 @@ export const createListGroupsTool = (organizationId: string) =>
 					name: group.name,
 					description: group.description,
 					color: group.color,
-					defaultMembershipPrice: group.defaultMembershipPrice,
+					defaultMembershipPriceCents: group.defaultMembershipPriceCents,
 					memberCount: sql<number>`(
 						select count(*)::int
 						from ${groupMember}

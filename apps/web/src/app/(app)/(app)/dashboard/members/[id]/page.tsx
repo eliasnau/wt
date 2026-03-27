@@ -8,6 +8,7 @@ import {
 	Copy,
 	CreditCard,
 	FileText,
+	Receipt,
 	ScrollText,
 	Shield,
 	User,
@@ -46,9 +47,12 @@ import {
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
+import { formatCents } from "@/utils/billing";
+import { parseMembershipPriceInput } from "@/utils/membership-price";
 import { orpc } from "@/utils/orpc";
 import { CancelMemberDialog } from "../_components/cancel-member-dialog";
 import { AssignGroupDialog } from "./_components/assign-group-dialog";
+import { MemberBillingSection } from "./_components/member-billing-section";
 import { MemberGroupsTable } from "./_components/member-groups-table";
 
 function formatDate(dateString: string | null | undefined) {
@@ -62,23 +66,14 @@ function formatDate(dateString: string | null | undefined) {
 	});
 }
 
-function formatCurrency(amount: string | null | undefined) {
-	if (!amount) return "€0.00";
-	return new Intl.NumberFormat("en-US", {
-		style: "currency",
-		currency: "EUR",
-	}).format(Number.parseFloat(amount));
+function formatCurrency(amountCents: number | null | undefined) {
+	return formatCents(amountCents ?? 0);
 }
 
 function getPaymentTypeLabel(payment: {
-	membershipAmount: string;
-	joiningFeeAmount: string;
-	yearlyFeeAmount: string;
+	totalCents: number;
 }) {
-	if (Number.parseFloat(payment.membershipAmount) > 0) return "Mitgliedschaft";
-	if (Number.parseFloat(payment.joiningFeeAmount) > 0) return "Aufnahmegebühr";
-	if (Number.parseFloat(payment.yearlyFeeAmount) > 0) return "Jahresbeitrag";
-	return "Sonstiges";
+	return payment.totalCents > 0 ? "Rechnung" : "Ausgleich";
 }
 
 function parseInitialPeriod(
@@ -88,6 +83,23 @@ function parseInitialPeriod(
 		return value;
 	}
 	return "monthly";
+}
+
+function formatAmountInputFromCents(amountCents: number | null | undefined) {
+	if (amountCents === null || amountCents === undefined) {
+		return "";
+	}
+
+	return (amountCents / 100).toFixed(2);
+}
+
+function parseAmountInputToCents(value: string) {
+	const parsedAmount = parseMembershipPriceInput(value);
+	if (parsedAmount === null) {
+		return undefined;
+	}
+
+	return Math.round(parsedAmount * 100);
 }
 
 function CopyButton({ value }: { value: string }) {
@@ -132,10 +144,10 @@ export default function MemberDetailPage() {
 		state: "",
 		postalCode: "",
 		country: "",
-		memberNotes: "",
-		contractNotes: "",
-		initialPeriod: "monthly" as "monthly" | "half_yearly" | "yearly",
-		joiningFeeAmount: "",
+				memberNotes: "",
+				contractNotes: "",
+				initialPeriod: "monthly" as "monthly" | "half_yearly" | "yearly",
+				joiningFeeAmount: "",
 		yearlyFeeAmount: "",
 	});
 
@@ -205,8 +217,12 @@ export default function MemberDetailPage() {
 				memberNotes: member.notes ?? "",
 				contractNotes: member.contract.notes ?? "",
 				initialPeriod: parseInitialPeriod(member.contract.initialPeriod),
-				joiningFeeAmount: member.contract.joiningFeeAmount ?? "",
-				yearlyFeeAmount: member.contract.yearlyFeeAmount ?? "",
+				joiningFeeAmount: formatAmountInputFromCents(
+					member.contract.joiningFeeCents,
+				),
+				yearlyFeeAmount: formatAmountInputFromCents(
+					member.contract.yearlyFeeCents,
+				),
 			});
 		}
 	}
@@ -265,12 +281,12 @@ export default function MemberDetailPage() {
 
 	// Calculate total monthly payment from groups
 	const totalGroupPayment = member.groups.reduce((sum, gm) => {
-		return sum + (gm.membershipPrice ?? 0);
+		return sum + ((gm.membershipPriceCents ?? 0) / 100);
 	}, 0);
 
 	// Calculate total monthly payment including yearly fee (divided by 12)
-	const yearlyFeeMonthly = member.contract.yearlyFeeAmount
-		? Number.parseFloat(member.contract.yearlyFeeAmount) / 12
+	const yearlyFeeMonthly = member.contract.yearlyFeeCents
+		? member.contract.yearlyFeeCents / 1200
 		: 0;
 	const totalMonthlyPayment = totalGroupPayment + yearlyFeeMonthly;
 	const isSubmitting = updateMemberMutation.isPending;
@@ -294,8 +310,12 @@ export default function MemberDetailPage() {
 			memberNotes: member.notes ?? "",
 			contractNotes: member.contract.notes ?? "",
 			initialPeriod: parseInitialPeriod(member.contract.initialPeriod),
-			joiningFeeAmount: member.contract.joiningFeeAmount ?? "",
-			yearlyFeeAmount: member.contract.yearlyFeeAmount ?? "",
+			joiningFeeAmount: formatAmountInputFromCents(
+				member.contract.joiningFeeCents,
+			),
+			yearlyFeeAmount: formatAmountInputFromCents(
+				member.contract.yearlyFeeCents,
+			),
 		});
 	};
 
@@ -318,8 +338,8 @@ export default function MemberDetailPage() {
 			memberNotes: formState.memberNotes || undefined,
 			contractNotes: formState.contractNotes || undefined,
 			initialPeriod: formState.initialPeriod,
-			joiningFeeAmount: formState.joiningFeeAmount || undefined,
-			yearlyFeeAmount: formState.yearlyFeeAmount || undefined,
+			joiningFeeCents: parseAmountInputToCents(formState.joiningFeeAmount),
+			yearlyFeeCents: parseAmountInputToCents(formState.yearlyFeeAmount),
 		});
 	};
 
@@ -631,10 +651,10 @@ export default function MemberDetailPage() {
 										</div>
 										<div>
 											<p className="font-medium text-muted-foreground text-sm">
-												Next Billing Date
+												Status
 											</p>
-											<p className="mt-1 text-sm">
-												{formatDate(member.contract.nextBillingDate)}
+											<p className="mt-1 text-sm capitalize">
+												{member.contract.status}
 											</p>
 										</div>
 										<div>
@@ -673,7 +693,7 @@ export default function MemberDetailPage() {
 												/>
 											) : (
 												<span className="font-semibold text-lg">
-													{formatCurrency(member.contract.joiningFeeAmount)}
+													{formatCurrency(member.contract.joiningFeeCents)}
 												</span>
 											)}
 										</div>
@@ -683,7 +703,7 @@ export default function MemberDetailPage() {
 													Jahresbeitrag
 												</span>
 												<p className="text-muted-foreground text-xs">
-													{formatCurrency(yearlyFeeMonthly.toFixed(2))}/month
+													{formatCents(Math.round(yearlyFeeMonthly * 100))}/month
 												</p>
 											</div>
 											{isEditing ? (
@@ -700,7 +720,7 @@ export default function MemberDetailPage() {
 												/>
 											) : (
 												<span className="font-semibold text-lg">
-													{formatCurrency(member.contract.yearlyFeeAmount)}
+													{formatCurrency(member.contract.yearlyFeeCents)}
 												</span>
 											)}
 										</div>
@@ -749,6 +769,30 @@ export default function MemberDetailPage() {
 										</>
 									)}
 								</div>
+							</FramePanel>
+						</CollapsiblePanel>
+					</Collapsible>
+				</Frame>
+
+				<Frame>
+					<Collapsible defaultOpen={false}>
+						<FrameHeader className="flex-row items-center justify-between px-2 py-2">
+							<CollapsibleTrigger
+								className="data-panel-open:[&_svg:first-child]:rotate-180"
+								render={<Button variant="ghost" />}
+							>
+								<ChevronDownIcon className="size-4" />
+								<Receipt className="size-4" />
+								Abrechnung
+							</CollapsibleTrigger>
+						</FrameHeader>
+						<CollapsiblePanel>
+							<FramePanel>
+								<MemberBillingSection
+									memberId={member.id}
+									contractId={member.contract.id}
+									memberName={memberName}
+								/>
 							</FramePanel>
 						</CollapsiblePanel>
 					</Collapsible>
@@ -1061,37 +1105,34 @@ export default function MemberDetailPage() {
 											) : paymentHistoryQuery.data?.payments.length ? (
 												<div className="w-full overflow-x-auto">
 													<Table className="min-w-[760px]">
-														<TableHeader>
-															<TableRow>
-																<TableHead>Fällig</TableHead>
-																<TableHead>Typ</TableHead>
-																<TableHead>Zeitraum</TableHead>
-																<TableHead>Lauf</TableHead>
+															<TableHeader>
+																<TableRow>
+																	<TableHead>Typ</TableHead>
+																	<TableHead>Zeitraum</TableHead>
+																	<TableHead>Lauf</TableHead>
 																<TableHead className="text-right">
 																	Betrag
 																</TableHead>
 															</TableRow>
 														</TableHeader>
 														<TableBody>
-															{paymentHistoryQuery.data.payments.map(
-																(payment) => (
-																	<TableRow key={payment.id}>
-																		<TableCell>
-																			{formatDate(payment.dueDate)}
-																		</TableCell>
-																		<TableCell>
-																			{getPaymentTypeLabel(payment)}
-																		</TableCell>
+																{paymentHistoryQuery.data.payments.map(
+																	(payment) => (
+																		<TableRow key={payment.id}>
+																			<TableCell>
+																				{getPaymentTypeLabel(payment)}
+																			</TableCell>
 																		<TableCell>
 																			{formatDate(payment.billingPeriodStart)} -{" "}
 																			{formatDate(payment.billingPeriodEnd)}
 																		</TableCell>
 																		<TableCell>
 																			{payment.batchNumber ??
-																				payment.billingMonth}
+																				payment.collectionDate ??
+																				"-"}
 																		</TableCell>
 																		<TableCell className="text-right font-medium">
-																			{formatCurrency(payment.totalAmount)}
+																			{formatCurrency(payment.totalCents)}
 																		</TableCell>
 																	</TableRow>
 																),

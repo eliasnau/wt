@@ -7,7 +7,6 @@ import {
 	eq,
 	inArray,
 	isNull,
-	lte,
 	or,
 	sql,
 	wsDb,
@@ -48,7 +47,6 @@ const creditGrantTypeSchema = z.enum(["money", "billing_cycles"]);
 
 const generateInvoicesSchema = z.object({
 	targetMonth: monthStartSchema,
-	dueDate: ymdSchema.optional(),
 	currency: z.string().default("EUR"),
 });
 
@@ -148,8 +146,9 @@ const updateBatchStatusSchema = z.object({
 const ACTIVE_CONTRACT_STATUSES = new Set(["active", "cancelled"]);
 const ACTIVE_BATCH_STATUSES = new Set(["generated", "downloaded"]);
 
-type InvoiceLineInsert = typeof invoiceLine.$inferInsert;
+type InvoiceLineDraft = Omit<typeof invoiceLine.$inferInsert, "invoiceId">;
 type InvoiceInsert = typeof invoice.$inferInsert;
+type BillingTx = Parameters<Parameters<typeof wsDb.transaction>[0]>[0];
 
 function parseDateOnly(dateStr: string) {
 	const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
@@ -201,6 +200,10 @@ function getYearlyCycleKey(monthStart: string, contractStartDate: string) {
 	const startMonth = contractStartDate.slice(5, 7);
 	const year = Number(monthStart.slice(0, 4));
 	return month >= startMonth ? `${year}-${startMonth}` : `${year - 1}-${startMonth}`;
+}
+
+function getMonthNumber(dateStr: string) {
+	return Number(dateStr.slice(5, 7));
 }
 
 function buildBatchNumber(
@@ -333,13 +336,13 @@ async function getContractGroupCharges(memberId: string) {
 		.orderBy(asc(group.name));
 }
 
-function applyInvoiceTotal(lines: InvoiceLineInsert[]) {
+function applyInvoiceTotal(lines: InvoiceLineDraft[]) {
 	return lines.reduce((sum, line) => sum + line.totalAmountCents, 0);
 }
 
-async function createInvoiceWithLines(tx: typeof wsDb, params: {
+async function createInvoiceWithLines(tx: BillingTx, params: {
 	invoice: InvoiceInsert;
-	lines: InvoiceLineInsert[];
+	lines: InvoiceLineDraft[];
 }) {
 	const [createdInvoice] = await tx
 		.insert(invoice)
@@ -389,12 +392,12 @@ async function applyCredits({
 	monthStart,
 	lines,
 }: {
-	tx: typeof wsDb;
+	tx: BillingTx;
 	organizationId: string;
 	memberId: string;
 	contractId: string;
 	monthStart: string;
-	lines: InvoiceLineInsert[];
+	lines: InvoiceLineDraft[];
 }) {
 	let balance = applyInvoiceTotal(lines);
 	if (balance <= 0) {
@@ -490,7 +493,7 @@ async function buildChargeLinesForMonth({
 	chargeJoiningFee: boolean;
 	chargeYearlyFee: boolean;
 }) {
-	const lines: InvoiceLineInsert[] = [];
+	const lines: InvoiceLineDraft[] = [];
 	const groupCharges = await getContractGroupCharges(contractRow.memberId);
 
 	for (const groupCharge of groupCharges) {
@@ -539,15 +542,24 @@ async function buildChargeLinesForMonth({
 	return lines;
 }
 
+async function setJoiningFeePaidState(
+	tx: BillingTx,
+	contractId: string,
+	joiningFeePaid: boolean,
+) {
+	await tx
+		.update(contract)
+		.set({ joiningFeePaid })
+		.where(eq(contract.id, contractId));
+}
+
 async function generateInvoicesForMonth({
 	organizationId,
 	targetMonth,
-	dueDate,
 	currency,
 }: {
 	organizationId: string;
 	targetMonth: string;
-	dueDate: string;
 	currency: string;
 }) {
 	const contracts = await db
@@ -606,12 +618,7 @@ async function generateInvoicesForMonth({
 			(month) => month !== collectibleArrearsMonth,
 		);
 
-		const joiningFeeAlreadyBilled = await hasNonVoidInvoiceLine({
-			contractId: contractRow.id,
-			type: "joining_fee",
-		});
-
-		let joiningFeeConsumed = joiningFeeAlreadyBilled;
+		let joiningFeeConsumed = contractRow.joiningFeePaid;
 
 		for (const month of missingMonths) {
 			const shouldWaive = waivedMonths.includes(month);
@@ -637,23 +644,19 @@ async function generateInvoicesForMonth({
 			const yearlyFeeDue =
 				!yearlyFeeAlreadyBilled &&
 				(contractRow.yearlyFeeMode === "anniversary"
-					? month.slice(5, 7) === contractRow.startDate.slice(5, 7)
-					: month.endsWith("-01"));
+					? getMonthNumber(month) === getMonthNumber(contractRow.startDate)
+					: getMonthNumber(month) === 1);
 
 			const lines = await buildChargeLinesForMonth({
 				organizationId,
 				contractRow,
 				monthStart: month,
-				chargeJoiningFee: !joiningFeeConsumed,
+				chargeJoiningFee: shouldCreateCurrent && !joiningFeeConsumed,
 				chargeYearlyFee: yearlyFeeDue,
 			});
 
 			if (lines.length === 0) {
 				continue;
-			}
-
-			if (!joiningFeeConsumed && lines.some((line) => line.type === "joining_fee")) {
-				joiningFeeConsumed = true;
 			}
 
 			if (shouldWaive) {
@@ -679,7 +682,8 @@ async function generateInvoicesForMonth({
 			}
 
 			if (!shouldWaive && shouldCreateCollectible) {
-				await wsDb.transaction(async (tx) => {
+				const { finalized, didChargeJoiningFee } = await wsDb.transaction(
+					async (tx) => {
 					await applyCredits({
 						tx,
 						organizationId,
@@ -688,21 +692,32 @@ async function generateInvoicesForMonth({
 						monthStart: month,
 						lines,
 					});
-						const finalized = await createInvoiceWithLines(tx, {
-							invoice: {
-								organizationId,
-								memberId: contractRow.memberId,
-								contractId: contractRow.id,
-								billingPeriodStart: month,
-								billingPeriodEnd: lastDayOfMonth(month),
-								dueDate,
-								status: "draft",
-								currency,
-							},
+					const finalized = await createInvoiceWithLines(tx, {
+						invoice: {
+							organizationId,
+							memberId: contractRow.memberId,
+							contractId: contractRow.id,
+							billingPeriodStart: month,
+							billingPeriodEnd: lastDayOfMonth(month),
+							status: "draft",
+							currency,
+						},
 						lines,
 					});
-					createdInvoices.push(finalized);
+					const didChargeJoiningFee = lines.some(
+						(line) => line.type === "joining_fee",
+					);
+
+					if (didChargeJoiningFee) {
+						await setJoiningFeePaidState(tx, contractRow.id, true);
+					}
+
+					return { finalized, didChargeJoiningFee };
 				});
+				createdInvoices.push(finalized);
+				if (didChargeJoiningFee) {
+					joiningFeeConsumed = true;
+				}
 			} else if (shouldWaive) {
 				await wsDb.transaction(async (tx) => {
 					const finalized = await createInvoiceWithLines(tx, {
@@ -712,7 +727,6 @@ async function generateInvoicesForMonth({
 							contractId: contractRow.id,
 							billingPeriodStart: month,
 							billingPeriodEnd: lastDayOfMonth(month),
-							dueDate: month,
 							status: "draft",
 							currency,
 						},
@@ -746,28 +760,28 @@ async function listEligibleInvoicesForBatch({
 	} catch {
 		invalidCreditorSettings = true;
 	}
-	const invoices = await db
-		.select({
-			id: invoice.id,
-			memberId: invoice.memberId,
-			contractId: invoice.contractId,
-			status: invoice.status,
-			totalCents: invoice.totalCents,
-			dueDate: invoice.dueDate,
-			billingPeriodStart: invoice.billingPeriodStart,
-			billingPeriodEnd: invoice.billingPeriodEnd,
-			memberFirstName: clubMember.firstName,
+		const invoices = await db
+			.select({
+				id: invoice.id,
+				memberId: invoice.memberId,
+				contractId: invoice.contractId,
+				status: invoice.status,
+				totalCents: invoice.totalCents,
+				billingPeriodStart: invoice.billingPeriodStart,
+				billingPeriodEnd: invoice.billingPeriodEnd,
+				memberFirstName: clubMember.firstName,
 			memberLastName: clubMember.lastName,
 		})
-		.from(invoice)
-		.innerJoin(clubMember, eq(clubMember.id, invoice.memberId))
-		.where(
-			and(
+			.from(invoice)
+			.innerJoin(clubMember, eq(clubMember.id, invoice.memberId))
+			.where(
 				eq(invoice.organizationId, organizationId),
-				lte(invoice.dueDate, collectionDate),
-			),
-		)
-		.orderBy(asc(invoice.dueDate), asc(clubMember.lastName), asc(clubMember.firstName));
+			)
+			.orderBy(
+				asc(invoice.billingPeriodStart),
+				asc(clubMember.lastName),
+				asc(clubMember.firstName),
+			);
 
 	const exportedInvoiceIds = new Set(
 		(
@@ -843,12 +857,11 @@ export const billingRouter = {
 		.input(generateInvoicesSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
-			const createdInvoices = await generateInvoicesForMonth({
-				organizationId,
-				targetMonth: input.targetMonth,
-				dueDate: input.dueDate ?? input.targetMonth,
-				currency: input.currency,
-			});
+				const createdInvoices = await generateInvoicesForMonth({
+					organizationId,
+					targetMonth: input.targetMonth,
+					currency: input.currency,
+				});
 
 			return {
 				targetMonth: input.targetMonth,
@@ -876,14 +889,13 @@ export const billingRouter = {
 			return db
 				.select({
 					id: invoice.id,
-					memberId: invoice.memberId,
-					contractId: invoice.contractId,
-					billingPeriodStart: invoice.billingPeriodStart,
-					billingPeriodEnd: invoice.billingPeriodEnd,
-					dueDate: invoice.dueDate,
-					status: invoice.status,
-					totalCents: invoice.totalCents,
-					currency: invoice.currency,
+						memberId: invoice.memberId,
+						contractId: invoice.contractId,
+						billingPeriodStart: invoice.billingPeriodStart,
+						billingPeriodEnd: invoice.billingPeriodEnd,
+						status: invoice.status,
+						totalCents: invoice.totalCents,
+						currency: invoice.currency,
 					createdAt: invoice.createdAt,
 					finalizedAt: invoice.finalizedAt,
 					memberFirstName: clubMember.firstName,
@@ -950,18 +962,45 @@ export const billingRouter = {
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
 			await ensureInvoiceNotExported(input.id);
-			const [updated] = await db
-				.update(invoice)
-				.set({
-					status: "void",
-					voidReason: input.reason,
-				})
-				.where(and(eq(invoice.id, input.id), eq(invoice.organizationId, organizationId)))
-				.returning();
+			const updated = await wsDb.transaction(async (tx) => {
+				const [invoiceRow] = await tx
+					.select({
+						id: invoice.id,
+						contractId: invoice.contractId,
+						organizationId: invoice.organizationId,
+					})
+					.from(invoice)
+					.where(and(eq(invoice.id, input.id), eq(invoice.organizationId, organizationId)))
+					.limit(1);
 
-			if (!updated) {
-				throw new ORPCError("NOT_FOUND", { message: "Invoice not found" });
-			}
+				if (!invoiceRow) {
+					throw new ORPCError("NOT_FOUND", { message: "Invoice not found" });
+				}
+
+				const lines = await tx
+					.select({ type: invoiceLine.type })
+					.from(invoiceLine)
+					.where(eq(invoiceLine.invoiceId, input.id));
+
+				const [voided] = await tx
+					.update(invoice)
+					.set({
+						status: "void",
+						voidReason: input.reason,
+					})
+					.where(eq(invoice.id, input.id))
+					.returning();
+
+				if (!voided) {
+					throw new ORPCError("NOT_FOUND", { message: "Invoice not found" });
+				}
+
+				if (lines.some((line) => line.type === "joining_fee")) {
+					await setJoiningFeePaidState(tx, invoiceRow.contractId, false);
+				}
+
+				return voided;
+			});
 
 			return updated;
 		})
@@ -999,16 +1038,15 @@ export const billingRouter = {
 					.where(eq(invoice.id, input.id));
 
 				const replacement = await createInvoiceWithLines(tx, {
-					invoice: {
-						organizationId,
-						memberId: currentInvoice.memberId,
-						contractId: currentInvoice.contractId,
-						billingPeriodStart: currentInvoice.billingPeriodStart,
-						billingPeriodEnd: currentInvoice.billingPeriodEnd,
-						dueDate: currentInvoice.dueDate,
-						status: "draft",
-						currency: currentInvoice.currency,
-					},
+						invoice: {
+							organizationId,
+							memberId: currentInvoice.memberId,
+							contractId: currentInvoice.contractId,
+							billingPeriodStart: currentInvoice.billingPeriodStart,
+							billingPeriodEnd: currentInvoice.billingPeriodEnd,
+							status: "draft",
+							currency: currentInvoice.currency,
+						},
 					lines: currentLines.map((line) => ({
 						organizationId,
 						type: line.type,
@@ -1175,6 +1213,20 @@ export const billingRouter = {
 			return updated;
 		})
 		.route({ method: "POST", path: "/billing/sepa-mandates/:id/revoke" }),
+
+	listSepaBatches: protectedProcedure
+		.use(rateLimitMiddleware(5))
+		.use(requirePermission({ billing: ["view"] }))
+		.input(z.object({}))
+		.handler(async ({ context }) => {
+			const organizationId = context.session.activeOrganizationId!;
+			return db
+				.select()
+				.from(sepaBatch)
+				.where(eq(sepaBatch.organizationId, organizationId))
+				.orderBy(desc(sepaBatch.createdAt));
+		})
+		.route({ method: "GET", path: "/billing/sepa-batches" }),
 
 	previewSepaBatch: protectedProcedure
 		.use(rateLimitMiddleware(5))
