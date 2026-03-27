@@ -991,6 +991,7 @@ export const billingRouter = {
 				const [invoiceRow] = await tx
 					.select({
 						id: invoice.id,
+						status: invoice.status,
 						contractId: invoice.contractId,
 						organizationId: invoice.organizationId,
 					})
@@ -1000,6 +1001,10 @@ export const billingRouter = {
 
 				if (!invoiceRow) {
 					throw new ORPCError("NOT_FOUND", { message: "Invoice not found" });
+				}
+
+				if (invoiceRow.status === "void") {
+					throw new ORPCError("BAD_REQUEST", { message: "Invoice is already void" });
 				}
 
 				const lines = await tx
@@ -1058,6 +1063,10 @@ export const billingRouter = {
 					throw new ORPCError("NOT_FOUND", { message: "Invoice not found" });
 				}
 
+				if (currentInvoice.status === "void") {
+					throw new ORPCError("BAD_REQUEST", { message: "Invoice is already void" });
+				}
+
 				const currentLines = await tx
 					.select()
 					.from(invoiceLine)
@@ -1070,17 +1079,9 @@ export const billingRouter = {
 
 				await restoreCreditGrants(tx, currentLines);
 
-				const replacement = await createInvoiceWithLines(tx, {
-						invoice: {
-							organizationId,
-							memberId: currentInvoice.memberId,
-							contractId: currentInvoice.contractId,
-							billingPeriodStart: currentInvoice.billingPeriodStart,
-							billingPeriodEnd: currentInvoice.billingPeriodEnd,
-							status: "draft",
-							currency: currentInvoice.currency,
-						},
-					lines: currentLines.map((line) => ({
+				const chargeLines: InvoiceLineDraft[] = currentLines
+					.filter((line) => line.type !== "credit_money" && line.type !== "credit_cycle")
+					.map((line) => ({
 						organizationId,
 						type: line.type,
 						description: line.description,
@@ -1091,7 +1092,28 @@ export const billingRouter = {
 						coverageEnd: line.coverageEnd,
 						groupId: line.groupId,
 						creditGrantId: line.creditGrantId,
-					})),
+					}));
+
+				await applyCredits({
+					tx,
+					organizationId,
+					memberId: currentInvoice.memberId,
+					contractId: currentInvoice.contractId,
+					monthStart: currentInvoice.billingPeriodStart,
+					lines: chargeLines,
+				});
+
+				const replacement = await createInvoiceWithLines(tx, {
+						invoice: {
+							organizationId,
+							memberId: currentInvoice.memberId,
+							contractId: currentInvoice.contractId,
+							billingPeriodStart: currentInvoice.billingPeriodStart,
+							billingPeriodEnd: currentInvoice.billingPeriodEnd,
+							status: "draft",
+							currency: currentInvoice.currency,
+						},
+					lines: chargeLines,
 				});
 
 				await tx
