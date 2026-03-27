@@ -437,8 +437,8 @@ export function MemberGroupsTable({
 		},
 	});
 
-	const totalMonthly = groups.reduce((sum, gm) => {
-		return sum + ((gm.membershipPriceCents ?? 0) / 100);
+	const totalMonthlyCents = groups.reduce((sum, gm) => {
+		return sum + (gm.membershipPriceCents ?? 0);
 	}, 0);
 
 	// If there are no groups at all, show empty state
@@ -562,7 +562,7 @@ export function MemberGroupsTable({
 										Total Monthly from Groups:
 									</span>
 									<span className="font-bold text-lg">
-										{formatCurrency(Math.round(totalMonthly * 100))}
+										{formatCurrency(totalMonthlyCents)}
 									</span>
 								</div>
 							</div>

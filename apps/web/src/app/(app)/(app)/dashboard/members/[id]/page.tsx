@@ -279,16 +279,15 @@ export default function MemberDetailPage() {
 	const isCancelled = !!member.contract.cancelledAt;
 	const memberName = `${member.firstName} ${member.lastName}`.trim();
 
-	// Calculate total monthly payment from groups
-	const totalGroupPayment = member.groups.reduce((sum, gm) => {
-		return sum + ((gm.membershipPriceCents ?? 0) / 100);
+	// Calculate total monthly payment from groups (in cents)
+	const totalGroupPaymentCents = member.groups.reduce((sum, gm) => {
+		return sum + (gm.membershipPriceCents ?? 0);
 	}, 0);
 
-	// Calculate total monthly payment including yearly fee (divided by 12)
+	// Calculate yearly fee per month (in cents, rounded to avoid fractional cents)
 	const yearlyFeeMonthly = member.contract.yearlyFeeCents
-		? member.contract.yearlyFeeCents / 1200
+		? Math.round(member.contract.yearlyFeeCents / 12)
 		: 0;
-	const totalMonthlyPayment = totalGroupPayment + yearlyFeeMonthly;
 	const isSubmitting = updateMemberMutation.isPending;
 
 	const handleEditCancel = () => {
@@ -703,7 +702,7 @@ export default function MemberDetailPage() {
 													Jahresbeitrag
 												</span>
 												<p className="text-muted-foreground text-xs">
-													{formatCents(Math.round(yearlyFeeMonthly * 100))}/month
+													{formatCents(yearlyFeeMonthly)}/month
 												</p>
 											</div>
 											{isEditing ? (
