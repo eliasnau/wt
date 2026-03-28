@@ -44,6 +44,8 @@ import {
 	serializeMembersCsv,
 } from "./members/membersCsvExport";
 import { reGeocodeOrganizationProcedure } from "./members/reGeocodeOrganization";
+import { updateMemberDetailsProcedure } from "./members/updateMemberDetails";
+import { updateBillingInfoProcedure } from "./members/updateBillingInfo";
 
 const optionalEmailSchema = z
 	.string()
@@ -406,46 +408,77 @@ export const membersRouter = {
 				});
 			}
 
-				const payments = await db
-					.select({
-						id: invoice.id,
-						status: invoice.status,
-						totalCents: invoice.totalCents,
-						billingPeriodStart: invoice.billingPeriodStart,
-						billingPeriodEnd: invoice.billingPeriodEnd,
-						createdAt: invoice.createdAt,
-						batchId: sepaBatch.id,
-						batchNumber: sepaBatch.batchNumber,
-					collectionDate: sepaBatch.collectionDate,
+			const payments = await db
+				.select({
+					id: invoice.id,
+					status: invoice.status,
+					totalCents: invoice.totalCents,
+					billingPeriodStart: invoice.billingPeriodStart,
+					billingPeriodEnd: invoice.billingPeriodEnd,
+					createdAt: invoice.createdAt,
 				})
 				.from(invoice)
 				.innerJoin(contract, eq(invoice.contractId, contract.id))
-				.leftJoin(
-					sepaBatchItem,
+				.where(
 					and(
-						eq(sepaBatchItem.invoiceId, invoice.id),
-						sql`${sepaBatchItem.status} <> 'void'`,
+						eq(contract.memberId, input.memberId),
+						eq(contract.organizationId, organizationId),
+						eq(invoice.organizationId, organizationId),
 					),
 				)
-				.leftJoin(
-					sepaBatch,
-					and(
-						eq(sepaBatch.id, sepaBatchItem.sepaBatchId),
-						sql`${sepaBatch.status} <> 'void'`,
-					),
-				)
+				.orderBy(desc(invoice.billingPeriodStart), desc(invoice.createdAt));
+
+			const batchInfoByInvoiceId = new Map<
+				string,
+				{
+					batchId: string;
+					batchNumber: string;
+					collectionDate: string;
+				}
+			>();
+
+			if (payments.length > 0) {
+				const batchRows = await db
+					.select({
+						invoiceId: sepaBatchItem.invoiceId,
+						batchId: sepaBatch.id,
+						batchNumber: sepaBatch.batchNumber,
+						collectionDate: sepaBatch.collectionDate,
+					})
+					.from(sepaBatchItem)
+					.innerJoin(sepaBatch, eq(sepaBatch.id, sepaBatchItem.sepaBatchId))
 					.where(
 						and(
-							eq(contract.memberId, input.memberId),
-							eq(contract.organizationId, organizationId),
-							eq(invoice.organizationId, organizationId),
+							eq(sepaBatchItem.organizationId, organizationId),
+							inArray(
+								sepaBatchItem.invoiceId,
+								payments.map((payment) => payment.id),
+							),
+							sql`${sepaBatchItem.status} <> 'void'`,
+							sql`${sepaBatch.status} <> 'void'`,
 						),
 					)
-					.orderBy(desc(invoice.billingPeriodStart), desc(invoice.createdAt));
+					.orderBy(desc(sepaBatch.createdAt));
+
+				for (const batchRow of batchRows) {
+					if (!batchInfoByInvoiceId.has(batchRow.invoiceId)) {
+						batchInfoByInvoiceId.set(batchRow.invoiceId, {
+							batchId: batchRow.batchId,
+							batchNumber: batchRow.batchNumber,
+							collectionDate: batchRow.collectionDate,
+						});
+					}
+				}
+			}
 
 			return {
 				memberId: input.memberId,
-				payments,
+				payments: payments.map((payment) => ({
+					...payment,
+					batchId: batchInfoByInvoiceId.get(payment.id)?.batchId ?? null,
+					batchNumber: batchInfoByInvoiceId.get(payment.id)?.batchNumber ?? null,
+					collectionDate: batchInfoByInvoiceId.get(payment.id)?.collectionDate ?? null,
+				})),
 			};
 		})
 		.route({ method: "GET", path: "/members/:memberId/payments" }),
@@ -1073,6 +1106,10 @@ export const membersRouter = {
 		})
 		.route({ method: "PATCH", path: "/members/:memberId" }),
 	reGeocodeOrganization: reGeocodeOrganizationProcedure,
+
+	updateMemberDetails: updateMemberDetailsProcedure,
+
+	updateBillingInfo: updateBillingInfoProcedure,
 
 	cancelContract: protectedProcedure
 		.use(rateLimitMiddleware(10))

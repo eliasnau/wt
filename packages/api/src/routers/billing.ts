@@ -413,6 +413,10 @@ async function applyCredits({
 				eq(creditGrant.memberId, memberId),
 				eq(creditGrant.contractId, contractId),
 				or(
+					isNull(creditGrant.validFrom),
+					sql`${creditGrant.validFrom} <= ${monthStart}`,
+				),
+				or(
 					isNull(creditGrant.expiresAt),
 					sql`${creditGrant.expiresAt} >= ${monthStart}`,
 				),
@@ -427,20 +431,27 @@ async function applyCredits({
 			const membershipTotal = lines
 				.filter((line) => line.type === "membership_fee")
 				.reduce((sum, line) => sum + line.totalAmountCents, 0);
+			const appliedCycleCredits = lines
+				.filter((line) => line.type === "credit_cycle")
+				.reduce((sum, line) => sum + line.totalAmountCents, 0);
+			const remainingMembershipTotal = Math.max(
+				0,
+				membershipTotal + appliedCycleCredits,
+			);
 
-			if (membershipTotal > 0) {
+			if (remainingMembershipTotal > 0) {
 				lines.push({
 					organizationId,
 					type: "credit_cycle",
 					description: "Billing cycle credit applied",
 					quantity: 1,
-					unitAmountCents: -membershipTotal,
-					totalAmountCents: -membershipTotal,
+					unitAmountCents: -remainingMembershipTotal,
+					totalAmountCents: -remainingMembershipTotal,
 					coverageStart: monthStart,
 					coverageEnd: lastDayOfMonth(monthStart),
 					creditGrantId: grant.id,
 				});
-				balance -= membershipTotal;
+				balance -= remainingMembershipTotal;
 				await tx
 					.update(creditGrant)
 					.set({ remainingCycles: (grant.remainingCycles ?? 0) - 1 })
