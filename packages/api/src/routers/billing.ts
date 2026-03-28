@@ -430,6 +430,7 @@ async function buildSepaBatchXml({
 }
 
 async function getNonVoidInvoiceMonths(
+	executor: BillingReadExecutor,
 	contractId: string,
 	months: string[],
 ) {
@@ -437,7 +438,7 @@ async function getNonVoidInvoiceMonths(
 		return new Set<string>();
 	}
 
-	const existing = await db
+	const existing = await executor
 		.select({
 			billingPeriodStart: invoice.billingPeriodStart,
 		})
@@ -454,19 +455,21 @@ async function getNonVoidInvoiceMonths(
 }
 
 async function hasNonVoidInvoiceLine({
+	executor,
 	contractId,
 	type,
 	year,
 	cycleKey,
 	contractStartDate,
 }: {
+	executor: BillingReadExecutor;
 	contractId: string;
 	type: string;
 	year?: number;
 	cycleKey?: string;
 	contractStartDate?: string;
 }) {
-	const rows = await db
+	const rows = await executor
 		.select({
 			coverageStart: invoiceLine.coverageStart,
 		})
@@ -502,8 +505,11 @@ async function hasNonVoidInvoiceLine({
 	return rows.length > 0;
 }
 
-async function getContractGroupCharges(memberId: string) {
-	return db
+async function getContractGroupCharges(
+	executor: BillingReadExecutor,
+	memberId: string,
+) {
+	return executor
 		.select({
 			groupId: groupMember.groupId,
 			groupName: group.name,
@@ -696,12 +702,14 @@ async function restoreCreditGrants(
 }
 
 async function buildChargeLinesForMonth({
+	executor,
 	organizationId,
 	contractRow,
 	monthStart,
 	chargeJoiningFee,
 	chargeYearlyFee,
 }: {
+	executor: BillingReadExecutor;
 	organizationId: string;
 	contractRow: typeof contract.$inferSelect;
 	monthStart: string;
@@ -709,7 +717,7 @@ async function buildChargeLinesForMonth({
 	chargeYearlyFee: boolean;
 }) {
 	const lines: InvoiceLineDraft[] = [];
-	const groupCharges = await getContractGroupCharges(contractRow.memberId);
+	const groupCharges = await getContractGroupCharges(executor, contractRow.memberId);
 
 	for (const groupCharge of groupCharges) {
 		lines.push({
@@ -769,15 +777,17 @@ async function setJoiningFeePaidState(
 }
 
 async function generateInvoicesForMonth({
+	tx,
 	organizationId,
 	targetMonth,
 	currency,
 }: {
+	tx: BillingTx;
 	organizationId: string;
 	targetMonth: string;
 	currency: string;
 }) {
-	const contracts = await db
+	const contracts = await tx
 		.select()
 		.from(contract)
 		.where(eq(contract.organizationId, organizationId));
@@ -816,6 +826,7 @@ async function generateInvoicesForMonth({
 		}
 
 		const existingMonths = await getNonVoidInvoiceMonths(
+			tx,
 			contractRow.id,
 			monthsToConsider,
 		);
@@ -845,12 +856,14 @@ async function generateInvoicesForMonth({
 			const yearlyFeeAlreadyBilled =
 				contractRow.yearlyFeeMode === "anniversary"
 					? await hasNonVoidInvoiceLine({
+							executor: tx,
 							contractId: contractRow.id,
 							type: "yearly_fee",
 							cycleKey: getYearlyCycleKey(month, contractRow.startDate),
 							contractStartDate: contractRow.startDate,
 						})
 					: await hasNonVoidInvoiceLine({
+							executor: tx,
 							contractId: contractRow.id,
 							type: "yearly_fee",
 							year,
@@ -863,6 +876,7 @@ async function generateInvoicesForMonth({
 					: getMonthNumber(month) === 1);
 
 			const lines = await buildChargeLinesForMonth({
+				executor: tx,
 				organizationId,
 				contractRow,
 				monthStart: month,
@@ -897,58 +911,52 @@ async function generateInvoicesForMonth({
 			}
 
 			if (!shouldWaive && shouldCreateCollectible) {
-				const { finalized, didChargeJoiningFee } = await wsDb.transaction(
-					async (tx) => {
-					await applyCredits({
-						tx,
+				await applyCredits({
+					tx,
+					organizationId,
+					memberId: contractRow.memberId,
+					contractId: contractRow.id,
+					monthStart: month,
+					lines,
+				});
+				const finalized = await createInvoiceWithLines(tx, {
+					invoice: {
 						organizationId,
 						memberId: contractRow.memberId,
 						contractId: contractRow.id,
-						monthStart: month,
-						lines,
-					});
-					const finalized = await createInvoiceWithLines(tx, {
-						invoice: {
-							organizationId,
-							memberId: contractRow.memberId,
-							contractId: contractRow.id,
-							billingPeriodStart: month,
-							billingPeriodEnd: lastDayOfMonth(month),
-							status: "draft",
-							currency,
-						},
-						lines,
-					});
-					const didChargeJoiningFee = lines.some(
-						(line) => line.type === "joining_fee",
-					);
-
-					if (didChargeJoiningFee) {
-						await setJoiningFeePaidState(tx, contractRow.id, true);
-					}
-
-					return { finalized, didChargeJoiningFee };
+						billingPeriodStart: month,
+						billingPeriodEnd: lastDayOfMonth(month),
+						status: "draft",
+						currency,
+					},
+					lines,
 				});
+				const didChargeJoiningFee = lines.some(
+					(line) => line.type === "joining_fee",
+				);
+
+				if (didChargeJoiningFee) {
+					await setJoiningFeePaidState(tx, contractRow.id, true);
+				}
+
 				createdInvoices.push(finalized);
 				if (didChargeJoiningFee) {
 					joiningFeeConsumed = true;
 				}
 			} else if (shouldWaive) {
-				await wsDb.transaction(async (tx) => {
-					const finalized = await createInvoiceWithLines(tx, {
-						invoice: {
-							organizationId,
-							memberId: contractRow.memberId,
-							contractId: contractRow.id,
-							billingPeriodStart: month,
-							billingPeriodEnd: lastDayOfMonth(month),
-							status: "draft",
-							currency,
-						},
-						lines,
-					});
-					createdInvoices.push(finalized);
+				const finalized = await createInvoiceWithLines(tx, {
+					invoice: {
+						organizationId,
+						memberId: contractRow.memberId,
+						contractId: contractRow.id,
+						billingPeriodStart: month,
+						billingPeriodEnd: lastDayOfMonth(month),
+						status: "draft",
+						currency,
+					},
+					lines,
 				});
+				createdInvoices.push(finalized);
 			}
 		}
 	}
@@ -957,13 +965,15 @@ async function generateInvoicesForMonth({
 }
 
 async function listEligibleInvoicesForBatch({
+	executor,
 	organizationId,
 	collectionDate,
 }: {
+	executor: BillingReadExecutor;
 	organizationId: string;
 	collectionDate: string;
 }) {
-	const invoices = await db
+	const invoices = await executor
 			.select({
 				id: invoice.id,
 				memberId: invoice.memberId,
@@ -988,7 +998,7 @@ async function listEligibleInvoicesForBatch({
 
 	const exportedInvoiceIds = new Set(
 		(
-			await db
+			await executor
 				.select({
 					invoiceId: sepaBatchItem.invoiceId,
 					status: sepaBatch.status,
@@ -1001,7 +1011,7 @@ async function listEligibleInvoicesForBatch({
 			.map((row) => row.invoiceId),
 	);
 
-	const mandates = await db
+	const mandates = await executor
 		.select({
 			contractId: sepaMandate.contractId,
 			id: sepaMandate.id,
@@ -1058,13 +1068,14 @@ export const billingRouter = {
 		.input(generateInvoicesSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
-			const lockKey = `billing:generateInvoices:${organizationId}:${input.targetMonth}`;
+			const lockKey = `billing:generateInvoices:${organizationId}`;
 			const createdInvoices = await wsDb.transaction(async (tx) => {
 				await tx.execute(
 					sql`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`,
 				);
 
 				const createdInvoices = await generateInvoicesForMonth({
+					tx,
 					organizationId,
 					targetMonth: input.targetMonth,
 					currency: input.currency,
@@ -1280,7 +1291,6 @@ export const billingRouter = {
 						coverageStart: line.coverageStart,
 						coverageEnd: line.coverageEnd,
 						groupId: line.groupId,
-						creditGrantId: line.creditGrantId,
 					}));
 
 				await applyCredits({
@@ -1493,6 +1503,7 @@ export const billingRouter = {
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
 			return listEligibleInvoicesForBatch({
+				executor: db,
 				organizationId,
 				collectionDate: input.collectionDate,
 			});
@@ -1506,6 +1517,7 @@ export const billingRouter = {
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
 			const initialPreview = await listEligibleInvoicesForBatch({
+				executor: db,
 				organizationId,
 				collectionDate: input.collectionDate,
 			});
@@ -1524,6 +1536,7 @@ export const billingRouter = {
 					}
 
 					const preview = await listEligibleInvoicesForBatch({
+						executor: tx,
 						organizationId,
 						collectionDate: input.collectionDate,
 					});
