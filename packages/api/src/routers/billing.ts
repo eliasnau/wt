@@ -214,8 +214,13 @@ function buildBatchNumber(
 	return `${collectionDate}-${String(sequenceNumber).padStart(2, "0")}-${organizationId.slice(0, 8).toUpperCase()}`;
 }
 
-type BillingQueryExecutor = Pick<typeof db, "select" | "execute">;
-type BillingReadExecutor = Pick<typeof db, "select">;
+type BillingReadExecutor = {
+	select: typeof db.select;
+};
+
+type BillingQueryExecutor = BillingReadExecutor & {
+	execute: (query: Parameters<typeof db.execute>[0]) => Promise<unknown>;
+};
 
 async function ensureOwnedMemberContract(
 	executor: BillingReadExecutor,
