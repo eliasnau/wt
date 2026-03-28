@@ -68,13 +68,23 @@ export function SepaBatchDetailSheet({
 		}),
 	);
 
-	const markDownloadedMutation = useMutation({
+	const downloadMutation = useMutation({
 		mutationFn: async () => {
 			if (!batchId) throw new Error("No batch selected");
-			return client.billing.markSepaBatchDownloaded({ id: batchId });
+			return client.billing.downloadSepaBatch({ id: batchId });
 		},
-		onSuccess: () => {
-			toast.success("Batch als heruntergeladen markiert");
+		onSuccess: (data) => {
+			const blob = new Blob([data.xml], { type: "application/xml" });
+			const url = URL.createObjectURL(blob);
+			const anchor = document.createElement("a");
+			anchor.href = url;
+			anchor.download = `sepa-${data.batch.batchNumber}.xml`;
+			document.body.appendChild(anchor);
+			anchor.click();
+			anchor.remove();
+			URL.revokeObjectURL(url);
+
+			toast.success("XML heruntergeladen");
 			queryClient.invalidateQueries({
 				queryKey: orpc.billing.listSepaBatches.queryKey({ input: {} }),
 			});
@@ -131,7 +141,7 @@ export function SepaBatchDetailSheet({
 	const isActive =
 		data?.batch?.status === "generated" ||
 		data?.batch?.status === "downloaded";
-	const canMarkDownloaded = data?.batch?.status === "generated";
+	const canDownload = data?.batch?.status === "generated";
 
 	if (!open) return null;
 
@@ -270,7 +280,7 @@ export function SepaBatchDetailSheet({
 														)}
 													</TableCell>
 													<TableCell className="font-mono text-xs">
-														{item.mandateReference}
+														{item.mandateReference ?? "-"}
 													</TableCell>
 													<TableCell className="text-right font-mono">
 														{formatCents(item.amountCents)}
@@ -285,16 +295,14 @@ export function SepaBatchDetailSheet({
 					) : null}
 				</SheetPanel>
 				<SheetFooter>
-					{canMarkDownloaded && (
+					{canDownload && (
 						<Button
 							variant="outline"
-							onClick={() => markDownloadedMutation.mutate()}
-							disabled={markDownloadedMutation.isPending}
+							onClick={() => downloadMutation.mutate()}
+							disabled={downloadMutation.isPending}
 						>
 							<Download className="size-4" />
-							{markDownloadedMutation.isPending
-								? "..."
-								: "Als heruntergeladen markieren"}
+							{downloadMutation.isPending ? "..." : "XML herunterladen"}
 						</Button>
 					)}
 					{isActive && (

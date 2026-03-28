@@ -1,14 +1,12 @@
 "use client";
 
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import {
 	AlertCircle,
 	ArrowLeft,
 	ChevronDownIcon,
 	Copy,
-	CreditCard,
 	FileText,
-	Receipt,
 	ScrollText,
 	Shield,
 	User,
@@ -34,32 +32,22 @@ import {
 	EmptyTitle,
 } from "@/components/ui/empty";
 import { Frame, FrameHeader, FramePanel } from "@/components/ui/frame";
-import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
-import { Textarea } from "@/components/ui/textarea";
 import { useCopyToClipboard } from "@/hooks/use-copy-to-clipboard";
 import { formatCents } from "@/utils/billing";
-import { parseMembershipPriceInput } from "@/utils/membership-price";
 import { orpc } from "@/utils/orpc";
 import { CancelMemberDialog } from "../_components/cancel-member-dialog";
 import { AssignGroupDialog } from "./_components/assign-group-dialog";
 import { MemberBillingSection } from "./_components/member-billing-section";
 import { MemberGroupsTable } from "./_components/member-groups-table";
+import { UpdateMemberDetailsSheet } from "./_components/update-member-details-sheet";
 
 function formatDate(dateString: string | null | undefined) {
-	if (!dateString) return "N/A";
+	if (!dateString) return "-";
 	const [year, month, day] = dateString.split("-").map((part) => Number(part));
-	if (!year || !month || !day) return "N/A";
-	return new Date(year, month - 1, day).toLocaleDateString("en-US", {
+	if (!year || !month || !day) return "-";
+	return new Date(year, month - 1, day).toLocaleDateString("de-DE", {
 		year: "numeric",
 		month: "long",
 		day: "numeric",
@@ -70,41 +58,9 @@ function formatCurrency(amountCents: number | null | undefined) {
 	return formatCents(amountCents ?? 0);
 }
 
-function getPaymentTypeLabel(payment: {
-	totalCents: number;
-}) {
-	return payment.totalCents > 0 ? "Rechnung" : "Ausgleich";
-}
-
-function parseInitialPeriod(
-	value: string | null | undefined,
-): "monthly" | "half_yearly" | "yearly" {
-	if (value === "monthly" || value === "half_yearly" || value === "yearly") {
-		return value;
-	}
-	return "monthly";
-}
-
-function formatAmountInputFromCents(amountCents: number | null | undefined) {
-	if (amountCents === null || amountCents === undefined) {
-		return "";
-	}
-
-	return (amountCents / 100).toFixed(2);
-}
-
-function parseAmountInputToCents(value: string) {
-	const parsedAmount = parseMembershipPriceInput(value);
-	if (parsedAmount === null) {
-		return undefined;
-	}
-
-	return Math.round(parsedAmount * 100);
-}
-
 function CopyButton({ value }: { value: string }) {
 	const { copyToClipboard, isCopied } = useCopyToClipboard({
-		onCopy: () => toast.success("Copied to clipboard"),
+		onCopy: () => toast.success("In Zwischenablage kopiert"),
 		timeout: 1000,
 	});
 
@@ -120,7 +76,7 @@ function CopyButton({ value }: { value: string }) {
 			title="In Zwischenablage kopieren"
 		>
 			<Copy className="size-3.5" />
-			{isCopied && <span className="text-xs">Copied!</span>}
+			{isCopied && <span className="text-xs">Kopiert!</span>}
 		</button>
 	);
 }
@@ -128,28 +84,8 @@ function CopyButton({ value }: { value: string }) {
 export default function MemberDetailPage() {
 	const params = useParams();
 	const memberId = params.id as string;
-	const [isEditing, setIsEditing] = useState(false);
 	const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
-	const [formState, setFormState] = useState({
-		firstName: "",
-		lastName: "",
-		birthdate: "",
-		email: "",
-		phone: "",
-		guardianName: "",
-		guardianEmail: "",
-		guardianPhone: "",
-		street: "",
-		city: "",
-		state: "",
-		postalCode: "",
-		country: "",
-				memberNotes: "",
-				contractNotes: "",
-				initialPeriod: "monthly" as "monthly" | "half_yearly" | "yearly",
-				joiningFeeAmount: "",
-		yearlyFeeAmount: "",
-	});
+	const [detailsSheetOpen, setDetailsSheetOpen] = useState(false);
 
 	const {
 		data: member,
@@ -161,71 +97,6 @@ export default function MemberDetailPage() {
 			input: { memberId },
 		}),
 	);
-
-	const paymentDetailsQuery = useQuery(
-		orpc.members.getPaymentDetails.queryOptions({
-			input: { memberId },
-			enabled: false,
-		}),
-	);
-
-	const paymentHistoryQuery = useQuery(
-		orpc.members.getPayments.queryOptions({
-			input: { memberId },
-			enabled: false,
-		}),
-	);
-
-	const updateMemberMutation = useMutation(
-		orpc.members.update.mutationOptions({
-			onSuccess: () => {
-				toast.success("Member updated");
-				setIsEditing(false);
-				refetch();
-			},
-			onError: (error) => {
-				toast.error(
-					error instanceof Error
-						? error.message
-						: "Mitglied konnte nicht aktualisiert werden",
-				);
-			},
-		}),
-	);
-
-	const [prevMember, setPrevMember] = useState<typeof member | null>(null);
-	const [prevIsEditing, setPrevIsEditing] = useState(isEditing);
-
-	if (member !== prevMember || isEditing !== prevIsEditing) {
-		setPrevMember(member);
-		setPrevIsEditing(isEditing);
-		if (member && !isEditing) {
-			setFormState({
-				firstName: member.firstName ?? "",
-				lastName: member.lastName ?? "",
-				birthdate: member.birthdate ?? "",
-				email: member.email ?? "",
-				phone: member.phone ?? "",
-				guardianName: member.guardianName ?? "",
-				guardianEmail: member.guardianEmail ?? "",
-				guardianPhone: member.guardianPhone ?? "",
-				street: member.street ?? "",
-				city: member.city ?? "",
-				state: member.state ?? "",
-				postalCode: member.postalCode ?? "",
-				country: member.country ?? "",
-				memberNotes: member.notes ?? "",
-				contractNotes: member.contract.notes ?? "",
-				initialPeriod: parseInitialPeriod(member.contract.initialPeriod),
-				joiningFeeAmount: formatAmountInputFromCents(
-					member.contract.joiningFeeCents,
-				),
-				yearlyFeeAmount: formatAmountInputFromCents(
-					member.contract.yearlyFeeCents,
-				),
-			});
-		}
-	}
 
 	if (isPending) {
 		return (
@@ -288,66 +159,6 @@ export default function MemberDetailPage() {
 	const yearlyFeeMonthly = member.contract.yearlyFeeCents
 		? Math.round(member.contract.yearlyFeeCents / 12)
 		: 0;
-	const isSubmitting = updateMemberMutation.isPending;
-
-	const handleEditCancel = () => {
-		setIsEditing(false);
-		setFormState({
-			firstName: member.firstName ?? "",
-			lastName: member.lastName ?? "",
-			birthdate: member.birthdate ?? "",
-			email: member.email ?? "",
-			phone: member.phone ?? "",
-			guardianName: member.guardianName ?? "",
-			guardianEmail: member.guardianEmail ?? "",
-			guardianPhone: member.guardianPhone ?? "",
-			street: member.street ?? "",
-			city: member.city ?? "",
-			state: member.state ?? "",
-			postalCode: member.postalCode ?? "",
-			country: member.country ?? "",
-			memberNotes: member.notes ?? "",
-			contractNotes: member.contract.notes ?? "",
-			initialPeriod: parseInitialPeriod(member.contract.initialPeriod),
-			joiningFeeAmount: formatAmountInputFromCents(
-				member.contract.joiningFeeCents,
-			),
-			yearlyFeeAmount: formatAmountInputFromCents(
-				member.contract.yearlyFeeCents,
-			),
-		});
-	};
-
-	const handleEditSubmit = async () => {
-		await updateMemberMutation.mutateAsync({
-			memberId,
-			firstName: formState.firstName,
-			lastName: formState.lastName,
-			birthdate: formState.birthdate || undefined,
-			email: formState.email.trim(),
-			phone: formState.phone.trim(),
-			guardianName: formState.guardianName || undefined,
-			guardianEmail: formState.guardianEmail || undefined,
-			guardianPhone: formState.guardianPhone || undefined,
-			street: formState.street,
-			city: formState.city,
-			state: formState.state,
-			postalCode: formState.postalCode,
-			country: formState.country,
-			memberNotes: formState.memberNotes || undefined,
-			contractNotes: formState.contractNotes || undefined,
-			initialPeriod: formState.initialPeriod,
-			joiningFeeCents: parseAmountInputToCents(formState.joiningFeeAmount),
-			yearlyFeeCents: parseAmountInputToCents(formState.yearlyFeeAmount),
-		});
-	};
-
-	const handleLoadPaymentData = async () => {
-		await Promise.all([
-			paymentDetailsQuery.refetch(),
-			paymentHistoryQuery.refetch(),
-		]);
-	};
 
 	return (
 		<div className="flex flex-col gap-8">
@@ -366,36 +177,14 @@ export default function MemberDetailPage() {
 						</h1>
 						{isCancelled && <Badge variant="destructive">Gekündigt</Badge>}
 					</div>
-					<div className="flex items-center gap-2">
-						{isEditing ? (
-							<>
-								<Button
-									variant="outline"
-									onClick={handleEditCancel}
-									disabled={isSubmitting}
-								>
-									Cancel
-								</Button>
-								<Button onClick={handleEditSubmit} disabled={isSubmitting}>
-									{isSubmitting ? "Speichern..." : "Speichern"}
-								</Button>
-							</>
-						) : (
-							<>
-								{!isCancelled && (
-									<Button
-										variant="destructive"
-										onClick={() => setCancelDialogOpen(true)}
-									>
-										Mitgliedschaft kündigen
-									</Button>
-								)}
-								<Button variant="outline" onClick={() => setIsEditing(true)}>
-									Edit
-								</Button>
-							</>
-						)}
-					</div>
+					{!isCancelled && (
+						<Button
+							variant="destructive"
+							onClick={() => setCancelDialogOpen(true)}
+						>
+							Mitgliedschaft kündigen
+						</Button>
+					)}
 				</div>
 				<div className="flex items-center gap-2 font-mono text-muted-foreground text-sm">
 					<span>ID: {member.id}</span>
@@ -413,178 +202,60 @@ export default function MemberDetailPage() {
 							>
 								<ChevronDownIcon className="size-4" />
 								<User className="size-4" />
-								Personal Information
+								Persönliche Daten
 							</CollapsibleTrigger>
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => setDetailsSheetOpen(true)}
+							>
+								Daten bearbeiten
+							</Button>
 						</FrameHeader>
 						<CollapsiblePanel>
 							<FramePanel>
 								<div className="grid gap-6 sm:grid-cols-2">
 									<div>
 										<p className="font-medium text-muted-foreground text-sm">
-											First Name
+											Vorname
 										</p>
-										{isEditing ? (
-											<Input
-												value={formState.firstName}
-												onChange={(event) =>
-													setFormState((prev) => ({
-														...prev,
-														firstName: event.target.value,
-													}))
-												}
-												className="mt-1"
-											/>
-										) : (
-											<p className="mt-1 text-sm">{member.firstName}</p>
-										)}
+										<p className="mt-1 text-sm">{member.firstName}</p>
 									</div>
 									<div>
 										<p className="font-medium text-muted-foreground text-sm">
-											Last Name
+											Nachname
 										</p>
-										{isEditing ? (
-											<Input
-												value={formState.lastName}
-												onChange={(event) =>
-													setFormState((prev) => ({
-														...prev,
-														lastName: event.target.value,
-													}))
-												}
-												className="mt-1"
-											/>
-										) : (
-											<p className="mt-1 text-sm">{member.lastName}</p>
-										)}
+										<p className="mt-1 text-sm">{member.lastName}</p>
 									</div>
 									<div>
 										<p className="font-medium text-muted-foreground text-sm">
-											Birthdate
+											Geburtsdatum
 										</p>
-										{isEditing ? (
-											<Input
-												type="date"
-												value={formState.birthdate}
-												onChange={(event) =>
-													setFormState((prev) => ({
-														...prev,
-														birthdate: event.target.value,
-													}))
-												}
-												className="mt-1"
-											/>
-										) : (
-											<p className="mt-1 text-sm">
-												{formatDate(member.birthdate)}
-											</p>
-										)}
+										<p className="mt-1 text-sm">{formatDate(member.birthdate)}</p>
 									</div>
 									<div>
 										<p className="font-medium text-muted-foreground text-sm">
-											Email
+											E-Mail
 										</p>
-										{isEditing ? (
-											<Input
-												type="email"
-												value={formState.email}
-												onChange={(event) =>
-													setFormState((prev) => ({
-														...prev,
-														email: event.target.value,
-													}))
-												}
-												className="mt-1"
-											/>
-										) : (
-											<p className="mt-1 text-sm">{member.email || "-"}</p>
-										)}
+										<p className="mt-1 text-sm">{member.email || "-"}</p>
 									</div>
 									<div>
 										<p className="font-medium text-muted-foreground text-sm">
-											Phone
+											Telefon
 										</p>
-										{isEditing ? (
-											<Input
-												type="tel"
-												value={formState.phone}
-												onChange={(event) =>
-													setFormState((prev) => ({
-														...prev,
-														phone: event.target.value,
-													}))
-												}
-												className="mt-1"
-											/>
-										) : (
-											<p className="mt-1 text-sm">{member.phone || "-"}</p>
-										)}
+										<p className="mt-1 text-sm">{member.phone || "-"}</p>
 									</div>
 									<div className="sm:col-span-2">
 										<p className="font-medium text-muted-foreground text-sm">
-											Address
+											Adresse
 										</p>
-										{isEditing ? (
-											<div className="mt-1 grid gap-2 md:grid-cols-2">
-												<Input
-													value={formState.street}
-													onChange={(event) =>
-														setFormState((prev) => ({
-															...prev,
-															street: event.target.value,
-														}))
-													}
-													placeholder="Street"
-												/>
-												<Input
-													value={formState.city}
-													onChange={(event) =>
-														setFormState((prev) => ({
-															...prev,
-															city: event.target.value,
-														}))
-													}
-													placeholder="City"
-												/>
-												<Input
-													value={formState.state}
-													onChange={(event) =>
-														setFormState((prev) => ({
-															...prev,
-															state: event.target.value,
-														}))
-													}
-													placeholder="State"
-												/>
-												<Input
-													value={formState.postalCode}
-													onChange={(event) =>
-														setFormState((prev) => ({
-															...prev,
-															postalCode: event.target.value,
-														}))
-													}
-													placeholder="Postal Code"
-												/>
-												<Input
-													value={formState.country}
-													onChange={(event) =>
-														setFormState((prev) => ({
-															...prev,
-															country: event.target.value,
-														}))
-													}
-													placeholder="Country"
-												/>
-											</div>
-										) : (
-											<p className="mt-1 text-sm">
-												{member.street}
-												<br />
-												{member.postalCode} {member.city}, {member.state}
-												<br />
-												{member.country}
-											</p>
-										)}
+										<p className="mt-1 text-sm">
+											{member.street}
+											<br />
+											{member.postalCode} {member.city}, {member.state}
+											<br />
+											{member.country}
+										</p>
 									</div>
 								</div>
 							</FramePanel>
@@ -625,7 +296,7 @@ export default function MemberDetailPage() {
 							>
 								<ChevronDownIcon className="size-4" />
 								<ScrollText className="size-4" />
-								Contract Details
+								Vertragsdetails
 							</CollapsibleTrigger>
 						</FrameHeader>
 						<CollapsiblePanel>
@@ -634,7 +305,7 @@ export default function MemberDetailPage() {
 									<div className="grid gap-6 sm:grid-cols-3">
 										<div>
 											<p className="font-medium text-muted-foreground text-sm">
-												Start Date
+												Startdatum
 											</p>
 											<p className="mt-1 text-sm">
 												{formatDate(member.contract.startDate)}
@@ -642,7 +313,7 @@ export default function MemberDetailPage() {
 										</div>
 										<div>
 											<p className="font-medium text-muted-foreground text-sm">
-												Initial Period
+												Erstlaufzeit
 											</p>
 											<p className="mt-1 text-sm capitalize">
 												{member.contract.initialPeriod?.replace("_", " ")}
@@ -658,7 +329,7 @@ export default function MemberDetailPage() {
 										</div>
 										<div>
 											<p className="font-medium text-muted-foreground text-sm">
-												Contract End Date
+												Ende der Erstlaufzeit
 											</p>
 											<p className="mt-1 text-sm">
 												{formatDate(member.contract.initialPeriodEndDate)}
@@ -675,26 +346,12 @@ export default function MemberDetailPage() {
 													Aufnahmegebühr
 												</span>
 												<p className="text-muted-foreground text-xs">
-													One-time
+													Einmalig
 												</p>
 											</div>
-											{isEditing ? (
-												<Input
-													value={formState.joiningFeeAmount}
-													onChange={(event) =>
-														setFormState((prev) => ({
-															...prev,
-															joiningFeeAmount: event.target.value,
-														}))
-													}
-													className="w-28"
-													placeholder="0.00"
-												/>
-											) : (
-												<span className="font-semibold text-lg">
-													{formatCurrency(member.contract.joiningFeeCents)}
-												</span>
-											)}
+											<span className="font-semibold text-lg">
+												{formatCurrency(member.contract.joiningFeeCents)}
+											</span>
 										</div>
 										<div className="flex items-center justify-between rounded-lg border bg-muted/50 p-4">
 											<div>
@@ -702,26 +359,12 @@ export default function MemberDetailPage() {
 													Jahresbeitrag
 												</span>
 												<p className="text-muted-foreground text-xs">
-													{formatCents(yearlyFeeMonthly)}/month
+													{formatCents(yearlyFeeMonthly)}/Monat
 												</p>
 											</div>
-											{isEditing ? (
-												<Input
-													value={formState.yearlyFeeAmount}
-													onChange={(event) =>
-														setFormState((prev) => ({
-															...prev,
-															yearlyFeeAmount: event.target.value,
-														}))
-													}
-													className="w-28"
-													placeholder="0.00"
-												/>
-											) : (
-												<span className="font-semibold text-lg">
-													{formatCurrency(member.contract.yearlyFeeCents)}
-												</span>
-											)}
+											<span className="font-semibold text-lg">
+												{formatCurrency(member.contract.yearlyFeeCents)}
+											</span>
 										</div>
 									</div>
 
@@ -730,12 +373,12 @@ export default function MemberDetailPage() {
 											<Separator />
 											<div className="space-y-3 rounded-lg border border-destructive/50 bg-destructive/5 p-4">
 												<h3 className="font-semibold text-destructive text-sm">
-													Cancellation Information
+													Kündigungsinformationen
 												</h3>
 												<div className="grid gap-4 sm:grid-cols-2">
 													<div>
 														<p className="font-medium text-muted-foreground text-sm">
-															Cancelled On
+															Gekündigt am
 														</p>
 														<p className="mt-1 text-sm">
 															{formatDate(
@@ -745,7 +388,7 @@ export default function MemberDetailPage() {
 													</div>
 													<div>
 														<p className="font-medium text-muted-foreground text-sm">
-															Effective Date
+															Wirksam zum
 														</p>
 														<p className="mt-1 text-sm">
 															{formatDate(
@@ -756,7 +399,7 @@ export default function MemberDetailPage() {
 													{member.contract.cancelReason && (
 														<div className="sm:col-span-2">
 															<p className="font-medium text-muted-foreground text-sm">
-																Reason
+																Grund
 															</p>
 															<p className="mt-1 whitespace-pre-wrap text-sm">
 																{member.contract.cancelReason}
@@ -773,29 +416,11 @@ export default function MemberDetailPage() {
 					</Collapsible>
 				</Frame>
 
-				<Frame>
-					<Collapsible defaultOpen={false}>
-						<FrameHeader className="flex-row items-center justify-between px-2 py-2">
-							<CollapsibleTrigger
-								className="data-panel-open:[&_svg:first-child]:rotate-180"
-								render={<Button variant="ghost" />}
-							>
-								<ChevronDownIcon className="size-4" />
-								<Receipt className="size-4" />
-								Abrechnung
-							</CollapsibleTrigger>
-						</FrameHeader>
-						<CollapsiblePanel>
-							<FramePanel>
-								<MemberBillingSection
-									memberId={member.id}
-									contractId={member.contract.id}
-									memberName={memberName}
-								/>
-							</FramePanel>
-						</CollapsiblePanel>
-					</Collapsible>
-				</Frame>
+				<MemberBillingSection
+					memberId={member.id}
+					contractId={member.contract.id}
+					memberName={memberName}
+				/>
 
 				<Frame>
 					<Collapsible defaultOpen={false}>
@@ -806,62 +431,12 @@ export default function MemberDetailPage() {
 							>
 								<ChevronDownIcon className="size-4" />
 								<Shield className="size-4" />
-								Guardian Information
+								Daten Erziehungsberechtigte
 							</CollapsibleTrigger>
 						</FrameHeader>
 						<CollapsiblePanel>
 							<FramePanel>
-								{isEditing ? (
-									<div className="grid gap-6 sm:grid-cols-2">
-										<div>
-											<p className="font-medium text-muted-foreground text-sm">
-												Name
-											</p>
-											<Input
-												value={formState.guardianName}
-												onChange={(event) =>
-													setFormState((prev) => ({
-														...prev,
-														guardianName: event.target.value,
-													}))
-												}
-												className="mt-1"
-											/>
-										</div>
-										<div>
-											<p className="font-medium text-muted-foreground text-sm">
-												Email
-											</p>
-											<Input
-												type="email"
-												value={formState.guardianEmail}
-												onChange={(event) =>
-													setFormState((prev) => ({
-														...prev,
-														guardianEmail: event.target.value,
-													}))
-												}
-												className="mt-1"
-											/>
-										</div>
-										<div>
-											<p className="font-medium text-muted-foreground text-sm">
-												Phone
-											</p>
-											<Input
-												type="tel"
-												value={formState.guardianPhone}
-												onChange={(event) =>
-													setFormState((prev) => ({
-														...prev,
-														guardianPhone: event.target.value,
-													}))
-												}
-												className="mt-1"
-											/>
-										</div>
-									</div>
-								) : member.guardianName ||
+								{member.guardianName ||
 									member.guardianEmail ||
 									member.guardianPhone ? (
 									<div className="grid gap-6 sm:grid-cols-2">
@@ -870,23 +445,23 @@ export default function MemberDetailPage() {
 												Name
 											</p>
 											<p className="mt-1 text-sm">
-												{member.guardianName || "N/A"}
+												{member.guardianName || "-"}
 											</p>
 										</div>
 										<div>
 											<p className="font-medium text-muted-foreground text-sm">
-												Email
+												E-Mail
 											</p>
 											<p className="mt-1 text-sm">
-												{member.guardianEmail || "N/A"}
+												{member.guardianEmail || "-"}
 											</p>
 										</div>
 										<div>
 											<p className="font-medium text-muted-foreground text-sm">
-												Phone
+												Telefon
 											</p>
 											<p className="mt-1 text-sm">
-												{member.guardianPhone || "N/A"}
+												{member.guardianPhone || "-"}
 											</p>
 										</div>
 									</div>
@@ -900,7 +475,8 @@ export default function MemberDetailPage() {
 												Keine Angaben zum Erziehungsberechtigten
 											</EmptyTitle>
 											<EmptyDescription>
-												No guardian information has been added for this member.
+												Für dieses Mitglied wurden noch keine Angaben zu
+												Erziehungsberechtigten hinterlegt.
 											</EmptyDescription>
 										</EmptyHeader>
 									</Empty>
@@ -919,86 +495,48 @@ export default function MemberDetailPage() {
 							>
 								<ChevronDownIcon className="size-4" />
 								<FileText className="size-4" />
-								Notes
+								Notizen
 							</CollapsibleTrigger>
 						</FrameHeader>
 						<CollapsiblePanel>
 							<FramePanel>
 								<div className="space-y-4">
-									{isEditing ? (
-										<div className="space-y-4">
-											<div>
-												<p className="font-medium text-muted-foreground text-sm">
-													Member Notes
-												</p>
-												<Textarea
-													value={formState.memberNotes}
-													onChange={(event) =>
-														setFormState((prev) => ({
-															...prev,
-															memberNotes: event.target.value,
-														}))
-													}
-													className="mt-2"
-													rows={3}
-												/>
-											</div>
-											<div>
-												<p className="font-medium text-muted-foreground text-sm">
-													Contract Notes
-												</p>
-												<Textarea
-													value={formState.contractNotes}
-													onChange={(event) =>
-														setFormState((prev) => ({
-															...prev,
-															contractNotes: event.target.value,
-														}))
-													}
-													className="mt-2"
-													rows={3}
-												/>
-											</div>
+									{member.notes && (
+										<div>
+											<p className="font-medium text-muted-foreground text-sm">
+												Notizen zum Mitglied
+											</p>
+											<p className="mt-2 whitespace-pre-wrap text-sm">
+												{member.notes}
+											</p>
 										</div>
-									) : (
+									)}
+									{member.contract.notes && (
 										<>
-											{member.notes && (
-												<div>
-													<p className="font-medium text-muted-foreground text-sm">
-														Member Notes
-													</p>
-													<p className="mt-2 whitespace-pre-wrap text-sm">
-														{member.notes}
-													</p>
-												</div>
-											)}
-											{member.contract.notes && (
-												<>
-													{member.notes && <Separator />}
-													<div>
-														<p className="font-medium text-muted-foreground text-sm">
-															Contract Notes
-														</p>
-														<p className="mt-2 whitespace-pre-wrap text-sm">
-															{member.contract.notes}
-														</p>
-													</div>
-												</>
-											)}
-											{!member.notes && !member.contract.notes && (
-												<Empty>
-													<EmptyHeader>
-														<EmptyMedia variant="icon">
-															<FileText />
-														</EmptyMedia>
-														<EmptyTitle>Keine Notizen</EmptyTitle>
-														<EmptyDescription>
-															No notes have been added for this member yet.
-														</EmptyDescription>
-													</EmptyHeader>
-												</Empty>
-											)}
+											{member.notes && <Separator />}
+											<div>
+												<p className="font-medium text-muted-foreground text-sm">
+													Vertragsnotizen
+												</p>
+												<p className="mt-2 whitespace-pre-wrap text-sm">
+													{member.contract.notes}
+												</p>
+											</div>
 										</>
+									)}
+									{!member.notes && !member.contract.notes && (
+										<Empty>
+											<EmptyHeader>
+												<EmptyMedia variant="icon">
+													<FileText />
+												</EmptyMedia>
+												<EmptyTitle>Keine Notizen</EmptyTitle>
+												<EmptyDescription>
+													Für dieses Mitglied wurden noch keine Notizen
+													hinterlegt.
+												</EmptyDescription>
+											</EmptyHeader>
+										</Empty>
 									)}
 								</div>
 							</FramePanel>
@@ -1006,151 +544,6 @@ export default function MemberDetailPage() {
 					</Collapsible>
 				</Frame>
 
-				<Frame>
-					<Collapsible defaultOpen={false}>
-						<FrameHeader className="flex-row items-center justify-between px-2 py-2">
-							<CollapsibleTrigger
-								className="data-panel-open:[&_svg:first-child]:rotate-180"
-								render={<Button variant="ghost" />}
-							>
-								<ChevronDownIcon className="size-4" />
-								<CreditCard className="size-4" />
-								Payment Information
-							</CollapsibleTrigger>
-						</FrameHeader>
-						<CollapsiblePanel>
-							<FramePanel>
-								{paymentDetailsQuery.data ? (
-									<div className="grid gap-6 sm:grid-cols-2">
-										<div>
-											<p className="font-medium text-muted-foreground text-sm">
-												IBAN
-											</p>
-											<p className="mt-1 font-mono text-sm">
-												{paymentDetailsQuery.data.iban}
-											</p>
-										</div>
-										<div>
-											<p className="font-medium text-muted-foreground text-sm">
-												BIC
-											</p>
-											<p className="mt-1 font-mono text-sm">
-												{paymentDetailsQuery.data.bic}
-											</p>
-										</div>
-										<div className="sm:col-span-2">
-											<p className="font-medium text-muted-foreground text-sm">
-												Account Holder
-											</p>
-											<p className="mt-1 text-sm">
-												{paymentDetailsQuery.data.cardHolder}
-											</p>
-										</div>
-									</div>
-								) : paymentDetailsQuery.error ? (
-									<Empty>
-										<EmptyHeader>
-											<EmptyMedia variant="icon">
-												<CreditCard />
-											</EmptyMedia>
-											<EmptyTitle>Keine Berechtigung</EmptyTitle>
-											<EmptyDescription>
-												Du hast keine Berechtigung, Zahlungsinformationen
-												anzuzeigen.
-											</EmptyDescription>
-										</EmptyHeader>
-									</Empty>
-								) : (
-									<div className="flex items-center justify-between gap-4">
-										<div>
-											<p className="font-medium text-sm">
-												View payment details
-											</p>
-											<p className="text-muted-foreground text-xs">
-												Sensitive information. Access is audited.
-											</p>
-										</div>
-										<Button
-											variant="outline"
-											onClick={handleLoadPaymentData}
-											disabled={
-												paymentDetailsQuery.isFetching ||
-												paymentHistoryQuery.isFetching
-											}
-										>
-											{paymentDetailsQuery.isFetching ||
-											paymentHistoryQuery.isFetching
-												? "Lädt..."
-												: "View"}
-										</Button>
-									</div>
-								)}
-
-								{paymentDetailsQuery.data && (
-									<>
-										<Separator className="my-6" />
-										<div className="space-y-4">
-											<div>
-												<p className="font-medium text-sm">Zahlungsverlauf</p>
-												<p className="text-muted-foreground text-xs">
-													Alle erzeugten Zahlungspositionen dieses Mitglieds.
-												</p>
-											</div>
-
-											{paymentHistoryQuery.error ? (
-												<p className="text-destructive text-sm">
-													Zahlungsverlauf konnte nicht geladen werden.
-												</p>
-											) : paymentHistoryQuery.data?.payments.length ? (
-												<div className="w-full overflow-x-auto">
-													<Table className="min-w-[760px]">
-															<TableHeader>
-																<TableRow>
-																	<TableHead>Typ</TableHead>
-																	<TableHead>Zeitraum</TableHead>
-																	<TableHead>Lauf</TableHead>
-																<TableHead className="text-right">
-																	Betrag
-																</TableHead>
-															</TableRow>
-														</TableHeader>
-														<TableBody>
-																{paymentHistoryQuery.data.payments.map(
-																	(payment) => (
-																		<TableRow key={payment.id}>
-																			<TableCell>
-																				{getPaymentTypeLabel(payment)}
-																			</TableCell>
-																		<TableCell>
-																			{formatDate(payment.billingPeriodStart)} -{" "}
-																			{formatDate(payment.billingPeriodEnd)}
-																		</TableCell>
-																		<TableCell>
-																			{payment.batchNumber ??
-																				payment.collectionDate ??
-																				"-"}
-																		</TableCell>
-																		<TableCell className="text-right font-medium">
-																			{formatCurrency(payment.totalCents)}
-																		</TableCell>
-																	</TableRow>
-																),
-															)}
-														</TableBody>
-													</Table>
-												</div>
-											) : (
-												<p className="text-muted-foreground text-sm">
-													Noch keine Zahlungen vorhanden.
-												</p>
-											)}
-										</div>
-									</>
-								)}
-							</FramePanel>
-						</CollapsiblePanel>
-					</Collapsible>
-				</Frame>
 			</div>
 
 			<CancelMemberDialog
@@ -1160,6 +553,23 @@ export default function MemberDetailPage() {
 				open={cancelDialogOpen}
 				onOpenChange={setCancelDialogOpen}
 				onSuccess={() => refetch()}
+			/>
+			<UpdateMemberDetailsSheet
+				memberId={member.id}
+				open={detailsSheetOpen}
+				onOpenChange={setDetailsSheetOpen}
+				initialValues={{
+					firstName: member.firstName ?? "",
+					lastName: member.lastName ?? "",
+					birthdate: member.birthdate ?? "",
+					email: member.email ?? "",
+					phone: member.phone ?? "",
+					street: member.street ?? "",
+					city: member.city ?? "",
+					state: member.state ?? "",
+					postalCode: member.postalCode ?? "",
+					country: member.country ?? "",
+				}}
 			/>
 		</div>
 	);

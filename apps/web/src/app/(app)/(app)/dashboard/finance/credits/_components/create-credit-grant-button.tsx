@@ -35,6 +35,11 @@ interface CreateCreditGrantButtonProps {
 
 type CreditGrantType = "money" | "billing_cycles";
 
+const CREDIT_GRANT_TYPE_ITEMS = [
+	{ value: "money", label: "Guthaben (Euro)" },
+	{ value: "billing_cycles", label: "Freie Monate" },
+] as const;
+
 export function CreateCreditGrantButton({
 	memberId,
 	contractId,
@@ -153,6 +158,7 @@ export function CreateCreditGrantButton({
 							</label>
 							<Select
 								value={type}
+								items={CREDIT_GRANT_TYPE_ITEMS}
 								onValueChange={(v) => setType(v as CreditGrantType)}
 							>
 								<SelectTrigger id="credit-type">

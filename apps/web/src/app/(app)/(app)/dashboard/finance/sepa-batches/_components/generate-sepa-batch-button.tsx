@@ -77,19 +77,8 @@ export function GenerateSepaBatchButton() {
 			});
 		},
 		onSuccess: (data) => {
-			// Download the XML file
-			const blob = new Blob([data.xml], { type: "application/xml" });
-			const url = URL.createObjectURL(blob);
-			const anchor = document.createElement("a");
-			anchor.href = url;
-			anchor.download = `sepa-${data.batch.batchNumber}.xml`;
-			document.body.appendChild(anchor);
-			anchor.click();
-			anchor.remove();
-			URL.revokeObjectURL(url);
-
-			toast.success("Lastschrift erzeugt", {
-				description: `${data.includedInvoices.length} Rechnungen exportiert.`,
+			toast.success("Lastschriftlauf erzeugt", {
+				description: `${data.includedInvoices.length} Rechnungen wurden dem Batch hinzugefügt.`,
 			});
 			setOpen(false);
 			setStep("date");
@@ -186,8 +175,8 @@ export function GenerateSepaBatchButton() {
 									<span className="font-medium text-sm">Wichtig</span>
 								</div>
 								<p className="mt-1 text-muted-foreground text-sm">
-									Nach der Generierung ist die Lastschrift eingefroren. Sie kann
-									storniert, aber nicht bearbeitet werden.
+									Die Batch-Zusammensetzung wird gespeichert. Die XML-Datei wird
+									erst beim Herunterladen erzeugt.
 								</p>
 							</div>
 						</div>
@@ -398,8 +387,8 @@ export function GenerateSepaBatchButton() {
 							>
 								<Download className="size-4" />
 								{generateMutation.isPending
-									? "Generiere..."
-									: `${previewQuery.data?.includedInvoices.length ?? 0} Rechnungen exportieren`}
+									? "Erzeuge..."
+									: `${previewQuery.data?.includedInvoices.length ?? 0} Rechnungen in Batch aufnehmen`}
 							</Button>
 						</>
 					)}
