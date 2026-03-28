@@ -141,7 +141,9 @@ export function SepaBatchDetailSheet({
 	const isActive =
 		data?.batch?.status === "generated" ||
 		data?.batch?.status === "downloaded";
-	const canDownload = data?.batch?.status === "generated";
+	const canDownload =
+		data?.batch?.status === "generated" ||
+		data?.batch?.status === "downloaded";
 
 	if (!open) return null;
 

@@ -64,7 +64,12 @@ function parseAmountToCents(value: string) {
     return undefined;
   }
 
-  return Math.round(Number(normalizedValue) * 100);
+  const parsed = Number(normalizedValue);
+  if (Number.isNaN(parsed)) {
+    return undefined;
+  }
+
+  return Math.round(parsed * 100);
 }
 
 export function CreateSelfServiceSheet({ onCreated }: CreateSelfServiceSheetProps) {
@@ -99,11 +104,18 @@ export function CreateSelfServiceSheet({ onCreated }: CreateSelfServiceSheetProp
 
       const payloadGroups = groups
         .filter((group) => group.groupId.trim().length > 0)
-        .map((group) => ({
-          groupId: group.groupId,
-          monthlyFeeCents: Math.round(Number(group.monthlyFee.trim()) * 100),
-          schedule: group.schedule.trim() || undefined,
-        }));
+        .map((group) => {
+          const monthlyFeeCents = parseAmountToCents(group.monthlyFee);
+          if (monthlyFeeCents === undefined) {
+            throw new Error("Bitte gib einen gueltigen Monatsbeitrag ein");
+          }
+
+          return {
+            groupId: group.groupId,
+            monthlyFeeCents,
+            schedule: group.schedule.trim() || undefined,
+          };
+        });
 
       if (payloadGroups.length === 0) {
         throw new Error("Mindestens eine Gruppe ist erforderlich");

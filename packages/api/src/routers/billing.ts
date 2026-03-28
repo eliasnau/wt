@@ -221,8 +221,7 @@ async function ensureInvoiceNotExported(invoiceId: string) {
 		})
 		.from(sepaBatchItem)
 		.innerJoin(sepaBatch, eq(sepaBatch.id, sepaBatchItem.sepaBatchId))
-		.where(eq(sepaBatchItem.invoiceId, invoiceId))
-		.limit(1);
+		.where(eq(sepaBatchItem.invoiceId, invoiceId));
 
 	if (existing.some((row) => ACTIVE_BATCH_STATUSES.has(row.status))) {
 		throw new ORPCError("BAD_REQUEST", {
@@ -231,11 +230,19 @@ async function ensureInvoiceNotExported(invoiceId: string) {
 	}
 }
 
+type SequenceQueryExecutor = Pick<typeof db, "select" | "execute">;
+
 async function getNextBatchSequenceNumber(
+	executor: SequenceQueryExecutor,
 	organizationId: string,
 	collectionDate: string,
 ) {
-	const [result] = await db
+	const lockKey = `${organizationId}:${collectionDate}`;
+	await executor.execute(
+		sql`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`,
+	);
+
+	const [result] = await executor
 		.select({
 			maxSequence: sql<number>`COALESCE(MAX(${sepaBatch.sequenceNumber}), 0)`,
 		})
@@ -1431,17 +1438,18 @@ export const billingRouter = {
 				});
 			}
 
-			const sequenceNumber = await getNextBatchSequenceNumber(
-				organizationId,
-				input.collectionDate,
-			);
-			const batchNumber = buildBatchNumber(
-				organizationId,
-				input.collectionDate,
-				sequenceNumber,
-			);
-
 			const result = await wsDb.transaction(async (tx) => {
+				const sequenceNumber = await getNextBatchSequenceNumber(
+					tx,
+					organizationId,
+					input.collectionDate,
+				);
+				const batchNumber = buildBatchNumber(
+					organizationId,
+					input.collectionDate,
+					sequenceNumber,
+				);
+
 				const [createdBatch] = await tx
 					.insert(sepaBatch)
 					.values({

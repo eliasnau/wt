@@ -311,16 +311,30 @@ async function loadMonthlyOverviewData(params: {
 			),
 		);
 
-	const [invoiceTotals] = await db
+	const [invoiceLineTotals] = await db
 		.select({
 			membershipTotal: sql<number>`COALESCE(SUM(CASE WHEN ${invoiceLine.type} IN ('membership_fee', 'arrears') THEN ${invoiceLine.totalAmountCents} ELSE 0 END), 0)`,
 			joiningFeeTotal: sql<number>`COALESCE(SUM(CASE WHEN ${invoiceLine.type} = 'joining_fee' THEN ${invoiceLine.totalAmountCents} ELSE 0 END), 0)`,
 			yearlyFeeTotal: sql<number>`COALESCE(SUM(CASE WHEN ${invoiceLine.type} = 'yearly_fee' THEN ${invoiceLine.totalAmountCents} ELSE 0 END), 0)`,
-			totalAmount: sql<number>`COALESCE(SUM(${invoice.totalCents}), 0)`,
 		})
 		.from(invoice)
 		.innerJoin(contract, eq(contract.id, invoice.contractId))
 		.leftJoin(invoiceLine, eq(invoiceLine.invoiceId, invoice.id))
+		.where(
+			and(
+				eq(contract.organizationId, organizationId),
+				eq(invoice.status, "finalized"),
+				sql`${invoice.billingPeriodStart} >= ${startDate}`,
+				sql`${invoice.billingPeriodStart} < ${nextMonthStartDate}`,
+			),
+		);
+
+	const [invoiceTotalAmount] = await db
+		.select({
+			totalAmount: sql<number>`COALESCE(SUM(${invoice.totalCents}), 0)`,
+		})
+		.from(invoice)
+		.innerJoin(contract, eq(contract.id, invoice.contractId))
 		.where(
 			and(
 				eq(contract.organizationId, organizationId),
@@ -369,8 +383,8 @@ async function loadMonthlyOverviewData(params: {
 		.groupBy(group.id);
 
 	const feesTotalValue =
-		(invoiceTotals?.joiningFeeTotal ?? 0) +
-		(invoiceTotals?.yearlyFeeTotal ?? 0);
+		(invoiceLineTotals?.joiningFeeTotal ?? 0) +
+		(invoiceLineTotals?.yearlyFeeTotal ?? 0);
 
 	return {
 		month,
@@ -381,7 +395,7 @@ async function loadMonthlyOverviewData(params: {
 		kpis: {
 			activeMembers,
 			newEnrollments,
-			revenueCollected: centsToCurrencyString(invoiceTotals?.totalAmount),
+			revenueCollected: centsToCurrencyString(invoiceTotalAmount?.totalAmount),
 		},
 		membership: {
 			newMembers: newEnrollments,
@@ -394,10 +408,10 @@ async function loadMonthlyOverviewData(params: {
 			})),
 		},
 		revenue: {
-			membershipTotal: centsToCurrencyString(invoiceTotals?.membershipTotal),
+			membershipTotal: centsToCurrencyString(invoiceLineTotals?.membershipTotal),
 			feesTotal: centsToCurrencyString(feesTotalValue),
-			joiningFeeTotal: centsToCurrencyString(invoiceTotals?.joiningFeeTotal),
-			yearlyFeeTotal: centsToCurrencyString(invoiceTotals?.yearlyFeeTotal),
+			joiningFeeTotal: centsToCurrencyString(invoiceLineTotals?.joiningFeeTotal),
+			yearlyFeeTotal: centsToCurrencyString(invoiceLineTotals?.yearlyFeeTotal),
 			outstanding: "0",
 			byGroup: revenueByGroup.map((item) => ({
 				groupId: item.groupId,
