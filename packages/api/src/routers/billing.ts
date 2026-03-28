@@ -215,6 +215,37 @@ function buildBatchNumber(
 }
 
 type BillingQueryExecutor = Pick<typeof db, "select" | "execute">;
+type BillingReadExecutor = Pick<typeof db, "select">;
+
+async function ensureOwnedMemberContract(
+	executor: BillingReadExecutor,
+	organizationId: string,
+	memberId: string,
+	contractId: string,
+) {
+	const [ownedContract] = await executor
+		.select({
+			id: contract.id,
+		})
+		.from(contract)
+		.innerJoin(clubMember, eq(clubMember.id, contract.memberId))
+		.where(
+			and(
+				eq(contract.id, contractId),
+				eq(contract.memberId, memberId),
+				eq(contract.organizationId, organizationId),
+				eq(clubMember.id, memberId),
+				eq(clubMember.organizationId, organizationId),
+			),
+		)
+		.limit(1);
+
+	if (!ownedContract) {
+		throw new ORPCError("NOT_FOUND", {
+			message: "Member or contract not found",
+		});
+	}
+}
 
 async function lockInvoiceIds(
 	executor: BillingQueryExecutor,
@@ -1285,6 +1316,13 @@ export const billingRouter = {
 		.input(createCreditGrantSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
+			await ensureOwnedMemberContract(
+				db,
+				organizationId,
+				input.memberId,
+				input.contractId,
+			);
+
 			const [created] = await db
 				.insert(creditGrant)
 				.values({
@@ -1340,6 +1378,13 @@ export const billingRouter = {
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
 			return wsDb.transaction(async (tx) => {
+				await ensureOwnedMemberContract(
+					tx,
+					organizationId,
+					input.memberId,
+					input.contractId,
+				);
+
 				await tx
 					.update(sepaMandate)
 					.set({ isActive: false, revokedAt: new Date() })
