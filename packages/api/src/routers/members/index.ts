@@ -1,36 +1,11 @@
-import { randomBytes } from "node:crypto";
 import { ORPCError } from "@orpc/server";
 import { syncAutumnUsage } from "@repo/autumn/backend";
-import {
-	and,
-	count,
-	db,
-	desc,
-	eq,
-	ilike,
-	inArray,
-	isNull,
-	or,
-	sql,
-} from "@repo/db";
-import { DB } from "@repo/db/functions";
-import {
-	clubMember,
-	contract,
-	group,
-	groupMember,
-	invoice,
-	sepaBatch,
-	sepaBatchItem,
-	sepaMandate,
-} from "@repo/db/schema";
+import { and, count, db, eq, sql } from "@repo/db";
+import { clubMember, contract } from "@repo/db/schema";
 import { after } from "next/server";
-import { z } from "zod";
 import { protectedProcedure } from "../../index";
-import { geocodeAddress } from "../../lib/geocoding";
 import { logger } from "../../lib/logger";
 import { getPostHogServer } from "../../lib/posthog";
-import { loadSepaModule } from "../../lib/sepa";
 import { requirePermission } from "../../middleware/permissions";
 import { rateLimitMiddleware } from "../../middleware/ratelimit";
 import {
@@ -40,11 +15,28 @@ import {
 	listMembersAdvancedSchema,
 } from "./listMembersAdvanced";
 import { getMemberById, getMemberSchema } from "./getMember";
+import { getMemberPaymentDetails } from "./getPaymentDetails";
+import { getMemberPayments } from "./getPayments";
+import { listMembers, listMembersSchema } from "./listMembers";
 import {
 	buildMembersExportFilename,
 	serializeMembersCsv,
 } from "./membersCsvExport";
 import { reGeocodeOrganizationProcedure } from "./reGeocodeOrganization";
+import { validateSepaMembers } from "./validateSepa";
+import { createMemberSchema, createMemberWithContract } from "./createMember";
+import {
+	cancelContractSchema,
+	cancelMemberContract,
+} from "./cancelContract";
+import {
+	assignGroupSchema,
+	assignMemberToGroup,
+	removeGroupMembershipSchema,
+	removeMemberGroupMembership,
+	updateGroupMembershipSchema,
+	updateMemberGroupMembership,
+} from "./groupMembership";
 import {
 	updateBillingInfoSchema,
 	createMandateForBillingInfo,
@@ -58,137 +50,7 @@ import {
 	updateMemberDetails,
 } from "./updateMemberDetails";
 
-const optionalEmailSchema = z
-	.string()
-	.trim()
-	.email("Invalid email address")
-	.or(z.string().trim().length(0));
-const optionalPhoneSchema = z.string().trim().max(255, "Phone is too long");
-
-const createMemberSchema = z.object({
-	// Personal info
-	firstName: z.string().min(1, "First name is required").max(255),
-	lastName: z.string().min(1, "Last name is required").max(255),
-	birthdate: z
-		.string()
-		.regex(/^\d{4}-\d{2}-\d{2}$/, "Must be valid date format (YYYY-MM-DD)")
-		.optional()
-		.or(z.literal("")),
-	email: optionalEmailSchema,
-	phone: optionalPhoneSchema,
-
-	// Address
-	street: z.string().min(1, "Street is required"),
-	city: z.string().min(1, "City is required"),
-	state: z.string().min(1, "State is required"),
-	postalCode: z.string().min(1, "Postal code is required"),
-	country: z.string().min(1, "Country is required"),
-
-	// Payment info
-	iban: z.string().min(1, "IBAN is required"),
-	bic: z.string().min(1, "BIC is required"),
-	cardHolder: z.string().min(1, "Card holder name is required"),
-
-	// Contract details
-	contractStartDate: z
-		.string()
-		.regex(/^\d{4}-\d{2}-01$/, "Must be 1st day of month (YYYY-MM-01)"),
-	initialPeriod: z.enum(["monthly", "half_yearly", "yearly"]),
-	joiningFeeCents: z.number().int().nonnegative().optional(),
-	yearlyFeeCents: z.number().int().nonnegative().optional(),
-	yearlyFeeMode: z.enum(["january", "anniversary"]).optional(),
-	settledThroughDate: z
-		.string()
-		.regex(/^\d{4}-\d{2}-\d{2}$/, "Must be valid date format (YYYY-MM-DD)")
-		.optional()
-		.or(z.literal("")),
-
-	// Optional notes
-	memberNotes: z.string().max(1000).optional(),
-	contractNotes: z.string().max(1000).optional(),
-
-	// Optional guardian info
-	guardianName: z.string().optional(),
-	guardianEmail: z.string().email().optional().or(z.literal("")),
-	guardianPhone: z.string().optional(),
-});
-
-const listMembersSchema = z.object({
-	page: z.coerce.number().int().min(1).default(1),
-	limit: z.coerce.number().int().min(1).max(100).default(20),
-	search: z.string().optional(),
-	groupIds: z.array(z.string()).optional(),
-	options: z
-		.object({
-			includeCancelledMembers: z.boolean().optional(),
-			memberStatus: z
-				.enum(["active", "cancelled", "cancelled_but_active"])
-				.optional(),
-		})
-		.optional(),
-});
-
-const cancelContractSchema = z.object({
-	memberId: z.string(),
-	cancelReason: z.string().min(1, "Cancel reason is required").max(1000),
-	cancellationEffectiveDate: z
-		.string()
-		.regex(/^\d{4}-\d{2}-\d{2}$/, "Must be valid date format (YYYY-MM-DD)"),
-});
-
-const assignGroupSchema = z.object({
-	memberId: z.string(),
-	groupId: z.string(),
-	membershipPriceCents: z.number().int().nonnegative().optional(),
-});
-
-const updateGroupMembershipSchema = z.object({
-	memberId: z.string(),
-	groupId: z.string(),
-	membershipPriceCents: z.number().int().nonnegative().nullable(),
-});
-
-const removeGroupMembershipSchema = z.object({
-	memberId: z.string(),
-	groupId: z.string(),
-});
-
 const MAX_MEMBERS_EXPORT_ROWS = 10_000;
-
-type DateParts = {
-	year: number;
-	month: number;
-	day: number;
-};
-
-type SepaMemberValidationIssue = {
-	memberId: string;
-	memberName: string;
-	reasons: string[];
-};
-
-function parseDateOnly(dateStr: string): DateParts | null {
-	const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(dateStr);
-	if (!match) return null;
-
-	const year = Number(match[1]);
-	const month = Number(match[2]);
-	const day = Number(match[3]);
-	if (!year || month < 1 || month > 12) return null;
-
-	const daysInMonth = new Date(year, month, 0).getDate();
-	if (day < 1 || day > daysInMonth) return null;
-
-	return { year, month, day };
-}
-
-function formatDateOnly(year: number, month: number, day: number): string {
-	return `${String(year).padStart(4, "0")}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-}
-
-function getLastDayOfMonth(year: number, month: number): number {
-	return new Date(year, month, 0).getDate();
-}
 
 function getTodayInBerlinDateString(): string {
 	const parts = new Intl.DateTimeFormat("en-CA", {
@@ -204,33 +66,12 @@ function getTodayInBerlinDateString(): string {
 
 	if (!year || !month || !day) {
 		const now = new Date();
-		return formatDateOnly(now.getFullYear(), now.getMonth() + 1, now.getDate());
+		return `${String(now.getFullYear()).padStart(4, "0")}-${String(
+			now.getMonth() + 1,
+		).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 	}
 
 	return `${year}-${month}-${day}`;
-}
-
-function generateMandateId(): string {
-	return `WT-${randomBytes(12).toString("hex").toUpperCase()}`;
-}
-
-function normalizeIban(value: string | null | undefined): string {
-	return (value ?? "").replace(/\s+/g, "").toUpperCase();
-}
-
-function normalizeBic(value: string | null | undefined): string {
-	return (value ?? "").replace(/\s+/g, "").toUpperCase();
-}
-
-function normalizeRequiredText(value: string | null | undefined): string {
-	return (value ?? "").trim();
-}
-
-function normalizeOptionalText(
-	value: string | null | undefined,
-): string | undefined {
-	const normalized = value?.trim();
-	return normalized ? normalized : undefined;
 }
 
 async function syncOrganizationMembersUsage(organizationId: string) {
@@ -254,37 +95,6 @@ async function syncOrganizationMembersUsage(organizationId: string) {
 		featureId: "members",
 		value: memberCount,
 	});
-}
-
-/**
- * Calculate the end date for the initial period based on contract type
- */
-function calculateInitialPeriodEndDate(
-	startDate: string,
-	period: "monthly" | "half_yearly" | "yearly",
-): string {
-	const parsedStartDate = parseDateOnly(startDate);
-	if (!parsedStartDate) {
-		throw new ORPCError("BAD_REQUEST", {
-			message: "Invalid contract start date",
-		});
-	}
-
-	const periodMonths =
-		period === "monthly" ? 1 : period === "half_yearly" ? 6 : 12;
-	const endMonthIndex = parsedStartDate.month - 1 + periodMonths - 1;
-	const endYear = parsedStartDate.year + Math.floor(endMonthIndex / 12);
-	const endMonth = (endMonthIndex % 12) + 1;
-	const endDay = getLastDayOfMonth(endYear, endMonth);
-	return formatDateOnly(endYear, endMonth, endDay);
-}
-
-/**
- * Get the next billing date (first billing is same as start date)
- */
-function getNextBillingDate(startDate: string): string {
-	// First billing happens immediately on start date
-	return startDate;
 }
 
 export const membersRouter = {
@@ -324,22 +134,10 @@ export const membersRouter = {
 		.input(getMemberSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
-			const member = await DB.query.members.getMembersPaymentInfo({
-				id: input.memberId,
+			return getMemberPaymentDetails({
+				organizationId,
+				memberId: input.memberId,
 			});
-
-			if (!member || member.organizationId !== organizationId) {
-				throw new ORPCError("NOT_FOUND", {
-					message: "Member not found",
-				});
-			}
-
-			return {
-				memberId: member.id,
-				iban: member.iban,
-				bic: member.bic,
-				cardHolder: member.cardHolder,
-			};
 		})
 		.route({ method: "GET", path: "/members/:memberId/payment-details" }),
 
@@ -349,94 +147,10 @@ export const membersRouter = {
 		.input(getMemberSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
-			const member = await db.query.clubMember.findFirst({
-				where: and(
-					eq(clubMember.id, input.memberId),
-					eq(clubMember.organizationId, organizationId),
-				),
-				columns: {
-					id: true,
-				},
-			});
-
-			if (!member) {
-				throw new ORPCError("NOT_FOUND", {
-					message: "Member not found",
-				});
-			}
-
-			const payments = await db
-				.select({
-					id: invoice.id,
-					status: invoice.status,
-					totalCents: invoice.totalCents,
-					billingPeriodStart: invoice.billingPeriodStart,
-					billingPeriodEnd: invoice.billingPeriodEnd,
-					createdAt: invoice.createdAt,
-				})
-				.from(invoice)
-				.innerJoin(contract, eq(invoice.contractId, contract.id))
-				.where(
-					and(
-						eq(contract.memberId, input.memberId),
-						eq(contract.organizationId, organizationId),
-						eq(invoice.organizationId, organizationId),
-					),
-				)
-				.orderBy(desc(invoice.billingPeriodStart), desc(invoice.createdAt));
-
-			const batchInfoByInvoiceId = new Map<
-				string,
-				{
-					batchId: string;
-					batchNumber: string;
-					collectionDate: string;
-				}
-			>();
-
-			if (payments.length > 0) {
-				const batchRows = await db
-					.select({
-						invoiceId: sepaBatchItem.invoiceId,
-						batchId: sepaBatch.id,
-						batchNumber: sepaBatch.batchNumber,
-						collectionDate: sepaBatch.collectionDate,
-					})
-					.from(sepaBatchItem)
-					.innerJoin(sepaBatch, eq(sepaBatch.id, sepaBatchItem.sepaBatchId))
-					.where(
-						and(
-							eq(sepaBatchItem.organizationId, organizationId),
-							inArray(
-								sepaBatchItem.invoiceId,
-								payments.map((payment) => payment.id),
-							),
-							sql`${sepaBatchItem.status} <> 'void'`,
-							sql`${sepaBatch.status} <> 'void'`,
-						),
-					)
-					.orderBy(desc(sepaBatch.createdAt));
-
-				for (const batchRow of batchRows) {
-					if (!batchInfoByInvoiceId.has(batchRow.invoiceId)) {
-						batchInfoByInvoiceId.set(batchRow.invoiceId, {
-							batchId: batchRow.batchId,
-							batchNumber: batchRow.batchNumber,
-							collectionDate: batchRow.collectionDate,
-						});
-					}
-				}
-			}
-
-			return {
+			return getMemberPayments({
+				organizationId,
 				memberId: input.memberId,
-				payments: payments.map((payment) => ({
-					...payment,
-					batchId: batchInfoByInvoiceId.get(payment.id)?.batchId ?? null,
-					batchNumber: batchInfoByInvoiceId.get(payment.id)?.batchNumber ?? null,
-					collectionDate: batchInfoByInvoiceId.get(payment.id)?.collectionDate ?? null,
-				})),
-			};
+			});
 		})
 		.route({ method: "GET", path: "/members/:memberId/payments" }),
 
@@ -446,220 +160,10 @@ export const membersRouter = {
 		.input(listMembersSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
-			const { page, limit } = input;
-			const includeCancelled = input.options?.includeCancelledMembers ?? false;
-			const memberStatus = input.options?.memberStatus;
-			const todayInBerlin = getTodayInBerlinDateString();
-
-			const rawSearch = input.search?.trim();
-			const search = rawSearch && rawSearch.length > 0 ? rawSearch : undefined;
-
-			const groupIds =
-				input.groupIds
-					?.map((g) => g.trim())
-					.filter(Boolean)
-					.filter((v, i, a) => a.indexOf(v) === i) ?? undefined;
-
-			if (
-				(input.groupIds?.length ?? 0) > 0 &&
-				(!groupIds || groupIds.length === 0)
-			) {
-				return {
-					data: [],
-					pagination: {
-						page,
-						limit,
-						totalCount: 0,
-						totalPages: 0,
-						hasNextPage: false,
-						hasPreviousPage: page > 1,
-					},
-				};
-			}
-
-			const offset = (page - 1) * limit;
-
-			const statusFilterWhere =
-				memberStatus === "active"
-					? sql`${contract.cancelledAt} IS NULL`
-					: memberStatus === "cancelled"
-						? sql`${contract.cancelledAt} IS NOT NULL
-                AND ${contract.cancellationEffectiveDate} IS NOT NULL
-                AND ${contract.cancellationEffectiveDate} < ${todayInBerlin}`
-						: memberStatus === "cancelled_but_active"
-							? sql`${contract.cancelledAt} IS NOT NULL
-                  AND (
-                    ${contract.cancellationEffectiveDate} IS NULL
-                    OR ${contract.cancellationEffectiveDate} >= ${todayInBerlin}
-                  )`
-							: includeCancelled
-								? undefined
-								: sql`(
-                    ${contract.cancellationEffectiveDate} IS NULL
-                    OR ${contract.cancellationEffectiveDate} >= ${todayInBerlin}
-                  )`;
-
-			const memberWhere = and(
-				eq(clubMember.organizationId, organizationId),
-				search
-					? or(
-							ilike(clubMember.firstName, `%${search}%`),
-							ilike(clubMember.lastName, `%${search}%`),
-							ilike(sql`CAST(${clubMember.birthdate} AS TEXT)`, `%${search}%`),
-							ilike(clubMember.email, `%${search}%`),
-							ilike(clubMember.phone, `%${search}%`),
-							ilike(
-								sql`${clubMember.firstName} || ' ' || ${clubMember.lastName}`,
-								`%${search}%`,
-							),
-						)
-					: undefined,
-				groupIds?.length
-					? sql`${clubMember.id} in (
-              select ${groupMember.memberId}
-              from ${groupMember}
-              where ${inArray(groupMember.groupId, groupIds)}
-            )`
-					: undefined,
-				statusFilterWhere,
-			);
-
-			const members = await db
-				.select({
-					id: clubMember.id,
-					firstName: clubMember.firstName,
-					lastName: clubMember.lastName,
-					birthdate: clubMember.birthdate,
-					email: clubMember.email,
-					phone: clubMember.phone,
-					street: clubMember.street,
-					city: clubMember.city,
-					state: clubMember.state,
-					postalCode: clubMember.postalCode,
-					country: clubMember.country,
-					notes: clubMember.notes,
-					guardianName: clubMember.guardianName,
-					guardianEmail: clubMember.guardianEmail,
-					guardianPhone: clubMember.guardianPhone,
-					organizationId: clubMember.organizationId,
-					createdAt: clubMember.createdAt,
-					updatedAt: clubMember.updatedAt,
-					// Contract information (flat fields)
-					contractId: contract.id,
-					contractStartDate: contract.startDate,
-					contractStatus: contract.status,
-					contractInitialPeriod: contract.initialPeriod,
-					contractInitialPeriodEndDate: contract.initialPeriodEndDate,
-					contractJoiningFeeCents: contract.joiningFeeCents,
-					contractYearlyFeeCents: contract.yearlyFeeCents,
-					contractNotes: contract.notes,
-					contractCancelledAt: contract.cancelledAt,
-					contractCancellationEffectiveDate: contract.cancellationEffectiveDate,
-				})
-				.from(clubMember)
-				.innerJoin(contract, eq(contract.memberId, clubMember.id))
-				.where(memberWhere)
-				.limit(limit)
-				.offset(offset);
-
-			const [{ count: totalCount = 0 } = { count: 0 }] = await db
-				.select({ count: count() })
-				.from(clubMember)
-				.innerJoin(contract, eq(contract.memberId, clubMember.id))
-				.where(memberWhere);
-
-			const totalPages = Math.ceil(totalCount / limit);
-
-			// Fetch group info for the listed members in one shot
-			const memberIds = members.map((m) => m.id);
-			let groupMap = new Map<
-				string,
-				{
-					groupId: string;
-					membershipPriceCents: number;
-					group: { id: string; name: string; color: string };
-				}[]
-			>();
-			if (memberIds.length > 0) {
-				const gmRows = await db
-					.select({
-						memberId: groupMember.memberId,
-						groupId: groupMember.groupId,
-						membershipPriceCents: groupMember.membershipPriceCents,
-						gId: group.id,
-						gName: group.name,
-						gColor: group.color,
-					})
-					.from(groupMember)
-					.innerJoin(group, eq(group.id, groupMember.groupId))
-					.where(inArray(groupMember.memberId, memberIds));
-
-				groupMap = gmRows.reduce(
-					(acc, r) => {
-						const list = acc.get(r.memberId) ?? [];
-						list.push({
-							groupId: r.groupId,
-							membershipPriceCents: r.membershipPriceCents,
-							group: { id: r.gId, name: r.gName, color: r.gColor },
-						});
-						acc.set(r.memberId, list);
-						return acc;
-					},
-					new Map<
-						string,
-						{
-							groupId: string;
-							membershipPriceCents: number;
-							group: { id: string; name: string; color: string };
-						}[]
-					>(),
-				);
-			}
-
-			const data = members.map((m) => {
-				const {
-					contractId,
-					contractStartDate,
-					contractStatus,
-					contractInitialPeriod,
-					contractInitialPeriodEndDate,
-					contractJoiningFeeCents,
-					contractYearlyFeeCents,
-					contractNotes,
-					contractCancelledAt,
-					contractCancellationEffectiveDate,
-					...memberData
-				} = m;
-
-				return {
-					...memberData,
-					contract: {
-						id: contractId,
-						startDate: contractStartDate,
-						status: contractStatus,
-						initialPeriod: contractInitialPeriod,
-						initialPeriodEndDate: contractInitialPeriodEndDate,
-						joiningFeeCents: contractJoiningFeeCents,
-						yearlyFeeCents: contractYearlyFeeCents,
-						notes: contractNotes,
-						cancelledAt: contractCancelledAt,
-						cancellationEffectiveDate: contractCancellationEffectiveDate,
-					},
-					groupMembers: groupMap.get(m.id) ?? [],
-				};
+			return listMembers({
+				organizationId,
+				input,
 			});
-
-			return {
-				data,
-				pagination: {
-					page,
-					limit,
-					totalCount,
-					totalPages,
-					hasNextPage: page < totalPages,
-					hasPreviousPage: page > 1,
-				},
-			};
 		})
 		.route({ method: "GET", path: "/members" }),
 
@@ -681,84 +185,9 @@ export const membersRouter = {
 		.use(requirePermission({ member: ["view"] }))
 		.handler(async ({ context }) => {
 			const organizationId = context.session.activeOrganizationId!;
-			const sepa = await loadSepaModule();
-			const bicRegex = /^[A-Z0-9]{8}([A-Z0-9]{3})?$/;
-
-			const rows = await db
-				.select({
-					memberId: clubMember.id,
-					firstName: clubMember.firstName,
-					lastName: clubMember.lastName,
-					email: clubMember.email,
-					iban: sepaMandate.iban,
-					bic: sepaMandate.bic,
-					cardHolder: sepaMandate.accountHolder,
-					mandateId: sepaMandate.mandateReference,
-					mandateSignatureDate: sepaMandate.signatureDate,
-					contractCancelledAt: contract.cancelledAt,
-				})
-				.from(clubMember)
-				.innerJoin(contract, eq(contract.memberId, clubMember.id))
-				.leftJoin(
-					sepaMandate,
-					and(
-						eq(sepaMandate.contractId, contract.id),
-						eq(sepaMandate.isActive, true),
-						isNull(sepaMandate.revokedAt),
-					),
-				)
-				.where(
-					and(
-						eq(clubMember.organizationId, organizationId),
-						eq(contract.organizationId, organizationId),
-					),
-				)
-				.orderBy(clubMember.lastName, clubMember.firstName);
-
-			const members = rows.map((row) => {
-				const memberName = `${row.firstName} ${row.lastName}`.trim();
-				const iban = normalizeIban(row.iban);
-				const bic = normalizeBic(row.bic);
-				const cardHolder = normalizeRequiredText(row.cardHolder);
-				const mandateId = normalizeRequiredText(row.mandateId);
-				const reasons: string[] = [];
-
-				if (!iban) reasons.push("missing IBAN");
-				else if (!sepa.validateIBAN(iban)) reasons.push("invalid IBAN");
-
-				if (!bic) reasons.push("missing BIC");
-				else if (!bicRegex.test(bic)) reasons.push("invalid BIC");
-
-				if (!cardHolder) reasons.push("missing account holder");
-				if (!mandateId) reasons.push("missing mandate ID");
-				if (!row.mandateSignatureDate)
-					reasons.push("missing mandate signature date");
-
-				return {
-					memberId: row.memberId,
-					memberName,
-					email: row.email,
-					contractCancelledAt: row.contractCancelledAt,
-					valid: reasons.length === 0,
-					reasons,
-				};
+			return validateSepaMembers({
+				organizationId,
 			});
-
-			const invalidMembers: SepaMemberValidationIssue[] = members
-				.filter((member) => !member.valid)
-				.map((member) => ({
-					memberId: member.memberId,
-					memberName: member.memberName,
-					reasons: member.reasons,
-				}));
-
-			return {
-				total: members.length,
-				validCount: members.length - invalidMembers.length,
-				invalidCount: invalidMembers.length,
-				members,
-				invalidMembers,
-			};
 		})
 		.route({ method: "GET", path: "/members/sepa/validate" }),
 
@@ -820,77 +249,10 @@ export const membersRouter = {
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
 			const posthog = getPostHogServer();
-
-			const sepa = await loadSepaModule();
-			if (!sepa.validateIBAN(input.iban)) {
-				throw new ORPCError("BAD_REQUEST", {
-					message: "Invalid IBAN",
-				});
-			}
-
-			const bicRegex = /^[A-Z0-9]{8}([A-Z0-9]{3})?$/;
-			if (!bicRegex.test(input.bic)) {
-				throw new ORPCError("BAD_REQUEST", {
-					message: "Invalid BIC",
-				});
-			}
-
-			// Calculate contract dates
-			const initialPeriodEndDate = calculateInitialPeriodEndDate(
-				input.contractStartDate,
-				input.initialPeriod,
-			);
-			const mandateSignatureDate = getTodayInBerlinDateString();
 			try {
-				const geocodedAddress = await geocodeAddress({
-					street: input.street,
-					postalCode: input.postalCode,
-					city: input.city,
-					country: input.country,
-				});
-
-				const result = await DB.mutation.members.createMemberWithContract({
+				const result = await createMemberWithContract({
 					organizationId,
-					memberId: randomBytes(16).toString("hex"),
-					memberData: {
-						firstName: input.firstName,
-						lastName: input.lastName,
-						email: normalizeOptionalText(input.email) ?? null,
-						phone: normalizeOptionalText(input.phone) ?? null,
-						birthdate: input.birthdate?.trim() || undefined,
-						street: input.street,
-						city: input.city,
-						state: input.state,
-						postalCode: input.postalCode,
-						country: input.country,
-						latitude: geocodedAddress?.latitude ?? null,
-						longitude: geocodedAddress?.longitude ?? null,
-						iban: input.iban,
-						bic: input.bic,
-						cardHolder: input.cardHolder,
-						notes: input.memberNotes,
-						guardianName: input.guardianName,
-						guardianEmail: input.guardianEmail || undefined,
-						guardianPhone: input.guardianPhone,
-					},
-					contractData: {
-						initialPeriod: input.initialPeriod,
-						startDate: input.contractStartDate,
-						initialPeriodEndDate,
-						joiningFeeCents: input.joiningFeeCents,
-						yearlyFeeCents: input.yearlyFeeCents,
-						yearlyFeeMode: input.yearlyFeeMode ?? "january",
-						settledThroughDate:
-							normalizeOptionalText(input.settledThroughDate) ?? undefined,
-						notes: input.contractNotes,
-					},
-					sepaMandateData: {
-						mandateReference: generateMandateId(),
-						signatureDate: mandateSignatureDate,
-						accountHolder: input.cardHolder,
-						iban: input.iban,
-						bic: input.bic,
-					},
+					input,
 				});
 
 				posthog.capture({
@@ -1006,75 +368,13 @@ export const membersRouter = {
 			const organizationId = context.session.activeOrganizationId!;
 			const posthog = getPostHogServer();
 
-			const effectiveDateParts = parseDateOnly(input.cancellationEffectiveDate);
-			if (!effectiveDateParts) {
-				throw new ORPCError("BAD_REQUEST", {
-					message: "Invalid cancellation effective date",
-				});
-			}
-
-			const isLastDayOfMonth =
-				effectiveDateParts.day ===
-				getLastDayOfMonth(effectiveDateParts.year, effectiveDateParts.month);
-			if (!isLastDayOfMonth) {
-				throw new ORPCError("BAD_REQUEST", {
-					message:
-						"Cancellation effective date must be the last day of the month",
-				});
-			}
-
-			const todayInBerlin = getTodayInBerlinDateString();
-			if (input.cancellationEffectiveDate <= todayInBerlin) {
-				throw new ORPCError("BAD_REQUEST", {
-					message: "Cancellation effective date must be in the future",
-				});
-			}
-
 			try {
-				const [existingContract] = await db
-					.select()
-					.from(contract)
-					.where(
-						and(
-							eq(contract.memberId, input.memberId),
-							eq(contract.organizationId, organizationId),
-						),
-					)
-					.limit(1);
-
-				if (!existingContract) {
-					throw new ORPCError("NOT_FOUND", {
-						message: "Contract not found for this member",
-					});
-				}
-
-				if (existingContract.cancelledAt) {
-					throw new ORPCError("BAD_REQUEST", {
-						message: "Contract is already cancelled",
-					});
-				}
-
-				if (existingContract.initialPeriodEndDate) {
-					if (
-						input.cancellationEffectiveDate <
-						existingContract.initialPeriodEndDate
-					) {
-						throw new ORPCError("BAD_REQUEST", {
-							message: `Initial period ends on ${existingContract.initialPeriodEndDate}. Cancellation effective date must be on or after that date.`,
-						});
-					}
-				}
-
-				const [updatedContract] = await db
-					.update(contract)
-					.set({
-						status: "cancelled",
-						cancelledAt: new Date(),
-						cancellationReason: input.cancelReason,
-						cancellationEffectiveDate: input.cancellationEffectiveDate,
-					})
-					.where(eq(contract.id, existingContract.id))
-					.returning();
+				const updatedContract = await cancelMemberContract({
+					organizationId,
+					memberId: input.memberId,
+					cancelReason: input.cancelReason,
+					cancellationEffectiveDate: input.cancellationEffectiveDate,
+				});
 
 				posthog.capture({
 					distinctId: context.userId,
@@ -1127,35 +427,15 @@ export const membersRouter = {
 		.input(assignGroupSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
-
-			// Validate member belongs to org
-			const member = await DB.query.members.getMemberById({
-				id: input.memberId,
-			});
-			if (!member || member.organizationId !== organizationId) {
-				throw new ORPCError("NOT_FOUND", { message: "Member not found" });
-			}
-
-			// Validate group belongs to org
-			const group = await DB.query.groups.getGroupById({
-				groupId: input.groupId,
-			});
-			if (!group || group.organizationId !== organizationId) {
-				throw new ORPCError("NOT_FOUND", { message: "Group not found" });
-			}
-
 			const posthog = getPostHogServer();
 
 			try {
-				const result = await DB.mutation.groups.assignMemberToGroup({
+				const { result, group } = await assignMemberToGroup({
+					organizationId,
 					memberId: input.memberId,
 					groupId: input.groupId,
 					membershipPriceCents: input.membershipPriceCents,
 				});
-
-				if (!result) {
-					throw new Error("Failed to assign member to group");
-				}
 
 				posthog.capture({
 					distinctId: context.userId,
@@ -1175,12 +455,9 @@ export const membersRouter = {
 
 				return result;
 			} catch (error) {
-				// Check for duplicate key error (Postgres code 23505)
-				if ((error as any).code === "23505") {
+				if (error instanceof ORPCError) {
 					after(() => posthog.shutdown());
-					throw new ORPCError("BAD_REQUEST", {
-						message: "Member is already in this group",
-					});
+					throw error;
 				}
 
 				posthog.captureException(error, context.userId, {
@@ -1220,34 +497,13 @@ export const membersRouter = {
 			const organizationId = context.session.activeOrganizationId!;
 			const posthog = getPostHogServer();
 
-			const [member, group] = await Promise.all([
-				DB.query.members.getMemberById({
-					id: input.memberId,
-				}),
-				DB.query.groups.getGroupById({
-					groupId: input.groupId,
-				}),
-			]);
-
-			if (!member || member.organizationId !== organizationId) {
-				throw new ORPCError("NOT_FOUND", { message: "Member not found" });
-			}
-			if (!group || group.organizationId !== organizationId) {
-				throw new ORPCError("NOT_FOUND", { message: "Group not found" });
-			}
-
 			try {
-				const result = await DB.mutation.groups.updateGroupMember({
+				const { result, group } = await updateMemberGroupMembership({
+					organizationId,
 					memberId: input.memberId,
 					groupId: input.groupId,
 					membershipPriceCents: input.membershipPriceCents ?? null,
 				});
-
-				if (!result) {
-					throw new ORPCError("NOT_FOUND", {
-						message: "Membership not found",
-					});
-				}
 
 				posthog.capture({
 					distinctId: context.userId,
@@ -1304,33 +560,14 @@ export const membersRouter = {
 		.input(removeGroupMembershipSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
-
-			const [member, group] = await Promise.all([
-				DB.query.members.getMemberById({ id: input.memberId }),
-				DB.query.groups.getGroupById({ groupId: input.groupId }),
-			]);
-
-			if (!member || member.organizationId !== organizationId) {
-				throw new ORPCError("NOT_FOUND", { message: "Member not found" });
-			}
-
-			if (!group || group.organizationId !== organizationId) {
-				throw new ORPCError("NOT_FOUND", { message: "Group not found" });
-			}
-
 			const posthog = getPostHogServer();
 
 			try {
-				const result = await DB.mutation.groups.removeMemberFromGroup({
+				const { result, group } = await removeMemberGroupMembership({
+					organizationId,
 					memberId: input.memberId,
 					groupId: input.groupId,
 				});
-
-				if (!result) {
-					throw new ORPCError("NOT_FOUND", {
-						message: "Membership not found",
-					});
-				}
 
 				posthog.capture({
 					distinctId: context.userId,
