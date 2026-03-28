@@ -99,14 +99,23 @@ export function AssignGroupDialog({
 			onSubmit: assignGroupSchema as any,
 		},
 		onSubmit: async ({ value }) => {
+			const membershipPrice = value.membershipPrice.trim();
+			const parsedMembershipPrice =
+				membershipPrice === ""
+					? undefined
+					: parseMembershipPriceInput(membershipPrice);
+
+			if (parsedMembershipPrice === null) {
+				toast.error("Bitte gib einen gueltigen Mitgliedsbeitrag ein.");
+				return;
+			}
+
 			await assignGroupMutation.mutateAsync({
 				groupId: value.groupId,
 				membershipPriceCents:
-					value.membershipPrice.trim() === ""
+					parsedMembershipPrice === undefined
 						? undefined
-						: Math.round(
-								(parseMembershipPriceInput(value.membershipPrice) ?? 0) * 100,
-							),
+						: Math.round(parsedMembershipPrice * 100),
 			});
 		},
 	});
