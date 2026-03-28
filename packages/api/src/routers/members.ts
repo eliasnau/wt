@@ -44,6 +44,7 @@ import {
 	serializeMembersCsv,
 } from "./members/membersCsvExport";
 import { reGeocodeOrganizationProcedure } from "./members/reGeocodeOrganization";
+import { updateMemberContractProcedure } from "./members/updateMemberContract";
 import { updateMemberDetailsProcedure } from "./members/updateMemberDetails";
 import { updateBillingInfoProcedure } from "./members/updateBillingInfo";
 
@@ -127,43 +128,6 @@ const cancelContractSchema = z.object({
 	cancellationEffectiveDate: z
 		.string()
 		.regex(/^\d{4}-\d{2}-\d{2}$/, "Must be valid date format (YYYY-MM-DD)"),
-});
-
-const updateMemberSchema = z.object({
-	memberId: z.string(),
-	// Personal info
-	firstName: z.string().min(1, "First name is required").max(255),
-	lastName: z.string().min(1, "Last name is required").max(255),
-	birthdate: z
-		.string()
-		.regex(/^\d{4}-\d{2}-\d{2}$/, "Must be valid date format (YYYY-MM-DD)")
-		.optional()
-		.or(z.literal("")),
-	email: optionalEmailSchema,
-	phone: optionalPhoneSchema,
-	// Address
-	street: z.string().min(1, "Street is required"),
-	city: z.string().min(1, "City is required"),
-	state: z.string().min(1, "State is required"),
-	postalCode: z.string().min(1, "Postal code is required"),
-	country: z.string().min(1, "Country is required"),
-	// Optional notes
-	memberNotes: z.string().max(1000).optional(),
-	// Optional guardian info
-	guardianName: z.string().optional(),
-	guardianEmail: z.string().email().optional().or(z.literal("")),
-	guardianPhone: z.string().optional(),
-	// Contract details
-	initialPeriod: z.enum(["monthly", "half_yearly", "yearly"]),
-	joiningFeeCents: z.number().int().nonnegative().optional(),
-	yearlyFeeCents: z.number().int().nonnegative().optional(),
-	yearlyFeeMode: z.enum(["january", "anniversary"]).optional(),
-	settledThroughDate: z
-		.string()
-		.regex(/^\d{4}-\d{2}-\d{2}$/, "Must be valid date format (YYYY-MM-DD)")
-		.optional()
-		.or(z.literal("")),
-	contractNotes: z.string().max(1000).optional(),
 });
 
 const assignGroupSchema = z.object({
@@ -982,132 +946,11 @@ export const membersRouter = {
 		})
 		.route({ method: "POST", path: "/members" }),
 
-	update: protectedProcedure
-		.use(rateLimitMiddleware(5))
-		.use(requirePermission({ member: ["update"] }))
-		.input(updateMemberSchema)
-		.handler(async ({ input, context }) => {
-			const organizationId = context.session.activeOrganizationId!;
-			const posthog = getPostHogServer();
-
-			try {
-				const [existingMember] = await db
-					.select({
-						street: clubMember.street,
-						city: clubMember.city,
-						state: clubMember.state,
-						postalCode: clubMember.postalCode,
-						country: clubMember.country,
-						latitude: clubMember.latitude,
-						longitude: clubMember.longitude,
-					})
-					.from(clubMember)
-					.where(
-						and(
-							eq(clubMember.id, input.memberId),
-							eq(clubMember.organizationId, organizationId),
-						),
-					)
-					.limit(1);
-
-				const addressChanged =
-					!existingMember ||
-					existingMember.street !== input.street ||
-					existingMember.city !== input.city ||
-					existingMember.state !== input.state ||
-					existingMember.postalCode !== input.postalCode ||
-					existingMember.country !== input.country;
-
-				const geocodedAddress = addressChanged
-					? await geocodeAddress({
-							street: input.street,
-							postalCode: input.postalCode,
-							city: input.city,
-							country: input.country,
-						})
-					: {
-							latitude: existingMember?.latitude ?? null,
-							longitude: existingMember?.longitude ?? null,
-						};
-
-				const result = await DB.mutation.members.updateMember({
-					memberId: input.memberId,
-					organizationId,
-					memberData: {
-						firstName: input.firstName,
-						lastName: input.lastName,
-						email: normalizeOptionalText(input.email) ?? null,
-						phone: normalizeOptionalText(input.phone) ?? null,
-						birthdate: input.birthdate?.trim() || undefined,
-						street: input.street,
-						city: input.city,
-						state: input.state,
-						postalCode: input.postalCode,
-						country: input.country,
-						latitude: geocodedAddress?.latitude ?? null,
-						longitude: geocodedAddress?.longitude ?? null,
-						notes: input.memberNotes,
-						guardianName: input.guardianName,
-						guardianEmail: input.guardianEmail || undefined,
-						guardianPhone: input.guardianPhone,
-					},
-					contractData: {
-						// initialPeriod: input.initialPeriod,
-						joiningFeeCents: input.joiningFeeCents,
-						yearlyFeeCents: input.yearlyFeeCents,
-						yearlyFeeMode: input.yearlyFeeMode,
-						settledThroughDate:
-							normalizeOptionalText(input.settledThroughDate) ?? undefined,
-						notes: input.contractNotes,
-					},
-				});
-
-				posthog.capture({
-					distinctId: context.userId,
-					event: "members:update",
-					groups: {
-						organization: organizationId,
-					},
-					properties: {
-						member_id: result.member.id,
-					},
-				});
-
-				after(() => posthog.shutdown());
-
-				return result;
-			} catch (error) {
-				if (error instanceof ORPCError) throw error;
-
-				posthog.captureException(error, context.userId, {
-					context: "members:update",
-					groups: {
-						organization: organizationId,
-					},
-					member_id: input.memberId,
-					trace_id: context.wideEvent.trace_id,
-					request_id: context.wideEvent.request_id,
-				});
-
-				after(() => {
-					posthog.shutdown();
-					logger.error("Failed to update member", {
-						error,
-						organizationId,
-						memberId: input.memberId,
-						userId: context.user.id,
-					});
-				});
-
-				throw new ORPCError("INTERNAL_SERVER_ERROR", {
-					message: "Failed to update member",
-				});
-			}
-		})
-		.route({ method: "PATCH", path: "/members/:memberId" }),
 	reGeocodeOrganization: reGeocodeOrganizationProcedure,
 
 	updateMemberDetails: updateMemberDetailsProcedure,
+
+	updateMemberContract: updateMemberContractProcedure,
 
 	updateBillingInfo: updateBillingInfoProcedure,
 

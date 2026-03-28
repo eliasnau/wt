@@ -41,6 +41,7 @@ import { CancelMemberDialog } from "../_components/cancel-member-dialog";
 import { AssignGroupDialog } from "./_components/assign-group-dialog";
 import { MemberBillingSection } from "./_components/member-billing-section";
 import { MemberGroupsTable } from "./_components/member-groups-table";
+import { UpdateMemberContractSheet } from "./_components/update-member-contract-sheet";
 import { UpdateMemberDetailsSheet } from "./_components/update-member-details-sheet";
 
 function formatDate(dateString: string | null | undefined) {
@@ -86,6 +87,7 @@ export default function MemberDetailPage() {
 	const memberId = params.id as string;
 	const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 	const [detailsSheetOpen, setDetailsSheetOpen] = useState(false);
+	const [contractSheetOpen, setContractSheetOpen] = useState(false);
 
 	const {
 		data: member,
@@ -149,11 +151,6 @@ export default function MemberDetailPage() {
 
 	const isCancelled = !!member.contract.cancelledAt;
 	const memberName = `${member.firstName} ${member.lastName}`.trim();
-
-	// Calculate total monthly payment from groups (in cents)
-	const totalGroupPaymentCents = member.groups.reduce((sum, gm) => {
-		return sum + (gm.membershipPriceCents ?? 0);
-	}, 0);
 
 	// Calculate yearly fee per month (in cents, rounded to avoid fractional cents)
 	const yearlyFeeMonthly = member.contract.yearlyFeeCents
@@ -298,6 +295,13 @@ export default function MemberDetailPage() {
 								<ScrollText className="size-4" />
 								Vertragsdetails
 							</CollapsibleTrigger>
+							<Button
+								variant="outline"
+								size="sm"
+								onClick={() => setContractSheetOpen(true)}
+							>
+								Vertrag bearbeiten
+							</Button>
 						</FrameHeader>
 						<CollapsiblePanel>
 							<FramePanel>
@@ -569,6 +573,23 @@ export default function MemberDetailPage() {
 					state: member.state ?? "",
 					postalCode: member.postalCode ?? "",
 					country: member.country ?? "",
+				}}
+			/>
+			<UpdateMemberContractSheet
+				memberId={member.id}
+				open={contractSheetOpen}
+				onOpenChange={setContractSheetOpen}
+				initialValues={{
+					joiningFeeAmount:
+						member.contract.joiningFeeCents !== null &&
+						member.contract.joiningFeeCents !== undefined
+							? (member.contract.joiningFeeCents / 100).toFixed(2)
+							: "",
+					yearlyFeeAmount:
+						member.contract.yearlyFeeCents !== null &&
+						member.contract.yearlyFeeCents !== undefined
+							? (member.contract.yearlyFeeCents / 100).toFixed(2)
+							: "",
 				}}
 			/>
 		</div>
