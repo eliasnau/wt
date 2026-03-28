@@ -1007,11 +1007,20 @@ export const billingRouter = {
 		.input(generateInvoicesSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
+			const lockKey = `billing:generateInvoices:${organizationId}:${input.targetMonth}`;
+			const createdInvoices = await wsDb.transaction(async (tx) => {
+				await tx.execute(
+					sql`SELECT pg_advisory_xact_lock(hashtext(${lockKey}))`,
+				);
+
 				const createdInvoices = await generateInvoicesForMonth({
 					organizationId,
 					targetMonth: input.targetMonth,
 					currency: input.currency,
 				});
+
+				return createdInvoices;
+			});
 
 			return {
 				targetMonth: input.targetMonth,
