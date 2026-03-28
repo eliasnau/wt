@@ -250,6 +250,127 @@ async function getNextBatchSequenceNumber(
 	return (result?.maxSequence ?? 0) + 1;
 }
 
+async function buildSepaBatchXml({
+	organizationId,
+	batchId,
+}: {
+	organizationId: string;
+	batchId: string;
+}) {
+	const [batch] = await db
+		.select()
+		.from(sepaBatch)
+		.where(and(eq(sepaBatch.id, batchId), eq(sepaBatch.organizationId, organizationId)))
+		.limit(1);
+
+	if (!batch) {
+		throw new ORPCError("NOT_FOUND", { message: "SEPA batch not found" });
+	}
+
+	if (batch.status !== "generated" && batch.status !== "downloaded") {
+		throw new ORPCError("BAD_REQUEST", {
+			message: "SEPA batch is not available for download",
+		});
+	}
+
+	const [sepaRow] = await db
+		.select()
+		.from(organizationSettings)
+		.where(eq(organizationSettings.organizationId, organizationId))
+		.limit(1);
+	const sepaSettings = requireSepaSettings(sepaRow);
+	const sepa = await loadSepaModule();
+	validateCreditorDetails(sepa, sepaSettings);
+
+	const items = await db
+		.select({
+			invoiceId: sepaBatchItem.invoiceId,
+			amountCents: sepaBatchItem.amountCents,
+			memberId: invoice.memberId,
+			contractId: invoice.contractId,
+			memberFirstName: clubMember.firstName,
+			memberLastName: clubMember.lastName,
+			billingPeriodStart: invoice.billingPeriodStart,
+		})
+		.from(sepaBatchItem)
+		.innerJoin(invoice, eq(invoice.id, sepaBatchItem.invoiceId))
+		.innerJoin(clubMember, eq(clubMember.id, invoice.memberId))
+		.where(
+			and(
+				eq(sepaBatchItem.organizationId, organizationId),
+				eq(sepaBatchItem.sepaBatchId, batchId),
+				eq(sepaBatchItem.status, "included"),
+			),
+		)
+		.orderBy(asc(clubMember.lastName), asc(clubMember.firstName));
+
+	if (items.length === 0) {
+		throw new ORPCError("BAD_REQUEST", {
+			message: "SEPA batch has no included invoices",
+		});
+	}
+
+	const activeMandates = await db
+		.select()
+		.from(sepaMandate)
+		.where(
+			and(
+				eq(sepaMandate.organizationId, organizationId),
+				eq(sepaMandate.isActive, true),
+				isNull(sepaMandate.revokedAt),
+				inArray(
+					sepaMandate.contractId,
+					Array.from(new Set(items.map((item) => item.contractId))),
+				),
+			),
+		);
+	const activeMandateByContractId = new Map(
+		activeMandates.map((mandate) => [mandate.contractId, mandate]),
+	);
+
+	const document = new sepa.Document("pain.008.001.02");
+	document.grpHdr.id = batch.batchNumber;
+	document.grpHdr.created = new Date();
+	document.grpHdr.initiatorName =
+		sepaRow?.initiatorName || sepaSettings.creditorName;
+
+	const paymentInfo = document.createPaymentInfo();
+	paymentInfo.collectionDate = new Date(`${batch.collectionDate}T00:00:00.000Z`);
+	paymentInfo.creditorIBAN = sepaSettings.creditorIban;
+	paymentInfo.creditorBIC = sepaSettings.creditorBic;
+	paymentInfo.creditorName = sepaSettings.creditorName;
+	paymentInfo.creditorId = sepaSettings.creditorId;
+	paymentInfo.batchBooking = sepaRow?.batchBooking ?? true;
+
+	for (const item of items) {
+		const mandate = activeMandateByContractId.get(item.contractId);
+		if (!mandate) {
+			throw new ORPCError("BAD_REQUEST", {
+				message: `Missing active mandate for invoice ${item.invoiceId}`,
+			});
+		}
+
+		const tx = paymentInfo.createTransaction();
+		tx.debtorName = `${item.memberFirstName} ${item.memberLastName}`.trim();
+		tx.debtorIBAN = mandate.iban.replace(/\s+/g, "").toUpperCase();
+		tx.debtorBIC = mandate.bic.replace(/\s+/g, "").toUpperCase();
+		tx.mandateId = mandate.mandateReference;
+		tx.mandateSignatureDate = new Date(`${mandate.signatureDate}T00:00:00.000Z`);
+		tx.amount = item.amountCents / 100;
+		tx.currency = "EUR";
+		tx.remittanceInfo = `Invoice ${item.billingPeriodStart}`;
+		tx.end2endId = `${batch.batchNumber}.${item.invoiceId}`.slice(0, 35);
+		paymentInfo.addTransaction(tx);
+	}
+
+	document.addPaymentInfo(paymentInfo);
+
+	return {
+		batch,
+		xml: document.toString(),
+	};
+}
+
 async function getNonVoidInvoiceMonths(
 	contractId: string,
 	months: string[],
@@ -784,19 +905,7 @@ async function listEligibleInvoicesForBatch({
 	organizationId: string;
 	collectionDate: string;
 }) {
-	const [sepaRow] = await db
-		.select()
-		.from(organizationSettings)
-		.where(eq(organizationSettings.organizationId, organizationId))
-		.limit(1);
-
-	let invalidCreditorSettings = false;
-	try {
-		requireSepaSettings(sepaRow);
-	} catch {
-		invalidCreditorSettings = true;
-	}
-		const invoices = await db
+	const invoices = await db
 			.select({
 				id: invoice.id,
 				memberId: invoice.memberId,
@@ -863,8 +972,6 @@ async function listEligibleInvoicesForBatch({
 			exclusionReason = "already_exported";
 		} else if (!mandateMap.has(currentInvoice.contractId)) {
 			exclusionReason = "missing_active_mandate";
-		} else if (invalidCreditorSettings) {
-			exclusionReason = "invalid_creditor_settings";
 		}
 
 		if (exclusionReason) {
@@ -1324,15 +1431,6 @@ export const billingRouter = {
 				});
 			}
 
-			const [sepaRow] = await db
-				.select()
-				.from(organizationSettings)
-				.where(eq(organizationSettings.organizationId, organizationId))
-				.limit(1);
-			const sepaSettings = requireSepaSettings(sepaRow);
-			const sepa = await loadSepaModule();
-			validateCreditorDetails(sepa, sepaSettings);
-
 			const sequenceNumber = await getNextBatchSequenceNumber(
 				organizationId,
 				input.collectionDate,
@@ -1342,56 +1440,6 @@ export const billingRouter = {
 				input.collectionDate,
 				sequenceNumber,
 			);
-
-			const mandateRows = await db
-				.select()
-				.from(sepaMandate)
-				.where(
-					inArray(
-						sepaMandate.id,
-						preview.includedInvoices.map((currentInvoice) => currentInvoice.sepaMandateId),
-					),
-				);
-			const mandateMap = new Map(mandateRows.map((row) => [row.id, row]));
-
-			const document = new sepa.Document("pain.008.001.02");
-			document.grpHdr.id = batchNumber;
-			document.grpHdr.created = new Date();
-			document.grpHdr.initiatorName =
-				sepaRow?.initiatorName || sepaSettings.creditorName;
-
-			const paymentInfo = document.createPaymentInfo();
-			paymentInfo.collectionDate = new Date(`${input.collectionDate}T00:00:00.000Z`);
-			paymentInfo.creditorIBAN = sepaSettings.creditorIban;
-			paymentInfo.creditorBIC = sepaSettings.creditorBic;
-			paymentInfo.creditorName = sepaSettings.creditorName;
-			paymentInfo.creditorId = sepaSettings.creditorId;
-			paymentInfo.batchBooking = sepaRow?.batchBooking ?? true;
-
-			for (const currentInvoice of preview.includedInvoices) {
-				const mandate = mandateMap.get(currentInvoice.sepaMandateId);
-				if (!mandate) {
-					throw new ORPCError("BAD_REQUEST", {
-						message: `Missing mandate for invoice ${currentInvoice.id}`,
-					});
-				}
-
-				const tx = paymentInfo.createTransaction();
-				tx.debtorName =
-					`${currentInvoice.memberFirstName} ${currentInvoice.memberLastName}`.trim();
-				tx.debtorIBAN = mandate.iban.replace(/\s+/g, "").toUpperCase();
-				tx.debtorBIC = mandate.bic.replace(/\s+/g, "").toUpperCase();
-				tx.mandateId = mandate.mandateReference;
-				tx.mandateSignatureDate = new Date(`${mandate.signatureDate}T00:00:00.000Z`);
-				tx.amount = currentInvoice.totalCents / 100;
-				tx.currency = "EUR";
-				tx.remittanceInfo = `Invoice ${currentInvoice.billingPeriodStart}`;
-				tx.end2endId = `${batchNumber}.${currentInvoice.id}`.slice(0, 35);
-				paymentInfo.addTransaction(tx);
-			}
-
-			document.addPaymentInfo(paymentInfo);
-			const xml = document.toString();
 
 			const result = await wsDb.transaction(async (tx) => {
 				const [createdBatch] = await tx
@@ -1433,7 +1481,6 @@ export const billingRouter = {
 
 			return {
 				batch: result,
-				xml,
 				includedInvoices: preview.includedInvoices,
 				excludedInvoices: preview.excludedInvoices,
 			};
@@ -1462,22 +1509,89 @@ export const billingRouter = {
 					invoiceId: sepaBatchItem.invoiceId,
 					amountCents: sepaBatchItem.amountCents,
 					status: sepaBatchItem.status,
+					contractId: invoice.contractId,
 					memberFirstName: clubMember.firstName,
 					memberLastName: clubMember.lastName,
 					billingPeriodStart: invoice.billingPeriodStart,
 					billingPeriodEnd: invoice.billingPeriodEnd,
-					mandateReference: sepaMandate.mandateReference,
 				})
 				.from(sepaBatchItem)
 				.innerJoin(invoice, eq(invoice.id, sepaBatchItem.invoiceId))
 				.innerJoin(clubMember, eq(clubMember.id, invoice.memberId))
-				.innerJoin(sepaMandate, eq(sepaMandate.id, sepaBatchItem.sepaMandateId))
 				.where(eq(sepaBatchItem.sepaBatchId, input.id))
 				.orderBy(asc(clubMember.lastName), asc(clubMember.firstName));
 
-			return { batch, items };
+			const activeMandates = await db
+				.select({
+					contractId: sepaMandate.contractId,
+					mandateReference: sepaMandate.mandateReference,
+				})
+				.from(sepaMandate)
+				.where(
+					and(
+						eq(sepaMandate.organizationId, organizationId),
+						eq(sepaMandate.isActive, true),
+						isNull(sepaMandate.revokedAt),
+						inArray(
+							sepaMandate.contractId,
+							Array.from(new Set(items.map((item) => item.contractId))),
+						),
+					),
+				);
+			const mandateReferenceByContractId = new Map(
+				activeMandates.map((mandate) => [
+					mandate.contractId,
+					mandate.mandateReference,
+				]),
+			);
+
+			return {
+				batch,
+				items: items.map((item) => ({
+					...item,
+					mandateReference:
+						mandateReferenceByContractId.get(item.contractId) ?? null,
+				})),
+			};
 		})
 		.route({ method: "GET", path: "/billing/sepa-batches/:id" }),
+
+	downloadSepaBatch: protectedProcedure
+		.use(rateLimitMiddleware(5))
+		.use(requirePermission({ billing: ["download"] }))
+		.input(markBatchDownloadedSchema)
+		.handler(async ({ input, context }) => {
+			const organizationId = context.session.activeOrganizationId!;
+			const { batch, xml } = await buildSepaBatchXml({
+				organizationId,
+				batchId: input.id,
+			});
+
+			let nextBatch = batch;
+			if (batch.status === "generated") {
+				const [updated] = await db
+					.update(sepaBatch)
+					.set({ status: "downloaded" })
+					.where(
+						and(
+							eq(sepaBatch.id, input.id),
+							eq(sepaBatch.organizationId, organizationId),
+							eq(sepaBatch.status, "generated"),
+						),
+					)
+					.returning();
+
+				if (updated) {
+					nextBatch = updated;
+				}
+			}
+
+			return {
+				batch: nextBatch,
+				xml,
+			};
+		})
+		.route({ method: "POST", path: "/billing/sepa-batches/:id/download" }),
 
 	markSepaBatchDownloaded: protectedProcedure
 		.use(rateLimitMiddleware(5))
