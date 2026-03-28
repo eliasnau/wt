@@ -5,7 +5,8 @@ import {
 	contract,
 	group,
 	groupMember,
-	payment,
+	invoice,
+	invoiceLine,
 } from "@repo/db/schema";
 import { after } from "next/server";
 import { z } from "zod";
@@ -227,6 +228,10 @@ function toNumber(value: string | number | null | undefined) {
 	return 0;
 }
 
+function centsToCurrencyString(value: number | null | undefined) {
+	return ((value ?? 0) / 100).toFixed(2);
+}
+
 function getBucketIdentity(monthDate: Date, groupBy: TimelineGroupBy) {
 	const year = monthDate.getUTCFullYear();
 	const month = monthDate.getUTCMonth();
@@ -306,20 +311,36 @@ async function loadMonthlyOverviewData(params: {
 			),
 		);
 
-	const [paymentTotals] = await db
+	const [invoiceLineTotals] = await db
 		.select({
-			membershipTotal: sql<string>`COALESCE(SUM(${payment.membershipAmount}), 0)`,
-			joiningFeeTotal: sql<string>`COALESCE(SUM(${payment.joiningFeeAmount}), 0)`,
-			yearlyFeeTotal: sql<string>`COALESCE(SUM(${payment.yearlyFeeAmount}), 0)`,
-			totalAmount: sql<string>`COALESCE(SUM(${payment.totalAmount}), 0)`,
+			membershipTotal: sql<number>`COALESCE(SUM(CASE WHEN ${invoiceLine.type} IN ('membership_fee', 'arrears') THEN ${invoiceLine.totalAmountCents} ELSE 0 END), 0)`,
+			joiningFeeTotal: sql<number>`COALESCE(SUM(CASE WHEN ${invoiceLine.type} = 'joining_fee' THEN ${invoiceLine.totalAmountCents} ELSE 0 END), 0)`,
+			yearlyFeeTotal: sql<number>`COALESCE(SUM(CASE WHEN ${invoiceLine.type} = 'yearly_fee' THEN ${invoiceLine.totalAmountCents} ELSE 0 END), 0)`,
 		})
-		.from(payment)
-		.innerJoin(contract, eq(contract.id, payment.contractId))
+		.from(invoice)
+		.innerJoin(contract, eq(contract.id, invoice.contractId))
+		.leftJoin(invoiceLine, eq(invoiceLine.invoiceId, invoice.id))
 		.where(
 			and(
 				eq(contract.organizationId, organizationId),
-				sql`${payment.billingPeriodStart} >= ${startDate}`,
-				sql`${payment.billingPeriodStart} < ${nextMonthStartDate}`,
+				eq(invoice.status, "finalized"),
+				sql`${invoice.billingPeriodStart} >= ${startDate}`,
+				sql`${invoice.billingPeriodStart} < ${nextMonthStartDate}`,
+			),
+		);
+
+	const [invoiceTotalAmount] = await db
+		.select({
+			totalAmount: sql<number>`COALESCE(SUM(${invoice.totalCents}), 0)`,
+		})
+		.from(invoice)
+		.innerJoin(contract, eq(contract.id, invoice.contractId))
+		.where(
+			and(
+				eq(contract.organizationId, organizationId),
+				eq(invoice.status, "finalized"),
+				sql`${invoice.billingPeriodStart} >= ${startDate}`,
+				sql`${invoice.billingPeriodStart} < ${nextMonthStartDate}`,
 			),
 		);
 
@@ -328,18 +349,18 @@ async function loadMonthlyOverviewData(params: {
 			groupId: group.id,
 			groupName: group.name,
 			groupColor: group.color,
-			total: sql<string>`COALESCE(SUM(${payment.membershipAmount}), 0)`,
+			total: sql<number>`COALESCE(SUM(CASE WHEN ${invoiceLine.type} = 'membership_fee' THEN ${invoiceLine.totalAmountCents} ELSE 0 END), 0)`,
 		})
-		.from(payment)
-		.innerJoin(contract, eq(contract.id, payment.contractId))
-		.innerJoin(groupMember, eq(groupMember.memberId, contract.memberId))
-		.innerJoin(group, eq(group.id, groupMember.groupId))
+		.from(invoiceLine)
+		.innerJoin(invoice, eq(invoice.id, invoiceLine.invoiceId))
+		.innerJoin(contract, eq(contract.id, invoice.contractId))
+		.innerJoin(group, eq(group.id, invoiceLine.groupId))
 		.where(
 			and(
 				eq(contract.organizationId, organizationId),
-				sql`${payment.billingPeriodStart} >= ${startDate}`,
-				sql`${payment.billingPeriodStart} < ${nextMonthStartDate}`,
-				sql`${groupMember.createdAt} < ${nextMonthStartDate}`,
+				eq(invoice.status, "finalized"),
+				sql`${invoice.billingPeriodStart} >= ${startDate}`,
+				sql`${invoice.billingPeriodStart} < ${nextMonthStartDate}`,
 			),
 		)
 		.groupBy(group.id);
@@ -362,8 +383,8 @@ async function loadMonthlyOverviewData(params: {
 		.groupBy(group.id);
 
 	const feesTotalValue =
-		toNumber(paymentTotals?.joiningFeeTotal) +
-		toNumber(paymentTotals?.yearlyFeeTotal);
+		(invoiceLineTotals?.joiningFeeTotal ?? 0) +
+		(invoiceLineTotals?.yearlyFeeTotal ?? 0);
 
 	return {
 		month,
@@ -374,7 +395,7 @@ async function loadMonthlyOverviewData(params: {
 		kpis: {
 			activeMembers,
 			newEnrollments,
-			revenueCollected: paymentTotals?.totalAmount ?? "0",
+			revenueCollected: centsToCurrencyString(invoiceTotalAmount?.totalAmount),
 		},
 		membership: {
 			newMembers: newEnrollments,
@@ -387,16 +408,16 @@ async function loadMonthlyOverviewData(params: {
 			})),
 		},
 		revenue: {
-			membershipTotal: paymentTotals?.membershipTotal ?? "0",
-			feesTotal: feesTotalValue.toFixed(2),
-			joiningFeeTotal: paymentTotals?.joiningFeeTotal ?? "0",
-			yearlyFeeTotal: paymentTotals?.yearlyFeeTotal ?? "0",
+			membershipTotal: centsToCurrencyString(invoiceLineTotals?.membershipTotal),
+			feesTotal: centsToCurrencyString(feesTotalValue),
+			joiningFeeTotal: centsToCurrencyString(invoiceLineTotals?.joiningFeeTotal),
+			yearlyFeeTotal: centsToCurrencyString(invoiceLineTotals?.yearlyFeeTotal),
 			outstanding: "0",
 			byGroup: revenueByGroup.map((item) => ({
 				groupId: item.groupId,
 				name: item.groupName,
 				color: item.groupColor,
-				total: item.total ?? "0",
+				total: centsToCurrencyString(item.total),
 			})),
 		},
 	} satisfies MonthlyOverviewData;

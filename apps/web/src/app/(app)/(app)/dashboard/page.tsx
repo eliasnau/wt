@@ -60,7 +60,7 @@ export default async function DashboardPage() {
 					description="Trainingsgruppen organisieren"
 				/>
 				<QuickAction
-					href="/dashboard/finance/batches"
+					href="/dashboard/finance/invoices"
 					icon={CreditCard}
 					label="Finanzen"
 					description="Zahlungen und Rechnungen"
