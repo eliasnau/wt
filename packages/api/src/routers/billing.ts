@@ -214,8 +214,25 @@ function buildBatchNumber(
 	return `${collectionDate}-${String(sequenceNumber).padStart(2, "0")}-${organizationId.slice(0, 8).toUpperCase()}`;
 }
 
-async function ensureInvoiceNotExported(invoiceId: string) {
-	const existing = await db
+type BillingQueryExecutor = Pick<typeof db, "select" | "execute">;
+
+async function lockInvoiceIds(
+	executor: BillingQueryExecutor,
+	invoiceIds: string[],
+) {
+	const uniqueInvoiceIds = Array.from(new Set(invoiceIds)).sort();
+	for (const invoiceId of uniqueInvoiceIds) {
+		await executor.execute(
+			sql`SELECT pg_advisory_xact_lock(hashtext(${`invoice:${invoiceId}`}))`,
+		);
+	}
+}
+
+async function ensureInvoiceNotExported(
+	executor: BillingQueryExecutor,
+	invoiceId: string,
+) {
+	const existing = await executor
 		.select({
 			status: sepaBatch.status,
 		})
@@ -230,10 +247,8 @@ async function ensureInvoiceNotExported(invoiceId: string) {
 	}
 }
 
-type SequenceQueryExecutor = Pick<typeof db, "select" | "execute">;
-
 async function getNextBatchSequenceNumber(
-	executor: SequenceQueryExecutor,
+	executor: BillingQueryExecutor,
 	organizationId: string,
 	collectionDate: string,
 ) {
@@ -1120,8 +1135,10 @@ export const billingRouter = {
 		.input(voidInvoiceSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
-			await ensureInvoiceNotExported(input.id);
 			const updated = await wsDb.transaction(async (tx) => {
+				await lockInvoiceIds(tx, [input.id]);
+				await ensureInvoiceNotExported(tx, input.id);
+
 				const [invoiceRow] = await tx
 					.select({
 						id: invoice.id,
@@ -1182,9 +1199,11 @@ export const billingRouter = {
 		.input(replaceInvoiceSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
-			await ensureInvoiceNotExported(input.id);
 
 			return wsDb.transaction(async (tx) => {
+				await lockInvoiceIds(tx, [input.id]);
+				await ensureInvoiceNotExported(tx, input.id);
+
 				const [currentInvoice] = await tx
 					.select()
 					.from(invoice)
@@ -1436,18 +1455,41 @@ export const billingRouter = {
 		.input(generateSepaBatchSchema)
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
-			const preview = await listEligibleInvoicesForBatch({
+			const initialPreview = await listEligibleInvoicesForBatch({
 				organizationId,
 				collectionDate: input.collectionDate,
 			});
-
-			if (preview.includedInvoices.length === 0) {
-				throw new ORPCError("BAD_REQUEST", {
-					message: "No eligible invoices for SEPA export",
-				});
-			}
+			let finalPreview = initialPreview;
 
 			const result = await wsDb.transaction(async (tx) => {
+				const lockedInvoiceIds = new Set<string>();
+				let pendingInvoiceIds = initialPreview.includedInvoices.map(
+					(currentInvoice) => currentInvoice.id,
+				);
+
+				while (pendingInvoiceIds.length > 0) {
+					await lockInvoiceIds(tx, pendingInvoiceIds);
+					for (const invoiceId of pendingInvoiceIds) {
+						lockedInvoiceIds.add(invoiceId);
+					}
+
+					const preview = await listEligibleInvoicesForBatch({
+						organizationId,
+						collectionDate: input.collectionDate,
+					});
+					finalPreview = preview;
+
+					pendingInvoiceIds = preview.includedInvoices
+						.map((currentInvoice) => currentInvoice.id)
+						.filter((invoiceId) => !lockedInvoiceIds.has(invoiceId));
+				}
+
+				if (finalPreview.includedInvoices.length === 0) {
+					throw new ORPCError("BAD_REQUEST", {
+						message: "No eligible invoices for SEPA export",
+					});
+				}
+
 				const sequenceNumber = await getNextBatchSequenceNumber(
 					tx,
 					organizationId,
@@ -1467,11 +1509,11 @@ export const billingRouter = {
 						sequenceNumber,
 						batchNumber,
 						status: "generated",
-						totalAmountCents: preview.includedInvoices.reduce(
+						totalAmountCents: finalPreview.includedInvoices.reduce(
 							(sum, currentInvoice) => sum + currentInvoice.totalCents,
 							0,
 						),
-						transactionCount: preview.includedInvoices.length,
+						transactionCount: finalPreview.includedInvoices.length,
 						notes: input.notes,
 					})
 					.returning();
@@ -1483,7 +1525,7 @@ export const billingRouter = {
 				}
 
 				await tx.insert(sepaBatchItem).values(
-					preview.includedInvoices.map((currentInvoice) => ({
+					finalPreview.includedInvoices.map((currentInvoice) => ({
 						organizationId,
 						sepaBatchId: createdBatch.id,
 						invoiceId: currentInvoice.id,
@@ -1498,8 +1540,8 @@ export const billingRouter = {
 
 			return {
 				batch: result,
-				includedInvoices: preview.includedInvoices,
-				excludedInvoices: preview.excludedInvoices,
+				includedInvoices: finalPreview.includedInvoices,
+				excludedInvoices: finalPreview.excludedInvoices,
 			};
 		})
 		.route({ method: "POST", path: "/billing/sepa-batches" }),

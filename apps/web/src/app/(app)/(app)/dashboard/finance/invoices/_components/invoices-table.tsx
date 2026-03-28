@@ -44,12 +44,16 @@ interface InvoicesTableProps {
 	onSelectInvoice: (invoiceId: string) => void;
 	statusFilter?: InvoiceStatus;
 	memberId?: string;
+	contractId?: string;
+	enabled?: boolean;
 }
 
 export function InvoicesTable({
 	onSelectInvoice,
 	statusFilter,
 	memberId,
+	contractId,
+	enabled = true,
 }: InvoicesTableProps) {
 	const [sortField, setSortField] = useState<SortField>("billingPeriodStart");
 	const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
@@ -59,7 +63,9 @@ export function InvoicesTable({
 			input: {
 				status: statusFilter,
 				memberId,
+				contractId,
 			},
+			enabled,
 		}),
 	);
 

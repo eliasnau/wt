@@ -3,10 +3,7 @@ import { ORPCError } from "@orpc/server";
 import { and, desc, eq, isNull, wsDb } from "@repo/db";
 import { contract, sepaMandate } from "@repo/db/schema";
 import { z } from "zod";
-import { protectedProcedure } from "../../index";
 import { loadSepaModule } from "../../lib/sepa";
-import { requirePermission } from "../../middleware/permissions";
-import { rateLimitMiddleware } from "../../middleware/ratelimit";
 
 const ACTIVE_CONTRACT_STATUSES = new Set(["active", "cancelled"]);
 
@@ -146,20 +143,3 @@ export async function createMandateForBillingInfo({
 		};
 	});
 }
-
-export const updateBillingInfoProcedure = protectedProcedure
-	.use(rateLimitMiddleware(5))
-	.use(requirePermission({ sepa: ["update"] }))
-	.input(updateBillingInfoSchema)
-	.handler(async ({ input, context }) => {
-		const organizationId = context.session.activeOrganizationId!;
-
-		return createMandateForBillingInfo({
-			organizationId,
-			memberId: input.memberId,
-			accountHolder: input.accountHolder,
-			iban: input.iban,
-			bic: input.bic,
-		});
-	})
-	.route({ method: "POST", path: "/members/:memberId/billing-info" });

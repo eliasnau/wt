@@ -26,27 +26,37 @@ import {
 } from "@repo/db/schema";
 import { after } from "next/server";
 import { z } from "zod";
-import { protectedProcedure } from "../index";
-import { geocodeAddress } from "../lib/geocoding";
-import { logger } from "../lib/logger";
-import { getPostHogServer } from "../lib/posthog";
-import { loadSepaModule } from "../lib/sepa";
-import { requirePermission } from "../middleware/permissions";
-import { rateLimitMiddleware } from "../middleware/ratelimit";
+import { protectedProcedure } from "../../index";
+import { geocodeAddress } from "../../lib/geocoding";
+import { logger } from "../../lib/logger";
+import { getPostHogServer } from "../../lib/posthog";
+import { loadSepaModule } from "../../lib/sepa";
+import { requirePermission } from "../../middleware/permissions";
+import { rateLimitMiddleware } from "../../middleware/ratelimit";
 import {
 	listMembersAdvanced,
 	listMembersAdvancedExportSchema,
 	listMembersAdvancedForExport,
 	listMembersAdvancedSchema,
-} from "./members/listMembersAdvanced";
+} from "./listMembersAdvanced";
+import { getMemberById, getMemberSchema } from "./getMember";
 import {
 	buildMembersExportFilename,
 	serializeMembersCsv,
-} from "./members/membersCsvExport";
-import { reGeocodeOrganizationProcedure } from "./members/reGeocodeOrganization";
-import { updateMemberContractProcedure } from "./members/updateMemberContract";
-import { updateMemberDetailsProcedure } from "./members/updateMemberDetails";
-import { updateBillingInfoProcedure } from "./members/updateBillingInfo";
+} from "./membersCsvExport";
+import { reGeocodeOrganizationProcedure } from "./reGeocodeOrganization";
+import {
+	updateBillingInfoSchema,
+	createMandateForBillingInfo,
+} from "./updateBillingInfo";
+import {
+	updateMemberContractSchema,
+	updateCurrentMemberContract,
+} from "./updateMemberContract";
+import {
+	updateMemberDetailsSchema,
+	updateMemberDetails,
+} from "./updateMemberDetails";
 
 const optionalEmailSchema = z
 	.string()
@@ -116,10 +126,6 @@ const listMembersSchema = z.object({
 				.optional(),
 		})
 		.optional(),
-});
-
-const getMemberSchema = z.object({
-	memberId: z.string(),
 });
 
 const cancelContractSchema = z.object({
@@ -289,23 +295,10 @@ export const membersRouter = {
 		.handler(async ({ input, context }) => {
 			const organizationId = context.session.activeOrganizationId!;
 			try {
-				const member = await DB.query.members.getMemberWithDetails({
+				return getMemberById({
+					organizationId,
 					memberId: input.memberId,
 				});
-
-				if (!member) {
-					throw new ORPCError("NOT_FOUND", {
-						message: "Member not found",
-					});
-				}
-
-				if (member.organizationId !== organizationId) {
-					throw new ORPCError("NOT_FOUND", {
-						message: "Member not found",
-					});
-				}
-
-				return member;
 			} catch (error) {
 				if (error instanceof ORPCError) throw error;
 
@@ -948,11 +941,62 @@ export const membersRouter = {
 
 	reGeocodeOrganization: reGeocodeOrganizationProcedure,
 
-	updateMemberDetails: updateMemberDetailsProcedure,
+	updateMemberDetails: protectedProcedure
+		.use(rateLimitMiddleware(5))
+		.use(requirePermission({ member: ["update"] }))
+		.input(updateMemberDetailsSchema)
+		.handler(async ({ input, context }) => {
+			const organizationId = context.session.activeOrganizationId!;
 
-	updateMemberContract: updateMemberContractProcedure,
+			return updateMemberDetails({
+				organizationId,
+				memberId: input.memberId,
+				firstName: input.firstName,
+				lastName: input.lastName,
+				birthdate: input.birthdate,
+				email: input.email,
+				phone: input.phone,
+				street: input.street,
+				city: input.city,
+				state: input.state,
+				postalCode: input.postalCode,
+				country: input.country,
+			});
+		})
+		.route({ method: "PATCH", path: "/members/:memberId/details" }),
 
-	updateBillingInfo: updateBillingInfoProcedure,
+	updateMemberContract: protectedProcedure
+		.use(rateLimitMiddleware(5))
+		.use(requirePermission({ member: ["update"] }))
+		.input(updateMemberContractSchema)
+		.handler(async ({ input, context }) => {
+			const organizationId = context.session.activeOrganizationId!;
+
+			return updateCurrentMemberContract({
+				organizationId,
+				memberId: input.memberId,
+				joiningFeeCents: input.joiningFeeCents,
+				yearlyFeeCents: input.yearlyFeeCents,
+			});
+		})
+		.route({ method: "PATCH", path: "/members/:memberId/contract" }),
+
+	updateBillingInfo: protectedProcedure
+		.use(rateLimitMiddleware(5))
+		.use(requirePermission({ sepa: ["update"] }))
+		.input(updateBillingInfoSchema)
+		.handler(async ({ input, context }) => {
+			const organizationId = context.session.activeOrganizationId!;
+
+			return createMandateForBillingInfo({
+				organizationId,
+				memberId: input.memberId,
+				accountHolder: input.accountHolder,
+				iban: input.iban,
+				bic: input.bic,
+			});
+		})
+		.route({ method: "POST", path: "/members/:memberId/billing-info" }),
 
 	cancelContract: protectedProcedure
 		.use(rateLimitMiddleware(10))

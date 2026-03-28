@@ -104,6 +104,8 @@ export default function MemberInvoicesPage() {
 
 			<InvoicesTable
 				memberId={memberId}
+				contractId={memberQuery.data?.contract.id}
+				enabled={memberQuery.isSuccess && !!memberQuery.data?.contract.id}
 				onSelectInvoice={handleSelectInvoice}
 				statusFilter={statusFilter === "all" ? undefined : statusFilter}
 			/>

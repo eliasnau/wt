@@ -2,9 +2,6 @@ import { ORPCError } from "@orpc/server";
 import { and, db, desc, eq } from "@repo/db";
 import { contract } from "@repo/db/schema";
 import { z } from "zod";
-import { protectedProcedure } from "../../index";
-import { requirePermission } from "../../middleware/permissions";
-import { rateLimitMiddleware } from "../../middleware/ratelimit";
 
 const ACTIVE_CONTRACT_STATUSES = new Set(["active", "cancelled"]);
 
@@ -36,67 +33,66 @@ export const updateMemberContractSchema = z.object({
 	yearlyFeeCents: z.number().int().nonnegative().optional(),
 });
 
-export const updateMemberContractProcedure = protectedProcedure
-	.use(rateLimitMiddleware(5))
-	.use(requirePermission({ member: ["update"] }))
-	.input(updateMemberContractSchema)
-	.handler(async ({ input, context }) => {
-		const organizationId = context.session.activeOrganizationId!;
-		const todayInBerlin = getTodayInBerlinDateString();
+export async function updateCurrentMemberContract({
+	organizationId,
+	...input
+}: z.infer<typeof updateMemberContractSchema> & {
+	organizationId: string;
+}) {
+	const todayInBerlin = getTodayInBerlinDateString();
 
-		const [contractRow] = await db
-			.select({
-				id: contract.id,
-				status: contract.status,
-				cancellationEffectiveDate: contract.cancellationEffectiveDate,
-			})
-			.from(contract)
-			.where(
-				and(
-					eq(contract.memberId, input.memberId),
-					eq(contract.organizationId, organizationId),
-				),
-			)
-			.orderBy(desc(contract.startDate), desc(contract.createdAt))
-			.limit(1);
+	const [contractRow] = await db
+		.select({
+			id: contract.id,
+			status: contract.status,
+			cancellationEffectiveDate: contract.cancellationEffectiveDate,
+		})
+		.from(contract)
+		.where(
+			and(
+				eq(contract.memberId, input.memberId),
+				eq(contract.organizationId, organizationId),
+			),
+		)
+		.orderBy(desc(contract.startDate), desc(contract.createdAt))
+		.limit(1);
 
-		if (!contractRow) {
-			throw new ORPCError("NOT_FOUND", {
-				message: "Contract not found",
-			});
-		}
+	if (!contractRow) {
+		throw new ORPCError("NOT_FOUND", {
+			message: "Contract not found",
+		});
+	}
 
-		const isCurrentContract =
-			ACTIVE_CONTRACT_STATUSES.has(contractRow.status) &&
-			(!contractRow.cancellationEffectiveDate ||
-				contractRow.cancellationEffectiveDate >= todayInBerlin);
+	const isCurrentContract =
+		ACTIVE_CONTRACT_STATUSES.has(contractRow.status) &&
+		(!contractRow.cancellationEffectiveDate ||
+			contractRow.cancellationEffectiveDate >= todayInBerlin);
 
-		if (!isCurrentContract) {
-			throw new ORPCError("BAD_REQUEST", {
-				message: "Contract can only be updated for active members",
-			});
-		}
+	if (!isCurrentContract) {
+		throw new ORPCError("BAD_REQUEST", {
+			message: "Contract can only be updated for active members",
+		});
+	}
 
-		const [updatedContract] = await db
-			.update(contract)
-			.set({
-				joiningFeeCents: input.joiningFeeCents,
-				yearlyFeeCents: input.yearlyFeeCents,
-			})
-			.where(
-				and(
-					eq(contract.id, contractRow.id),
-					eq(contract.organizationId, organizationId),
-				),
-			)
-			.returning();
+	const [updatedContract] = await db
+		.update(contract)
+		.set({
+			joiningFeeCents: input.joiningFeeCents,
+			yearlyFeeCents: input.yearlyFeeCents,
+		})
+		.where(
+			and(
+				eq(contract.id, contractRow.id),
+				eq(contract.organizationId, organizationId),
+			),
+		)
+		.returning();
 
-		if (!updatedContract) {
-			throw new ORPCError("NOT_FOUND", {
-				message: "Contract not found",
-			});
-		}
+	if (!updatedContract) {
+		throw new ORPCError("NOT_FOUND", {
+			message: "Contract not found",
+		});
+	}
 
-		return updatedContract;
-	})
-	.route({ method: "PATCH", path: "/members/:memberId/contract" });
+	return updatedContract;
+}
