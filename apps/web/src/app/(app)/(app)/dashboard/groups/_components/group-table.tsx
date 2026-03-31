@@ -81,6 +81,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { formatCents } from "@/utils/billing";
 import { client } from "@/utils/orpc";
 import { EditGroupSheet } from "./group-sheets";
 
@@ -183,8 +184,10 @@ export const columns: ColumnDef<GroupRow>[] = [
 		enableSorting: false,
 	},
 	{
-		accessorKey: "defaultMembershipPrice",
+		accessorKey: "defaultMembershipPriceCents",
 		header: "Mitgliedsbeitrag",
+		cell: ({ row }) =>
+			formatCents(row.original.defaultMembershipPriceCents ?? 0),
 	},
 	{
 		id: "actions",

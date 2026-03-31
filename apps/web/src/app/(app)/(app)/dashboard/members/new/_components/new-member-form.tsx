@@ -32,6 +32,7 @@ import {
 	normalizeMembershipPriceInput,
 	parseMembershipPriceInput,
 } from "@/utils/membership-price";
+import { formatCents } from "@/utils/billing";
 import { client, orpc } from "@/utils/orpc";
 
 const firstNameSchema = z.string().min(1, "Vorname ist erforderlich").max(255);
@@ -105,7 +106,7 @@ const formSchema = z.object({
 
 type GroupAssignment = {
 	groupId: string;
-	membershipPrice?: number;
+	membershipPriceCents?: number;
 };
 
 const CONTRACT_START_MONTH_ITEMS = [
@@ -128,6 +129,15 @@ const INITIAL_PERIOD_ITEMS = [
 	{ value: "half_yearly", label: "Halbjährlich" },
 	{ value: "yearly", label: "Jährlich" },
 ] as const;
+
+function parseAmountInputToCents(value: string) {
+	const parsedAmount = parseMembershipPriceInput(value);
+	if (parsedAmount === null) {
+		return undefined;
+	}
+
+	return Math.round(parsedAmount * 100);
+}
 
 export function NewMemberForm() {
 	const router = useRouter();
@@ -173,8 +183,8 @@ export function NewMemberForm() {
 			cardHolder: string;
 			contractStartDate: string;
 			initialPeriod: "monthly" | "half_yearly" | "yearly";
-			joiningFeeAmount?: string;
-			yearlyFeeAmount?: string;
+			joiningFeeCents?: number;
+			yearlyFeeCents?: number;
 			memberNotes?: string;
 			contractNotes?: string;
 			groupAssignments: GroupAssignment[];
@@ -188,7 +198,7 @@ export function NewMemberForm() {
 					await client.members.assignGroup({
 						memberId: result.member.id,
 						groupId: assignment.groupId,
-						membershipPrice: assignment.membershipPrice,
+						membershipPriceCents: assignment.membershipPriceCents,
 					});
 				} catch {
 					failedAssignments.push(assignment);
@@ -273,8 +283,8 @@ export function NewMemberForm() {
 				cardHolder: value.cardHolder,
 				contractStartDate: `${value.contractStartYear}-${value.contractStartMonth}-01`,
 				initialPeriod: value.initialPeriod,
-				joiningFeeAmount: value.joiningFeeAmount,
-				yearlyFeeAmount: value.yearlyFeeAmount,
+				joiningFeeCents: parseAmountInputToCents(value.joiningFeeAmount),
+				yearlyFeeCents: parseAmountInputToCents(value.yearlyFeeAmount),
 				memberNotes: value.memberNotes,
 				contractNotes: value.contractNotes,
 			};
@@ -289,10 +299,10 @@ export function NewMemberForm() {
 				const membershipPrice = groupPrices[groupId];
 				return {
 					groupId,
-					membershipPrice:
+					membershipPriceCents:
 						membershipPrice?.trim() &&
 						parseMembershipPriceInput(membershipPrice) !== null
-							? (parseMembershipPriceInput(membershipPrice) ?? undefined)
+							? Math.round((parseMembershipPriceInput(membershipPrice) ?? 0) * 100)
 							: undefined,
 				};
 			});
@@ -805,13 +815,21 @@ export function NewMemberForm() {
 															{group.name}
 														</span>
 														<div className="flex items-center gap-2">
-															{group.defaultMembershipPrice ? (
+															{group.defaultMembershipPriceCents !== null &&
+															group.defaultMembershipPriceCents !==
+																undefined ? (
 																<span className="text-muted-foreground text-xs">
-																	Standard: €{group.defaultMembershipPrice}
+																	Standard:{" "}
+																	{formatCents(
+																		group.defaultMembershipPriceCents,
+																	)}
 																</span>
 															) : null}
 															{isFreeMembershipPrice(
-																group.defaultMembershipPrice,
+																group.defaultMembershipPriceCents !== null &&
+																	group.defaultMembershipPriceCents !== undefined
+																	? group.defaultMembershipPriceCents / 100
+																	: undefined,
 															) ? (
 																<Badge variant="secondary">Kostenlos</Badge>
 															) : null}
@@ -856,8 +874,9 @@ export function NewMemberForm() {
 																	}));
 																}}
 																placeholder={
-																	group.defaultMembershipPrice
-																		? `Standard: ${group.defaultMembershipPrice}`
+																	group.defaultMembershipPriceCents !== null &&
+																	group.defaultMembershipPriceCents !== undefined
+																		? `Standard: ${(group.defaultMembershipPriceCents / 100).toFixed(2)}`
 																		: "Leer lassen, um den Standard zu verwenden"
 																}
 																aria-invalid={!!priceError}

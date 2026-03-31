@@ -20,7 +20,7 @@ const customStatement = {
 	sepa: ["view", "update"] as const,
 	statistics: ["view"] as const,
 	financeStatistics: ["view"] as const,
-	paymentBatches: ["view", "generate", "download"] as const,
+	billing: ["view", "generate", "download", "update"] as const,
 	groups: ["view", "create", "update", "delete"] as const,
 } as const;
 
@@ -50,7 +50,7 @@ export const owner = ac.newRole({
 	sepa: ["view", "update"],
 	statistics: ["view"],
 	financeStatistics: ["view"],
-	paymentBatches: ["view", "generate", "download"],
+	billing: ["view", "generate", "download", "update"],
 	groups: ["view", "create", "update", "delete"],
 });
 
@@ -69,7 +69,7 @@ export const admin = ac.newRole({
 	sepa: ["view", "update"],
 	statistics: ["view"],
 	financeStatistics: ["view"],
-	paymentBatches: ["view", "generate", "download"],
+	billing: ["view", "generate", "download", "update"],
 	groups: ["view", "create", "update", "delete"],
 });
 

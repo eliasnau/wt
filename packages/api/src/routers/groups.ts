@@ -17,10 +17,7 @@ const createGroupSchema = z.object({
   name: z.string().min(1, "Name is required").max(255),
   description: z.string().max(1000).optional(),
   color: groupColorSchema,
-  defaultMembershipPrice: z
-    .string()
-    .regex(/^\d+(\.\d{1,2})?$/)
-    .optional(),
+  defaultMembershipPriceCents: z.number().int().nonnegative().optional(),
 });
 
 const updateGroupSchema = z.object({
@@ -28,10 +25,7 @@ const updateGroupSchema = z.object({
   name: z.string().min(1, "Name is required").max(255).optional(),
   description: z.string().max(1000).optional(),
   color: groupColorSchema,
-  defaultMembershipPrice: z
-    .string()
-    .regex(/^\d+(\.\d{1,2})?$/)
-    .optional(),
+  defaultMembershipPriceCents: z.number().int().nonnegative().optional(),
 });
 
 export const groupsRouter = {
@@ -145,7 +139,7 @@ export const groupsRouter = {
           name: input.name,
           description: input.description,
           color: input.color,
-          defaultMembershipPrice: input.defaultMembershipPrice,
+          defaultMembershipPriceCents: input.defaultMembershipPriceCents,
         });
 
         posthog.capture({
@@ -199,11 +193,14 @@ export const groupsRouter = {
     .input(updateGroupSchema)
     .handler(async ({ input, context }) => {
       const organizationId = context.session.activeOrganizationId!;
-      const { id, ...updates } = input;
+      const { id, defaultMembershipPriceCents, ...updates } = input;
       const posthog = getPostHogServer();
 
       const cleanUpdates = Object.fromEntries(
-        Object.entries(updates).filter(([_, v]) => v !== undefined),
+        Object.entries({
+          ...updates,
+          defaultMembershipPriceCents,
+        }).filter(([_, v]) => v !== undefined),
       );
 
       if (Object.keys(cleanUpdates).length === 0) {
