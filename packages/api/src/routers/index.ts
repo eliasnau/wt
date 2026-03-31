@@ -1,9 +1,9 @@
 import type { RouterClient } from "@orpc/server";
 import { publicProcedure } from "../index";
-import { billingRouter } from "./billing";
 import { groupsRouter } from "./groups";
 import { membersRouter } from "./members";
 import { organizationsRouter } from "./organizations";
+import { paymentBatchesRouter } from "./paymentBatches";
 import { selfRegistrationsRouter } from "./selfRegistrations";
 import { statisticsRouter } from "./statistics";
 
@@ -14,11 +14,11 @@ export const appRouter = {
 		})
 		.route({ method: "GET", successStatus: 200 }),
 	members: { ...membersRouter },
-	billing: {
-		...billingRouter,
-	},
 	groups: {
 		...groupsRouter,
+	},
+	paymentBatches: {
+		...paymentBatchesRouter,
 	},
 	organizations: {
 		...organizationsRouter,

@@ -10,6 +10,7 @@ import { loadSepaModule } from "../lib/sepa";
 import { requirePermission } from "../middleware/permissions";
 import { rateLimitMiddleware } from "../middleware/ratelimit";
 
+const decimalSchema = z.string().regex(/^\d+(\.\d{1,2})?$/);
 const optionalEmailSchema = z
   .string()
   .trim()
@@ -49,7 +50,7 @@ async function syncOrganizationMembersUsage(organizationId: string) {
 
 const configGroupSchema = z.object({
   groupId: z.string().min(1),
-  monthlyFeeCents: z.number().int().nonnegative(),
+  monthlyFee: decimalSchema,
   schedule: z.string().max(255).optional(),
 });
 
@@ -58,8 +59,8 @@ const createSelfRegistrationSchema = z.object({
   description: z.string().max(1000).optional(),
   isActive: z.boolean().default(true),
   billingCycle: z.enum(["monthly", "half_yearly", "yearly"]).default("monthly"),
-  joiningFeeCents: z.number().int().nonnegative().optional(),
-  yearlyFeeCents: z.number().int().nonnegative().optional(),
+  joiningFeeAmount: decimalSchema.optional(),
+  yearlyFeeAmount: decimalSchema.optional(),
   contractStartDate: z
     .string()
     .regex(/^\d{4}-\d{2}-01$/, "Must be 1st day of month (YYYY-MM-01)")
@@ -74,8 +75,8 @@ const updateSelfRegistrationSchema = z.object({
   description: z.string().max(1000).optional(),
   isActive: z.boolean().optional(),
   billingCycle: z.enum(["monthly", "half_yearly", "yearly"]).optional(),
-  joiningFeeCents: z.number().int().nonnegative().optional(),
-  yearlyFeeCents: z.number().int().nonnegative().optional(),
+  joiningFeeAmount: decimalSchema.optional(),
+  yearlyFeeAmount: decimalSchema.optional(),
   contractStartDate: z
     .string()
     .regex(/^\d{4}-\d{2}-01$/, "Must be 1st day of month (YYYY-MM-01)")
@@ -310,8 +311,8 @@ export const selfRegistrationsRouter = {
           description: input.description,
           isActive: input.isActive,
           billingCycle: input.billingCycle,
-          joiningFeeCents: input.joiningFeeCents,
-          yearlyFeeCents: input.yearlyFeeCents,
+          joiningFeeAmount: input.joiningFeeAmount,
+          yearlyFeeAmount: input.yearlyFeeAmount,
           contractStartDate: input.contractStartDate,
           notes: input.notes,
         },
@@ -319,7 +320,7 @@ export const selfRegistrationsRouter = {
           groupId: item.groupId,
           groupNameSnapshot: groupNameById.get(item.groupId) || "Unknown group",
           schedule: item.schedule,
-          monthlyFeeCents: item.monthlyFeeCents,
+          monthlyFee: item.monthlyFee,
         })),
       });
     })
@@ -348,8 +349,8 @@ export const selfRegistrationsRouter = {
           description: input.description,
           isActive: input.isActive,
           billingCycle: input.billingCycle,
-          joiningFeeCents: input.joiningFeeCents,
-          yearlyFeeCents: input.yearlyFeeCents,
+          joiningFeeAmount: input.joiningFeeAmount,
+          yearlyFeeAmount: input.yearlyFeeAmount,
           contractStartDate: input.contractStartDate,
           notes: input.notes,
           firstName: input.firstName,
@@ -380,7 +381,7 @@ export const selfRegistrationsRouter = {
             groupId: string;
             groupNameSnapshot: string;
             schedule?: string;
-            monthlyFeeCents: number;
+            monthlyFee: string;
           }>
         | undefined;
 
@@ -410,7 +411,7 @@ export const selfRegistrationsRouter = {
           groupId: item.groupId,
           groupNameSnapshot: groupNameById.get(item.groupId) || "Unknown group",
           schedule: item.schedule,
-          monthlyFeeCents: item.monthlyFeeCents,
+          monthlyFee: item.monthlyFee,
         }));
       }
 
@@ -491,8 +492,8 @@ export const selfRegistrationsRouter = {
         status: config.status,
         description: config.description,
         billingCycle: config.billingCycle,
-        joiningFeeCents: config.joiningFeeCents,
-        yearlyFeeCents: config.yearlyFeeCents,
+        joiningFeeAmount: config.joiningFeeAmount,
+        yearlyFeeAmount: config.yearlyFeeAmount,
         contractStartDate: config.contractStartDate,
         notes: config.notes,
         groups: config.groupsSnapshot,
@@ -642,6 +643,7 @@ export const selfRegistrationsRouter = {
         contractStartDate,
         initialPeriod,
       );
+      const nextBillingDate = contractStartDate;
       const mandateSignatureDate = getTodayInBerlinDateString();
       const newMemberId = randomBytes(16).toString("hex");
 
@@ -671,16 +673,12 @@ export const selfRegistrationsRouter = {
           initialPeriod,
           startDate: contractStartDate,
           initialPeriodEndDate,
-          joiningFeeCents: registration.joiningFeeCents ?? undefined,
-          yearlyFeeCents: registration.yearlyFeeCents ?? undefined,
+          nextBillingDate,
+          mandateId: generateMandateId(),
+          mandateSignatureDate,
+          joiningFeeAmount: registration.joiningFeeAmount || undefined,
+          yearlyFeeAmount: registration.yearlyFeeAmount || undefined,
           notes: registration.notes || undefined,
-        },
-        sepaMandateData: {
-          mandateReference: generateMandateId(),
-          signatureDate: mandateSignatureDate,
-          accountHolder: registration.accountHolder!,
-          iban: registration.iban!,
-          bic: registration.bic!,
         },
       });
 
@@ -691,14 +689,12 @@ export const selfRegistrationsRouter = {
         if (!entry || typeof entry !== "object") continue;
         const group = entry as Record<string, unknown>;
         if (typeof group.groupId !== "string") continue;
-        const monthlyFeeCents =
-          typeof group.monthlyFeeCents === "number"
-            ? group.monthlyFeeCents
-            : undefined;
+        const monthlyFee =
+          typeof group.monthlyFee === "string" ? group.monthlyFee : undefined;
         await DB.mutation.groups.assignMemberToGroup({
           memberId: created.member.id,
           groupId: group.groupId,
-          membershipPriceCents: monthlyFeeCents,
+          membershipPrice: monthlyFee,
         });
       }
 

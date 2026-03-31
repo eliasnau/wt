@@ -23,7 +23,6 @@ import {
 	SheetPopup,
 	SheetTitle,
 } from "@/components/ui/sheet";
-import { formatCents } from "@/utils/billing";
 import { isFreeMembershipPrice } from "@/utils/membership-price";
 import type { client } from "@/utils/orpc";
 
@@ -161,12 +160,7 @@ export function MemberOverviewSheet({
 									{groupMembers.map((gm) => (
 										<div className="flex items-center gap-2" key={gm.groupId}>
 											<Badge variant="outline">{gm.group.name}</Badge>
-											{isFreeMembershipPrice(
-												gm.membershipPriceCents !== null &&
-													gm.membershipPriceCents !== undefined
-													? gm.membershipPriceCents / 100
-													: undefined,
-											) ? (
+											{isFreeMembershipPrice(gm.membershipPrice) ? (
 												<Badge variant="secondary">Free</Badge>
 											) : null}
 										</div>
@@ -198,25 +192,23 @@ export function MemberOverviewSheet({
 												{monthsWithUs} {monthsWithUs === 1 ? "month" : "months"}
 											</span>
 										</div>
-										{member.contract.joiningFeeCents !== null &&
-											member.contract.joiningFeeCents !== undefined && (
+										{member.contract.joiningFeeAmount && (
 											<div className="flex justify-between">
 												<span className="text-muted-foreground">
 													Aufnahmegebühr
 												</span>
 												<span className="text-foreground">
-													{formatCents(member.contract.joiningFeeCents)}
+													€{member.contract.joiningFeeAmount}
 												</span>
 											</div>
 										)}
-										{member.contract.yearlyFeeCents !== null &&
-											member.contract.yearlyFeeCents !== undefined && (
+										{member.contract.yearlyFeeAmount && (
 											<div className="flex justify-between">
 												<span className="text-muted-foreground">
 													Jahresbeitrag
 												</span>
 												<span className="text-foreground">
-													{formatCents(member.contract.yearlyFeeCents)}
+													€{member.contract.yearlyFeeAmount}
 												</span>
 											</div>
 										)}

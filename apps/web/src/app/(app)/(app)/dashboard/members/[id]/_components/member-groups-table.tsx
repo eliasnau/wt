@@ -72,18 +72,17 @@ import {
 	normalizeMembershipPriceInput,
 	parseMembershipPriceInput,
 } from "@/utils/membership-price";
-import { formatCents } from "@/utils/billing";
 import { client, orpc } from "@/utils/orpc";
 
 interface MemberGroup {
 	groupId: string;
-	membershipPriceCents: number | null;
+	membershipPrice: number | null;
 	joinedAt: string | Date | null;
 	group: {
 		id: string;
 		name: string;
 		description: string | null;
-		defaultMembershipPriceCents: number | null;
+		defaultMembershipPrice: number | null;
 	};
 }
 
@@ -93,8 +92,12 @@ interface MemberGroupsTableProps {
 	loading?: boolean;
 }
 
-function formatCurrency(amountCents: number | null | undefined) {
-	return formatCents(amountCents ?? 0);
+function formatCurrency(amount: number | string | null | undefined) {
+	if (!amount) return "€0.00";
+	return new Intl.NumberFormat("en-US", {
+		style: "currency",
+		currency: "EUR",
+	}).format(typeof amount === "number" ? amount : Number.parseFloat(amount));
 }
 
 function EditPriceDialog({
@@ -111,19 +114,15 @@ function EditPriceDialog({
 	onSuccess?: () => void;
 }) {
 	const queryClient = useQueryClient();
-	const [price, setPrice] = useState(
-		group.membershipPriceCents !== null && group.membershipPriceCents !== undefined
-			? (group.membershipPriceCents / 100).toString()
-			: "",
-	);
+	const [price, setPrice] = useState((group.membershipPrice ?? 0).toString());
 	const [error, setError] = useState<string | null>(null);
 
 	const updateMutation = useMutation({
-		mutationFn: async (membershipPriceCents: number | null) => {
+		mutationFn: async (membershipPrice: number | null) => {
 			return client.members.updateGroupMembership({
 				memberId,
 				groupId: group.groupId,
-				membershipPriceCents,
+				membershipPrice,
 			});
 		},
 		onSuccess: () => {
@@ -157,9 +156,7 @@ function EditPriceDialog({
 
 		setError(null);
 		setPrice(normalizedPrice);
-		updateMutation.mutate(
-			parsedPrice === null ? null : Math.round(parsedPrice * 100),
-		);
+		updateMutation.mutate(parsedPrice);
 	};
 
 	return (
@@ -168,12 +165,7 @@ function EditPriceDialog({
 			onOpenChange={(nextOpen) => {
 			onOpenChange(nextOpen);
 			if (nextOpen) {
-				setPrice(
-					group.membershipPriceCents !== null &&
-						group.membershipPriceCents !== undefined
-						? (group.membershipPriceCents / 100).toString()
-						: "",
-				);
+				setPrice((group.membershipPrice ?? 0).toString());
 				setError(null);
 			}
 		}}
@@ -202,22 +194,18 @@ function EditPriceDialog({
 							onChange={(event) => setPrice(event.target.value)}
 							onBlur={() => setPrice(normalizeMembershipPriceInput(price))}
 							placeholder={
-								group.group.defaultMembershipPriceCents !== null &&
-								group.group.defaultMembershipPriceCents !== undefined
-									? `Current default: ${(group.group.defaultMembershipPriceCents / 100).toFixed(2)}`
+								group.group.defaultMembershipPrice
+									? `Current default: ${group.group.defaultMembershipPrice}`
 									: "Leer lassen, um €0.00 zu verwenden"
 							}
 						/>
-						{group.group.defaultMembershipPriceCents !== null &&
-							group.group.defaultMembershipPriceCents !== undefined && (
+						{group.group.defaultMembershipPrice && (
 							<div className="flex items-center gap-2 text-muted-foreground text-xs">
 								<p>
 									Leer lassen, um den aktuellen Gruppenstandard zu uebernehmen:
-									{formatCents(group.group.defaultMembershipPriceCents)}
+									€{group.group.defaultMembershipPrice}
 								</p>
-								{isFreeMembershipPrice(
-									group.group.defaultMembershipPriceCents / 100,
-								) ? (
+								{isFreeMembershipPrice(group.group.defaultMembershipPrice) ? (
 									<Badge variant="secondary">Free</Badge>
 								) : null}
 							</div>
@@ -384,13 +372,8 @@ export function MemberGroupsTable({
 			cell: ({ row }) => {
 				return (
 					<div className="flex items-center justify-end gap-2">
-						<span>{formatCurrency(row.original.membershipPriceCents)}</span>
-						{isFreeMembershipPrice(
-							row.original.membershipPriceCents !== null &&
-								row.original.membershipPriceCents !== undefined
-								? row.original.membershipPriceCents / 100
-								: undefined,
-						) ? (
+						<span>{formatCurrency(row.original.membershipPrice)}</span>
+						{isFreeMembershipPrice(row.original.membershipPrice) ? (
 							<Badge variant="secondary">Free</Badge>
 						) : null}
 					</div>
@@ -437,8 +420,8 @@ export function MemberGroupsTable({
 		},
 	});
 
-	const totalMonthlyCents = groups.reduce((sum, gm) => {
-		return sum + (gm.membershipPriceCents ?? 0);
+	const totalMonthly = groups.reduce((sum, gm) => {
+		return sum + (gm.membershipPrice ?? 0);
 	}, 0);
 
 	// If there are no groups at all, show empty state
@@ -562,7 +545,7 @@ export function MemberGroupsTable({
 										Total Monthly from Groups:
 									</span>
 									<span className="font-bold text-lg">
-										{formatCurrency(totalMonthlyCents)}
+										{formatCurrency(totalMonthly.toFixed(2))}
 									</span>
 								</div>
 							</div>
