@@ -104,9 +104,11 @@ export function AssignGroupDialog({
 				membershipPriceCents:
 					value.membershipPrice.trim() === ""
 						? undefined
-						: Math.round(
-								(parseMembershipPriceInput(value.membershipPrice) ?? 0) * 100,
-							),
+						: (() => {
+								const parsed = parseMembershipPriceInput(value.membershipPrice);
+								if (parsed === null) return undefined;
+								return Math.round(parsed * 100);
+							})(),
 			});
 		},
 	});
