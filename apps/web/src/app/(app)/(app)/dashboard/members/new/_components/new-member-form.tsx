@@ -32,7 +32,6 @@ import {
 	normalizeMembershipPriceInput,
 	parseMembershipPriceInput,
 } from "@/utils/membership-price";
-import { formatCents } from "@/utils/billing";
 import { client, orpc } from "@/utils/orpc";
 
 const firstNameSchema = z.string().min(1, "Vorname ist erforderlich").max(255);
@@ -106,7 +105,7 @@ const formSchema = z.object({
 
 type GroupAssignment = {
 	groupId: string;
-	membershipPriceCents?: number;
+	membershipPrice?: number;
 };
 
 const CONTRACT_START_MONTH_ITEMS = [
@@ -129,15 +128,6 @@ const INITIAL_PERIOD_ITEMS = [
 	{ value: "half_yearly", label: "Halbjährlich" },
 	{ value: "yearly", label: "Jährlich" },
 ] as const;
-
-function parseAmountInputToCents(value: string) {
-	const parsedAmount = parseMembershipPriceInput(value);
-	if (parsedAmount === null) {
-		return undefined;
-	}
-
-	return Math.round(parsedAmount * 100);
-}
 
 export function NewMemberForm() {
 	const router = useRouter();
@@ -183,8 +173,8 @@ export function NewMemberForm() {
 			cardHolder: string;
 			contractStartDate: string;
 			initialPeriod: "monthly" | "half_yearly" | "yearly";
-			joiningFeeCents?: number;
-			yearlyFeeCents?: number;
+			joiningFeeAmount?: string;
+			yearlyFeeAmount?: string;
 			memberNotes?: string;
 			contractNotes?: string;
 			groupAssignments: GroupAssignment[];
@@ -198,7 +188,7 @@ export function NewMemberForm() {
 					await client.members.assignGroup({
 						memberId: result.member.id,
 						groupId: assignment.groupId,
-						membershipPriceCents: assignment.membershipPriceCents,
+						membershipPrice: assignment.membershipPrice,
 					});
 				} catch {
 					failedAssignments.push(assignment);
@@ -283,8 +273,8 @@ export function NewMemberForm() {
 				cardHolder: value.cardHolder,
 				contractStartDate: `${value.contractStartYear}-${value.contractStartMonth}-01`,
 				initialPeriod: value.initialPeriod,
-				joiningFeeCents: parseAmountInputToCents(value.joiningFeeAmount),
-				yearlyFeeCents: parseAmountInputToCents(value.yearlyFeeAmount),
+				joiningFeeAmount: value.joiningFeeAmount,
+				yearlyFeeAmount: value.yearlyFeeAmount,
 				memberNotes: value.memberNotes,
 				contractNotes: value.contractNotes,
 			};
@@ -299,10 +289,10 @@ export function NewMemberForm() {
 				const membershipPrice = groupPrices[groupId];
 				return {
 					groupId,
-					membershipPriceCents:
+					membershipPrice:
 						membershipPrice?.trim() &&
 						parseMembershipPriceInput(membershipPrice) !== null
-							? Math.round((parseMembershipPriceInput(membershipPrice) ?? 0) * 100)
+							? (parseMembershipPriceInput(membershipPrice) ?? undefined)
 							: undefined,
 				};
 			});
@@ -815,21 +805,13 @@ export function NewMemberForm() {
 															{group.name}
 														</span>
 														<div className="flex items-center gap-2">
-															{group.defaultMembershipPriceCents !== null &&
-															group.defaultMembershipPriceCents !==
-																undefined ? (
+															{group.defaultMembershipPrice ? (
 																<span className="text-muted-foreground text-xs">
-																	Standard:{" "}
-																	{formatCents(
-																		group.defaultMembershipPriceCents,
-																	)}
+																	Standard: €{group.defaultMembershipPrice}
 																</span>
 															) : null}
 															{isFreeMembershipPrice(
-																group.defaultMembershipPriceCents !== null &&
-																	group.defaultMembershipPriceCents !== undefined
-																	? group.defaultMembershipPriceCents / 100
-																	: undefined,
+																group.defaultMembershipPrice,
 															) ? (
 																<Badge variant="secondary">Kostenlos</Badge>
 															) : null}
@@ -874,9 +856,8 @@ export function NewMemberForm() {
 																	}));
 																}}
 																placeholder={
-																	group.defaultMembershipPriceCents !== null &&
-																	group.defaultMembershipPriceCents !== undefined
-																		? `Standard: ${(group.defaultMembershipPriceCents / 100).toFixed(2)}`
+																	group.defaultMembershipPrice
+																		? `Standard: ${group.defaultMembershipPrice}`
 																		: "Leer lassen, um den Standard zu verwenden"
 																}
 																aria-invalid={!!priceError}

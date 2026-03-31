@@ -60,9 +60,8 @@ export const createGetMemberInfoTool = (organizationId: string) =>
 						name: entry.group.name,
 						description: entry.group.description,
 						color: entry.group.color,
-						defaultMembershipPriceCents:
-							entry.group.defaultMembershipPriceCents,
-						membershipPriceCents: entry.membershipPriceCents,
+						defaultMembershipPrice: entry.group.defaultMembershipPrice,
+						membershipPrice: entry.membershipPrice,
 						joinedAt: entry.joinedAt,
 					})),
 				},

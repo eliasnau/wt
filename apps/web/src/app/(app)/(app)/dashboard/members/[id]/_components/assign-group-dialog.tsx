@@ -34,7 +34,6 @@ import {
 	normalizeMembershipPriceInput,
 	parseMembershipPriceInput,
 } from "@/utils/membership-price";
-import { formatCents } from "@/utils/billing";
 import { client, orpc } from "@/utils/orpc";
 
 const assignGroupSchema = z.object({
@@ -63,14 +62,11 @@ export function AssignGroupDialog({
 	);
 
 	const assignGroupMutation = useMutation({
-		mutationFn: async (data: {
-			groupId: string;
-			membershipPriceCents?: number;
-		}) => {
+		mutationFn: async (data: { groupId: string; membershipPrice?: number }) => {
 			return await client.members.assignGroup({
 				memberId,
 				groupId: data.groupId,
-				membershipPriceCents: data.membershipPriceCents,
+				membershipPrice: data.membershipPrice,
 			});
 		},
 		onSuccess: () => {
@@ -101,12 +97,10 @@ export function AssignGroupDialog({
 		onSubmit: async ({ value }) => {
 			await assignGroupMutation.mutateAsync({
 				groupId: value.groupId,
-				membershipPriceCents:
+				membershipPrice:
 					value.membershipPrice.trim() === ""
 						? undefined
-						: Math.round(
-								(parseMembershipPriceInput(value.membershipPrice) ?? 0) * 100,
-							),
+						: (parseMembershipPriceInput(value.membershipPrice) ?? undefined),
 			});
 		},
 	});
@@ -228,29 +222,22 @@ export function AssignGroupDialog({
 														onChange={(e) => field.handleChange(e.target.value)}
 														aria-invalid={isInvalid}
 														placeholder={
-															selectedGroup?.defaultMembershipPriceCents !==
-																null &&
-															selectedGroup?.defaultMembershipPriceCents !==
-																undefined
-																? `Current default: ${(selectedGroup.defaultMembershipPriceCents / 100).toFixed(2)}`
+															selectedGroup?.defaultMembershipPrice
+																? `Current default: ${selectedGroup.defaultMembershipPrice}`
 																: "Leer lassen, um €0.00 zu verwenden"
 														}
 													/>
 													{isInvalid && (
 														<FieldError errors={field.state.meta.errors} />
 													)}
-													{selectedGroup?.defaultMembershipPriceCents !== null &&
-													selectedGroup?.defaultMembershipPriceCents !==
-														undefined && (
+													{selectedGroup?.defaultMembershipPrice && (
 														<div className="flex items-center gap-2 text-muted-foreground text-xs">
 															<p>
-																Current group default:{" "}
-																{formatCents(
-																	selectedGroup.defaultMembershipPriceCents,
-																)}
+																Current group default: €
+																{selectedGroup.defaultMembershipPrice}
 															</p>
 															{isFreeMembershipPrice(
-																selectedGroup.defaultMembershipPriceCents / 100,
+																selectedGroup.defaultMembershipPrice,
 															) ? (
 																<Badge variant="secondary">Free</Badge>
 															) : null}

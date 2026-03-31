@@ -5,62 +5,27 @@ import {
 	group,
 	groupMember,
 	organization,
-	sepaMandate,
 	selfRegistration,
 } from "../schema";
 
-function normalizeCents(
-	value?: number | string | null,
-): number | undefined {
-	if (value === undefined || value === null) {
-		return undefined;
-	}
-
-	if (typeof value === "number") {
-		if (!Number.isInteger(value) || value < 0) {
-			throw new Error("Invalid money amount");
-		}
-
-		return value;
-	}
-
-	const normalizedValue = value.trim().replace(/\s+/g, "");
-
-	if (normalizedValue === "") {
-		return undefined;
-	}
-
-	if (!/^\d+$/.test(normalizedValue)) {
-		throw new Error("Invalid cents amount");
-	}
-
-	const parsedValue = Number.parseInt(normalizedValue, 10);
-	if (!Number.isFinite(parsedValue) || parsedValue < 0) {
-		throw new Error("Invalid cents amount");
-	}
-
-	return parsedValue;
-}
-
 async function resolveGroupMembershipPrice({
 	groupId,
-	membershipPriceCents,
+	membershipPrice,
 }: {
 	groupId: string;
-	membershipPriceCents?: number | string | null;
+	membershipPrice?: number | string | null;
 }) {
-	const normalizedMembershipPriceCents = normalizeCents(
-		membershipPriceCents,
-	);
+	const normalizedMembershipPrice =
+		normalizeOptionalPriceInput(membershipPrice);
 
-	if (normalizedMembershipPriceCents !== undefined) {
-		return normalizedMembershipPriceCents;
+	if (normalizedMembershipPrice !== undefined) {
+		return normalizedMembershipPrice;
 	}
 
 	const existingGroup = await db.query.group.findFirst({
 		where: (fields, { eq }) => eq(fields.id, groupId),
 		columns: {
-			defaultMembershipPriceCents: true,
+			defaultMembershipPrice: true,
 		},
 	});
 
@@ -68,11 +33,36 @@ async function resolveGroupMembershipPrice({
 		throw new Error("Group not found");
 	}
 
-	if (existingGroup.defaultMembershipPriceCents !== null) {
-		return existingGroup.defaultMembershipPriceCents;
+	return existingGroup.defaultMembershipPrice ?? 0;
+}
+
+function normalizeOptionalPriceInput(
+	value?: number | string | null,
+): number | undefined {
+	if (value === undefined || value === null) {
+		return undefined;
 	}
 
-	return 0;
+	if (typeof value === "number") {
+		if (!Number.isFinite(value) || value < 0) {
+			throw new Error("Invalid membership price");
+		}
+
+		return value;
+	}
+
+	const normalizedValue = value.trim().replace(/\s+/g, "").replace(",", ".");
+
+	if (normalizedValue === "") {
+		return undefined;
+	}
+
+	const parsedValue = Number(normalizedValue);
+	if (!Number.isFinite(parsedValue) || parsedValue < 0) {
+		throw new Error("Invalid membership price");
+	}
+
+	return parsedValue;
 }
 
 export const DB = {
@@ -140,24 +130,25 @@ export const DB = {
 						// Contract information
 						contractId: contract.id,
 						contractStartDate: contract.startDate,
-						contractStatus: contract.status,
 						contractInitialPeriod: contract.initialPeriod,
 						contractInitialPeriodEndDate: contract.initialPeriodEndDate,
-						contractJoiningFeeCents: contract.joiningFeeCents,
-						contractYearlyFeeCents: contract.yearlyFeeCents,
+						contractCurrentPeriodEndDate: contract.currentPeriodEndDate,
+						contractNextBillingDate: contract.nextBillingDate,
+						contractJoiningFeeAmount: contract.joiningFeeAmount,
+						contractYearlyFeeAmount: contract.yearlyFeeAmount,
 						contractNotes: contract.notes,
 						contractCancelledAt: contract.cancelledAt,
-						contractCancelReason: contract.cancellationReason,
+						contractCancelReason: contract.cancelReason,
 						contractCancellationEffectiveDate:
 							contract.cancellationEffectiveDate,
 						// Group membership fields
 						groupId: groupMember.groupId,
-						membershipPriceCents: groupMember.membershipPriceCents,
+						membershipPrice: groupMember.membershipPrice,
 						groupMemberCreatedAt: groupMember.createdAt,
 						groupName: group.name,
 						groupDescription: group.description,
 						groupColor: group.color,
-						groupDefaultMembershipPriceCents: group.defaultMembershipPriceCents,
+						groupDefaultMembershipPrice: group.defaultMembershipPrice,
 					})
 					.from(clubMember)
 					.innerJoin(contract, eq(contract.memberId, clubMember.id))
@@ -175,15 +166,14 @@ export const DB = {
 					.filter((row) => row.groupId !== null)
 					.map((row) => ({
 						groupId: row.groupId!,
-						membershipPriceCents: row.membershipPriceCents,
+						membershipPrice: row.membershipPrice,
 						joinedAt: row.groupMemberCreatedAt,
 						group: {
 							id: row.groupId!,
 							name: row.groupName!,
 							description: row.groupDescription,
 							color: row.groupColor,
-							defaultMembershipPriceCents:
-								row.groupDefaultMembershipPriceCents,
+							defaultMembershipPrice: row.groupDefaultMembershipPrice,
 						},
 					}));
 
@@ -209,11 +199,12 @@ export const DB = {
 					contract: {
 						id: firstRow.contractId,
 						startDate: firstRow.contractStartDate,
-						status: firstRow.contractStatus,
 						initialPeriod: firstRow.contractInitialPeriod,
 						initialPeriodEndDate: firstRow.contractInitialPeriodEndDate,
-						joiningFeeCents: firstRow.contractJoiningFeeCents,
-						yearlyFeeCents: firstRow.contractYearlyFeeCents,
+						currentPeriodEndDate: firstRow.contractCurrentPeriodEndDate,
+						nextBillingDate: firstRow.contractNextBillingDate,
+						joiningFeeAmount: firstRow.contractJoiningFeeAmount,
+						yearlyFeeAmount: firstRow.contractYearlyFeeAmount,
 						notes: firstRow.contractNotes,
 						cancelledAt: firstRow.contractCancelledAt,
 						cancelReason: firstRow.contractCancelReason,
@@ -259,7 +250,7 @@ export const DB = {
 						memberCreatedAt: clubMember.createdAt,
 						memberUpdatedAt: clubMember.updatedAt,
 						// Group membership fields
-						membershipPriceCents: groupMember.membershipPriceCents,
+						membershipPrice: groupMember.membershipPrice,
 						joinedAt: groupMember.createdAt,
 					})
 					.from(groupMember)
@@ -467,11 +458,8 @@ export const DB = {
 				};
 				contractData: {
 					// initialPeriod: string;
-					joiningFeeCents?: number;
-					yearlyFeeCents?: number;
-					yearlyFeeMode?: "january" | "anniversary";
-					settledThroughDate?: string;
-					cancellationReason?: string;
+					joiningFeeAmount?: string;
+					yearlyFeeAmount?: string;
 					notes?: string;
 				};
 			}) => {
@@ -511,11 +499,8 @@ export const DB = {
 					const contractUpdateValues = Object.fromEntries(
 						Object.entries({
 							// initialPeriod: contractData.initialPeriod,
-							joiningFeeCents: contractData.joiningFeeCents,
-							yearlyFeeCents: contractData.yearlyFeeCents,
-							yearlyFeeMode: contractData.yearlyFeeMode,
-							settledThroughDate: contractData.settledThroughDate,
-							cancellationReason: contractData.cancellationReason,
+							joiningFeeAmount: contractData.joiningFeeAmount,
+							yearlyFeeAmount: contractData.yearlyFeeAmount,
 							notes: contractData.notes,
 						}).filter(([, value]) => value !== undefined),
 					);
@@ -564,7 +549,6 @@ export const DB = {
 				memberId,
 				memberData,
 				contractData,
-				sepaMandateData,
 			}: {
 				organizationId: string;
 				memberId: string;
@@ -593,22 +577,12 @@ export const DB = {
 					initialPeriod: string;
 					startDate: string;
 					initialPeriodEndDate: string;
-					status?: "active" | "cancelled" | "ended";
-					cancellationNoticeDays?: number;
-					cancellationEffectiveDate?: string;
-					cancellationReason?: string;
-					joiningFeeCents?: number;
-					yearlyFeeCents?: number;
-					yearlyFeeMode?: "january" | "anniversary";
-					settledThroughDate?: string;
+					nextBillingDate: string;
+					mandateId: string;
+					mandateSignatureDate: string;
+					joiningFeeAmount?: string;
+					yearlyFeeAmount?: string;
 					notes?: string;
-				};
-				sepaMandateData: {
-					mandateReference: string;
-					accountHolder: string;
-					iban: string;
-					bic: string;
-					signatureDate: string;
 				};
 			}) => {
 				return wsDb.transaction(async (tx) => {
@@ -648,19 +622,15 @@ export const DB = {
 						.values({
 							memberId: newMember.id,
 							organizationId,
-							status: contractData.status ?? "active",
 							initialPeriod: contractData.initialPeriod,
 							startDate: contractData.startDate,
 							initialPeriodEndDate: contractData.initialPeriodEndDate,
-							cancellationNoticeDays:
-								contractData.cancellationNoticeDays ?? 0,
-							cancellationEffectiveDate:
-								contractData.cancellationEffectiveDate,
-							cancellationReason: contractData.cancellationReason,
-							joiningFeeCents: contractData.joiningFeeCents,
-							yearlyFeeCents: contractData.yearlyFeeCents,
-							yearlyFeeMode: contractData.yearlyFeeMode ?? "january",
-							settledThroughDate: contractData.settledThroughDate,
+							currentPeriodEndDate: contractData.initialPeriodEndDate,
+							nextBillingDate: contractData.nextBillingDate,
+							mandateId: contractData.mandateId,
+							mandateSignatureDate: contractData.mandateSignatureDate,
+							joiningFeeAmount: contractData.joiningFeeAmount,
+							yearlyFeeAmount: contractData.yearlyFeeAmount,
 							notes: contractData.notes,
 						})
 						.returning();
@@ -669,30 +639,7 @@ export const DB = {
 						throw new Error("Failed to create contract");
 					}
 
-					const [newSepaMandate] = await tx
-						.insert(sepaMandate)
-						.values({
-							organizationId,
-							memberId: newMember.id,
-							contractId: newContract.id,
-							mandateReference: sepaMandateData.mandateReference,
-							accountHolder: sepaMandateData.accountHolder,
-							iban: sepaMandateData.iban,
-							bic: sepaMandateData.bic,
-							signatureDate: sepaMandateData.signatureDate,
-							isActive: true,
-						})
-						.returning();
-
-					if (!newSepaMandate) {
-						throw new Error("Failed to create SEPA mandate");
-					}
-
-					return {
-						member: newMember,
-						contract: newContract,
-						sepaMandate: newSepaMandate,
-					};
+					return { member: newMember, contract: newContract };
 				});
 			},
 		},
@@ -702,16 +649,16 @@ export const DB = {
 				name,
 				description,
 				color,
-				defaultMembershipPriceCents,
+				defaultMembershipPrice,
 			}: {
 				organizationId: string;
 				name: string;
 				description?: string;
 				color: string;
-				defaultMembershipPriceCents?: number | string | null;
+				defaultMembershipPrice?: number | string | null;
 			}) => {
-				const normalizedDefaultMembershipPriceCents = normalizeCents(
-					defaultMembershipPriceCents,
+				const normalizedDefaultMembershipPrice = normalizeOptionalPriceInput(
+					defaultMembershipPrice,
 				);
 
 				const [newGroup] = await db
@@ -720,8 +667,7 @@ export const DB = {
 						name,
 						description,
 						color,
-						defaultMembershipPriceCents:
-							normalizedDefaultMembershipPriceCents,
+						defaultMembershipPrice: normalizedDefaultMembershipPrice,
 						organizationId,
 					})
 					.returning();
@@ -741,18 +687,15 @@ export const DB = {
 					name?: string;
 					description?: string;
 					color?: string;
-					defaultMembershipPriceCents?: number | string | null;
+					defaultMembershipPrice?: number | string | null;
 				};
 			}) => {
-				const normalizedDefaultMembershipPriceCents = normalizeCents(
-					updates.defaultMembershipPriceCents,
-				);
 				const normalizedUpdates = {
 					...updates,
-					defaultMembershipPriceCents:
-						updates.defaultMembershipPriceCents === undefined
+					defaultMembershipPrice:
+						updates.defaultMembershipPrice === undefined
 							? undefined
-							: normalizedDefaultMembershipPriceCents ?? null,
+							: normalizeOptionalPriceInput(updates.defaultMembershipPrice),
 				};
 
 				const [updatedGroup] = await db
@@ -774,15 +717,15 @@ export const DB = {
 			assignMemberToGroup: async ({
 				memberId,
 				groupId,
-				membershipPriceCents,
+				membershipPrice,
 			}: {
 				memberId: string;
 				groupId: string;
-				membershipPriceCents?: number | string | null;
+				membershipPrice?: number | string | null;
 			}) => {
 				const resolvedMembershipPrice = await resolveGroupMembershipPrice({
 					groupId,
-					membershipPriceCents,
+					membershipPrice,
 				});
 
 				const [newGroupMember] = await db
@@ -790,7 +733,7 @@ export const DB = {
 					.values({
 						memberId,
 						groupId,
-						membershipPriceCents: resolvedMembershipPrice,
+						membershipPrice: resolvedMembershipPrice,
 					})
 					.returning();
 
@@ -799,22 +742,20 @@ export const DB = {
 			updateGroupMember: async ({
 				memberId,
 				groupId,
-				membershipPriceCents,
+				membershipPrice,
 			}: {
 				memberId: string;
 				groupId: string;
-				membershipPriceCents?: number | string | null;
+				membershipPrice?: number | string | null;
 			}) => {
 				const resolvedMembershipPrice = await resolveGroupMembershipPrice({
 					groupId,
-					membershipPriceCents,
+					membershipPrice,
 				});
 
 				const [updatedGroupMember] = await db
 					.update(groupMember)
-					.set({
-						membershipPriceCents: resolvedMembershipPrice,
-					})
+					.set({ membershipPrice: resolvedMembershipPrice })
 					.where(
 						and(
 							eq(groupMember.memberId, memberId),
@@ -858,8 +799,8 @@ export const DB = {
 					description?: string;
 					isActive: boolean;
 					billingCycle: string;
-					joiningFeeCents?: number;
-					yearlyFeeCents?: number;
+					joiningFeeAmount?: string;
+					yearlyFeeAmount?: string;
 					contractStartDate?: string;
 					notes?: string;
 				};
@@ -867,7 +808,7 @@ export const DB = {
 					groupId: string;
 					groupNameSnapshot: string;
 					schedule?: string;
-					monthlyFeeCents: number;
+					monthlyFee: string;
 				}>;
 			}) => {
 				const [created] = await db
@@ -879,8 +820,8 @@ export const DB = {
 						description: config.description,
 						isActive: config.isActive,
 						billingCycle: config.billingCycle,
-						joiningFeeCents: config.joiningFeeCents,
-						yearlyFeeCents: config.yearlyFeeCents,
+						joiningFeeAmount: config.joiningFeeAmount,
+						yearlyFeeAmount: config.yearlyFeeAmount,
 						contractStartDate: config.contractStartDate,
 						notes: config.notes,
 						groupsSnapshot: groups,
@@ -905,8 +846,8 @@ export const DB = {
 					description?: string;
 					isActive?: boolean;
 					billingCycle?: string;
-					joiningFeeCents?: number;
-					yearlyFeeCents?: number;
+					joiningFeeAmount?: string;
+					yearlyFeeAmount?: string;
 					contractStartDate?: string;
 					notes?: string;
 					firstName?: string;
@@ -928,7 +869,7 @@ export const DB = {
 					groupId: string;
 					groupNameSnapshot: string;
 					schedule?: string;
-					monthlyFeeCents: number;
+					monthlyFee: string;
 				}>;
 			}) => {
 				const [updated] = await db

@@ -196,9 +196,9 @@ function mapMember(
 		membershipStatus: member.membershipStatus,
 		contract: {
 			startDate: member.contract.startDate,
-			status: member.contract.status,
 			initialPeriod: member.contract.initialPeriod,
-			initialPeriodEndDate: member.contract.initialPeriodEndDate,
+			currentPeriodEndDate: member.contract.currentPeriodEndDate,
+			nextBillingDate: member.contract.nextBillingDate,
 			cancelledAt: member.contract.cancelledAt,
 			cancelReason: member.contract.cancelReason,
 			cancellationEffectiveDate: member.contract.cancellationEffectiveDate,
@@ -207,7 +207,7 @@ function mapMember(
 			id: groupMember.group.id,
 			name: groupMember.group.name,
 			color: groupMember.group.color,
-			membershipPriceCents: groupMember.membershipPriceCents,
+			membershipPrice: groupMember.membershipPrice,
 		})),
 	};
 }
@@ -269,7 +269,7 @@ export const createQueryMembersTool = (organizationId: string) =>
 
 				const filteredMembers = exportResult.data
 					.filter((member) => {
-						const endDate = member.contract.initialPeriodEndDate;
+						const endDate = member.contract.currentPeriodEndDate;
 						if (!endDate) {
 							return false;
 						}
@@ -285,8 +285,8 @@ export const createQueryMembersTool = (organizationId: string) =>
 						return true;
 					})
 					.sort((a, b) =>
-						a.contract.initialPeriodEndDate.localeCompare(
-							b.contract.initialPeriodEndDate,
+						a.contract.currentPeriodEndDate.localeCompare(
+							b.contract.currentPeriodEndDate,
 						),
 					);
 

@@ -41,7 +41,6 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group";
 import { Popover, PopoverPopup, PopoverTrigger } from "@/components/ui/popover";
-import { formatCents } from "@/utils/billing";
 import { client, orpc } from "@/utils/orpc";
 
 const stepLabels = [
@@ -69,12 +68,14 @@ type RegistrationGroup = {
   groupId: string;
   groupNameSnapshot: string;
   schedule?: string;
-  monthlyFeeCents: number;
+  monthlyFee: string;
 };
 
-function formatCurrency(value?: number | null) {
-  if (value === null || value === undefined) return "-";
-  return formatCents(value);
+function formatCurrency(value?: string | null) {
+  if (!value) return "-";
+  const parsed = Number(value);
+  if (Number.isNaN(parsed)) return value;
+  return `EUR ${parsed.toFixed(2)}`;
 }
 
 function formatGermanDate(value?: string | null) {
@@ -93,14 +94,14 @@ function normalizeGroups(value: unknown): RegistrationGroup[] {
       if (
         typeof row.groupId !== "string" ||
         typeof row.groupNameSnapshot !== "string" ||
-        typeof row.monthlyFeeCents !== "number"
+        typeof row.monthlyFee !== "string"
       ) {
         return null;
       }
       const normalized: RegistrationGroup = {
         groupId: row.groupId,
         groupNameSnapshot: row.groupNameSnapshot,
-        monthlyFeeCents: row.monthlyFeeCents,
+        monthlyFee: row.monthlyFee,
       };
       if (typeof row.schedule === "string") {
         normalized.schedule = row.schedule;
@@ -198,8 +199,8 @@ export function MemberRegistrationForm({
           : data?.billingCycle === "yearly"
             ? "Jährlich"
             : "-",
-    joiningFee: formatCurrency(data?.joiningFeeCents),
-    yearlyFee: formatCurrency(data?.yearlyFeeCents),
+    joiningFee: formatCurrency(data?.joiningFeeAmount),
+    yearlyFee: formatCurrency(data?.yearlyFeeAmount),
     contractStart: formatGermanDate(data?.contractStartDate),
   };
 
@@ -457,7 +458,7 @@ export function MemberRegistrationForm({
                             <p className="font-medium text-sm">{group.groupNameSnapshot}</p>
                             <p className="text-muted-foreground text-xs">{group.schedule || "-"}</p>
                             <p className="mt-1 font-medium text-xs">
-                              Monatsbeitrag: {formatCurrency(group.monthlyFeeCents)}
+                              Monatsbeitrag: {formatCurrency(group.monthlyFee)}
                             </p>
                           </article>
                         ))}
@@ -738,7 +739,7 @@ export function MemberRegistrationForm({
                         label="Monatsbeitrag"
                         value={
                           prefilledGroups[0]
-                            ? formatCurrency(prefilledGroups[0].monthlyFeeCents)
+                            ? formatCurrency(prefilledGroups[0].monthlyFee)
                             : "-"
                         }
                       />

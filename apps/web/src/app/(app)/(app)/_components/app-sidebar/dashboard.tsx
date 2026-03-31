@@ -83,11 +83,6 @@ const routes: RouteConfig[] = [
     title: "Finanzen",
     icon: <DollarSign className="size-4" />,
     href: "/dashboard/finance",
-    subs: [
-      { title: "Rechnungen", href: "/dashboard/finance/invoices" },
-      { title: "SEPA-Batches", href: "/dashboard/finance/sepa-batches" },
-      { title: "Guthaben", href: "/dashboard/finance/credits" },
-    ],
   },
   {
     id: "self-service",

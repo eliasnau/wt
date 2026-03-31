@@ -58,20 +58,6 @@ function makeGroupRow(): GroupRow {
   };
 }
 
-function parseAmountToCents(value: string) {
-  const normalizedValue = value.trim();
-  if (!normalizedValue) {
-    return undefined;
-  }
-
-  const parsed = Number(normalizedValue);
-  if (Number.isNaN(parsed)) {
-    return undefined;
-  }
-
-  return Math.round(parsed * 100);
-}
-
 export function CreateSelfServiceSheet({ onCreated }: CreateSelfServiceSheetProps) {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState("");
@@ -104,25 +90,18 @@ export function CreateSelfServiceSheet({ onCreated }: CreateSelfServiceSheetProp
 
       const payloadGroups = groups
         .filter((group) => group.groupId.trim().length > 0)
-        .map((group) => {
-          const monthlyFeeCents = parseAmountToCents(group.monthlyFee);
-          if (monthlyFeeCents === undefined) {
-            throw new Error("Bitte gib einen gueltigen Monatsbeitrag ein");
-          }
-
-          return {
-            groupId: group.groupId,
-            monthlyFeeCents,
-            schedule: group.schedule.trim() || undefined,
-          };
-        });
+        .map((group) => ({
+          groupId: group.groupId,
+          monthlyFee: group.monthlyFee.trim(),
+          schedule: group.schedule.trim() || undefined,
+        }));
 
       if (payloadGroups.length === 0) {
         throw new Error("Mindestens eine Gruppe ist erforderlich");
       }
 
       for (const item of payloadGroups) {
-        if (!Number.isFinite(item.monthlyFeeCents)) {
+        if (!item.monthlyFee.match(/^\d+(\.\d{1,2})?$/)) {
           throw new Error("Gruppenpreis muss ein gueltiger Betrag sein (z.B. 69 oder 69.00)");
         }
       }
@@ -139,8 +118,8 @@ export function CreateSelfServiceSheet({ onCreated }: CreateSelfServiceSheetProp
         name: name.trim(),
         description: description.trim() || undefined,
         billingCycle,
-        joiningFeeCents: parseAmountToCents(joiningFeeAmount),
-        yearlyFeeCents: parseAmountToCents(yearlyFeeAmount),
+        joiningFeeAmount: joiningFeeAmount.trim() || undefined,
+        yearlyFeeAmount: yearlyFeeAmount.trim() || undefined,
         contractStartDate: contractStartMonth ? `${contractStartMonth}-01` : undefined,
         notes: notes.trim() || undefined,
         groups: payloadGroups,

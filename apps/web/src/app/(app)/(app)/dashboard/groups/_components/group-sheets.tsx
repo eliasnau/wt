@@ -67,7 +67,6 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { Textarea } from "@/components/ui/textarea";
-import { formatCents } from "@/utils/billing";
 import { client, orpc } from "@/utils/orpc";
 import {
 	DEFAULT_GROUP_COLOR,
@@ -102,20 +101,7 @@ function parsePriceValue(value: string): number | undefined {
 		return undefined;
 	}
 
-	const parsed = Number(normalizedValue);
-	if (Number.isNaN(parsed)) {
-		return undefined;
-	}
-
-	return Math.round(parsed * 100);
-}
-
-function formatAmountInputFromCents(amountCents: number | null | undefined) {
-	if (amountCents === null || amountCents === undefined) {
-		return "";
-	}
-
-	return (amountCents / 100).toString();
+	return Number(normalizedValue);
 }
 
 function EnrollMemberDialog({
@@ -161,7 +147,7 @@ function EnrollMemberDialog({
 			return client.members.assignGroup({
 				memberId: selectedMemberId,
 				groupId: group.id,
-				membershipPriceCents: parsePriceValue(membershipPrice),
+				membershipPrice: parsePriceValue(membershipPrice),
 			});
 		},
 		onSuccess: () => {
@@ -262,16 +248,14 @@ function EnrollMemberDialog({
 							value={membershipPrice}
 							onChange={(event) => setMembershipPrice(event.target.value)}
 							placeholder={
-								group.defaultMembershipPriceCents !== null &&
-								group.defaultMembershipPriceCents !== undefined
-									? `Standard: ${(group.defaultMembershipPriceCents / 100).toFixed(2)}`
+								group.defaultMembershipPrice
+									? `Standard: ${group.defaultMembershipPrice}`
 									: "Leer lassen, um den Standard zu verwenden"
 							}
 						/>
-						{group.defaultMembershipPriceCents !== null &&
-							group.defaultMembershipPriceCents !== undefined && (
+						{group.defaultMembershipPrice && (
 							<p className="text-muted-foreground text-xs">
-								Standardbeitrag: {formatCents(group.defaultMembershipPriceCents)}
+								Standardbeitrag: €{group.defaultMembershipPrice}
 							</p>
 						)}
 						{priceError && (
@@ -314,9 +298,7 @@ export function EditGroupSheet({
 			name: group?.name ?? "",
 			description: group?.description ?? "",
 			color: group?.color ?? DEFAULT_GROUP_COLOR,
-			defaultMembershipPrice: formatAmountInputFromCents(
-				group?.defaultMembershipPriceCents,
-			),
+			defaultMembershipPrice: group?.defaultMembershipPrice?.toString() ?? "",
 		},
 	});
 
@@ -326,7 +308,7 @@ export function EditGroupSheet({
 			name?: string;
 			description?: string;
 			color: string;
-			defaultMembershipPriceCents?: number;
+			defaultMembershipPrice?: string;
 		}) => client.groups.update(data),
 		onSuccess: () => {
 			toast.success("Gruppe erfolgreich aktualisiert");
@@ -345,9 +327,8 @@ export function EditGroupSheet({
 			name: values.name.trim(),
 			description: values.description?.trim() ?? "",
 			color: values.color.toLowerCase(),
-			defaultMembershipPriceCents: parsePriceValue(
-				values.defaultMembershipPrice ?? "",
-			),
+			defaultMembershipPrice:
+				values.defaultMembershipPrice?.trim() || undefined,
 		});
 	};
 
@@ -358,9 +339,7 @@ export function EditGroupSheet({
 			name: group.name ?? "",
 			description: group.description ?? "",
 			color: group.color ?? DEFAULT_GROUP_COLOR,
-			defaultMembershipPrice: formatAmountInputFromCents(
-				group.defaultMembershipPriceCents,
-			),
+			defaultMembershipPrice: group.defaultMembershipPrice?.toString() ?? "",
 		});
 	}, [open, group, form]);
 
@@ -501,9 +480,8 @@ export function EditGroupSheet({
 											<InputGroup>
 												<InputGroupInput
 													placeholder={
-														group?.defaultMembershipPriceCents !== null &&
-														group?.defaultMembershipPriceCents !== undefined
-															? `Aktuell: ${(group.defaultMembershipPriceCents / 100).toFixed(2)}`
+														group?.defaultMembershipPrice
+															? `Aktuell: ${group.defaultMembershipPrice}`
 															: "0.00"
 													}
 													type="text"
