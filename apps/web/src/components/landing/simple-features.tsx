@@ -7,7 +7,7 @@ import {
 	IconUsers,
 } from "nucleo-glass";
 import type React from "react";
-import { GridPattern } from "@/components/ui/grid-pattern";
+import { DecorIcon } from "@/components/ui/decor-icon";
 import { cn } from "@/lib/utils";
 
 type FeatureType = {
@@ -57,23 +57,24 @@ const features: FeatureType[] = [
 
 export function SimpleFeatures() {
 	return (
-		<section className="py-16 text-center md:py-24">
-			<h2 className="text-balance font-medium text-2xl text-foreground md:text-4xl">
-				Alles was du für deinen Erfolg brauchst
-			</h2>
-			<p className="mx-auto mt-4 max-w-[650px] text-balance text-muted-foreground text-sm md:text-base">
-				Mit leistungsstarken Funktionen ausgestattet, die dir helfen, dein
-				Unternehmen zu wachsen und deinen Arbeitsablauf effizient zu verwalten.
-			</p>
-
-			<div className="mt-10 overflow-hidden rounded-lg border">
-				<div className="grid grid-cols-1 gap-px bg-border sm:grid-cols-2 md:grid-cols-3">
-					{features.map((feature) => (
-						<FeatureCard feature={feature} key={feature.title} />
-					))}
-				</div>
+		<div className="mx-auto flex min-h-screen w-full max-w-5xl flex-col justify-center gap-12 px-4 py-12 md:px-8">
+			<div className="mx-auto max-w-md space-y-2 text-center">
+				<h2 className="font-bold text-2xl tracking-tight md:text-3xl lg:font-extrabold lg:text-4xl">
+					Alles was du für deinen Erfolg brauchst
+				</h2>
+				<p className="text-muted-foreground text-sm md:text-base">
+					Mit leistungsstarken Funktionen ausgestattet, die dir helfen, dein
+					Unternehmen zu wachsen und deinen Arbeitsablauf effizient zu
+					verwalten.
+				</p>
 			</div>
-		</section>
+
+			<div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+				{features.map((feature) => (
+					<FeatureCard feature={feature} key={feature.title} />
+				))}
+			</div>
+		</div>
 	);
 }
 
@@ -87,26 +88,36 @@ function FeatureCard({
 	return (
 		<div
 			className={cn(
-				"relative overflow-hidden bg-background p-6 text-left",
+				"relative flex flex-col justify-between gap-6 bg-background px-6 pt-8 pb-6 shadow-xs",
+				"dark:bg-[radial-gradient(50%_80%_at_25%_0%,--theme(--color-foreground/.1),transparent)]",
 				className,
 			)}
 			{...props}
 		>
-			<div className="mask-[radial-gradient(farthest-side_at_top,white,transparent)] pointer-events-none absolute top-0 left-1/2 -mt-2 -ml-20 size-full">
-				<GridPattern
-					className="absolute inset-0 size-full stroke-foreground/20"
-					height={40}
-					width={40}
-					x={20}
-				/>
-			</div>
-			<div className="[&_svg]:size-6 [&_svg]:text-foreground/75">
+			<DecorIcon className="size-3.5" position="top-left" />
+
+			<div className="absolute -inset-y-4 -left-px w-px bg-border" />
+			<div className="absolute -inset-y-4 -right-px w-px bg-border" />
+			<div className="absolute -inset-x-4 -top-px h-px bg-border" />
+			<div className="absolute -right-4 -bottom-px -left-4 h-px bg-border" />
+
+			<div
+				className={cn(
+					"relative z-10 flex w-fit items-center justify-center rounded-lg border bg-muted/20 p-3",
+					"[&_svg]:size-5 [&_svg]:stroke-[1.5] [&_svg]:text-foreground",
+				)}
+			>
 				{feature.icon}
 			</div>
-			<h3 className="mt-10 text-sm md:text-base">{feature.title}</h3>
-			<p className="relative z-20 mt-2 font-light text-muted-foreground text-xs">
-				{feature.description}
-			</p>
+
+			<div className="relative z-10 space-y-2">
+				<h3 className="font-medium text-base text-foreground">
+					{feature.title}
+				</h3>
+				<p className="text-muted-foreground text-xs leading-relaxed">
+					{feature.description}
+				</p>
+			</div>
 		</div>
 	);
 }
