@@ -388,7 +388,7 @@ async function buildSepaBatchXml({
 		activeMandates.map((mandate) => [mandate.contractId, mandate]),
 	);
 
-	const document = new sepa.Document("pain.008.001.02");
+	const document = new sepa.Document("pain.008.001.08");
 	document.grpHdr.id = batch.batchNumber;
 	document.grpHdr.created = new Date();
 	document.grpHdr.initiatorName =
