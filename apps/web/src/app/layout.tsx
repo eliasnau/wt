@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { Cal_Sans, Inter } from "next/font/google";
+import { Inter } from "next/font/google";
+import localFont from "next/font/local";
 import "../index.css";
 import { DevMode } from "@/components/dev-mode";
 import Providers from "@/components/providers";
@@ -9,9 +10,10 @@ const fontSans = Inter({
 	variable: "--font-sans",
 });
 
-const fontHeading = Cal_Sans({
-	subsets: ["latin"],
+const fontHeading = localFont({
+	src: "../fonts/CalSans-Regular.woff2",
 	variable: "--font-heading",
+	display: "swap",
 	weight: "400",
 });
 
