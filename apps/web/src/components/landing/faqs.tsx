@@ -1,11 +1,11 @@
+import Link from "next/link";
 import { DecorIcon } from "@/components/ui/decor-icon";
 import {
 	Accordion,
-	AccordionHeader,
+	AccordionContent,
 	AccordionItem,
-	AccordionPanel,
 	AccordionTrigger,
-} from "@/components/animate-ui/primitives/base/accordion";
+} from "@/components/ui/accordion";
 
 type FaqItem = {
 	id: string;
@@ -30,9 +30,9 @@ export function FaqsSection() {
 						</p>
 						<p className="text-muted-foreground text-sm leading-relaxed md:text-base">
 							{"Noch etwas unklar? "}
-							<a className="text-primary hover:underline" href="/contact">
+							<Link className="text-primary hover:underline" href="/contact">
 								Kontaktiere uns
-							</a>
+							</Link>
 						</p>
 					</div>
 				</div>
@@ -58,15 +58,13 @@ export function FaqsSection() {
 									position="bottom-left"
 								/>
 
-								<AccordionHeader>
-									<AccordionTrigger className="px-4 py-4 hover:no-underline focus-visible:underline focus-visible:ring-0">
-										{item.title}
-									</AccordionTrigger>
-								</AccordionHeader>
+								<AccordionTrigger className="px-4 py-4 hover:no-underline focus-visible:underline focus-visible:ring-0">
+									{item.title}
+								</AccordionTrigger>
 
-								<AccordionPanel className="px-4 pb-4 text-muted-foreground">
+								<AccordionContent className="px-4 pb-4 text-muted-foreground">
 									{item.content}
-								</AccordionPanel>
+								</AccordionContent>
 							</AccordionItem>
 						))}
 					</Accordion>
