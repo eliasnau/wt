@@ -24,7 +24,7 @@
     "better-auth": "^1.5.5",
     "botid": "^1.5.11",
     "dotenv": "catalog:",
-    "next": "16.2.3",
+    "next": "16.2.4",
     "posthog-node": "^5.28.2",
     "zod": "catalog:"
   },
