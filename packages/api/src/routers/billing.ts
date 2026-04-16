@@ -621,34 +621,34 @@ async function applyCredits({
 				const membershipTotal = lines
 					.filter((line) => line.type === "membership_fee")
 					.reduce((sum, line) => sum + line.totalAmountCents, 0);
-			const appliedCycleCredits = lines
-				.filter((line) => line.type === "credit_cycle")
-				.reduce((sum, line) => sum + line.totalAmountCents, 0);
-			const remainingMembershipTotal = Math.max(
-				0,
-				membershipTotal + appliedCycleCredits,
-			);
+				const appliedCycleCredits = lines
+					.filter((line) => line.type === "credit_cycle")
+					.reduce((sum, line) => sum + line.totalAmountCents, 0);
+				const remainingMembershipTotal = Math.max(
+					0,
+					membershipTotal + appliedCycleCredits,
+				);
 
-			if (remainingMembershipTotal > 0) {
-				lines.push({
-					organizationId,
-					type: "credit_cycle",
-					description: "Billing cycle credit applied",
-					quantity: 1,
-					unitAmountCents: -remainingMembershipTotal,
-					totalAmountCents: -remainingMembershipTotal,
-					coverageStart: monthStart,
-					coverageEnd: lastDayOfMonth(monthStart),
-					creditGrantId: grant.id,
-				});
-				balance -= remainingMembershipTotal;
-				await tx
-					.update(creditGrant)
-					.set({ remainingCycles: (grant.remainingCycles ?? 0) - 1 })
-					.where(eq(creditGrant.id, grant.id));
+				if (remainingMembershipTotal > 0) {
+					lines.push({
+						organizationId,
+						type: "credit_cycle",
+						description: "Billing cycle credit applied",
+						quantity: 1,
+						unitAmountCents: -remainingMembershipTotal,
+						totalAmountCents: -remainingMembershipTotal,
+						coverageStart: monthStart,
+						coverageEnd: lastDayOfMonth(monthStart),
+						creditGrantId: grant.id,
+					});
+					balance -= remainingMembershipTotal;
+					await tx
+						.update(creditGrant)
+						.set({ remainingCycles: (grant.remainingCycles ?? 0) - 1 })
+						.where(eq(creditGrant.id, grant.id));
+				}
 			}
 		}
-	}
 
 	if (balance <= 0) {
 		return;
@@ -982,34 +982,36 @@ async function generateInvoicesForMonth({
 async function listEligibleInvoicesForBatch({
 	executor,
 	organizationId,
-	collectionDate,
 }: {
 	executor: BillingReadExecutor;
 	organizationId: string;
-	collectionDate: string;
 }) {
 	const invoices = await executor
-			.select({
-				id: invoice.id,
-				memberId: invoice.memberId,
-				contractId: invoice.contractId,
-				status: invoice.status,
-				totalCents: invoice.totalCents,
-				billingPeriodStart: invoice.billingPeriodStart,
-				billingPeriodEnd: invoice.billingPeriodEnd,
-				memberFirstName: clubMember.firstName,
+		.select({
+			id: invoice.id,
+			memberId: invoice.memberId,
+			contractId: invoice.contractId,
+			status: invoice.status,
+			totalCents: invoice.totalCents,
+			billingPeriodStart: invoice.billingPeriodStart,
+			billingPeriodEnd: invoice.billingPeriodEnd,
+			memberFirstName: clubMember.firstName,
 			memberLastName: clubMember.lastName,
 		})
-			.from(invoice)
-			.innerJoin(clubMember, eq(clubMember.id, invoice.memberId))
-			.where(
+		.from(invoice)
+		.innerJoin(clubMember, eq(clubMember.id, invoice.memberId))
+		.where(
+			and(
 				eq(invoice.organizationId, organizationId),
-			)
-			.orderBy(
-				asc(invoice.billingPeriodStart),
-				asc(clubMember.lastName),
-				asc(clubMember.firstName),
-			);
+				eq(invoice.status, "finalized"),
+				sql`${invoice.totalCents} > 0`,
+			),
+		)
+		.orderBy(
+			asc(invoice.billingPeriodStart),
+			asc(clubMember.lastName),
+			asc(clubMember.firstName),
+		);
 
 	const exportedInvoiceIds = new Set(
 		(
@@ -1047,11 +1049,7 @@ async function listEligibleInvoicesForBatch({
 	for (const currentInvoice of invoices) {
 		let exclusionReason: string | null = null;
 
-		if (currentInvoice.status !== "finalized") {
-			exclusionReason = "invoice_not_finalized";
-		} else if (currentInvoice.totalCents <= 0) {
-			exclusionReason = "total_is_zero";
-		} else if (exportedInvoiceIds.has(currentInvoice.id)) {
+		if (exportedInvoiceIds.has(currentInvoice.id)) {
 			exclusionReason = "already_exported";
 		} else if (!mandateMap.has(currentInvoice.contractId)) {
 			exclusionReason = "missing_active_mandate";
@@ -1511,16 +1509,15 @@ export const billingRouter = {
 		})
 		.route({ method: "GET", path: "/billing/sepa-batches" }),
 
-	previewSepaBatch: protectedProcedure
-		.use(rateLimitMiddleware(5))
-		.use(requirePermission({ billing: ["view"] }))
-		.input(previewSepaBatchSchema)
-		.handler(async ({ input, context }) => {
-			const organizationId = context.session.activeOrganizationId!;
-			return listEligibleInvoicesForBatch({
-				executor: db,
+		previewSepaBatch: protectedProcedure
+			.use(rateLimitMiddleware(5))
+			.use(requirePermission({ billing: ["view"] }))
+			.input(previewSepaBatchSchema)
+			.handler(async ({ context }) => {
+				const organizationId = context.session.activeOrganizationId!;
+				return listEligibleInvoicesForBatch({
+					executor: db,
 				organizationId,
-				collectionDate: input.collectionDate,
 			});
 		})
 		.route({ method: "GET", path: "/billing/sepa-batches/preview" }),
@@ -1534,7 +1531,6 @@ export const billingRouter = {
 			const initialPreview = await listEligibleInvoicesForBatch({
 				executor: db,
 				organizationId,
-				collectionDate: input.collectionDate,
 			});
 			let finalPreview = initialPreview;
 
@@ -1553,7 +1549,6 @@ export const billingRouter = {
 					const preview = await listEligibleInvoicesForBatch({
 						executor: tx,
 						organizationId,
-						collectionDate: input.collectionDate,
 					});
 					finalPreview = preview;
 

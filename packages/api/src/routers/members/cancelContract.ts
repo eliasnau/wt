@@ -1,5 +1,5 @@
 import { ORPCError } from "@orpc/server";
-import { and, db, eq } from "@repo/db";
+import { and, db, eq, isNull } from "@repo/db";
 import { contract } from "@repo/db/schema";
 import { z } from "zod";
 
@@ -129,8 +129,14 @@ export async function cancelMemberContract({
 			cancellationReason: cancelReason,
 			cancellationEffectiveDate,
 		})
-		.where(eq(contract.id, existingContract.id))
+		.where(and(eq(contract.id, existingContract.id), isNull(contract.cancelledAt)))
 		.returning();
+
+	if (!updatedContract) {
+		throw new ORPCError("BAD_REQUEST", {
+			message: "Contract is already cancelled",
+		});
+	}
 
 	return updatedContract;
 }

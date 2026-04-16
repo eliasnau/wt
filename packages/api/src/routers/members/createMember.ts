@@ -16,6 +16,19 @@ export const optionalPhoneSchema = z
 	.trim()
 	.max(255, "Phone is too long");
 
+function isLastDayOfMonthDate(value: string) {
+	const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+	if (!match) return false;
+
+	const year = Number(match[1]);
+	const month = Number(match[2]);
+	const day = Number(match[3]);
+	if (!year || month < 1 || month > 12 || day < 1) return false;
+
+	const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+	return day === lastDay;
+}
+
 export const createMemberSchema = z.object({
 	firstName: z.string().min(1, "First name is required").max(255),
 	lastName: z.string().min(1, "Last name is required").max(255),
@@ -44,6 +57,7 @@ export const createMemberSchema = z.object({
 	settledThroughDate: z
 		.string()
 		.regex(/^\d{4}-\d{2}-\d{2}$/, "Must be valid date format (YYYY-MM-DD)")
+		.refine(isLastDayOfMonthDate, "Must be the last day of the month")
 		.optional()
 		.or(z.literal("")),
 	memberNotes: z.string().max(1000).optional(),
