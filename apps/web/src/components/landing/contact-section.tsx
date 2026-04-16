@@ -18,12 +18,14 @@ export function ContactSection({ isSignedIn = false }: ContactSectionProps) {
 						<p className="max-w-sm text-muted-foreground text-sm leading-relaxed md:text-base">
 							Du bist bereits angemeldet. Für Produktfragen und schnellere
 							Rückmeldungen nutze bitte den dedizierten{" "}
-							<Link
+							<a
 								className="text-foreground underline underline-offset-4 hover:text-primary"
-								href="/support"
+								href="https://docs.matdesk.app"
+								rel="noreferrer"
+								target="_blank"
 							>
 								Support-Bereich
-							</Link>
+							</a>
 							.
 						</p>
 					</div>
