@@ -34,7 +34,7 @@
 		"@neondatabase/serverless": "^1.0.2",
 		"@upstash/redis": "^1.37.0",
 		"dotenv": "catalog:",
-		"drizzle-orm": "^0.45.1",
+		"drizzle-orm": "^0.45.2",
 		"pg": "^8.20.0",
 		"zod": "catalog:"
 	}
