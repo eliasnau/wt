@@ -309,13 +309,15 @@ async function getNextBatchSequenceNumber(
 }
 
 async function buildSepaBatchXml({
+	executor,
 	organizationId,
 	batchId,
 }: {
+	executor: BillingReadExecutor;
 	organizationId: string;
 	batchId: string;
 }) {
-	const [batch] = await db
+	const [batch] = await executor
 		.select()
 		.from(sepaBatch)
 		.where(and(eq(sepaBatch.id, batchId), eq(sepaBatch.organizationId, organizationId)))
@@ -331,7 +333,7 @@ async function buildSepaBatchXml({
 		});
 	}
 
-	const [sepaRow] = await db
+	const [sepaRow] = await executor
 		.select()
 		.from(organizationSettings)
 		.where(eq(organizationSettings.organizationId, organizationId))
@@ -340,7 +342,7 @@ async function buildSepaBatchXml({
 	const sepa = await loadSepaModule();
 	validateCreditorDetails(sepa, sepaSettings);
 
-	const items = await db
+	const items = await executor
 		.select({
 			invoiceId: sepaBatchItem.invoiceId,
 			amountCents: sepaBatchItem.amountCents,
@@ -368,7 +370,7 @@ async function buildSepaBatchXml({
 		});
 	}
 
-	const activeMandates = await db
+	const activeMandates = await executor
 		.select()
 		.from(sepaMandate)
 		.where(
@@ -1684,42 +1686,50 @@ export const billingRouter = {
 		})
 		.route({ method: "GET", path: "/billing/sepa-batches/:id" }),
 
-	downloadSepaBatch: protectedProcedure
-		.use(rateLimitMiddleware(5))
-		.use(requirePermission({ billing: ["download"] }))
-		.input(markBatchDownloadedSchema)
-		.handler(async ({ input, context }) => {
-			const organizationId = context.session.activeOrganizationId!;
-			const { batch, xml } = await buildSepaBatchXml({
-				organizationId,
-				batchId: input.id,
-			});
+		downloadSepaBatch: protectedProcedure
+			.use(rateLimitMiddleware(5))
+			.use(requirePermission({ billing: ["download"] }))
+			.input(markBatchDownloadedSchema)
+			.handler(async ({ input, context }) => {
+				const organizationId = context.session.activeOrganizationId!;
+				const { batch, xml } = await wsDb.transaction(async (tx) => {
+					const { batch, xml } = await buildSepaBatchXml({
+						executor: tx,
+						organizationId,
+						batchId: input.id,
+					});
 
-			let nextBatch = batch;
-			if (batch.status === "generated") {
-				const [updated] = await db
-					.update(sepaBatch)
-					.set({ status: "downloaded" })
-					.where(
-						and(
-							eq(sepaBatch.id, input.id),
-							eq(sepaBatch.organizationId, organizationId),
-							eq(sepaBatch.status, "generated"),
-						),
-					)
-					.returning();
+					let nextBatch = batch;
+					if (batch.status === "generated") {
+						const [updated] = await tx
+							.update(sepaBatch)
+							.set({ status: "downloaded" })
+							.where(
+								and(
+									eq(sepaBatch.id, input.id),
+									eq(sepaBatch.organizationId, organizationId),
+									eq(sepaBatch.status, "generated"),
+								),
+							)
+							.returning();
 
-				if (updated) {
-					nextBatch = updated;
-				}
-			}
+						if (updated) {
+							nextBatch = updated;
+						}
+					}
 
-			return {
-				batch: nextBatch,
-				xml,
-			};
-		})
-		.route({ method: "POST", path: "/billing/sepa-batches/:id/download" }),
+					return {
+						batch: nextBatch,
+						xml,
+					};
+				});
+
+				return {
+					batch,
+					xml,
+				};
+			})
+			.route({ method: "POST", path: "/billing/sepa-batches/:id/download" }),
 
 	markSepaBatchDownloaded: protectedProcedure
 		.use(rateLimitMiddleware(5))
