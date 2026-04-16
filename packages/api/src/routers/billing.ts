@@ -787,6 +787,8 @@ async function generateInvoicesForMonth({
 	targetMonth: string;
 	currency: string;
 }) {
+	// Contract state is protected by the per-organization advisory lock acquired by
+	// generateInvoices, so we can read the org's contracts here without FOR UPDATE.
 	const contracts = await tx
 		.select()
 		.from(contract)
@@ -803,13 +805,6 @@ async function generateInvoicesForMonth({
 			continue;
 		}
 
-		if (
-			contractRow.cancellationEffectiveDate &&
-			contractRow.cancellationEffectiveDate < targetMonth
-		) {
-			continue;
-		}
-
 		const settledThroughMonth = contractRow.settledThroughDate
 			? addMonths(firstDayOfMonth(contractRow.settledThroughDate), 1)
 			: contractRow.startDate;
@@ -817,10 +812,21 @@ async function generateInvoicesForMonth({
 			settledThroughMonth > contractRow.startDate
 				? settledThroughMonth
 				: contractRow.startDate;
+		// Cancelled contracts can still have collectible arrears, but they should not
+		// generate charges beyond their effective cancellation month.
+		const lastBillableMonth =
+			contractRow.cancellationEffectiveDate &&
+			contractRow.cancellationEffectiveDate < targetMonth
+				? firstDayOfMonth(contractRow.cancellationEffectiveDate)
+				: targetMonth;
+
+		if (firstBillableMonth > lastBillableMonth) {
+			continue;
+		}
 
 		const monthsToConsider: string[] = [];
 		let cursor = firstBillableMonth;
-		while (cursor <= targetMonth) {
+		while (cursor <= lastBillableMonth) {
 			monthsToConsider.push(cursor);
 			cursor = addMonths(cursor, 1);
 		}
