@@ -41,6 +41,19 @@ Das bedeutet zum Beispiel:
 
 Diese Regel ist eine bewusste Geschäftsentscheidung mit spürbaren finanziellen Folgen und sollte bei Betrieb und Support klar bekannt sein.
 
+## Billing-Cycle-Credits gelten nicht für Arrears
+
+Billing-Cycle-Credits ("freie Monate") werden aktuell nur auf **normale aktuelle Mitgliedsbeiträge** angewendet.
+
+Sobald ein historischer Monatsbeitrag als `arrears` behandelt wird, greifen diese Credits darauf **nicht** mehr. Für arrears können aktuell nur Geldgutschriften (`money credits`) verrechnet werden.
+
+Das bedeutet:
+
+- Ein freier Monat reduziert den aktuellen `membership_fee`-Anteil.
+- Ein freier Monat erlässt keine bereits als arrears markierten Altschulden.
+
+Auch das ist derzeit eine bewusste Produktentscheidung und sollte für Support, Betrieb und spätere Produktentscheidungen explizit bekannt sein.
+
 ## Technische Notiz: `settledThroughDate` wird nicht fortgeschrieben
 
 Nach erfolgreicher Rechnungserzeugung wird `contract.settledThroughDate` aktuell **nicht** automatisch auf den zuletzt abgedeckten Monat weitergesetzt.

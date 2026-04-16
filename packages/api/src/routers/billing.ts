@@ -611,13 +611,16 @@ async function applyCredits({
 		)
 		.orderBy(asc(creditGrant.createdAt));
 
-	for (const grant of grants) {
-		if (balance <= 0) break;
+		for (const grant of grants) {
+			if (balance <= 0) break;
 
-		if (grant.type === "billing_cycles" && (grant.remainingCycles ?? 0) > 0) {
-			const membershipTotal = lines
-				.filter((line) => line.type === "membership_fee")
-				.reduce((sum, line) => sum + line.totalAmountCents, 0);
+			if (grant.type === "billing_cycles" && (grant.remainingCycles ?? 0) > 0) {
+				// Intentional: billing-cycle credits only offset current membership_fee
+				// lines. Once a missed month is converted into arrears, only money credits
+				// can reduce it; "free month" credits do not forgive historical debt.
+				const membershipTotal = lines
+					.filter((line) => line.type === "membership_fee")
+					.reduce((sum, line) => sum + line.totalAmountCents, 0);
 			const appliedCycleCredits = lines
 				.filter((line) => line.type === "credit_cycle")
 				.reduce((sum, line) => sum + line.totalAmountCents, 0);
