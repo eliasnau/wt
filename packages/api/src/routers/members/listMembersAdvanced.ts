@@ -127,15 +127,14 @@ const memberSelect = {
 	updatedAt: clubMember.updatedAt,
 	contractId: contract.id,
 	contractStartDate: contract.startDate,
+	contractStatus: contract.status,
 	contractInitialPeriod: contract.initialPeriod,
 	contractInitialPeriodEndDate: contract.initialPeriodEndDate,
-	contractCurrentPeriodEndDate: contract.currentPeriodEndDate,
-	contractNextBillingDate: contract.nextBillingDate,
-	contractJoiningFeeAmount: contract.joiningFeeAmount,
-	contractYearlyFeeAmount: contract.yearlyFeeAmount,
+	contractJoiningFeeCents: contract.joiningFeeCents,
+	contractYearlyFeeCents: contract.yearlyFeeCents,
 	contractNotes: contract.notes,
 	contractCancelledAt: contract.cancelledAt,
-	contractCancelReason: contract.cancelReason,
+	contractCancelReason: contract.cancellationReason,
 	contractCancellationEffectiveDate: contract.cancellationEffectiveDate,
 };
 
@@ -187,14 +186,14 @@ function getFieldConfig(field: z.infer<typeof filterFieldSchema>) {
 				textExpr: sql`CAST(${clubMember.birthdate} AS TEXT)`,
 			};
 		case "initialPeriod":
-			return {
-				compareExpr: contract.initialPeriod,
-				textExpr: contract.initialPeriod,
-			};
+		return {
+			compareExpr: contract.initialPeriod,
+			textExpr: contract.initialPeriod,
+		};
 		case "cancelReason":
 			return {
-				compareExpr: contract.cancelReason,
-				textExpr: contract.cancelReason,
+				compareExpr: contract.cancellationReason,
+				textExpr: contract.cancellationReason,
 			};
 		case "startDate":
 			return {
@@ -482,7 +481,7 @@ function buildMembersQueryContext({
 					`%${search}%`,
 				),
 				ilike(contract.initialPeriod, `%${search}%`),
-				ilike(contract.cancelReason, `%${search}%`),
+				ilike(contract.cancellationReason, `%${search}%`),
 				ilike(sql`CAST(${contract.startDate} AS TEXT)`, `%${search}%`),
 				ilike(
 					sql`CAST(${contract.cancellationEffectiveDate} AS TEXT)`,
@@ -548,7 +547,7 @@ async function buildGroupMap(memberIds: string[]) {
 			string,
 			{
 				groupId: string;
-				membershipPrice: number;
+				membershipPriceCents: number;
 				group: { id: string; name: string; color: string };
 			}[]
 		>();
@@ -558,7 +557,7 @@ async function buildGroupMap(memberIds: string[]) {
 		.select({
 			memberId: groupMember.memberId,
 			groupId: groupMember.groupId,
-			membershipPrice: groupMember.membershipPrice,
+			membershipPriceCents: groupMember.membershipPriceCents,
 			groupName: group.name,
 			groupColor: group.color,
 		})
@@ -571,7 +570,7 @@ async function buildGroupMap(memberIds: string[]) {
 			const groupMembers = acc.get(row.memberId) ?? [];
 			groupMembers.push({
 				groupId: row.groupId,
-				membershipPrice: row.membershipPrice ?? 0,
+				membershipPriceCents: row.membershipPriceCents,
 				group: { id: row.groupId, name: row.groupName, color: row.groupColor },
 			});
 			acc.set(row.memberId, groupMembers);
@@ -581,7 +580,7 @@ async function buildGroupMap(memberIds: string[]) {
 			string,
 			{
 				groupId: string;
-				membershipPrice: number;
+				membershipPriceCents: number;
 				group: { id: string; name: string; color: string };
 			}[]
 		>(),
@@ -670,12 +669,11 @@ async function fetchMembersAdvancedData({
 		const {
 			contractId,
 			contractStartDate,
+			contractStatus,
 			contractInitialPeriod,
 			contractInitialPeriodEndDate,
-			contractCurrentPeriodEndDate,
-			contractNextBillingDate,
-			contractJoiningFeeAmount,
-			contractYearlyFeeAmount,
+			contractJoiningFeeCents,
+			contractYearlyFeeCents,
 			contractNotes,
 			contractCancelledAt,
 			contractCancelReason,
@@ -693,12 +691,11 @@ async function fetchMembersAdvancedData({
 			contract: {
 				id: contractId,
 				startDate: contractStartDate,
+				status: contractStatus,
 				initialPeriod: contractInitialPeriod,
 				initialPeriodEndDate: contractInitialPeriodEndDate,
-				currentPeriodEndDate: contractCurrentPeriodEndDate,
-				nextBillingDate: contractNextBillingDate,
-				joiningFeeAmount: contractJoiningFeeAmount,
-				yearlyFeeAmount: contractYearlyFeeAmount,
+				joiningFeeCents: contractJoiningFeeCents,
+				yearlyFeeCents: contractYearlyFeeCents,
 				notes: contractNotes,
 				cancelledAt: contractCancelledAt,
 				cancelReason: contractCancelReason,

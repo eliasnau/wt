@@ -44,6 +44,20 @@ import {
 	getRandomGroupColor,
 } from "./group-color-presets";
 
+function parsePriceValue(value: string) {
+	const normalizedValue = value.trim();
+	if (!normalizedValue) {
+		return undefined;
+	}
+
+	const parsed = Number(normalizedValue);
+	if (Number.isNaN(parsed)) {
+		return undefined;
+	}
+
+	return Math.round(parsed * 100);
+}
+
 interface NewGroupSheetProps {
 	onGroupCreated?: () => void;
 }
@@ -82,7 +96,7 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 			name: string;
 			description?: string;
 			color: string;
-			defaultMembershipPrice?: string;
+			defaultMembershipPriceCents?: number;
 		}) => {
 			return client.groups.create(data);
 		},
@@ -102,8 +116,9 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 			name: values.name.trim(),
 			description: values.description?.trim(),
 			color: values.color.toLowerCase(),
-			defaultMembershipPrice:
-				values.defaultMembershipPrice?.trim() || undefined,
+			defaultMembershipPriceCents: parsePriceValue(
+				values.defaultMembershipPrice ?? "",
+			),
 		});
 	};
 
