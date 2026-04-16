@@ -1,0 +1,29 @@
+---
+title: Abrechnungslogik
+description: Wichtige Verhaltensweisen und bekannte Einschränkungen der Rechnungslogik.
+---
+
+Diese Seite beschreibt aktuelle Verhaltensweisen der Abrechnung, die für Betrieb und spätere Weiterentwicklung bewusst dokumentiert sind.
+
+## Joining Fee auf der aktuellen Rechnung
+
+Die Aufnahmegebühr wird absichtlich nur auf der **aktuellen Zielmonats-Rechnung** erzeugt.
+
+Wenn für einen Vertrag sowohl eine rückwirkende Nachberechnung als auch eine aktuelle Monatsrechnung erzeugt werden, erscheint die Aufnahmegebühr **nicht** auf der Nachberechnungs-Rechnung, sondern nur auf der aktuellen Rechnung.
+
+Das ist aktuell eine bewusste Produktentscheidung:
+
+- Nachberechnungen sollen offene Monatsbeiträge aufholen.
+- Die Aufnahmegebühr soll auf der ersten "echten" aktuellen Rechnung erscheinen.
+- Die Aufnahmegebühr wird nicht rückwirkend auf historische Forderungen verschoben.
+
+## Nachberechnungen verwenden den aktuellen Gruppenstand
+
+Nachberechnungen verwenden aktuell die **heutigen Gruppenmitgliedschaften und Mitgliedsbeiträge** des Mitglieds, nicht einen historischen Snapshot pro Abrechnungsmonat.
+
+Das bedeutet:
+
+- Wenn ein Mitglied zwischenzeitlich die Gruppe gewechselt hat, kann eine Nachberechnung den heutigen Gruppenbeitrag statt des damaligen Beitrags verwenden.
+- Wenn sich der Preis einer bestehenden Gruppenmitgliedschaft geändert hat, kann die Nachberechnung ebenfalls den aktuellen Preis statt des historischen Preises verwenden.
+
+Das ist eine bekannte Einschränkung des derzeitigen "current state"-Ansatzes und sollte bei zukünftigen Verbesserungen der Abrechnungslogik berücksichtigt werden.

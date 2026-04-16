@@ -719,6 +719,8 @@ async function buildChargeLinesForMonth({
 	chargeYearlyFee: boolean;
 }) {
 	const lines: InvoiceLineDraft[] = [];
+	// Arrears are priced from the member's current group assignments and membership
+	// prices. We do not yet snapshot historical group memberships per billing month.
 	const groupCharges = await getContractGroupCharges(executor, contractRow.memberId);
 
 	for (const groupCharge of groupCharges) {
@@ -883,14 +885,16 @@ async function generateInvoicesForMonth({
 					? getMonthNumber(month) === getMonthNumber(contractRow.startDate)
 					: getMonthNumber(month) === 1);
 
-			const lines = await buildChargeLinesForMonth({
-				executor: tx,
-				organizationId,
-				contractRow,
-				monthStart: month,
-				chargeJoiningFee: shouldCreateCurrent && !joiningFeeConsumed,
-				chargeYearlyFee: yearlyFeeDue,
-			});
+				const lines = await buildChargeLinesForMonth({
+					executor: tx,
+					organizationId,
+					contractRow,
+					monthStart: month,
+					// Joining fees are intentionally only added to the target month's
+					// "current" invoice, never to arrears invoices for historical months.
+					chargeJoiningFee: shouldCreateCurrent && !joiningFeeConsumed,
+					chargeYearlyFee: yearlyFeeDue,
+				});
 
 			if (lines.length === 0) {
 				continue;

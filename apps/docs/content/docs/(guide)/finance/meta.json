@@ -1,4 +1,4 @@
 {
 	"title": "Finanzen",
-	"pages": ["batches"]
+	"pages": ["batches", "billing-behavior"]
 }
