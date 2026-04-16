@@ -27,3 +27,24 @@ Das bedeutet:
 - Wenn sich der Preis einer bestehenden Gruppenmitgliedschaft geändert hat, kann die Nachberechnung ebenfalls den aktuellen Preis statt des historischen Preises verwenden.
 
 Das ist eine bekannte Einschränkung des derzeitigen "current state"-Ansatzes und sollte bei zukünftigen Verbesserungen der Abrechnungslogik berücksichtigt werden.
+
+## Arrears Policy: nur der letzte verpasste Monat ist zahlbar
+
+Wenn für einen Vertrag mehrere historische Monate fehlen, wird aktuell nur der **letzte** verpasste Monat als echte Nachforderung berechnet.
+
+Frühere verpasste Monate werden als Waiver-Rechnungen erzeugt und heben sich betragsmäßig selbst auf.
+
+Das bedeutet zum Beispiel:
+
+- Fehlen Januar bis April und die Abrechnung läuft für Mai, dann wird nur April als arrears belastet.
+- Januar bis März erscheinen nur als dokumentierte, betragsneutrale Waiver-Rechnungen.
+
+Diese Regel ist eine bewusste Geschäftsentscheidung mit spürbaren finanziellen Folgen und sollte bei Betrieb und Support klar bekannt sein.
+
+## Technische Notiz: `settledThroughDate` wird nicht fortgeschrieben
+
+Nach erfolgreicher Rechnungserzeugung wird `contract.settledThroughDate` aktuell **nicht** automatisch auf den zuletzt abgedeckten Monat weitergesetzt.
+
+Stattdessen verhindert das System doppelte Rechnungen dadurch, dass bei späteren Läufen vorhandene nicht-stornierte Rechnungsmonate erneut geprüft und übersprungen werden.
+
+Das ist fachlich korrekt, kann aber langfristig zu mehr Arbeit pro Lauf führen, weil ältere Vertragsmonate immer wieder mitgescannt werden. Das ist derzeit dokumentiert, aber noch nicht optimiert.

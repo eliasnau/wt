@@ -802,12 +802,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "due_date": {
-          "name": "due_date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": true
-        },
         "status": {
           "name": "status",
           "type": "text",
@@ -898,21 +892,6 @@
           "columns": [
             {
               "expression": "contract_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "invoice_due_date_idx": {
-          "name": "invoice_due_date_idx",
-          "columns": [
-            {
-              "expression": "due_date",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
