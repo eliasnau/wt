@@ -64,7 +64,7 @@ export function GenerateSepaBatchButton() {
 
 	const previewQuery = useQuery(
 		orpc.billing.previewSepaBatch.queryOptions({
-			input: { collectionDate },
+			input: {},
 			enabled: open && step === "preview",
 		}),
 	);

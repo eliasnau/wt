@@ -126,9 +126,7 @@ const revokeSepaMandateSchema = z.object({
 	id: z.string().uuid(),
 });
 
-const previewSepaBatchSchema = z.object({
-	collectionDate: ymdSchema,
-});
+const previewSepaBatchSchema = z.object({});
 
 const generateSepaBatchSchema = z.object({
 	collectionDate: ymdSchema,
