@@ -3,8 +3,8 @@
 import { useChat } from "@ai-sdk/react";
 import { useHotkey } from "@tanstack/react-hotkeys";
 import {
-	lastAssistantMessageIsCompleteWithApprovalResponses,
 	type FileUIPart,
+	lastAssistantMessageIsCompleteWithApprovalResponses,
 } from "ai";
 import {
 	ArrowDownIcon,
@@ -20,7 +20,6 @@ import {
 	UsersIcon,
 } from "lucide-react";
 import { Fragment, memo, useCallback, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
 import { getModelProviderFromId } from "@/ai/model-icons";
 import {
 	CHAT_MODEL_OPTIONS,
@@ -193,7 +192,11 @@ function formatDeniedSensitiveFields(fields: string[]) {
 	return `${labels.slice(0, -1).join(", ")} and ${labels.at(-1)}`;
 }
 
-function getApprovalMessage(toolName: string, input: unknown, providerName: string) {
+function getApprovalMessage(
+	toolName: string,
+	input: unknown,
+	providerName: string,
+) {
 	const requestedFields = getApprovalRequestedSensitiveFields(input);
 	const targetLabel =
 		toolName === "getMemberInfo" ? "dieses Mitglieds" : "deiner Mitglieder";
@@ -210,7 +213,9 @@ function getApprovalDeniedReason(toolName: string, input: unknown) {
 	const requestedLabel = formatDeniedSensitiveFields(requestedFields);
 
 	const targetLabel =
-		toolName === "getMemberInfo" ? "for this member" : "for the requested members";
+		toolName === "getMemberInfo"
+			? "for this member"
+			: "for the requested members";
 
 	return `User denied reading ${requestedLabel} ${targetLabel}. Do not retry this sensitive-member-data request unless the user explicitly asks again and wants to approve it.`;
 }
@@ -517,8 +522,9 @@ function EmptyState({ onSuggestion }: EmptyStateProps) {
 const AiChat = () => {
 	const [modelSelectorOpen, setModelSelectorOpen] = useState(false);
 	const [model, setModel] = useState(DEFAULT_CHAT_MODEL_ID);
-	const [lastRequestedModel, setLastRequestedModel] =
-		useState(DEFAULT_CHAT_MODEL_ID);
+	const [lastRequestedModel, setLastRequestedModel] = useState(
+		DEFAULT_CHAT_MODEL_ID,
+	);
 	const [previewAttachment, setPreviewAttachment] =
 		useState<PreviewAttachmentData | null>(null);
 	const [isPromptDropActive, setIsPromptDropActive] = useState(false);
@@ -532,11 +538,8 @@ const AiChat = () => {
 		status,
 		setMessages,
 	} = useChat({
-		sendAutomaticallyWhen:
-			lastAssistantMessageIsCompleteWithApprovalResponses,
-		onError: (chatError) => {
-			toast.error(formatChatErrorMessage(chatError) ?? "Request failed.");
-		},
+		experimental_throttle: 50,
+		sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithApprovalResponses,
 	});
 	const formattedErrorMessage = formatChatErrorMessage(error);
 
@@ -568,14 +571,14 @@ const AiChat = () => {
 
 		if (!lastAssistantMessage) {
 			return [] as PendingApproval[];
-			}
+		}
 
-			return lastAssistantMessage.parts
-				.filter(isToolPartForApproval)
-				.filter(isApprovalRequestedToolPart)
-				.map((part) => ({
-					approvalId: part.approval.id,
-					toolName:
+		return lastAssistantMessage.parts
+			.filter(isToolPartForApproval)
+			.filter(isApprovalRequestedToolPart)
+			.map((part) => ({
+				approvalId: part.approval.id,
+				toolName:
 					part.type === "dynamic-tool"
 						? part.toolName
 						: part.type.split("-").slice(1).join("-"),
@@ -609,27 +612,27 @@ const AiChat = () => {
 			const hasText = Boolean(text);
 			const hasAttachments = Boolean(message.files?.length);
 
-				if (!(hasText || hasAttachments)) {
-					return;
-				}
+			if (!(hasText || hasAttachments)) {
+				return;
+			}
 
-				clearError();
-				setLastRequestedModel(model);
+			clearError();
+			setLastRequestedModel(model);
 
-				sendMessage(
-					{
-						text: text || "Sent with attachments",
-						files: message.files,
+			sendMessage(
+				{
+					text: text || "Sent with attachments",
+					files: message.files,
 				},
 				{
 					body: {
 						model,
-						},
 					},
-				);
-			},
-			[model, sendMessage, clearError],
-		);
+				},
+			);
+		},
+		[model, sendMessage, clearError],
+	);
 
 	const handleSuggestion = useCallback(
 		(suggestion: string) => {
@@ -845,13 +848,6 @@ const AiChat = () => {
 								</Message>
 							))
 						)}
-						{formattedErrorMessage ? (
-							<Message from="assistant">
-								<MessageContent>
-									<MessageResponse>{formattedErrorMessage}</MessageResponse>
-								</MessageContent>
-							</Message>
-						) : null}
 					</ConversationContent>
 					<ConversationScrollButton />
 				</Conversation>
@@ -859,6 +855,14 @@ const AiChat = () => {
 				{/* Input bar — pinned to bottom */}
 				<PromptInputProvider>
 					<div className="space-y-2 pb-1">
+						{formattedErrorMessage ? (
+							<div
+								className="rounded-xl border border-destructive/30 bg-destructive/5 px-3 py-2 text-destructive text-sm"
+								role="alert"
+							>
+								{formattedErrorMessage}
+							</div>
+						) : null}
 						{pendingApprovals.length > 0 ? (
 							<div className="space-y-2">
 								{pendingApprovals.map((approval) => (
