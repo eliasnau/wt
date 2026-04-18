@@ -5,15 +5,22 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1765718925854,
-      "tag": "0000_clumsy_gargoyle",
+      "when": 1774380628547,
+      "tag": "0000_redundant_newton_destine",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "7",
-      "when": 1772877561922,
-      "tag": "0001_robust_mole_man",
+      "when": 1776364382185,
+      "tag": "0001_april_billing_cutover",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776505775484,
+      "tag": "0002_restore_contract_member_unique",
       "breakpoints": true
     }
   ]

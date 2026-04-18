@@ -1,0 +1,63 @@
+---
+title: Abrechnungslogik
+description: Wichtige Verhaltensweisen und bekannte Einschränkungen der Rechnungslogik.
+---
+
+Diese Seite beschreibt aktuelle Verhaltensweisen der Abrechnung, die für Betrieb und spätere Weiterentwicklung bewusst dokumentiert sind.
+
+## Joining Fee auf der aktuellen Rechnung
+
+Die Aufnahmegebühr wird absichtlich nur auf der **aktuellen Zielmonats-Rechnung** erzeugt.
+
+Wenn für einen Vertrag sowohl eine rückwirkende Nachberechnung als auch eine aktuelle Monatsrechnung erzeugt werden, erscheint die Aufnahmegebühr **nicht** auf der Nachberechnungs-Rechnung, sondern nur auf der aktuellen Rechnung.
+
+Das ist aktuell eine bewusste Produktentscheidung:
+
+- Nachberechnungen sollen offene Monatsbeiträge aufholen.
+- Die Aufnahmegebühr soll auf der ersten "echten" aktuellen Rechnung erscheinen.
+- Die Aufnahmegebühr wird nicht rückwirkend auf historische Forderungen verschoben.
+
+## Nachberechnungen verwenden den aktuellen Gruppenstand
+
+Nachberechnungen verwenden aktuell die **heutigen Gruppenmitgliedschaften und Mitgliedsbeiträge** des Mitglieds, nicht einen historischen Snapshot pro Abrechnungsmonat.
+
+Das bedeutet:
+
+- Wenn ein Mitglied zwischenzeitlich die Gruppe gewechselt hat, kann eine Nachberechnung den heutigen Gruppenbeitrag statt des damaligen Beitrags verwenden.
+- Wenn sich der Preis einer bestehenden Gruppenmitgliedschaft geändert hat, kann die Nachberechnung ebenfalls den aktuellen Preis statt des historischen Preises verwenden.
+
+Das ist eine bekannte Einschränkung des derzeitigen "current state"-Ansatzes und sollte bei zukünftigen Verbesserungen der Abrechnungslogik berücksichtigt werden.
+
+## Arrears Policy: nur der letzte verpasste Monat ist zahlbar
+
+Wenn für einen Vertrag mehrere historische Monate fehlen, wird aktuell nur der **letzte** verpasste Monat als echte Nachforderung berechnet.
+
+Frühere verpasste Monate werden als Waiver-Rechnungen erzeugt und heben sich betragsmäßig selbst auf.
+
+Das bedeutet zum Beispiel:
+
+- Fehlen Januar bis April und die Abrechnung läuft für Mai, dann wird nur April als arrears belastet.
+- Januar bis März erscheinen nur als dokumentierte, betragsneutrale Waiver-Rechnungen.
+
+Diese Regel ist eine bewusste Geschäftsentscheidung mit spürbaren finanziellen Folgen und sollte bei Betrieb und Support klar bekannt sein.
+
+## Billing-Cycle-Credits gelten nicht für Arrears
+
+Billing-Cycle-Credits ("freie Monate") werden aktuell nur auf **normale aktuelle Mitgliedsbeiträge** angewendet.
+
+Sobald ein historischer Monatsbeitrag als `arrears` behandelt wird, greifen diese Credits darauf **nicht** mehr. Für arrears können aktuell nur Geldgutschriften (`money credits`) verrechnet werden.
+
+Das bedeutet:
+
+- Ein freier Monat reduziert den aktuellen `membership_fee`-Anteil.
+- Ein freier Monat erlässt keine bereits als arrears markierten Altschulden.
+
+Auch das ist derzeit eine bewusste Produktentscheidung und sollte für Support, Betrieb und spätere Produktentscheidungen explizit bekannt sein.
+
+## Technische Notiz: `settledThroughDate` wird nicht fortgeschrieben
+
+Nach erfolgreicher Rechnungserzeugung wird `contract.settledThroughDate` aktuell **nicht** automatisch auf den zuletzt abgedeckten Monat weitergesetzt.
+
+Stattdessen verhindert das System doppelte Rechnungen dadurch, dass bei späteren Läufen vorhandene nicht-stornierte Rechnungsmonate erneut geprüft und übersprungen werden.
+
+Das ist fachlich korrekt, kann aber langfristig zu mehr Arbeit pro Lauf führen, weil ältere Vertragsmonate immer wieder mitgescannt werden. Das ist derzeit dokumentiert, aber noch nicht optimiert.

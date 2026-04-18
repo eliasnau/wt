@@ -44,6 +44,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { formatCents } from "@/utils/billing";
 import { client, orpc, queryClient } from "@/utils/orpc";
 import {
   Header,
@@ -62,8 +63,8 @@ type RegistrationRow = {
   code: string;
   description: string | null;
   billingCycle: string;
-  joiningFeeAmount: string | null;
-  yearlyFeeAmount: string | null;
+  joiningFeeCents: number | null;
+  yearlyFeeCents: number | null;
   contractStartDate: string | null;
   notes: string | null;
   isActive: boolean;
@@ -93,18 +94,16 @@ function formatDate(value: Date | string | null) {
   });
 }
 
-function formatMoney(value: string | null | undefined) {
-  if (!value) return "-";
-  const parsed = Number(value);
-  if (Number.isNaN(parsed)) return value;
-  return `EUR ${parsed.toFixed(2)}`;
+function formatMoney(value: number | null | undefined) {
+  if (value === null || value === undefined) return "-";
+  return formatCents(value);
 }
 
 function normalizeGroups(value: unknown): Array<{
   groupId: string;
   groupNameSnapshot: string;
   schedule?: string;
-  monthlyFee: string;
+  monthlyFeeCents: number;
 }> {
   if (!Array.isArray(value)) return [];
   return value
@@ -114,7 +113,7 @@ function normalizeGroups(value: unknown): Array<{
       if (
         typeof item.groupId !== "string" ||
         typeof item.groupNameSnapshot !== "string" ||
-        typeof item.monthlyFee !== "string"
+        typeof item.monthlyFeeCents !== "number"
       ) {
         return null;
       }
@@ -122,12 +121,12 @@ function normalizeGroups(value: unknown): Array<{
       return {
         groupId: item.groupId,
         groupNameSnapshot: item.groupNameSnapshot,
-        monthlyFee: item.monthlyFee,
+        monthlyFeeCents: item.monthlyFeeCents,
         ...(schedule ? { schedule } : {}),
       };
     })
     .filter(
-      (row): row is { groupId: string; groupNameSnapshot: string; monthlyFee: string; schedule?: string } =>
+      (row): row is { groupId: string; groupNameSnapshot: string; monthlyFeeCents: number; schedule?: string } =>
         row !== null,
     );
 }
@@ -581,13 +580,13 @@ export function SelfServiceRegistrationsPageClient() {
                   <div className="rounded-lg border p-3">
                     <p className="text-muted-foreground text-xs">Aufnahmegebühr</p>
                     <p className="font-medium text-sm">
-                      {formatMoney(selectedRegistration?.joiningFeeAmount)}
+                      {formatMoney(selectedRegistration?.joiningFeeCents)}
                     </p>
                   </div>
                   <div className="rounded-lg border p-3">
                     <p className="text-muted-foreground text-xs">Jahresbeitrag</p>
                     <p className="font-medium text-sm">
-                      {formatMoney(selectedRegistration?.yearlyFeeAmount)}
+                      {formatMoney(selectedRegistration?.yearlyFeeCents)}
                     </p>
                   </div>
                 </div>
@@ -602,7 +601,7 @@ export function SelfServiceRegistrationsPageClient() {
                         <div key={group.groupId} className="rounded-lg border p-3">
                           <p className="font-medium text-sm">{group.groupNameSnapshot}</p>
                           <p className="text-muted-foreground text-xs">{group.schedule || "-"}</p>
-                          <p className="text-xs">Monatsbeitrag: {formatMoney(group.monthlyFee)}</p>
+                          <p className="text-xs">Monatsbeitrag: {formatMoney(group.monthlyFeeCents)}</p>
                         </div>
                       ))}
                     </div>
