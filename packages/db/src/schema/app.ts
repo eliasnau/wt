@@ -221,6 +221,7 @@ export const contract = pgTable(
 			.notNull(),
 	},
 	(table) => [
+		unique("contract_member_unique").on(table.memberId),
 		index("contract_member_id_idx").on(table.memberId),
 		index("contract_org_id_idx").on(table.organizationId),
 	],

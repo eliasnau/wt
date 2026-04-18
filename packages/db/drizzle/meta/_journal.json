@@ -15,6 +15,13 @@
       "when": 1776364382185,
       "tag": "0001_april_billing_cutover",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1776505775484,
+      "tag": "0002_restore_contract_member_unique",
+      "breakpoints": true
     }
   ]
 }

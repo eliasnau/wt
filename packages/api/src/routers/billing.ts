@@ -609,44 +609,44 @@ async function applyCredits({
 		)
 		.orderBy(asc(creditGrant.createdAt));
 
-		for (const grant of grants) {
-			if (balance <= 0) break;
+	for (const grant of grants) {
+		if (balance <= 0) break;
 
-			if (grant.type === "billing_cycles" && (grant.remainingCycles ?? 0) > 0) {
-				// Intentional: billing-cycle credits only offset current membership_fee
-				// lines. Once a missed month is converted into arrears, only money credits
-				// can reduce it; "free month" credits do not forgive historical debt.
-				const membershipTotal = lines
-					.filter((line) => line.type === "membership_fee")
-					.reduce((sum, line) => sum + line.totalAmountCents, 0);
-				const appliedCycleCredits = lines
-					.filter((line) => line.type === "credit_cycle")
-					.reduce((sum, line) => sum + line.totalAmountCents, 0);
-				const remainingMembershipTotal = Math.max(
-					0,
-					membershipTotal + appliedCycleCredits,
-				);
+		if (grant.type === "billing_cycles" && (grant.remainingCycles ?? 0) > 0) {
+			// Intentional: billing-cycle credits only offset current membership_fee
+			// lines. Once a missed month is converted into arrears, only money credits
+			// can reduce it; "free month" credits do not forgive historical debt.
+			const membershipTotal = lines
+				.filter((line) => line.type === "membership_fee")
+				.reduce((sum, line) => sum + line.totalAmountCents, 0);
+			const appliedCycleCredits = lines
+				.filter((line) => line.type === "credit_cycle")
+				.reduce((sum, line) => sum + line.totalAmountCents, 0);
+			const remainingMembershipTotal = Math.max(
+				0,
+				membershipTotal + appliedCycleCredits,
+			);
 
-				if (remainingMembershipTotal > 0) {
-					lines.push({
-						organizationId,
-						type: "credit_cycle",
-						description: "Billing cycle credit applied",
-						quantity: 1,
-						unitAmountCents: -remainingMembershipTotal,
-						totalAmountCents: -remainingMembershipTotal,
-						coverageStart: monthStart,
-						coverageEnd: lastDayOfMonth(monthStart),
-						creditGrantId: grant.id,
-					});
-					balance -= remainingMembershipTotal;
-					await tx
-						.update(creditGrant)
-						.set({ remainingCycles: (grant.remainingCycles ?? 0) - 1 })
-						.where(eq(creditGrant.id, grant.id));
+			if (remainingMembershipTotal > 0) {
+				lines.push({
+					organizationId,
+					type: "credit_cycle",
+					description: "Billing cycle credit applied",
+					quantity: 1,
+					unitAmountCents: -remainingMembershipTotal,
+					totalAmountCents: -remainingMembershipTotal,
+					coverageStart: monthStart,
+					coverageEnd: lastDayOfMonth(monthStart),
+					creditGrantId: grant.id,
+				});
+				balance -= remainingMembershipTotal;
+				await tx
+					.update(creditGrant)
+					.set({ remainingCycles: (grant.remainingCycles ?? 0) - 1 })
+					.where(eq(creditGrant.id, grant.id));
 				}
 			}
-		}
+	}
 
 	if (balance <= 0) {
 		return;
@@ -886,16 +886,16 @@ async function generateInvoicesForMonth({
 					? getMonthNumber(month) === getMonthNumber(contractRow.startDate)
 					: getMonthNumber(month) === 1);
 
-				const lines = await buildChargeLinesForMonth({
-					executor: tx,
-					organizationId,
-					contractRow,
-					monthStart: month,
-					// Joining fees are intentionally only added to the target month's
-					// "current" invoice, never to arrears invoices for historical months.
-					chargeJoiningFee: shouldCreateCurrent && !joiningFeeConsumed,
-					chargeYearlyFee: yearlyFeeDue,
-				});
+			const lines = await buildChargeLinesForMonth({
+				executor: tx,
+				organizationId,
+				contractRow,
+				monthStart: month,
+				// Joining fees are intentionally only added to the target month's
+				// "current" invoice, never to arrears invoices for historical months.
+				chargeJoiningFee: shouldCreateCurrent && !joiningFeeConsumed,
+				chargeYearlyFee: yearlyFeeDue,
+			});
 
 			if (lines.length === 0) {
 				continue;
@@ -1290,6 +1290,9 @@ export const billingRouter = {
 
 				await restoreCreditGrants(tx, currentLines);
 
+				// Keep waiver lines on replacement invoices. A replaced zero-sum waiver
+				// invoice should remain waived; only previously applied credits are stripped
+				// and recalculated below.
 				const chargeLines: InvoiceLineDraft[] = currentLines
 					.filter((line) => line.type !== "credit_money" && line.type !== "credit_cycle")
 					.map((line) => ({
@@ -1313,16 +1316,19 @@ export const billingRouter = {
 					lines: chargeLines,
 				});
 
+				// Unlike voidInvoice, replacing an invoice does not reset joiningFeePaid.
+				// Any joining_fee line is carried forward into chargeLines above and moves
+				// onto the replacement invoice instead of becoming payable again.
 				const replacement = await createInvoiceWithLines(tx, {
-						invoice: {
-							organizationId,
-							memberId: currentInvoice.memberId,
-							contractId: currentInvoice.contractId,
-							billingPeriodStart: currentInvoice.billingPeriodStart,
-							billingPeriodEnd: currentInvoice.billingPeriodEnd,
-							status: "draft",
-							currency: currentInvoice.currency,
-						},
+					invoice: {
+						organizationId,
+						memberId: currentInvoice.memberId,
+						contractId: currentInvoice.contractId,
+						billingPeriodStart: currentInvoice.billingPeriodStart,
+						billingPeriodEnd: currentInvoice.billingPeriodEnd,
+						status: "draft",
+						currency: currentInvoice.currency,
+					},
 					lines: chargeLines,
 				});
 

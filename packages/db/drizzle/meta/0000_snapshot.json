@@ -246,6 +246,13 @@
           "primaryKey": false,
           "notNull": false
         },
+        "joining_fee_paid": {
+          "name": "joining_fee_paid",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
         "yearly_fee_cents": {
           "name": "yearly_fee_cents",
           "type": "integer",
