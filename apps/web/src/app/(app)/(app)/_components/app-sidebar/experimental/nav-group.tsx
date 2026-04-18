@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import type React from "react";
+import type { Route } from "next";
 import { ChevronRightIcon } from "lucide-react";
 import Link from "next/link";
 import { AnimateIcon } from "@/components/animate-ui/icons/icon";
@@ -72,7 +73,7 @@ function NavGroupItem({ item }: { item: SidebarNavItem }) {
 					onMouseEnter={() => setIsHovered(true)}
 					onMouseLeave={() => setIsHovered(false)}
 				>
-					<Link href={item.path ?? "/dashboard"}>
+					<Link href={(item.path ?? "/dashboard") as Route}>
 						<AnimatedIcon animate={isHovered} icon={item.icon} />
 						<span>{item.title}</span>
 					</Link>
@@ -140,7 +141,7 @@ function SidebarSubItem({ subItem }: { subItem: SidebarNavItem }) {
 				onMouseEnter={() => setIsHovered(true)}
 				onMouseLeave={() => setIsHovered(false)}
 			>
-				<Link href={subItem.path ?? "/dashboard"}>
+				<Link href={(subItem.path ?? "/dashboard") as Route}>
 					<AnimatedIcon animate={isHovered} icon={subItem.icon} />
 					<span>{subItem.title}</span>
 				</Link>

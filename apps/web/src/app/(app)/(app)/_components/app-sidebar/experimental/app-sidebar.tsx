@@ -1,5 +1,6 @@
 "use client";
 
+import type { Route } from "next";
 import Link from "next/link";
 import { AnimateIcon } from "@/components/animate-ui/icons/icon";
 import {
@@ -50,7 +51,7 @@ export function ExperimentalAppSidebar() {
 									isActive={item.isActive}
 									size="sm"
 								>
-									<Link href={item.path ?? "/dashboard"}>
+									<Link href={(item.path ?? "/dashboard") as Route}>
 										{item.icon}
 										<span>{item.title}</span>
 									</Link>

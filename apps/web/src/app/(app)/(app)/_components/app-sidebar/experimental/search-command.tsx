@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
+import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import {
   ArrowDownIcon,
@@ -47,6 +48,7 @@ const iconClassName = "mr-2 h-4 w-4 shrink-0 opacity-80";
 type MemberSearchItem = {
   value: string;
   label: string;
+  icon?: React.ReactNode;
   memberId: string;
   memberGroups: string[];
   isMemberResult: true;
@@ -210,11 +212,12 @@ export function SearchCommand() {
       .filter((group) => group.items.length > 0);
 
     if (shouldSearchMembers && memberResults.length > 0) {
-      groups.push({
+        groups.push({
         value: "Mitglieder",
         items: memberResults.map((member) => ({
           value: `member-${member.id}`,
           label: member.name,
+          group: "Mitglieder",
           memberId: member.id,
           memberGroups: member.groups,
           isMemberResult: true,
@@ -254,7 +257,7 @@ export function SearchCommand() {
       }
 
       if (item.path) {
-        router.push(item.path);
+        router.push(item.path as Route);
         setOpen(false);
       }
     },
@@ -263,7 +266,7 @@ export function SearchCommand() {
 
   const handleMemberClick = React.useCallback(
     (memberId: string) => {
-      router.push(`/dashboard/members/${memberId}`);
+      router.push(`/dashboard/members/${memberId}` as Route);
       setOpen(false);
     },
     [router],
@@ -378,24 +381,26 @@ export function SearchCommand() {
                           );
                         }
 
+                        const indexedItem = item as IndexedCommandItem;
+
                         return (
                           <CommandItem
-                            key={item.value}
-                            value={item.value}
-                            onClick={() => handleItemClick(item)}
+                            key={indexedItem.value}
+                            value={indexedItem.value}
+                            onClick={() => handleItemClick(indexedItem)}
                           >
-                            {item.icon}
+                            {indexedItem.icon}
                             <BreadcrumbLabel
-                              label={item.label}
+                              label={indexedItem.label}
                               breadcrumb={
-                                !isSubpage && item.isIndexedChild
-                                  ? item.breadcrumb
+                                !isSubpage && indexedItem.isIndexedChild
+                                  ? indexedItem.breadcrumb
                                   : undefined
                               }
                             />
                             {!isSubpage &&
-                            item.children &&
-                            !item.isIndexedChild ? (
+                            indexedItem.children &&
+                            !indexedItem.isIndexedChild ? (
                               <CommandShortcut>
                                 <ChevronRightIcon className="h-4 w-4" />
                               </CommandShortcut>
