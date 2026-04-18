@@ -7,7 +7,7 @@ export default async function AdminScriptsPage() {
 
 	return (
 		<AdminScriptsPageClient
-			initialOrganizationId={session.session.activeOrganizationId}
+			initialOrganizationId={session.session.activeOrganizationId ?? ""}
 		/>
 	);
 }

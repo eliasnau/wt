@@ -20,14 +20,14 @@
 	},
 	"dependencies": {
 		"@repo/auth": "workspace:*",
-		"atmn": "^1.1.3",
-		"autumn-js": "^1.0.0"
+		"atmn": "^1.1.8",
+		"autumn-js": "^1.2.9"
 	},
 	"devDependencies": {
 		"@repo/config": "workspace:*",
 		"typescript": "catalog:"
 	},
 	"peerDependencies": {
-		"typescript": "^5"
+		"typescript": "^5 || ^6"
 	}
 }

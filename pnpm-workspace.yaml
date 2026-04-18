@@ -3,14 +3,14 @@ packages:
   - packages/*
 
 catalog:
-  '@orpc/client': ^1.13.7
-  '@orpc/contract': ^1.13.7
-  '@orpc/openapi': ^1.13.7
-  '@orpc/server': ^1.13.7
-  '@orpc/tanstack-query': ^1.13.7
-  '@orpc/zod': ^1.13.7
-  convex: ^1.33.1
-  dotenv: 17.3.1
-  next: ^16.0.7
-  typescript: ^5.9.3
+  '@orpc/client': ^1.13.14
+  '@orpc/contract': ^1.13.14
+  '@orpc/openapi': ^1.13.14
+  '@orpc/server': ^1.13.14
+  '@orpc/tanstack-query': ^1.13.14
+  '@orpc/zod': ^1.13.14
+  convex: ^1.35.1
+  dotenv: 17.4.2
+  next: ^16.2.4
+  typescript: ^6.0.3
   zod: ^4.3.6
