@@ -2,10 +2,9 @@
 
 import { Input as InputPrimitive } from "@base-ui/react/input";
 import type * as React from "react";
-
 import { cn } from "@/lib/utils";
 
-type InputProps = Omit<
+export type InputProps = Omit<
   InputPrimitive.Props & React.RefAttributes<HTMLInputElement>,
   "size"
 > & {
@@ -14,16 +13,15 @@ type InputProps = Omit<
   nativeInput?: boolean;
 };
 
-function Input({
+export function Input({
   className,
   size = "default",
   unstyled = false,
   nativeInput = false,
   ...props
-}: InputProps) {
-  const { style, ...restProps } = props;
+}: InputProps): React.ReactElement {
   const inputClassName = cn(
-    "h-8.5 w-full min-w-0 rounded-[inherit] px-[calc(--spacing(3)-1px)] leading-8.5 outline-none placeholder:text-muted-foreground/72 sm:h-7.5 sm:leading-7.5 [transition:background-color_5000000s_ease-in-out_0s]",
+    "h-8.5 w-full min-w-0 rounded-[inherit] px-[calc(--spacing(3)-1px)] leading-8.5 outline-none [transition:background-color_5000000s_ease-in-out_0s] placeholder:text-muted-foreground/72 sm:h-7.5 sm:leading-7.5",
     size === "sm" &&
       "h-7.5 px-[calc(--spacing(2.5)-1px)] leading-7.5 sm:h-6.5 sm:leading-6.5",
     size === "lg" && "h-9.5 leading-9.5 sm:h-8.5 sm:leading-8.5",
@@ -46,24 +44,28 @@ function Input({
       data-slot="input-control"
     >
       {nativeInput ? (
-        <input
-          className={inputClassName}
-          data-slot="input"
-          size={typeof size === "number" ? size : undefined}
-          style={typeof style === "function" ? undefined : style}
-          {...restProps}
-        />
+        (() => {
+          const { style, ...rest } = props;
+          return (
+            <input
+              className={inputClassName}
+              data-slot="input"
+              size={typeof size === "number" ? size : undefined}
+              style={typeof style === "function" ? undefined : style}
+              {...rest}
+            />
+          );
+        })()
       ) : (
         <InputPrimitive
           className={inputClassName}
           data-slot="input"
           size={typeof size === "number" ? size : undefined}
-          style={style}
-          {...restProps}
+          {...props}
         />
       )}
     </span>
   );
 }
 
-export { Input, type InputProps };
+export { InputPrimitive };

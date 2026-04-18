@@ -9,8 +9,10 @@ export interface GenerateProps {
 	logo?: ReactNode;
 }
 
-const font = fs.readFile("./lib/og/JetBrainsMono-Regular.ttf");
-const fontBold = fs.readFile("./lib/og/JetBrainsMono-Bold.ttf");
+const font = fs.readFile(
+	new URL("./JetBrainsMono-Regular.ttf", import.meta.url),
+);
+const fontBold = fs.readFile(new URL("./JetBrainsMono-Bold.ttf", import.meta.url));
 
 export async function getImageResponseOptions(): Promise<ImageResponseOptions> {
 	return {
