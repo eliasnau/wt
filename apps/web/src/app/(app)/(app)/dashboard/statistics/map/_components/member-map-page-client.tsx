@@ -1,9 +1,16 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircleIcon } from "lucide-react";
+import {
+	AlertCircleIcon,
+	Building2Icon,
+	MapPinnedIcon,
+	RouteIcon,
+	UsersIcon,
+} from "lucide-react";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { DecorIcon } from "@/components/ui/decor-icon";
 import {
 	Empty,
 	EmptyContent,
@@ -12,7 +19,8 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
-import { Frame, FrameHeader, FramePanel } from "@/components/ui/frame";
+import { Frame, FramePanel } from "@/components/ui/frame";
+import { cn } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 import {
 	Header,
@@ -47,6 +55,55 @@ const mapStyles = {
 } as const;
 
 type MapStyleKey = keyof typeof mapStyles;
+type MapStatFeature = {
+	title: string;
+	icon: React.ReactNode;
+	value: string | number;
+	description: string;
+};
+
+function MapStatFeatureCard({
+	feature,
+	className,
+	...props
+}: React.ComponentProps<"div"> & {
+	feature: MapStatFeature;
+}) {
+	return (
+		<div
+			className={cn(
+				"relative flex min-h-0 flex-col justify-between gap-3 bg-background px-5 pt-5 pb-4 shadow-xs",
+				"dark:bg-[radial-gradient(50%_80%_at_25%_0%,--theme(--color-foreground/.1),transparent)]",
+				className,
+			)}
+			{...props}
+		>
+			<DecorIcon className="size-3.5" position="top-left" />
+
+			<div className="absolute -inset-y-4 -left-px w-px bg-border" />
+			<div className="absolute -inset-y-4 -right-px w-px bg-border" />
+			<div className="absolute -inset-x-4 -top-px h-px bg-border" />
+			<div className="absolute -right-4 -bottom-px -left-4 h-px bg-border" />
+
+			<div
+				className={cn(
+					"relative z-10 flex w-fit items-center justify-center rounded-lg border bg-muted/20 p-2.5",
+					"[&_svg]:size-4.5 [&_svg]:stroke-[1.5] [&_svg]:text-foreground",
+				)}
+			>
+				{feature.icon}
+			</div>
+
+			<div className="relative z-10 space-y-1.5">
+				<p className="font-medium text-sm text-foreground">{feature.title}</p>
+				<p className="font-semibold text-xl">{feature.value}</p>
+				<p className="text-muted-foreground text-xs leading-relaxed">
+					{feature.description}
+				</p>
+			</div>
+		</div>
+	);
+}
 
 export function MemberMapPageClient() {
 	const [viewMode, setViewMode] = useState<ViewMode>("heatmap");
@@ -91,6 +148,36 @@ export function MemberMapPageClient() {
 		citySummaries.length > 0
 			? Math.round(filteredMembers.length / citySummaries.length)
 			: 0;
+	const statFeatures: MapStatFeature[] = [
+		{
+			title: "Mitglieder gesamt",
+			icon: <UsersIcon />,
+			value: mapQuery.isPending ? "-" : filteredMembers.length,
+			description: `Verteilt auf ${
+				mapQuery.isPending ? "-" : citySummaries.length
+			} Orte`,
+		},
+		{
+			title: "Größter Standort",
+			icon: <Building2Icon />,
+			value: mapQuery.isPending ? "-" : (largestCity?.city ?? "-"),
+			description: mapQuery.isPending
+				? "-"
+				: `${largestCity?.count ?? 0} Mitglieder`,
+		},
+		{
+			title: "Durchschnitt",
+			icon: <MapPinnedIcon />,
+			value: mapQuery.isPending ? "-" : averagePerCity,
+			description: "Mitglieder pro Ort",
+		},
+		{
+			title: "Durchschnitt",
+			icon: <RouteIcon />,
+			value: mapQuery.isPending ? "-" : "0 km",
+			description: "Entfernung zur Schule",
+		},
+	];
 
 	return (
 		<div className="flex flex-col gap-8">
@@ -148,70 +235,13 @@ export function MemberMapPageClient() {
 				</Frame>
 			) : (
 				<>
-					<div className="grid gap-6 lg:grid-cols-4">
-						<Frame>
-							<FrameHeader className="flex-row items-start justify-between">
-								<div>
-									<p className="text-muted-foreground text-xs uppercase">
-										Mitglieder gesamt
-									</p>
-									<p className="font-semibold text-2xl">
-										{mapQuery.isPending ? "-" : filteredMembers.length}
-									</p>
-									<p className="text-muted-foreground text-xs">
-										Verteilt auf{" "}
-										{mapQuery.isPending ? "-" : citySummaries.length} Orte
-									</p>
-								</div>
-							</FrameHeader>
-						</Frame>
-						<Frame>
-							<FrameHeader className="flex-row items-start justify-between">
-								<div>
-									<p className="text-muted-foreground text-xs uppercase">
-										Größter Standort
-									</p>
-									<p className="font-semibold text-2xl">
-										{mapQuery.isPending ? "-" : (largestCity?.city ?? "-")}
-									</p>
-									<p className="text-muted-foreground text-xs">
-										{mapQuery.isPending
-											? "-"
-											: `${largestCity?.count ?? 0} Mitglieder`}
-									</p>
-								</div>
-							</FrameHeader>
-						</Frame>
-						<Frame>
-							<FrameHeader className="flex-row items-start justify-between">
-								<div>
-									<p className="text-muted-foreground text-xs uppercase">
-										Durchschnitt
-									</p>
-									<p className="font-semibold text-2xl">
-										{mapQuery.isPending ? "-" : averagePerCity}
-									</p>
-									<p className="text-muted-foreground text-xs">
-										Mitglieder pro Ort
-									</p>
-								</div>
-							</FrameHeader>
-						</Frame>
-						<Frame>
-							<FrameHeader className="flex-row items-start justify-between">
-								<div>
-									<p className="text-muted-foreground text-xs uppercase">
-										Durchschnitt
-									</p>
-									<p className="font-semibold text-2xl">
-										{mapQuery.isPending ? "-" : "0 km"}
-									</p>
-									<p className="text-muted-foreground text-xs">
-										Entfernung zur Schule
-									</p>
-								</div>
-							</FrameHeader>
-						</Frame>
+					<div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+						{statFeatures.map((feature) => (
+							<MapStatFeatureCard
+								feature={feature}
+								key={`${feature.title}-${feature.description}`}
+							/>
+						))}
 					</div>
 
 					<Frame>

@@ -49,6 +49,7 @@ import {
 	updateMemberDetailsSchema,
 	updateMemberDetails,
 } from "./updateMemberDetails";
+import { searchMembers, searchMembersSchema } from "./searchMembers";
 
 const MAX_MEMBERS_EXPORT_ROWS = 10_000;
 
@@ -179,6 +180,19 @@ export const membersRouter = {
 			});
 		})
 		.route({ method: "POST", path: "/members/query" }),
+
+	search: protectedProcedure
+		.use(rateLimitMiddleware(1))
+		.use(requirePermission({ member: ["view"] }))
+		.input(searchMembersSchema)
+		.handler(async ({ input, context }) => {
+			const organizationId = context.session.activeOrganizationId!;
+			return searchMembers({
+				organizationId,
+				input,
+			});
+		})
+		.route({ method: "POST", path: "/members/search" }),
 
 	validateSepa: protectedProcedure
 		.use(rateLimitMiddleware(2))
