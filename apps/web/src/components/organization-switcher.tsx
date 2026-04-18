@@ -191,7 +191,9 @@ export function OrganizationSwitcher() {
 																		<div className="flex size-8 shrink-0 items-center justify-center rounded-md bg-primary/10">
 																			<Plus className="size-4 text-primary" />
 																		</div>
-																		<span className="flex-1">{item.label}</span>
+																		<span className="min-w-0 flex-1 truncate">
+																			{item.label}
+																		</span>
 																	</>
 																) : (
 																	<>

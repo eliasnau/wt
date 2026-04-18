@@ -5,9 +5,7 @@ import { useQuery } from "@tanstack/react-query";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 import {
-  ArrowDownIcon,
   ArrowLeftIcon,
-  ArrowUpIcon,
   ChevronRightIcon,
   CornerDownLeftIcon,
   LoaderCircleIcon,
@@ -35,6 +33,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import { useDebounce } from "@/hooks/use-debounce";
+import { useOs } from "@/hooks/use-os";
 import { orpc } from "@/utils/orpc";
 
 import {
@@ -116,6 +115,7 @@ function BreadcrumbLabel({
 
 export function SearchCommand() {
   const router = useRouter();
+  const { isMac } = useOs();
   const [open, setOpen] = React.useState(false);
   const [query, setQuery] = React.useState("");
   const [memberSearchQuery, setMemberSearchQuery] = React.useState("");
@@ -127,7 +127,7 @@ export function SearchCommand() {
   const isSubpage = pageStack.length > 0;
   const showDeepSearch = query.trim().length >= 2;
   const normalizedQuery = query.trim();
-  const shouldSearchMembers = !isSubpage && normalizedQuery.length > 4;
+  const shouldSearchMembers = !isSubpage && normalizedQuery.length >= 4;
   const debouncedSetMemberSearchQuery = useDebounce(
     (nextQuery: string) => setMemberSearchQuery(nextQuery),
     300,
@@ -160,7 +160,7 @@ export function SearchCommand() {
           limit: 8,
         },
       }),
-      enabled: open && shouldSearchMembers && memberSearchQuery.length > 4,
+      enabled: open && shouldSearchMembers && memberSearchQuery.length >= 4,
       placeholderData: (previousData) => previousData,
     },
   );
@@ -169,7 +169,7 @@ export function SearchCommand() {
     shouldSearchMembers &&
     (memberSearchQuery.length === 0 || isMemberSearchFetching);
   const memberSearchCharsRemaining = !isSubpage
-    ? Math.max(0, 5 - normalizedQuery.length)
+    ? Math.max(0, 4 - normalizedQuery.length)
     : 0;
   const emptyMessage =
     isMemberSearchPending
@@ -212,7 +212,7 @@ export function SearchCommand() {
       .filter((group) => group.items.length > 0);
 
     if (shouldSearchMembers && memberResults.length > 0) {
-        groups.push({
+      groups.push({
         value: "Mitglieder",
         items: memberResults.map((member) => ({
           value: `member-${member.id}`,
@@ -423,12 +423,8 @@ export function SearchCommand() {
             <div className="flex items-center gap-4">
               <div className="flex items-center gap-2">
                 <KbdGroup>
-                  <Kbd>
-                    <ArrowUpIcon />
-                  </Kbd>
-                  <Kbd>
-                    <ArrowDownIcon />
-                  </Kbd>
+                  <Kbd>{isMac ? "⌘" : "Ctrl"}</Kbd>
+                  <Kbd>K</Kbd>
                 </KbdGroup>
                 <span>Navigieren</span>
               </div>

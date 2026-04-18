@@ -51,7 +51,7 @@ export function OrganizationSwitcherButton() {
 						logo={activeOrg.logo}
 						name={activeOrg.name}
 					/>
-					<span>{activeOrg.name}</span>
+					<span className="min-w-0 flex-1 truncate">{activeOrg.name}</span>
 					<ChevronsUpDown className="ml-auto text-muted-foreground/60" />
 				</SidebarMenuButton>
 			</SidebarMenuItem>
