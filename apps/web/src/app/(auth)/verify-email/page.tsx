@@ -60,7 +60,7 @@ export default function EmailVerifiedPage() {
 	const [token] = useQueryState("token");
 	const [callbackURL] = useQueryState("callbackURL");
 	const [isResending, setIsResending] = useState(false);
-	const postLoginRedirect = callbackURL || "/dashboard";
+	const postLoginRedirect = callbackURL || "/organizations";
 	const signInHref = `/sign-in?redirectUrl=${encodeURIComponent(postLoginRedirect)}`;
 	const {
 		data: session,

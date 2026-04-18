@@ -33,7 +33,7 @@ export default function Verify2FA() {
 	const [view, setView] = useState<View>("verify");
 	const router = useRouter();
 	const [redirectUrl] = useQueryState("redirectUrl", {
-		defaultValue: "/dashboard",
+		defaultValue: "/organizations",
 	});
 
 	const handleVerifyTOTP = async () => {

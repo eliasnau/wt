@@ -21,7 +21,7 @@ export default async function SignInPage({
     getServerSession(),
     searchParams,
   ]);
-  const redirectUrl = getSingleValue(params.redirectUrl) ?? "/dashboard";
+  const redirectUrl = getSingleValue(params.redirectUrl) ?? "/organizations";
   const invite = getSingleValue(params.invite) === "1";
 
   if (session?.session.id) {
