@@ -38,7 +38,7 @@ export async function searchMembers({
 }) {
 	const normalizedQuery = input.query.trim();
 
-	if (normalizedQuery.length <= 4) {
+	if (normalizedQuery.length < 4) {
 		return { data: [] };
 	}
 
