@@ -774,15 +774,15 @@ export function NewMemberForm() {
 												filter={null}
 												items={addressSuggestions}
 												itemToStringValue={(item: unknown) =>
-													(item as AddressSuggestion).street
+													(item as AddressSuggestion).label
 												}
 												value={field.state.value}
 												onValueChange={(value) => {
-													field.handleChange(value);
 													const selected = addressSuggestions.find(
-														(s) => s.street === value,
+														(s) => s.label === value,
 													);
 													if (selected) {
+														field.handleChange(selected.street);
 														form.setFieldValue(
 															"postalCode",
 															selected.postalCode,
@@ -796,6 +796,7 @@ export function NewMemberForm() {
 														setAddressSuggestions([]);
 														setAddressQuery("");
 													} else {
+														field.handleChange(value);
 														setAddressQuery(value);
 													}
 												}}
