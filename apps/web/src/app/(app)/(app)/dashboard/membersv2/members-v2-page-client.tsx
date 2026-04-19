@@ -1446,8 +1446,7 @@ export function MembersV2PageClient({
 						printPending={printListMutation.isPending}
 					/>
 
-					<div className="w-full min-w-0 overflow-hidden">
-						<MembersV2Table
+					<MembersV2Table
 							canExportCsv={canExportMembers}
 							data={data?.data ?? []}
 							rowSelection={rowSelection}
@@ -1474,7 +1473,6 @@ export function MembersV2PageClient({
 							exportPending={exportCsvMutation.isPending}
 							loading={isPending}
 						/>
-					</div>
 				</>
 			)}
 		</div>

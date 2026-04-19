@@ -30,6 +30,7 @@ import { type CSSProperties, useMemo, useState } from "react";
 import { CopyableTableCell } from "@/components/table/copyable-table-cell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { CardFrame } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Empty,
@@ -38,6 +39,7 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
+import { Frame, FramePanel } from "@/components/ui/frame";
 import {
 	Menu,
 	MenuGroup,
@@ -63,7 +65,15 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { TableCell, TableHead } from "@/components/ui/table";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableFooter,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
 import {
 	Toolbar,
 	ToolbarButton,
@@ -432,31 +442,33 @@ export function MembersV2Table({
 
 	if (hasNoMembers) {
 		return (
-			<div className="rounded-xl border bg-background py-12">
-				<Empty>
-					<EmptyHeader>
-						<EmptyMedia variant="icon">
-							<UserIcon />
-						</EmptyMedia>
-						<EmptyTitle>Noch keine Mitglieder</EmptyTitle>
-						<EmptyDescription>
-							Lege los, indem du dein erstes Mitglied erstellst.
-						</EmptyDescription>
-					</EmptyHeader>
-				</Empty>
-			</div>
+			<Frame>
+				<FramePanel>
+					<Empty>
+						<EmptyHeader>
+							<EmptyMedia variant="icon">
+								<UserIcon />
+							</EmptyMedia>
+							<EmptyTitle>Noch keine Mitglieder</EmptyTitle>
+							<EmptyDescription>
+								Lege los, indem du dein erstes Mitglied erstellst.
+							</EmptyDescription>
+						</EmptyHeader>
+					</Empty>
+				</FramePanel>
+			</Frame>
 		);
 	}
 
 	return (
 		<>
-			<div className="w-full min-w-0 max-w-[calc(100dvw-2rem)] overflow-hidden rounded-xl border bg-background sm:max-w-full">
+			<CardFrame className="w-full min-w-0 max-w-[calc(100dvw-2rem)] overflow-hidden sm:max-w-full">
 				<div className="w-full max-w-full overflow-x-auto overscroll-x-contain">
 					<div className="min-w-[1040px]">
-						<table className="w-full caption-bottom text-sm">
-							<thead className="[&_tr]:border-b">
+						<Table variant="card">
+							<TableHeader>
 								{table.getHeaderGroups().map((headerGroup) => (
-									<tr key={headerGroup.id}>
+									<TableRow key={headerGroup.id}>
 										{headerGroup.headers.map((header, index) => {
 											const isLast = index === headerGroup.headers.length - 1;
 											return (
@@ -473,13 +485,13 @@ export function MembersV2Table({
 												</TableHead>
 											);
 										})}
-									</tr>
+									</TableRow>
 								))}
-							</thead>
-							<tbody className="[&_tr:last-child]:border-0">
+							</TableHeader>
+							<TableBody>
 								{loading ? (
 									skeletonRowKeys.map((rowKey) => (
-										<tr key={rowKey} className="border-b">
+										<TableRow key={rowKey}>
 											{skeletonColumnKeys.map((columnKey) => (
 												<TableCell
 													key={`${rowKey}-${columnKey}`}
@@ -488,18 +500,23 @@ export function MembersV2Table({
 													<Skeleton className="h-5 w-full" />
 												</TableCell>
 											))}
-										</tr>
+										</TableRow>
 									))
 								) : !table.getRowModel().rows.length ? (
-									<tr className="border-b">
+									<TableRow className="hover:bg-transparent">
 										<TableCell
 											colSpan={columns.length}
-											className="h-32 text-center"
 										>
-											<div className="flex flex-col items-center justify-center gap-2">
-												<p className="text-muted-foreground">
-													Keine Mitglieder entsprechen den aktuellen Filtern.
-												</p>
+											<Empty>
+												<EmptyHeader>
+													<EmptyMedia variant="icon">
+														<UserIcon />
+													</EmptyMedia>
+													<EmptyTitle>Keine Ergebnisse</EmptyTitle>
+													<EmptyDescription>
+														Keine Mitglieder entsprechen den aktuellen Filtern.
+													</EmptyDescription>
+												</EmptyHeader>
 												{hasActiveFilters && (
 													<Button
 														size="sm"
@@ -509,17 +526,17 @@ export function MembersV2Table({
 														Filter zurücksetzen
 													</Button>
 												)}
-											</div>
+											</Empty>
 										</TableCell>
-									</tr>
+									</TableRow>
 								) : (
 									table.getRowModel().rows.map((row) => (
-										<tr
+										<TableRow
 											key={row.id}
 											className={
 												row.getIsSelected()
-													? "border-b bg-primary/4 transition-colors hover:bg-primary/6"
-													: "border-b transition-colors hover:bg-muted/50"
+													? "bg-primary/4 hover:bg-primary/6"
+													: undefined
 											}
 										>
 											{row.getVisibleCells().map((cell) => (
@@ -533,90 +550,93 @@ export function MembersV2Table({
 													)}
 												</TableCell>
 											))}
-										</tr>
+										</TableRow>
 									))
 								)}
-							</tbody>
-						</table>
-
-						<div className="border-t bg-muted/50 p-2">
-							<div className="flex items-center justify-between gap-2">
-								<div className="flex min-w-0 items-center gap-2 whitespace-nowrap">
-									<p className="text-muted-foreground text-sm">Zeige</p>
-									<Select
-										items={[
-											{ label: "10", value: 10 },
-											{ label: "20", value: 20 },
-											{ label: "30", value: 30 },
-											{ label: "50", value: 50 },
-										]}
-										onValueChange={(value) => {
-											onLimitChange(value as number);
-										}}
-										value={pagination.limit}
-									>
-										<SelectTrigger
-											aria-label="Rows per page"
-											className="w-fit min-w-none"
-											size="sm"
-										>
-											<SelectValue />
-										</SelectTrigger>
-										<SelectPopup>
-											<SelectItem value={10}>10</SelectItem>
-											<SelectItem value={20}>20</SelectItem>
-											<SelectItem value={30}>30</SelectItem>
-											<SelectItem value={50}>50</SelectItem>
-										</SelectPopup>
-									</Select>
-									<span className="text-muted-foreground text-sm">
-										von{" "}
-										<strong className="font-medium text-foreground">
-											{pagination.totalCount}
-										</strong>{" "}
-										{pagination.totalCount === 1 ? "Mitglied" : "Mitgliedern"}
-									</span>
-								</div>
-								<Pagination className="justify-end">
-									<PaginationContent>
-										<PaginationItem>
-											<span className="text-muted-foreground text-sm">
-												Seite {pagination.page} von {pagination.totalPages}
-											</span>
-										</PaginationItem>
-										<PaginationItem>
-											<PaginationPrevious
-												className="sm:*:[svg]:hidden"
-												render={
-													<Button
-														disabled={!pagination.hasPreviousPage}
-														onClick={() => onPageChange(pagination.page - 1)}
+							</TableBody>
+							<TableFooter>
+								<TableRow>
+									<TableCell colSpan={columns.length} className="!py-2 px-2">
+										<div className="flex items-center justify-between gap-2">
+											<div className="flex min-w-0 items-center gap-2 whitespace-nowrap">
+												<p className="hidden text-muted-foreground text-sm sm:inline">Zeige</p>
+												<Select
+													items={[
+														{ label: "10", value: 10 },
+														{ label: "20", value: 20 },
+														{ label: "30", value: 30 },
+														{ label: "50", value: 50 },
+													]}
+													onValueChange={(value) => {
+														onLimitChange(value as number);
+													}}
+													value={pagination.limit}
+												>
+													<SelectTrigger
+														aria-label="Einträge pro Seite"
+														className="w-fit min-w-none"
 														size="sm"
-														variant="outline"
-													/>
-												}
-											/>
-										</PaginationItem>
-										<PaginationItem>
-											<PaginationNext
-												className="sm:*:[svg]:hidden"
-												render={
-													<Button
-														disabled={!pagination.hasNextPage}
-														onClick={() => onPageChange(pagination.page + 1)}
-														size="sm"
-														variant="outline"
-													/>
-												}
-											/>
-										</PaginationItem>
-									</PaginationContent>
-								</Pagination>
-							</div>
-						</div>
+													>
+														<SelectValue />
+													</SelectTrigger>
+													<SelectPopup>
+														<SelectItem value={10}>10</SelectItem>
+														<SelectItem value={20}>20</SelectItem>
+														<SelectItem value={30}>30</SelectItem>
+														<SelectItem value={50}>50</SelectItem>
+													</SelectPopup>
+												</Select>
+												<span className="text-muted-foreground text-sm">
+													von{" "}
+													<strong className="font-medium text-foreground">
+														{pagination.totalCount}
+													</strong>{" "}
+													<span className="hidden sm:inline">
+														{pagination.totalCount === 1 ? "Mitglied" : "Mitgliedern"}
+													</span>
+												</span>
+											</div>
+											<Pagination className="justify-end">
+												<PaginationContent>
+													<PaginationItem>
+														<span className="text-muted-foreground text-sm">
+															Seite {pagination.page} von {pagination.totalPages}
+														</span>
+													</PaginationItem>
+													<PaginationItem>
+														<PaginationPrevious
+															render={
+																<Button
+																	disabled={!pagination.hasPreviousPage}
+																	onClick={() => onPageChange(pagination.page - 1)}
+																	size="sm"
+																	variant="outline"
+																/>
+															}
+														/>
+													</PaginationItem>
+													<PaginationItem>
+														<PaginationNext
+															render={
+																<Button
+																	disabled={!pagination.hasNextPage}
+																	onClick={() => onPageChange(pagination.page + 1)}
+																	size="sm"
+																	variant="outline"
+																/>
+															}
+														/>
+													</PaginationItem>
+												</PaginationContent>
+											</Pagination>
+										</div>
+									</TableCell>
+								</TableRow>
+							</TableFooter>
+						</Table>
 					</div>
 				</div>
-			</div>
+			</CardFrame>
 
 			<div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex justify-center px-4">
 				<Toolbar
