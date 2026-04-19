@@ -24,8 +24,15 @@ import {
 	DialogPopup,
 	DialogTitle,
 } from "@/components/ui/dialog";
+import {
+	Card,
+	CardFrame,
+	CardFrameDescription,
+	CardFrameHeader,
+	CardFrameTitle,
+	CardPanel,
+} from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Frame, FrameFooter, FramePanel } from "@/components/ui/frame";
 import {
 	InputGroup,
 	InputGroupAddon,
@@ -117,53 +124,54 @@ export function OrganizationSlugFrame({
 
 	return (
 		<>
-			<Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
-				<FramePanel>
-					<h2 className="mb-2 font-heading text-foreground text-xl">
-						Organization Slug
-					</h2>
-					<p className="mb-6 text-muted-foreground text-sm">
+			<CardFrame>
+				<CardFrameHeader>
+					<CardFrameTitle>Organization Slug</CardFrameTitle>
+					<CardFrameDescription>
 						Your default member area URL
-					</p>
-
-					<Field>
-						<FieldLabel>Mitgliederbereich-URL</FieldLabel>
-						<div className="flex items-center gap-2">
-							<InputGroup>
-								<InputGroupInput value={slug} readOnly />
-								<InputGroupAddon align="inline-end">
-									.domain.com
-								</InputGroupAddon>
-							</InputGroup>
+					</CardFrameDescription>
+				</CardFrameHeader>
+				<Card>
+					<CardPanel>
+						<Field>
+							<FieldLabel>Mitgliederbereich-URL</FieldLabel>
+							<div className="flex items-center gap-2">
+								<InputGroup>
+									<InputGroupInput value={slug} readOnly />
+									<InputGroupAddon align="inline-end">
+										.domain.com
+									</InputGroupAddon>
+								</InputGroup>
+								<Button
+									type="button"
+									variant="ghost"
+									size="icon-sm"
+									onClick={() => {
+										window.open(
+											`https://${slug}.domain.com`,
+											"_blank",
+											"noopener,noreferrer",
+										);
+									}}
+									title="Open in new tab"
+								>
+									<ExternalLink className="size-4" />
+								</Button>
+							</div>
+						</Field>
+						<div className="mt-4 flex justify-end gap-2">
 							<Button
 								type="button"
-								variant="ghost"
-								size="icon-sm"
-								onClick={() => {
-									window.open(
-										`https://${slug}.domain.com`,
-										"_blank",
-										"noopener,noreferrer",
-									);
-								}}
-								title="Open in new tab"
+								variant="outline"
+								size="sm"
+								onClick={handleOpenEditDialog}
 							>
-								<ExternalLink className="size-4" />
+								Change Slug
 							</Button>
 						</div>
-					</Field>
-				</FramePanel>
-				<FrameFooter className="flex-row justify-end gap-2">
-					<Button
-						type="button"
-						variant="outline"
-						size="sm"
-						onClick={handleOpenEditDialog}
-					>
-						Change Slug
-					</Button>
-				</FrameFooter>
-			</Frame>
+					</CardPanel>
+				</Card>
+			</CardFrame>
 
 			{/* Edit Slug Dialog */}
 			<Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>

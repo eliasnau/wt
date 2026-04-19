@@ -31,8 +31,15 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
+import {
+	Card,
+	CardFrame,
+	CardFrameDescription,
+	CardFrameHeader,
+	CardFrameTitle,
+	CardPanel,
+} from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Frame, FrameFooter, FramePanel } from "@/components/ui/frame";
 import { Input } from "@/components/ui/input";
 import { client } from "@/utils/orpc";
 
@@ -194,134 +201,137 @@ export function CustomDomainFrame() {
 
 	if (isLoading) {
 		return (
-			<Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
-				<FramePanel className="flex items-center justify-center py-8">
-					<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-				</FramePanel>
-			</Frame>
+			<CardFrame>
+				<Card>
+					<CardPanel className="flex items-center justify-center py-8">
+						<Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+					</CardPanel>
+				</Card>
+			</CardFrame>
 		);
 	}
 
 	return (
 		<>
-			<Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
-				<FramePanel>
-					{!currentDomain ? (
-						<Empty>
-							<EmptyHeader>
-								<EmptyMedia variant="icon">
-									<Globe />
-								</EmptyMedia>
-								<EmptyTitle>
-									Keine benutzerdefinierte Domain konfiguriert
-								</EmptyTitle>
-								<EmptyDescription>
-									You haven't set up a custom domain yet. Add one to use your
-									own domain for your organization's member area.
-								</EmptyDescription>
-							</EmptyHeader>
-						</Empty>
-					) : (
-						<div className="space-y-4">
-							<div className="flex items-start justify-between">
-								<div>
-									<h2 className="mb-2 font-heading text-foreground text-xl">
-										Custom Domain
-									</h2>
-									<p className="mb-4 text-muted-foreground text-sm">
-										Your organization is accessible via this custom domain
-									</p>
+			<CardFrame>
+				<CardFrameHeader>
+					<CardFrameTitle>Custom Domain</CardFrameTitle>
+					<CardFrameDescription>
+						{currentDomain
+							? "Your organization is accessible via this custom domain"
+							: "Use your own domain for your organization's member area"}
+					</CardFrameDescription>
+				</CardFrameHeader>
+				<Card>
+					<CardPanel>
+						{!currentDomain ? (
+							<Empty>
+								<EmptyHeader>
+									<EmptyMedia variant="icon">
+										<Globe />
+									</EmptyMedia>
+									<EmptyTitle>
+										Keine benutzerdefinierte Domain konfiguriert
+									</EmptyTitle>
+									<EmptyDescription>
+										You haven't set up a custom domain yet. Add one to use your
+										own domain for your organization's member area.
+									</EmptyDescription>
+								</EmptyHeader>
+							</Empty>
+						) : (
+							<div className="space-y-4">
+								<div className="flex items-start justify-between">
+									<div className="rounded-lg border bg-muted/50 p-4">
+										<div className="flex items-center justify-between">
+											<div>
+												<p className="font-medium text-sm">Domain</p>
+												<p className="font-mono text-muted-foreground text-sm">
+													{currentDomain}
+												</p>
+											</div>
+										</div>
+									</div>
+									<Badge
+										variant={isVerified ? "default" : "secondary"}
+										className="flex items-center gap-1"
+									>
+										{isVerified ? (
+											<>
+												<CheckCircle2 className="h-3 w-3" />
+												Verified
+											</>
+										) : (
+											<>
+												<AlertCircle className="h-3 w-3" />
+												Pending
+											</>
+										)}
+									</Badge>
 								</div>
-								<Badge
-									variant={isVerified ? "default" : "secondary"}
-									className="flex items-center gap-1"
+
+								{verificationRequired && !isVerified && (
+									<Alert>
+										<AlertCircle className="h-4 w-4" />
+										<AlertTitle>DNS Configuration Required</AlertTitle>
+										<AlertDescription className="mt-2 space-y-3">
+											<p className="text-sm">
+												To verify domain ownership, add the following DNS record
+												to your domain provider:
+											</p>
+											<DNSTable records={dnsRecords} />
+											<p className="text-muted-foreground text-xs">
+												DNS changes can take up to 48 hours to propagate. The
+												domain will be automatically verified once the records are
+												detected.
+											</p>
+										</AlertDescription>
+									</Alert>
+								)}
+
+								{isVerified && (
+									<Alert className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950">
+										<CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
+										<AlertTitle className="text-green-900 dark:text-green-100">
+											Domain Verified
+										</AlertTitle>
+										<AlertDescription className="text-green-800 dark:text-green-200">
+											Your custom domain is properly configured and verified. SSL
+											certificate has been automatically issued.
+										</AlertDescription>
+									</Alert>
+								)}
+							</div>
+						)}
+						<div className="mt-4 flex justify-end gap-2">
+							{currentDomain ? (
+								<Button
+									variant="destructive"
+									size="sm"
+									onClick={handleRemoveDomain}
+									disabled={isRemoving}
 								>
-									{isVerified ? (
+									{isRemoving ? (
 										<>
-											<CheckCircle2 className="h-3 w-3" />
-											Verified
+											<Loader2 className="mr-2 h-4 w-4 animate-spin" />
+											Removing...
 										</>
 									) : (
 										<>
-											<AlertCircle className="h-3 w-3" />
-											Pending
+											<Trash2 className="mr-2 h-4 w-4" />
+											Remove Domain
 										</>
 									)}
-								</Badge>
-							</div>
-
-							<div className="rounded-lg border bg-muted/50 p-4">
-								<div className="flex items-center justify-between">
-									<div>
-										<p className="font-medium text-sm">Domain</p>
-										<p className="font-mono text-muted-foreground text-sm">
-											{currentDomain}
-										</p>
-									</div>
-								</div>
-							</div>
-
-							{verificationRequired && !isVerified && (
-								<Alert>
-									<AlertCircle className="h-4 w-4" />
-									<AlertTitle>DNS Configuration Required</AlertTitle>
-									<AlertDescription className="mt-2 space-y-3">
-										<p className="text-sm">
-											To verify domain ownership, add the following DNS record
-											to your domain provider:
-										</p>
-										<DNSTable records={dnsRecords} />
-										<p className="text-muted-foreground text-xs">
-											DNS changes can take up to 48 hours to propagate. The
-											domain will be automatically verified once the records are
-											detected.
-										</p>
-									</AlertDescription>
-								</Alert>
-							)}
-
-							{isVerified && (
-								<Alert className="border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-950">
-									<CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-									<AlertTitle className="text-green-900 dark:text-green-100">
-										Domain Verified
-									</AlertTitle>
-									<AlertDescription className="text-green-800 dark:text-green-200">
-										Your custom domain is properly configured and verified. SSL
-										certificate has been automatically issued.
-									</AlertDescription>
-								</Alert>
+								</Button>
+							) : (
+								<Button variant="outline" size="sm" onClick={handleOpenDialog}>
+									Add Domain
+								</Button>
 							)}
 						</div>
-					)}
-				</FramePanel>
-				<FrameFooter className="flex-row justify-end gap-2">
-					{currentDomain ? (
-						<Button
-							variant="destructive"
-							size="sm"
-							onClick={handleRemoveDomain}
-							disabled={isRemoving}
-						>
-							{isRemoving ? (
-								<>
-									<Loader2 className="mr-2 h-4 w-4 animate-spin" />
-									Removing...
-								</>
-							) : (
-								<>
-									<Trash2 className="mr-2 h-4 w-4" />
-									Remove Domain
-								</>
-							)}
-						</Button>
-					) : (
-						<Button variant="outline" size="sm" onClick={handleOpenDialog}>
-							Add Domain
-						</Button>
-					)}
-				</FrameFooter>
-			</Frame>
+					</CardPanel>
+				</Card>
+			</CardFrame>
 
 			{/* Add Domain Dialog */}
 			<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

@@ -6,8 +6,15 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+	Card,
+	CardFrame,
+	CardFrameDescription,
+	CardFrameHeader,
+	CardFrameTitle,
+	CardPanel,
+} from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Frame, FrameFooter, FramePanel } from "@/components/ui/frame";
 import { Input } from "@/components/ui/input";
 
 interface OrganizationInfoFrameProps {
@@ -72,51 +79,52 @@ export function OrganizationInfoFrame({
 	};
 
 	return (
-		<Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
-			<FramePanel>
-				<h2 className="mb-2 font-heading text-foreground text-xl">
-					Organization Information
-				</h2>
-				<p className="mb-6 text-muted-foreground text-sm">
+		<CardFrame>
+			<CardFrameHeader>
+				<CardFrameTitle>Organization Information</CardFrameTitle>
+				<CardFrameDescription>
 					Aktualisiere die Details deiner Organisation und öffentliche
 					Informationen
-				</p>
-				<form id="org-info-form" onSubmit={handleSubmit} className="space-y-4">
-					<Field>
-						<FieldLabel>Organisationsname</FieldLabel>
-						<Input
-							placeholder="Acme Inc."
-							value={orgName}
-							onChange={(e) => setOrgName(e.target.value)}
-							disabled={isUpdating}
-						/>
-					</Field>
-				</form>
-			</FramePanel>
-			<FrameFooter className="flex-row justify-end gap-2">
-				<Button
-					type="button"
-					onClick={handleReset}
-					variant="ghost"
-					disabled={isUpdating}
-				>
-					Reset
-				</Button>
-				<Button
-					type="submit"
-					form="org-info-form"
-					disabled={isUpdating || orgName.trim() === initialName}
-				>
-					{isUpdating ? (
-						<>
-							<Loader2 className="mr-2 size-4 animate-spin" />
-							Saving...
-						</>
-					) : (
-						"Änderungen speichern"
-					)}
-				</Button>
-			</FrameFooter>
-		</Frame>
+				</CardFrameDescription>
+			</CardFrameHeader>
+			<Card>
+				<CardPanel>
+					<form id="org-info-form" onSubmit={handleSubmit} className="space-y-4">
+						<Field>
+							<FieldLabel>Organisationsname</FieldLabel>
+							<Input
+								placeholder="Acme Inc."
+								value={orgName}
+								onChange={(e) => setOrgName(e.target.value)}
+								disabled={isUpdating}
+							/>
+						</Field>
+						<div className="flex justify-end gap-2">
+							<Button
+								type="button"
+								onClick={handleReset}
+								variant="ghost"
+								disabled={isUpdating}
+							>
+								Reset
+							</Button>
+							<Button
+								type="submit"
+								disabled={isUpdating || orgName.trim() === initialName}
+							>
+								{isUpdating ? (
+									<>
+										<Loader2 className="mr-2 size-4 animate-spin" />
+										Saving...
+									</>
+								) : (
+									"Änderungen speichern"
+								)}
+							</Button>
+						</div>
+					</form>
+				</CardPanel>
+			</Card>
+		</CardFrame>
 	);
 }
