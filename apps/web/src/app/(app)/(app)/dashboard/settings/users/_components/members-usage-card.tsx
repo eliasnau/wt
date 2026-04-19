@@ -1,7 +1,7 @@
 "use client";
 
 import { useCustomer } from "@repo/autumn/react";
-import { Frame } from "@/components/ui/frame";
+import { Card, CardFrame, CardPanel } from "@/components/ui/card";
 import {
 	Progress,
 	ProgressIndicator,
@@ -35,18 +35,20 @@ export function MembersUsageCard() {
 	}
 
 	return (
-		<Frame className="w-full">
-			<div className="p-4">
-				<Progress max={included} value={used}>
-					<div className="flex items-center justify-between gap-2">
-						<ProgressLabel>Users</ProgressLabel>
-						<ProgressValue>{() => `${used} / ${included}`}</ProgressValue>
-					</div>
-					<ProgressTrack>
-						<ProgressIndicator />
-					</ProgressTrack>
-				</Progress>
-			</div>
-		</Frame>
+		<CardFrame>
+			<Card>
+				<CardPanel>
+					<Progress max={included} value={used}>
+						<div className="flex items-center justify-between gap-2">
+							<ProgressLabel>Benutzer</ProgressLabel>
+							<ProgressValue>{() => `${used} / ${included}`}</ProgressValue>
+						</div>
+						<ProgressTrack>
+							<ProgressIndicator />
+						</ProgressTrack>
+					</Progress>
+				</CardPanel>
+			</Card>
+		</CardFrame>
 	);
 }

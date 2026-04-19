@@ -15,7 +15,7 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
-import { Frame } from "@/components/ui/frame";
+import { CardFrame } from "@/components/ui/card";
 import {
 	Select,
 	SelectContent,
@@ -179,7 +179,7 @@ export function MembersSection() {
 					</EmptyMedia>
 					<EmptyTitle>Noch keine Mitglieder</EmptyTitle>
 					<EmptyDescription>
-						Invite members to your organization to get started.
+						Lade Mitglieder in deine Organisation ein, um loszulegen.
 					</EmptyDescription>
 				</EmptyHeader>
 			</Empty>
@@ -188,14 +188,14 @@ export function MembersSection() {
 
 	return (
 		<>
-			<Frame className="w-full">
-				<Table>
+			<CardFrame>
+				<Table variant="card">
 					<TableHeader>
 						<TableRow className="hover:bg-transparent">
 							<TableHead>Mitglied</TableHead>
 							<TableHead>E-Mail</TableHead>
 							<TableHead>Rolle</TableHead>
-							<TableHead className="text-right">Actions</TableHead>
+							<TableHead className="text-right">Aktionen</TableHead>
 						</TableRow>
 					</TableHeader>
 					<TableBody>
@@ -248,14 +248,14 @@ export function MembersSection() {
 										variant="destructive"
 										onClick={() => openRemoveConfirmDialog(member)}
 									>
-										Remove
+										Entfernen
 									</Button>
 								</TableCell>
 							</TableRow>
 						))}
 					</TableBody>
 				</Table>
-			</Frame>
+			</CardFrame>
 
 			<RoleChangeDialog
 				open={roleConfirmOpen}

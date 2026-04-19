@@ -19,7 +19,8 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
-import { Frame, FrameHeader, FramePanel } from "@/components/ui/frame";
+import { CardFrame, CardPanel } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import {
 	Table,
 	TableBody,
@@ -118,45 +119,48 @@ export function InvitationsSection() {
 
 	return (
 		<>
-			<Frame className="w-full">
+			<CardFrame>
 				<Collapsible defaultOpen={false}>
-					<FrameHeader className="flex-row items-center justify-between px-2 py-2">
+					<div className="flex items-center justify-between px-2 py-2">
 						<CollapsibleTrigger
 							className="data-panel-open:[&_svg]:rotate-180"
 							render={<Button variant="ghost" />}
 						>
 							<ChevronDownIcon className="size-4" />
-							Pending Invitations
+							Ausstehende Einladungen
 							{pendingInvitations.length > 0 && (
 								<Badge variant="outline" className="ml-2">
 									{pendingInvitations.length}
 								</Badge>
 							)}
 						</CollapsibleTrigger>
-					</FrameHeader>
+					</div>
 					<CollapsiblePanel>
 						{invitations.length === 0 ? (
-							<FramePanel>
-								<Empty>
-									<EmptyHeader>
-										<EmptyMedia variant="icon">
-											<Mail />
-										</EmptyMedia>
-										<EmptyTitle>Keine ausstehenden Einladungen</EmptyTitle>
-										<EmptyDescription>
-											Invite members to see pending invitations here.
-										</EmptyDescription>
-									</EmptyHeader>
-								</Empty>
-							</FramePanel>
+							<Card>
+								<CardPanel>
+									<Empty>
+										<EmptyHeader>
+											<EmptyMedia variant="icon">
+												<Mail />
+											</EmptyMedia>
+											<EmptyTitle>Keine ausstehenden Einladungen</EmptyTitle>
+											<EmptyDescription>
+												Lade Mitglieder ein, um ausstehende Einladungen hier zu
+												sehen.
+											</EmptyDescription>
+										</EmptyHeader>
+									</Empty>
+								</CardPanel>
+							</Card>
 						) : (
-							<Table>
+							<Table variant="card">
 								<TableHeader>
 									<TableRow className="hover:bg-transparent">
 										<TableHead>E-Mail</TableHead>
 										<TableHead>Rolle</TableHead>
 										<TableHead>Status</TableHead>
-										<TableHead className="text-right">Actions</TableHead>
+										<TableHead className="text-right">Aktionen</TableHead>
 									</TableRow>
 								</TableHeader>
 								<TableBody>
@@ -187,7 +191,7 @@ export function InvitationsSection() {
 														onClick={() => openCancelInviteDialog(invitation)}
 													>
 														<X className="size-4" />
-														Cancel
+														Abbrechen
 													</Button>
 												)}
 											</TableCell>
@@ -198,7 +202,7 @@ export function InvitationsSection() {
 						)}
 					</CollapsiblePanel>
 				</Collapsible>
-			</Frame>
+			</CardFrame>
 
 			<CancelInvitationDialog
 				open={cancelInviteOpen}

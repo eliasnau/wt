@@ -56,12 +56,12 @@ export function MembersContent() {
 					</EmptyMedia>
 					<EmptyTitle>Keine aktive Organisation</EmptyTitle>
 					<EmptyDescription>
-						Select an Organization to view Members
+						Wähle eine Organisation aus, um Mitglieder anzuzeigen
 					</EmptyDescription>
 				</EmptyHeader>
 				<EmptyContent>
 					<Button onClick={() => refetch()} className="mt-4">
-						Try Again
+						Erneut versuchen
 					</Button>
 				</EmptyContent>
 			</Empty>
@@ -80,7 +80,7 @@ export function MembersContent() {
 				</EmptyHeader>
 				<EmptyContent>
 					<Button onClick={() => refetch()} className="mt-4">
-						Try Again
+						Erneut versuchen
 					</Button>
 				</EmptyContent>
 			</Empty>

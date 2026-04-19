@@ -47,7 +47,7 @@ export default async function SepaSettingsPage() {
 				<HeaderContent>
 					<HeaderTitle>SEPA-Zahlungseinstellungen</HeaderTitle>
 					<HeaderDescription>
-						Configure your SEPA direct debit payment information
+						Konfiguriere deine SEPA-Lastschrift-Zahlungsinformationen
 					</HeaderDescription>
 				</HeaderContent>
 			</Header>

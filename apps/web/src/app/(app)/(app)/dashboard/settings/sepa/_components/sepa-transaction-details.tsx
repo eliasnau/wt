@@ -2,8 +2,17 @@
 
 import { CircleQuestionMarkIcon, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardFrame,
+  CardFrameAction,
+  CardFrameDescription,
+  CardFrameFooter,
+  CardFrameHeader,
+  CardFrameTitle,
+  CardPanel,
+} from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { Frame, FrameFooter, FramePanel } from "@/components/ui/frame";
 import { Input } from "@/components/ui/input";
 import {
   Tooltip,
@@ -36,13 +45,14 @@ export function SepaTransactionDetails({
   docsHref,
 }: SepaTransactionDetailsProps) {
   return (
-    <Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
-      <FramePanel>
-        <div className="mb-2 flex items-center justify-between gap-2">
-          <h2 className="font-heading text-foreground text-xl">
-            Transaction Details
-          </h2>
-          {docsHref ? (
+    <CardFrame>
+      <CardFrameHeader>
+        <CardFrameTitle>Transaktionsdetails</CardFrameTitle>
+        <CardFrameDescription>
+          Konfiguriere, wie Transaktionen auf Kontoauszügen erscheinen
+        </CardFrameDescription>
+        {docsHref ? (
+          <CardFrameAction>
             <Button
               size="xs"
               variant="outline"
@@ -53,34 +63,36 @@ export function SepaTransactionDetails({
               <CircleQuestionMarkIcon data-icon="inline-start" />
               Docs
             </Button>
-          ) : null}
-        </div>
-        <p className="mb-6 text-muted-foreground text-sm">
-          Customize how transactions appear on bank statements
-        </p>
-        <form
-          id="sepa-transaction-form"
-          onSubmit={onSubmit}
-          className="space-y-6"
-        >
-          <TransactionTemplateFields
-            formState={formState}
-            setFormState={setFormState}
-            isLoading={isLoading}
-          />
-        </form>
-      </FramePanel>
-      <FrameFooter>
-        <Button
-          type="submit"
-          form="sepa-transaction-form"
-          disabled={isSaving || isLoading}
-        >
-          {isSaving ? "Speichern..." : "Änderungen speichern"}
-        </Button>
+          </CardFrameAction>
+        ) : null}
+      </CardFrameHeader>
+      <Card>
+        <CardPanel>
+          <form
+            id="sepa-transaction-form"
+            onSubmit={onSubmit}
+            className="space-y-6"
+          >
+            <TransactionTemplateFields
+              formState={formState}
+              setFormState={setFormState}
+              isLoading={isLoading}
+            />
+            <div className="flex justify-end">
+              <Button
+                type="submit"
+                disabled={isSaving || isLoading}
+              >
+                {isSaving ? "Speichern..." : "Änderungen speichern"}
+              </Button>
+            </div>
+          </form>
+        </CardPanel>
+      </Card>
+      <CardFrameFooter>
         <VariablesTooltip />
-      </FrameFooter>
-    </Frame>
+      </CardFrameFooter>
+    </CardFrame>
   );
 }
 
@@ -115,7 +127,7 @@ function TransactionTemplateFields({
           }
         />
         <p className="mt-1 text-muted-foreground text-xs">
-          Description for recurring monthly payments
+          Beschreibung für wiederkehrende monatliche Zahlungen
         </p>
       </Field>
 
@@ -135,8 +147,7 @@ function TransactionTemplateFields({
           }
         />
         <p className="mt-1 text-muted-foreground text-xs">
-          Description for the initial joining fee charged when a member
-          registers
+          Beschreibung für die einmalige Aufnahmegebühr bei der Registrierung
         </p>
       </Field>
 
@@ -144,7 +155,7 @@ function TransactionTemplateFields({
         <FieldLabel>Jahresbeitrag</FieldLabel>
         <Input
           placeholder={
-            isLoading ? "Lädt..." : "Annual membership fee for %YEAR%"
+            isLoading ? "Lädt..." : "Jährlicher Mitgliedsbeitrag für %YEAR%"
           }
           type="text"
           maxLength={140}
@@ -158,7 +169,7 @@ function TransactionTemplateFields({
           }
         />
         <p className="mt-1 text-muted-foreground text-xs">
-          Description for the annual membership payment
+          Beschreibung für die jährliche Mitgliedszahlung
         </p>
       </Field>
     </>
@@ -170,22 +181,22 @@ function VariablesTooltip() {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger>
-          <div className="flex w-fit cursor-help items-center gap-2 text-muted-foreground text-sm">
-            <Info className="size-4" />
+          <div className="flex w-fit cursor-help items-center gap-2 text-muted-foreground text-xs">
+            <Info className="size-3 h-lh shrink-0" />
             <span>Verfügbare Variablen</span>
           </div>
         </TooltipTrigger>
         <TooltipContent className="max-w-xs" side="top" align="start">
           <p className="text-sm">
-            <strong>%MONTH%</strong> - Month name (e.g., January)
+            <strong>%MONTH%</strong> – Monatsname (z. B. Januar)
             <br />
-            <strong>%YEAR%</strong> - Year (e.g., 2025)
+            <strong>%YEAR%</strong> – Jahr (z. B. 2025)
             <br />
-            <strong>%MEMBER_NAME%</strong> - Member&apos;s full name
+            <strong>%MEMBER_NAME%</strong> – Vollständiger Name des Mitglieds
             <br />
-            <strong>%MEMBER_ID%</strong> - Member ID number
+            <strong>%MEMBER_ID%</strong> – Mitgliedsnummer
             <br />
-            <strong>%JOIN_DATE%</strong> - Date of joining
+            <strong>%JOIN_DATE%</strong> – Beitrittsdatum
           </p>
         </TooltipContent>
       </Tooltip>

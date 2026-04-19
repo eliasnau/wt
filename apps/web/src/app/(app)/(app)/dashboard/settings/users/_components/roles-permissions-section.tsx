@@ -20,7 +20,7 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
-import { Frame, FrameHeader, FramePanel } from "@/components/ui/frame";
+import { Card, CardFrame, CardPanel } from "@/components/ui/card";
 import { RoleDeleteDialog } from "./role-delete-dialog";
 import { RoleEditorDialog } from "./role-editor-dialog";
 import { RolePreviewDialog } from "./role-preview-dialog";
@@ -168,105 +168,109 @@ export function RolesPermissionsSection() {
 		!isPending && !error && canRead && customRoleCards.length === 0;
 
 	return (
-		<Frame className="w-full">
+		<CardFrame>
 			<Collapsible defaultOpen={false}>
-				<FrameHeader className="flex-row items-center justify-between px-2 py-2">
+				<div className="flex items-center justify-between px-2 py-2">
 					<CollapsibleTrigger
 						className="data-panel-open:[&_svg]:rotate-180"
 						render={<Button variant="ghost" />}
 					>
 						<ChevronDownIcon className="size-4" />
-						Roles & Permissions
+						Rollen & Berechtigungen
 						{dynamicRoles.length > 0 && (
 							<Badge variant="outline" className="ml-2">
 								{dynamicRoles.length}
 							</Badge>
 						)}
 					</CollapsibleTrigger>
-				</FrameHeader>
+				</div>
 				<CollapsiblePanel>
-					<FramePanel>
-						<div className="flex flex-col gap-6">
-							<div className="flex flex-wrap items-start justify-between gap-4">
-								<div>
-									<div className="font-semibold text-sm">Roles</div>
-									<div className="text-muted-foreground text-sm">
-										Create roles with tailored permissions and review built-in
-										access.
+					<Card>
+						<CardPanel>
+							<div className="flex flex-col gap-6">
+								<div className="flex flex-wrap items-start justify-between gap-4">
+									<div>
+										<div className="font-semibold text-sm">Rollen</div>
+										<div className="text-muted-foreground text-sm">
+											Erstelle Rollen mit individuellen Berechtigungen und
+											überprüfe den integrierten Zugriff.
+										</div>
 									</div>
+									<Button onClick={openCreateDialog} disabled={!canCreate}>
+										Neue Rolle
+									</Button>
 								</div>
-								<Button onClick={openCreateDialog} disabled={!canCreate}>
-									New role
-								</Button>
+
+								{!canCreate && (
+									<div className="flex items-center gap-2 rounded-xl border border-border border-dashed bg-muted/40 px-3 py-2 text-muted-foreground text-xs">
+										<Lock className="size-3" />
+										Nur Administratoren mit Rollenverwaltungs-Berechtigungen
+										können benutzerdefinierte Rollen erstellen.
+									</div>
+								)}
+
+								{isPending && (
+									<div className="flex items-center justify-center py-10 text-muted-foreground text-sm">
+										Rollen werden geladen...
+									</div>
+								)}
+
+								{!isPending && error && (
+									<Empty>
+										<EmptyHeader>
+											<EmptyMedia variant="icon">
+												<Settings2 />
+											</EmptyMedia>
+											<EmptyTitle>Rollen nicht verfügbar</EmptyTitle>
+											<EmptyDescription>
+												Benutzerdefinierte Rollen konnten nicht geladen werden.
+											</EmptyDescription>
+										</EmptyHeader>
+										<EmptyContent>
+											<Button variant="outline" onClick={() => refetch()}>
+												Erneut versuchen
+											</Button>
+										</EmptyContent>
+									</Empty>
+								)}
+
+								{!isPending && !error && !canRead && (
+									<Empty>
+										<EmptyHeader>
+											<EmptyMedia variant="icon">
+												<Settings2 />
+											</EmptyMedia>
+											<EmptyTitle>Rollen nicht verfügbar</EmptyTitle>
+											<EmptyDescription>
+												Du hast keine Berechtigung, benutzerdefinierte Rollen
+												anzuzeigen.
+											</EmptyDescription>
+										</EmptyHeader>
+									</Empty>
+								)}
+
+								{showCustomEmpty && (
+									<Empty>
+										<EmptyHeader>
+											<EmptyMedia variant="icon">
+												<Settings2 />
+											</EmptyMedia>
+											<EmptyTitle>Keine benutzerdefinierten Rollen</EmptyTitle>
+											<EmptyDescription>
+												Erstelle eine neue Rolle, um individuelle Berechtigungen
+												zuzuweisen.
+											</EmptyDescription>
+										</EmptyHeader>
+									</Empty>
+								)}
+
+								<div className="grid gap-3">
+									{customRoleCards}
+									{builtInRoleCards}
+								</div>
 							</div>
-
-							{!canCreate && (
-								<div className="flex items-center gap-2 rounded-xl border border-border border-dashed bg-muted/40 px-3 py-2 text-muted-foreground text-xs">
-									<Lock className="size-3" />
-									Only admins with role management permissions can create custom
-									roles.
-								</div>
-							)}
-
-							{isPending && (
-								<div className="flex items-center justify-center py-10 text-muted-foreground text-sm">
-									Loading roles...
-								</div>
-							)}
-
-							{!isPending && error && (
-								<Empty>
-									<EmptyHeader>
-										<EmptyMedia variant="icon">
-											<Settings2 />
-										</EmptyMedia>
-										<EmptyTitle>Rollen nicht verfügbar</EmptyTitle>
-										<EmptyDescription>
-											We couldn't load custom roles right now.
-										</EmptyDescription>
-									</EmptyHeader>
-									<EmptyContent>
-										<Button variant="outline" onClick={() => refetch()}>
-											Try again
-										</Button>
-									</EmptyContent>
-								</Empty>
-							)}
-
-							{!isPending && !error && !canRead && (
-								<Empty>
-									<EmptyHeader>
-										<EmptyMedia variant="icon">
-											<Settings2 />
-										</EmptyMedia>
-										<EmptyTitle>Rollen nicht verfügbar</EmptyTitle>
-										<EmptyDescription>
-											You don't have permission to view custom roles.
-										</EmptyDescription>
-									</EmptyHeader>
-								</Empty>
-							)}
-
-							{showCustomEmpty && (
-								<Empty>
-									<EmptyHeader>
-										<EmptyMedia variant="icon">
-											<Settings2 />
-										</EmptyMedia>
-										<EmptyTitle>Keine benutzerdefinierten Rollen</EmptyTitle>
-										<EmptyDescription>
-											Create a new role to start assigning tailored permissions.
-										</EmptyDescription>
-									</EmptyHeader>
-								</Empty>
-							)}
-
-							<div className="grid gap-3">
-								{customRoleCards}
-								{builtInRoleCards}
-							</div>
-						</div>
-					</FramePanel>
+						</CardPanel>
+					</Card>
 				</CollapsiblePanel>
 			</Collapsible>
 
@@ -291,6 +295,6 @@ export function RolesPermissionsSection() {
 				roleName={previewRole?.roleName}
 				permissions={previewRole?.permissions}
 			/>
-		</Frame>
+		</CardFrame>
 	);
 }

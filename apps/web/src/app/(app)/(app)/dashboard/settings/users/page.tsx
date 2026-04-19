@@ -25,14 +25,14 @@ export default function MembersSettingsPage() {
 					<HeaderContent>
 						<HeaderTitle>Benutzerverwaltung</HeaderTitle>
 						<HeaderDescription>
-							Manage organization members and their roles
+							Verwalte die Mitglieder und Rollen deiner Organisation
 						</HeaderDescription>
 					</HeaderContent>
 					{activeOrg && (
 						<HeaderActions>
 							<Button onClick={() => setInviteOpen(true)}>
 								<UserPlus className="size-4" />
-								Invite User
+								Benutzer einladen
 							</Button>
 						</HeaderActions>
 					)}
