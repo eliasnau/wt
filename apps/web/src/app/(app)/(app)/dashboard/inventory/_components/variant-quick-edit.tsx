@@ -42,7 +42,7 @@ export function VariantQuickEdit({
 
   const preview = useMemo(() => {
     const parsed = Number.parseInt(amount, 10);
-    if (!amount || Number.isNaN(parsed)) return null;
+    if (!amount || Number.isNaN(parsed) || parsed < 0) return null;
     if (mode === "set") return parsed;
     if (mode === "add") return variant.quantity + parsed;
     return Math.max(0, variant.quantity - parsed);

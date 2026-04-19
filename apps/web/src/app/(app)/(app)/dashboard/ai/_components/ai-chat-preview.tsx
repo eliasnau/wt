@@ -469,7 +469,7 @@ export function AiChatPreview() {
               </PromptInputTools>
 
               <div className="flex items-center gap-2">
-                <PromptInputSelect onValueChange={setModel} value={model}>
+                <PromptInputSelect onValueChange={(value) => setModel(value as string)} value={model}>
                   <PromptInputSelectTrigger>
                     <PromptInputSelectValue />
                   </PromptInputSelectTrigger>

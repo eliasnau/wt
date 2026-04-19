@@ -65,7 +65,7 @@ function dedupeValues(values: string[]) {
 	const output: string[] = [];
 
 	for (const value of values) {
-		const trimmed = value.trim();
+		const trimmed = value.trim().replace(/\s+/g, " ");
 		if (!trimmed) continue;
 		const key = trimmed.toLowerCase();
 		if (seen.has(key)) continue;
