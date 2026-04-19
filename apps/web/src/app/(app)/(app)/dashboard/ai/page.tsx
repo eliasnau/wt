@@ -1,10 +1,6 @@
-import AiChat from "./_components/ai-chat";
 import "streamdown/styles.css";
+import { AiChatPreview } from "./_components/ai-chat-preview";
 
 export default function AiDashboardPage() {
-	return (
-		<div className="-mb-4 flex h-[calc(100dvh-5rem)] flex-col gap-4 overflow-hidden sm:-mb-6 lg:-mb-10">
-			<AiChat />
-		</div>
-	);
+	return <AiChatPreview />;
 }

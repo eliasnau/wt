@@ -128,6 +128,9 @@ export async function POST(req: Request) {
 
 	const result = streamText({
 		model,
+		providerOptions: {
+			openai: { reasoningEffort: "low" },
+		},
 		system: `You are MatDesk AI, a helpful assistant for a martial arts school management platform.
 
 Context:
