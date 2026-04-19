@@ -2,6 +2,7 @@ import type { RouterClient } from "@orpc/server";
 import { publicProcedure } from "../index";
 import { billingRouter } from "./billing";
 import { groupsRouter } from "./groups";
+import { inventoryRouter } from "./inventory";
 import { membersRouter } from "./members";
 import { organizationsRouter } from "./organizations";
 import { selfRegistrationsRouter } from "./selfRegistrations";
@@ -19,6 +20,9 @@ export const appRouter = {
 	},
 	groups: {
 		...groupsRouter,
+	},
+	inventory: {
+		...inventoryRouter,
 	},
 	organizations: {
 		...organizationsRouter,

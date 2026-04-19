@@ -86,7 +86,9 @@ export const groupMember = pgTable(
 		memberId: uuid("member_id")
 			.notNull()
 			.references(() => clubMember.id, { onDelete: "cascade" }),
-		membershipPriceCents: integer("membership_price_cents").notNull().default(0),
+		membershipPriceCents: integer("membership_price_cents")
+			.notNull()
+			.default(0),
 		createdAt: timestamp("created_at").defaultNow().notNull(),
 		updatedAt: timestamp("updated_at")
 			.defaultNow()
