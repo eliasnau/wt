@@ -26,6 +26,8 @@ interface NavButtonProps {
 	/** Sub-nav — right-side-only radius, attaches to left border line */
 	isSubNav?: boolean;
 	className?: string;
+	/** Small text badge shown after the title */
+	badge?: string;
 	/** Shared layoutId for the sliding active background */
 	layoutId?: string;
 }
@@ -39,6 +41,7 @@ export function NavButton({
 	isGroup = false,
 	onClick,
 	isOpen,
+	badge,
 	isSubNav = false,
 	className,
 	layoutId,
@@ -93,6 +96,12 @@ export function NavButton({
 				>
 					{title}
 				</span>
+
+				{badge && expanded && (
+					<span className="relative ml-auto rounded-md bg-muted px-1.5 py-0.5 text-[10px] font-medium leading-none text-muted-foreground">
+						{badge}
+					</span>
+				)}
 			</div>
 
 			{isOpen !== undefined && (

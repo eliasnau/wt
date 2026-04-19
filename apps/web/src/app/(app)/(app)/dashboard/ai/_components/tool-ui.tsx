@@ -20,6 +20,7 @@ import type { ReactNode } from "react";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
 	Collapsible,
 	CollapsibleContent,
@@ -660,6 +661,8 @@ export function ToolCollapsible({
 	output,
 	errorText,
 	approval,
+	onApprove,
+	onDeny,
 }: {
 	toolName: string;
 	state: string;
@@ -671,6 +674,8 @@ export function ToolCollapsible({
 		approved?: boolean;
 		reason?: string;
 	};
+	onApprove?: () => void;
+	onDeny?: () => void;
 }): ReactNode {
 	const done = state === "output-available";
 	const hasError = state === "output-error";
@@ -702,7 +707,10 @@ export function ToolCollapsible({
 	} else if (isAwaitingApproval) {
 		label = "Warte auf Freigabe…";
 	} else if (isApprovalResponded) {
-		label = "Verarbeite Freigabe…";
+		label =
+			approval?.approved === false
+				? "Lehne Freigabe ab…"
+				: "Erteile Freigabe…";
 	}
 
 	const sheetTitle = config.sheetTitle({ ...data, _toolName: toolName });
@@ -718,34 +726,48 @@ export function ToolCollapsible({
 			: null;
 
 	const innerContent = (
-		<span
-			className={cn(
-				"inline-flex items-center gap-1.5 text-sm transition-colors",
-				hasError
-					? "text-destructive"
-					: isDenied
-						? "text-amber-700"
-						: "text-muted-foreground",
-			)}
-		>
-			{isLoading ? (
-				<LoaderCircleIcon className="size-4 shrink-0 animate-spin" />
-			) : hasError ? (
-				<XCircleIcon className="size-4 shrink-0" />
-			) : isDenied ? (
-				<XCircleIcon className="size-4 shrink-0" />
-			) : (
-				<Icon className="size-4 shrink-0" />
-			)}
-			{isLoading ? (
-				<Shimmer as="span" duration={1.5}>
-					{label}
-				</Shimmer>
-			) : (
-				<span>{label}</span>
-			)}
-			{canOpen && <ChevronRightIcon className="size-3.5 shrink-0 opacity-60" />}
-		</span>
+		<div className="space-y-2">
+			<span
+				className={cn(
+					"inline-flex items-center gap-1.5 text-sm transition-colors",
+					hasError
+						? "text-destructive"
+						: isDenied
+							? "text-amber-700"
+							: "text-muted-foreground",
+				)}
+			>
+				{isLoading || isApprovalResponded ? (
+					<LoaderCircleIcon className="size-4 shrink-0 animate-spin" />
+				) : hasError ? (
+					<XCircleIcon className="size-4 shrink-0" />
+				) : isDenied ? (
+					<XCircleIcon className="size-4 shrink-0" />
+				) : (
+					<Icon className="size-4 shrink-0" />
+				)}
+				{isLoading || isApprovalResponded ? (
+					<Shimmer as="span" duration={1.5}>
+						{label}
+					</Shimmer>
+				) : (
+					<span>{label}</span>
+				)}
+				{canOpen && (
+					<ChevronRightIcon className="size-3.5 shrink-0 opacity-60" />
+				)}
+			</span>
+			{isAwaitingApproval && onApprove && onDeny ? (
+				<div className="flex flex-wrap gap-2">
+					<Button onClick={onDeny} size="sm" type="button" variant="outline">
+						Ablehnen
+					</Button>
+					<Button onClick={onApprove} size="sm" type="button">
+						Erlauben
+					</Button>
+				</div>
+			) : null}
+		</div>
 	);
 
 	if (!canOpen) {

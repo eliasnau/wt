@@ -1,16 +1,17 @@
 "use client";
 
 import { env } from "@repo/env/web";
-import type { ReactNode } from "react";
-import { useMemo } from "react";
-import { usePathname } from "next/navigation";
 import {
+	ArrowLeftIcon,
 	BookOpenIcon,
 	DollarSignIcon,
 	HelpCircleIcon,
+	PackageIcon,
 	ShieldIcon,
-	ArrowLeftIcon,
 } from "lucide-react";
+import { usePathname } from "next/navigation";
+import type { ReactNode } from "react";
+import { useMemo } from "react";
 import { ChartLine } from "@/components/animate-ui/icons/chart-line";
 import { ClipboardCheck } from "@/components/animate-ui/icons/clipboard-check";
 import { Layers } from "@/components/animate-ui/icons/layers";
@@ -34,7 +35,11 @@ export type SidebarNavGroup = {
 	items: SidebarNavItem[];
 };
 
-const isActivePath = (pathname: string | null, path?: string, exact?: boolean) => {
+const isActivePath = (
+	pathname: string | null,
+	path?: string,
+	exact?: boolean,
+) => {
 	if (!pathname || !path) {
 		return false;
 	}
@@ -104,6 +109,13 @@ export function useAppShellNavigation() {
 								path: "/dashboard/groups",
 								icon: <Layers className="size-4" />,
 								isActive: isActivePath(pathname, "/dashboard/groups"),
+							},
+							{
+								title: "Inventar",
+								path: "/dashboard/inventory",
+								icon: <PackageIcon className="size-4" />,
+								isActive: isActivePath(pathname, "/dashboard/inventory"),
+								badge: "Beta",
 							},
 							{
 								title: "KI-Assistent",
@@ -235,7 +247,10 @@ export function useAppShellNavigation() {
 									{
 										title: "SEPA",
 										path: "/dashboard/settings/sepa",
-										isActive: isActivePath(pathname, "/dashboard/settings/sepa"),
+										isActive: isActivePath(
+											pathname,
+											"/dashboard/settings/sepa",
+										),
 									},
 								],
 							},

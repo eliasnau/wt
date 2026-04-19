@@ -22,6 +22,7 @@ const customStatement = {
 	financeStatistics: ["view"] as const,
 	billing: ["view", "generate", "download", "update"] as const,
 	groups: ["view", "create", "update", "delete"] as const,
+	inventory: ["view", "create", "update", "delete"] as const,
 } as const;
 
 export const statement = {
@@ -52,6 +53,7 @@ export const owner = ac.newRole({
 	financeStatistics: ["view"],
 	billing: ["view", "generate", "download", "update"],
 	groups: ["view", "create", "update", "delete"],
+	inventory: ["view", "create", "update", "delete"],
 });
 
 export const admin = ac.newRole({
@@ -71,6 +73,7 @@ export const admin = ac.newRole({
 	financeStatistics: ["view"],
 	billing: ["view", "generate", "download", "update"],
 	groups: ["view", "create", "update", "delete"],
+	inventory: ["view", "create", "update", "delete"],
 });
 
 export const member = ac.newRole({
@@ -78,6 +81,7 @@ export const member = ac.newRole({
 	member: ["view"],
 	ai: ["chat"],
 	groups: ["view"],
+	inventory: ["view"],
 });
 
 export const roles = {
