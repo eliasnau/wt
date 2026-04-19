@@ -143,7 +143,7 @@ export function InventoryPageClient() {
         </Frame>
       ) : (
         <>
-          <InputGroup>
+          <InputGroup className="max-w-sm">
             <InputGroupAddon>
               {isPlaceholderData ? (
                 <LoaderCircle aria-hidden="true" className="animate-spin" />

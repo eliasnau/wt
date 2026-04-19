@@ -187,69 +187,46 @@ export function NewGroupSheet({ onGroupCreated }: NewGroupSheetProps) {
 								name="color"
 								render={({ field }) => (
 									<FormItem>
-										<div className="flex items-center justify-between gap-2">
-											<FormLabel>Farbe *</FormLabel>
-											<Button
-												type="button"
-												size="sm"
-												variant="outline"
-												onClick={() =>
-													field.onChange(getRandomGroupColor(field.value))
-												}
-												disabled={createGroupMutation.isPending}
-											>
-												Zufällig
-											</Button>
-										</div>
+										<FormLabel>Farbe</FormLabel>
 										<FormControl>
-											<div className="space-y-3">
-												<div className="grid grid-cols-6 gap-2 sm:grid-cols-12">
-													{GROUP_COLOR_PRESETS.map((preset) => {
-														const isSelected =
-															field.value?.toLowerCase() === preset.hex;
+											<div className="flex flex-wrap items-center gap-2">
+												{GROUP_COLOR_PRESETS.map((preset) => {
+													const isSelected =
+														field.value?.toLowerCase() === preset.hex;
 
-														return (
-															<button
-																key={preset.hex}
-																type="button"
-																onClick={() => field.onChange(preset.hex)}
-																disabled={createGroupMutation.isPending}
-																className={`h-8 w-8 rounded-md border transition-transform hover:scale-105 focus-visible:ring-2 focus-visible:ring-ring ${
-																	isSelected
-																		? "ring-2 ring-foreground ring-offset-2"
-																		: ""
-																}`}
-																style={{ backgroundColor: preset.hex }}
-																title={preset.name}
-																aria-label={`${preset.name} auswählen`}
-															/>
-														);
-													})}
-												</div>
-												<div className="flex items-center gap-3">
-													<Input
-														type="color"
-														value={field.value}
-														onChange={field.onChange}
-														disabled={createGroupMutation.isPending}
-														className="h-10 w-14 p-1"
-														required
-													/>
-													<Input
-														type="text"
-														value={field.value}
-														onChange={field.onChange}
-														placeholder={DEFAULT_GROUP_COLOR}
-														disabled={createGroupMutation.isPending}
-														pattern="^#[0-9A-Fa-f]{6}$"
-														required
-													/>
-												</div>
+													return (
+														<button
+															key={preset.hex}
+															type="button"
+															onClick={() => field.onChange(preset.hex)}
+															disabled={createGroupMutation.isPending}
+															className={`size-7 rounded-full border transition-transform hover:scale-110 focus-visible:ring-2 focus-visible:ring-ring ${
+																isSelected
+																	? "ring-2 ring-foreground ring-offset-2"
+																	: ""
+															}`}
+															style={{ backgroundColor: preset.hex }}
+															title={preset.name}
+															aria-label={`${preset.name} auswählen`}
+														/>
+													);
+												})}
+												<Button
+													type="button"
+													size="icon-sm"
+													variant="outline"
+													className="size-7 rounded-full"
+													onClick={() =>
+														field.onChange(getRandomGroupColor(field.value))
+													}
+													disabled={createGroupMutation.isPending}
+													title="Zufällige Farbe"
+													aria-label="Zufällige Farbe"
+												>
+													<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-3.5"><path d="M2 18h1.4c1.3 0 2.5-.6 3.3-1.7l6.1-8.6c.7-1.1 2-1.7 3.3-1.7H22"/><path d="m18 2 4 4-4 4"/><path d="M2 6h1.9c1.5 0 2.9.9 3.6 2.2"/><path d="M22 18h-5.9c-1.3 0-2.6-.7-3.3-1.8l-.5-.8"/><path d="m18 14 4 4-4 4"/></svg>
+												</Button>
 											</div>
 										</FormControl>
-										<FormDescription>
-											Wähle eine Farbe oder gib einen Hex-Wert ein.
-										</FormDescription>
 										<FormMessage />
 									</FormItem>
 								)}

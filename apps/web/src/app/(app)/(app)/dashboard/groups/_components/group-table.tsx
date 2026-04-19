@@ -36,6 +36,7 @@ import {
 	AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { CardFrame } from "@/components/ui/card";
 import {
 	Empty,
 	EmptyDescription,
@@ -160,20 +161,15 @@ export const columns: ColumnDef<GroupRow>[] = [
 	{
 		accessorKey: "name",
 		header: "Name",
-	},
-	{
-		accessorKey: "color",
-		header: "Farbe",
-		enableSorting: false,
 		cell: ({ row }) => {
 			const color = row.original.color ?? "#000000";
 			return (
 				<div className="flex items-center gap-2">
 					<span
-						className="size-3 rounded-full border"
+						className="size-3 shrink-0 rounded-full border"
 						style={{ backgroundColor: color }}
 					/>
-					<span className="font-mono text-xs uppercase">{color}</span>
+					{row.original.name}
 				</div>
 			);
 		},
@@ -186,13 +182,18 @@ export const columns: ColumnDef<GroupRow>[] = [
 	{
 		accessorKey: "defaultMembershipPriceCents",
 		header: "Mitgliedsbeitrag",
-		cell: ({ row }) =>
-			formatCents(row.original.defaultMembershipPriceCents ?? 0),
+		meta: { className: "text-right" },
+		cell: ({ row }) => (
+			<div className="text-right">
+				{formatCents(row.original.defaultMembershipPriceCents ?? 0)}
+			</div>
+		),
 	},
 	{
 		id: "actions",
-		header: "Aktionen",
+		header: "",
 		enableSorting: false,
+		meta: { className: "w-0" },
 		cell: ({ row, table }) => {
 			const group = row.original;
 			const { onDeleteGroup, onEditGroup } = table.options.meta as {
@@ -329,8 +330,8 @@ export default function GroupTable({
 	// If there are no groups at all, show empty state
 	if (!loading && !data?.length) {
 		return (
-			<Frame className="relative flex min-w-0 flex-1 flex-col bg-muted/50 bg-clip-padding shadow-black/5 shadow-sm after:pointer-events-none after:absolute after:-inset-[5px] after:-z-1 after:rounded-[calc(var(--radius-2xl)+4px)] after:border after:border-border/50 after:bg-clip-padding lg:rounded-2xl lg:border dark:after:bg-background/72">
-				<FramePanel className="py-12">
+			<Frame>
+				<FramePanel>
 					<Empty>
 						<EmptyHeader>
 							<EmptyMedia variant="icon">
@@ -347,48 +348,54 @@ export default function GroupTable({
 		);
 	}
 
+	const nameFilterValue =
+		(table.getColumn("name")?.getFilterValue() as string) ?? "";
+
 	return (
-		<div className="">
-			<div className="mb-4">
-				<InputGroup className="max-w-sm">
-					<InputGroupAddon>
-						<SearchIcon className="size-4" />
-					</InputGroupAddon>
-					<InputGroupInput
-						type="text"
-						placeholder="Name suchen..."
-						value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
-						onChange={(event) =>
-							table.getColumn("name")?.setFilterValue(event.target.value)
-						}
-					/>
-					{((table.getColumn("name")?.getFilterValue() as string) ?? "") !==
-						"" && (
-						<InputGroupAddon
-							align={"inline-end"}
-							className="cursor-pointer"
+		<>
+			<InputGroup className="max-w-sm">
+				<InputGroupAddon>
+					<SearchIcon aria-hidden="true" />
+				</InputGroupAddon>
+				<InputGroupInput
+					type="search"
+					aria-label="Gruppen durchsuchen"
+					placeholder="Gruppen durchsuchen..."
+					value={nameFilterValue}
+					onChange={(event) =>
+						table.getColumn("name")?.setFilterValue(event.target.value)
+					}
+				/>
+				{nameFilterValue && (
+					<InputGroupAddon align="inline-end">
+						<button
+							type="button"
 							onClick={() => table.getColumn("name")?.setFilterValue("")}
 						>
-							<XIcon className="size-4" />
-						</InputGroupAddon>
-					)}
-				</InputGroup>
-			</div>
-			<Table>
+							<XIcon aria-hidden="true" />
+							<span className="sr-only">Suche löschen</span>
+						</button>
+					</InputGroupAddon>
+				)}
+			</InputGroup>
+
+			<CardFrame>
+				<Table variant="card">
 				<TableHeader>
 					{table.getHeaderGroups().map((headerGroup) => (
 						<TableRow className="hover:bg-transparent" key={headerGroup.id}>
 							{headerGroup.headers.map((header, idx) => {
 								const isLast = idx === headerGroup.headers.length - 1;
+								const metaClassName = (header.column.columnDef.meta as { className?: string })?.className;
 								return (
 									<TableHead
 										key={header.id}
-										className={isLast ? "text-right" : undefined}
+										className={[isLast && "text-right", metaClassName].filter(Boolean).join(" ") || undefined}
 									>
 										{header.isPlaceholder ? null : header.column.getCanSort() ? (
 											<button
 												type="button"
-												className="flex h-full w-full cursor-pointer select-none items-center justify-between gap-2"
+												className={`flex h-full w-full cursor-pointer select-none items-center gap-2 ${metaClassName === "text-right" ? "justify-end" : "justify-between"}`}
 												onClick={header.column.getToggleSortingHandler()}
 											>
 												{flexRender(
@@ -434,9 +441,19 @@ export default function GroupTable({
 							</TableRow>
 						))
 					) : !table.getRowModel().rows?.length ? (
-						<TableRow>
-							<TableCell colSpan={columns.length} className="h-24 text-center">
-								Keine Ergebnisse gefunden.
+						<TableRow className="hover:bg-transparent">
+							<TableCell colSpan={columns.length}>
+								<Empty>
+									<EmptyHeader>
+										<EmptyMedia variant="icon">
+											<SearchIcon />
+										</EmptyMedia>
+										<EmptyTitle>Keine Ergebnisse</EmptyTitle>
+										<EmptyDescription>
+											Keine Gruppe passt zu &ldquo;{nameFilterValue}&rdquo;.
+										</EmptyDescription>
+									</EmptyHeader>
+								</Empty>
 							</TableCell>
 						</TableRow>
 					) : (
@@ -456,10 +473,10 @@ export default function GroupTable({
 				</TableBody>
 				<TableFooter>
 					<TableRow>
-						<TableCell colSpan={columns.length} className="p-2">
+						<TableCell colSpan={columns.length} className="!py-2 px-2">
 							<div className="flex items-center justify-between gap-2">
-								<div className="flex items-center gap-2 whitespace-nowrap">
-									<p className="text-muted-foreground text-sm">Zeige</p>
+								<div className="flex min-w-0 items-center gap-2 whitespace-nowrap">
+									<p className="hidden text-muted-foreground text-sm sm:inline">Zeige</p>
 									<Select
 										items={[
 											{ label: "10", value: 10 },
@@ -490,38 +507,43 @@ export default function GroupTable({
 										von{" "}
 										<strong className="font-medium text-foreground">
 											{table.getRowCount()}
-										</strong>
+										</strong>{" "}
+										<span className="hidden sm:inline">
+											{table.getRowCount() === 1
+												? "Gruppe"
+												: "Gruppen"}
+										</span>
 									</span>
 								</div>
 								<Pagination className="justify-end">
 									<PaginationContent>
 										<PaginationItem>
+											<span className="text-muted-foreground text-sm">
+												Seite {table.getState().pagination.pageIndex + 1} von{" "}
+												{table.getPageCount()}
+											</span>
+										</PaginationItem>
+										<PaginationItem>
 											<PaginationPrevious
-												className="sm:*:[svg]:hidden"
 												render={
 													<Button
 														disabled={!table.getCanPreviousPage()}
 														onClick={() => table.previousPage()}
 														size="sm"
 														variant="outline"
-													>
-														Zurück
-													</Button>
+													/>
 												}
 											/>
 										</PaginationItem>
 										<PaginationItem>
 											<PaginationNext
-												className="sm:*:[svg]:hidden"
 												render={
 													<Button
 														disabled={!table.getCanNextPage()}
 														onClick={() => table.nextPage()}
 														size="sm"
 														variant="outline"
-													>
-														Weiter
-													</Button>
+													/>
 												}
 											/>
 										</PaginationItem>
@@ -532,6 +554,7 @@ export default function GroupTable({
 					</TableRow>
 				</TableFooter>
 			</Table>
+			</CardFrame>
 
 			<DeleteGroupDialog
 				group={groupToDelete}
@@ -546,6 +569,6 @@ export default function GroupTable({
 				onOpenChange={setEditGroupOpen}
 				onSuccess={onRefetch}
 			/>
-		</div>
+		</>
 	);
 }
