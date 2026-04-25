@@ -1,9 +1,18 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { AlertCircle, LoaderCircle, Package, Search, X } from "lucide-react";
+import {
+  AlertCircle,
+  ChevronRight,
+  LoaderCircle,
+  Package,
+  Search,
+  X,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
 import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
 import { useMemo } from "react";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { CardFrame } from "@/components/ui/card";
 import {
@@ -53,10 +62,10 @@ import {
   HeaderTitle,
 } from "../_components/page-header";
 import { NewProductSheet } from "./_components/new-product-sheet";
-import { ProductStockSheet } from "./_components/product-stock-sheet";
-import type { Product } from "./_components/types";
+import { type Product, getTotalStock } from "./_components/types";
 
 export function InventoryPageClient() {
+  const router = useRouter();
   const [{ page, limit, search }, setQueryState] = useQueryStates({
     page: parseAsInteger.withDefault(1),
     limit: parseAsInteger.withDefault(20),
@@ -188,24 +197,24 @@ export function InventoryPageClient() {
               <TableBody>
                 {isPending ? (
                   Array.from({ length: limit }).map((_, i) => (
-                          <TableRow key={`skeleton-${i}`}>
-                            <TableCell>
-                              <Skeleton className="h-3.5 w-28" />
-                            </TableCell>
-                            <TableCell className="hidden sm:table-cell">
-                              <div className="flex items-center gap-1.5">
-                                <Skeleton className="h-4 w-12 rounded-full" />
-                                <Skeleton className="h-4 w-14 rounded-full" />
-                              </div>
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <Skeleton className="ml-auto h-3.5 w-6" />
-                            </TableCell>
-                            <TableCell className="w-8 pr-4">
-                              <Skeleton className="size-4" />
-                            </TableCell>
-                          </TableRow>
-                    ))
+                    <TableRow key={`skeleton-${i}`}>
+                      <TableCell>
+                        <Skeleton className="h-3.5 w-28" />
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <div className="flex items-center gap-1.5">
+                          <Skeleton className="h-4 w-12 rounded-full" />
+                          <Skeleton className="h-4 w-14 rounded-full" />
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Skeleton className="ml-auto h-3.5 w-6" />
+                      </TableCell>
+                      <TableCell className="w-8 pr-4">
+                        <Skeleton className="size-4" />
+                      </TableCell>
+                    </TableRow>
+                  ))
                 ) : !isPlaceholderData && products.length === 0 ? (
                   <TableRow className="hover:bg-transparent">
                     <TableCell colSpan={4}>
@@ -224,10 +233,47 @@ export function InventoryPageClient() {
                   </TableRow>
                 ) : (
                   products.map((product) => (
-                    <ProductStockSheet
+                    <TableRow
                       key={product.id}
-                      product={product}
-                    />
+                      className="group cursor-pointer"
+                      onClick={() =>
+                        router.push(`/dashboard/inventory/${product.id}`)
+                      }
+                    >
+                      <TableCell>
+                        <div className="font-medium">{product.name}</div>
+                        {product.description && (
+                          <p className="mt-0.5 truncate text-muted-foreground text-sm">
+                            {product.description}
+                          </p>
+                        )}
+                      </TableCell>
+                      <TableCell className="hidden sm:table-cell">
+                        <div className="flex flex-wrap items-center gap-1.5">
+                          {product.attributes.length === 0 ? (
+                            <span className="text-muted-foreground text-xs">
+                              Standard
+                            </span>
+                          ) : (
+                            product.attributes.map((attr) => (
+                              <Badge
+                                key={attr.id}
+                                variant="secondary"
+                                size="sm"
+                              >
+                                {attr.name}
+                              </Badge>
+                            ))
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        {getTotalStock(product)}
+                      </TableCell>
+                      <TableCell className="w-8 pr-4">
+                        <ChevronRight className="size-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+                      </TableCell>
+                    </TableRow>
                   ))
                 )}
               </TableBody>

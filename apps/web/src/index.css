@@ -184,6 +184,35 @@ body {
 	}
 }
 
+@media print {
+	@page {
+		margin: 14mm 12mm;
+	}
+	html,
+	body {
+		background: #fff !important;
+		color: #000 !important;
+	}
+	body * {
+		visibility: hidden;
+	}
+	#print-area,
+	#print-area * {
+		visibility: visible;
+	}
+	#print-area {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		padding: 0;
+		color: #000;
+		background: #fff;
+	}
+	.no-print {
+		display: none !important;
+	}
+}
+
 @media (prefers-reduced-motion: reduce) {
 	*,
 	*::before,
