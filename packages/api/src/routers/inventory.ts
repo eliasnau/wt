@@ -44,6 +44,19 @@ const updateVariantQuantitySchema = z.object({
 	quantity: z.number().int().min(0),
 });
 
+const updateVariantQuantitiesSchema = z.object({
+	productId: z.string(),
+	updates: z
+		.array(
+			z.object({
+				variantId: z.string(),
+				quantity: z.number().int().min(0),
+			}),
+		)
+		.min(1)
+		.max(500),
+});
+
 const deleteProductSchema = z.object({
 	productId: z.string(),
 });
@@ -348,6 +361,10 @@ const listProductsSchema = z.object({
 	search: z.string().trim().optional(),
 });
 
+const getProductSchema = z.object({
+	productId: z.string(),
+});
+
 export const inventoryRouter = {
 	listProducts: protectedProcedure
 		.use(rateLimitMiddleware(1))
@@ -512,6 +529,102 @@ export const inventoryRouter = {
 		})
 		.route({ method: "GET", path: "/inventory/products" }),
 
+	getProduct: protectedProcedure
+		.use(rateLimitMiddleware(1))
+		.use(requirePermission({ inventory: ["view"] }))
+		.input(getProductSchema)
+		.handler(async ({ input, context }) => {
+			const organizationId = requireActiveOrganizationId(
+				context.session.activeOrganizationId,
+			);
+
+			const [product] = await db
+				.select({
+					id: inventoryProduct.id,
+					name: inventoryProduct.name,
+					description: inventoryProduct.description,
+					isActive: inventoryProduct.isActive,
+					createdAt: inventoryProduct.createdAt,
+					updatedAt: inventoryProduct.updatedAt,
+				})
+				.from(inventoryProduct)
+				.where(
+					and(
+						eq(inventoryProduct.id, input.productId),
+						eq(inventoryProduct.organizationId, organizationId),
+					),
+				)
+				.limit(1);
+
+			if (!product) {
+				throw new ORPCError("NOT_FOUND", {
+					message: "Product not found",
+				});
+			}
+
+			const attributeRows = await db
+				.select({
+					id: inventoryProductAttribute.id,
+					name: inventoryProductAttribute.name,
+					position: inventoryProductAttribute.position,
+				})
+				.from(inventoryProductAttribute)
+				.where(eq(inventoryProductAttribute.productId, product.id));
+
+			const attributeIds = attributeRows.map((attribute) => attribute.id);
+
+			const valueRows = attributeIds.length
+				? await db
+						.select({
+							attributeId: inventoryProductAttributeValue.attributeId,
+							value: inventoryProductAttributeValue.value,
+							position: inventoryProductAttributeValue.position,
+						})
+						.from(inventoryProductAttributeValue)
+						.where(
+							inArray(inventoryProductAttributeValue.attributeId, attributeIds),
+						)
+				: [];
+
+			const variantRows = await db
+				.select({
+					id: inventoryVariant.id,
+					quantity: inventoryVariant.quantity,
+					options: inventoryVariant.options,
+					updatedAt: inventoryVariant.updatedAt,
+				})
+				.from(inventoryVariant)
+				.where(eq(inventoryVariant.productId, product.id));
+
+			const valuesByAttributeId = new Map<
+				string,
+				Array<{ value: string; position: number }>
+			>();
+			for (const row of valueRows) {
+				const current = valuesByAttributeId.get(row.attributeId) ?? [];
+				current.push({ value: row.value, position: row.position });
+				valuesByAttributeId.set(row.attributeId, current);
+			}
+
+			const attributes = attributeRows
+				.sort((a, b) => a.position - b.position)
+				.map((attribute) => ({
+					id: attribute.id,
+					name: attribute.name,
+					position: attribute.position,
+					values: (valuesByAttributeId.get(attribute.id) ?? [])
+						.sort((a, b) => a.position - b.position)
+						.map((value) => value.value),
+				}));
+
+			return {
+				...product,
+				attributes,
+				variants: variantRows,
+			};
+		})
+		.route({ method: "GET", path: "/inventory/products/:productId" }),
+
 	createProduct: protectedProcedure
 		.use(rateLimitMiddleware(1))
 		.use(requirePermission({ inventory: ["create"] }))
@@ -652,6 +765,82 @@ export const inventoryRouter = {
 			return updated;
 		})
 		.route({ method: "PUT", path: "/inventory/variants/:variantId/quantity" }),
+
+	updateVariantQuantities: protectedProcedure
+		.use(rateLimitMiddleware(1))
+		.use(requirePermission({ inventory: ["update"] }))
+		.input(updateVariantQuantitiesSchema)
+		.handler(async ({ input, context }) => {
+			const organizationId = requireActiveOrganizationId(
+				context.session.activeOrganizationId,
+			);
+
+			const updatesByVariantId = new Map(
+				input.updates.map((update) => [update.variantId, update.quantity]),
+			);
+			const variantIds = Array.from(updatesByVariantId.keys());
+
+			const variants = await db
+				.select({
+					id: inventoryVariant.id,
+					productId: inventoryVariant.productId,
+					organizationId: inventoryProduct.organizationId,
+				})
+				.from(inventoryVariant)
+				.innerJoin(
+					inventoryProduct,
+					eq(inventoryProduct.id, inventoryVariant.productId),
+				)
+				.where(inArray(inventoryVariant.id, variantIds));
+
+			const authorizedVariantIds = variants
+				.filter(
+					(variant) =>
+						variant.productId === input.productId &&
+						variant.organizationId === organizationId,
+				)
+				.map((variant) => variant.id);
+
+			if (authorizedVariantIds.length !== variantIds.length) {
+				throw new ORPCError("NOT_FOUND", {
+					message: "One or more variants were not found",
+				});
+			}
+
+			const updated = await wsDb.transaction(async (tx) => {
+				const results: Array<{ id: string; quantity: number }> = [];
+
+				for (const variantId of authorizedVariantIds) {
+					const quantity = updatesByVariantId.get(variantId);
+					if (quantity === undefined) continue;
+
+					const [row] = await tx
+						.update(inventoryVariant)
+						.set({ quantity })
+						.where(eq(inventoryVariant.id, variantId))
+						.returning({
+							id: inventoryVariant.id,
+							quantity: inventoryVariant.quantity,
+						});
+
+					if (!row) {
+						throw new ORPCError("INTERNAL_SERVER_ERROR", {
+							message: "Failed to update quantity",
+						});
+					}
+
+					results.push(row);
+				}
+
+				return results;
+			});
+
+			return { updated };
+		})
+		.route({
+			method: "PUT",
+			path: "/inventory/products/:productId/variant-quantities",
+		}),
 
 	deleteProduct: protectedProcedure
 		.use(rateLimitMiddleware(1))
