@@ -20,6 +20,7 @@ export const env = createEnv({
 		BETTER_AUTH_SECRET: z.string().min(32).optional(),
 		AUTUMN_SECRET_KEY: z.string().startsWith("am_sk_").optional(),
 
+		OPENROUTER_API_KEY: z.string().min(1),
 		RESEND_API_KEY: z.string().startsWith("re_"),
 	},
 	client: {
@@ -43,6 +44,7 @@ export const env = createEnv({
 		BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET,
 		AUTUMN_SECRET_KEY: process.env.AUTUMN_SECRET_KEY,
 
+		OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
 		// Client
 		NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
 		NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,

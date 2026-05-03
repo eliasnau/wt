@@ -1,16 +1,8 @@
-import { gateway } from "ai";
-
 export type ChatModelOption = {
 	id: string;
 	name: string;
 	providerName: string;
 };
-
-export type ChatModel = ChatModelOption & {
-	model: ReturnType<typeof gateway>;
-};
-
-const createChatModel = (model: ChatModel): ChatModel => model;
 
 export const CHAT_MODEL_OPTIONS: readonly ChatModelOption[] = [
 	{
@@ -19,8 +11,8 @@ export const CHAT_MODEL_OPTIONS: readonly ChatModelOption[] = [
 		providerName: "OpenAI",
 	},
 	{
-		id: "google/gemini-3-flash",
-		name: "Gemini 3 Flash",
+		id: "google/gemini-3-flash-preview",
+		name: "Gemini 3 Flash Preview",
 		providerName: "Google",
 	},
 ];
@@ -34,11 +26,5 @@ const CHAT_MODEL_OPTIONS_BY_ID = new Map(
 export const getChatModel = (modelId?: string | null) => {
 	if (!modelId) return undefined;
 
-	const modelOption = CHAT_MODEL_OPTIONS_BY_ID.get(modelId);
-	if (!modelOption) return undefined;
-
-	return createChatModel({
-		...modelOption,
-		model: gateway(modelOption.id),
-	});
+	return CHAT_MODEL_OPTIONS_BY_ID.get(modelId);
 };

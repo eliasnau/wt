@@ -431,7 +431,7 @@ const ModelItem = memo(({ m, selectedModel, onSelect }: ModelItemProps) => {
 					{m.name}
 				</ModelSelectorName>
 				<ModelSelectorProvider>
-					{m.providerName} via AI Gateway
+					{m.providerName} via OpenRouter
 				</ModelSelectorProvider>
 			</ModelSelectorText>
 			{selectedModel === m.id ? (
