@@ -16,6 +16,7 @@
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
       "env": [
         "NEXT_PUBLIC_*",
+        "OPENROUTER_API_KEY",
         "POSTHOG_API_KEY",
         "POSTHOG_ENV_ID",
         "RESEND_API_KEY"
