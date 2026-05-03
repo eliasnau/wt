@@ -11,6 +11,7 @@
 		"@ai-sdk/react": "^3.0.170",
 		"@base-ui/react": "^1.4.0",
 		"@hookform/resolvers": "^5.2.2",
+		"@openrouter/ai-sdk-provider": "^2.9.0",
 		"@orpc/client": "catalog:",
 		"@orpc/contract": "catalog:",
 		"@orpc/openapi": "catalog:",

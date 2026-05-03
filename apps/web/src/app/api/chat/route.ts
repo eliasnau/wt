@@ -1,137 +1,143 @@
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { withTracing } from "@posthog/ai";
 import { auth } from "@repo/auth";
 import { checkAutumnFeature, trackAutumnUsage } from "@repo/autumn/backend";
 import { db, eq } from "@repo/db";
 import { organization } from "@repo/db/schema";
 import {
-	convertToModelMessages,
-	stepCountIs,
-	streamText,
-	type UIMessage,
+  convertToModelMessages,
+  stepCountIs,
+  streamText,
+  type UIMessage,
 } from "ai";
 import { after } from "next/server";
 import { PostHog } from "posthog-node";
 import { DEFAULT_CHAT_MODEL_ID, getChatModel } from "@/ai/models";
 
 import { createTools } from "./_tools";
+import { env } from "@repo/env/web";
 
 const getOrganizationSession = async (req: Request) => {
-	const sessionData = await auth.api.getSession({ headers: req.headers });
-	if (!sessionData?.session?.activeOrganizationId) return null;
-	const activeOrganizationId = sessionData.session.activeOrganizationId;
-	const [activeOrganization] = await db
-		.select({ name: organization.name })
-		.from(organization)
-		.where(eq(organization.id, activeOrganizationId))
-		.limit(1);
+  const sessionData = await auth.api.getSession({ headers: req.headers });
+  if (!sessionData?.session?.activeOrganizationId) return null;
+  const activeOrganizationId = sessionData.session.activeOrganizationId;
+  const [activeOrganization] = await db
+    .select({ name: organization.name })
+    .from(organization)
+    .where(eq(organization.id, activeOrganizationId))
+    .limit(1);
 
-	return {
-		organizationId: activeOrganizationId,
-		organizationName: activeOrganization?.name ?? "Unknown organization",
-		userName: sessionData.user.name,
-		userId: sessionData.user.id,
-	};
+  return {
+    organizationId: activeOrganizationId,
+    organizationName: activeOrganization?.name ?? "Unknown organization",
+    userName: sessionData.user.name,
+    userId: sessionData.user.id,
+  };
 };
 
 const hasAiChatPermission = async (req: Request) => {
-	const result = await auth.api.hasPermission({
-		headers: req.headers,
-		body: {
-			permissions: {
-				ai: ["chat"],
-			},
-		},
-	});
+  const result = await auth.api.hasPermission({
+    headers: req.headers,
+    body: {
+      permissions: {
+        ai: ["chat"],
+      },
+    },
+  });
 
-	return result.success;
+  return result.success;
 };
 
 export async function POST(req: Request) {
-	const rawBody = (await req.json()) as {
-		messages?: UIMessage[];
-		model?: string;
-	};
-	const messages = rawBody.messages;
-	if (!Array.isArray(messages)) {
-		return new Response(JSON.stringify({ error: "Invalid request payload." }), {
-			status: 400,
-			headers: { "Content-Type": "application/json" },
-		});
-	}
+  const rawBody = (await req.json()) as {
+    messages?: UIMessage[];
+    model?: string;
+  };
+  const messages = rawBody.messages;
+  if (!Array.isArray(messages)) {
+    return new Response(JSON.stringify({ error: "Invalid request payload." }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
 
-	const requestedModelId =
-		typeof rawBody.model === "string" ? rawBody.model.trim() : undefined;
-	if (requestedModelId && !getChatModel(requestedModelId)) {
-		return new Response(
-			JSON.stringify({ error: `Unsupported model: ${requestedModelId}` }),
-			{ status: 400, headers: { "Content-Type": "application/json" } },
-		);
-	}
+  const requestedModelId =
+    typeof rawBody.model === "string" ? rawBody.model.trim() : undefined;
+  if (requestedModelId && !getChatModel(requestedModelId)) {
+    return new Response(
+      JSON.stringify({ error: `Unsupported model: ${requestedModelId}` }),
+      { status: 400, headers: { "Content-Type": "application/json" } },
+    );
+  }
 
-	const selectedModel = getChatModel(requestedModelId ?? DEFAULT_CHAT_MODEL_ID);
-	if (!selectedModel) {
-		return new Response(
-			JSON.stringify({ error: "No default chat model configured." }),
-			{ status: 500, headers: { "Content-Type": "application/json" } },
-		);
-	}
+  const selectedModel = getChatModel(requestedModelId ?? DEFAULT_CHAT_MODEL_ID);
+  if (!selectedModel) {
+    return new Response(
+      JSON.stringify({ error: "No default chat model configured." }),
+      { status: 500, headers: { "Content-Type": "application/json" } },
+    );
+  }
 
-	const session = await getOrganizationSession(req);
+  const session = await getOrganizationSession(req);
 
-	if (!session) {
-		return new Response(
-			JSON.stringify({ error: "Unauthorized: missing active organization." }),
-			{ status: 401, headers: { "Content-Type": "application/json" } },
-		);
-	}
+  if (!session) {
+    return new Response(
+      JSON.stringify({ error: "Unauthorized: missing active organization." }),
+      { status: 401, headers: { "Content-Type": "application/json" } },
+    );
+  }
 
-	const canUseAiChat = await hasAiChatPermission(req);
-	if (!canUseAiChat) {
-		return new Response(
-			JSON.stringify({ error: "Forbidden: missing ai.chat permission." }),
-			{ status: 403, headers: { "Content-Type": "application/json" } },
-		);
-	}
+  const canUseAiChat = await hasAiChatPermission(req);
+  if (!canUseAiChat) {
+    return new Response(
+      JSON.stringify({ error: "Forbidden: missing ai.chat permission." }),
+      { status: 403, headers: { "Content-Type": "application/json" } },
+    );
+  }
 
-	const aiMessagesAccess = await checkAutumnFeature({
-		customerId: session.organizationId,
-		featureId: "ai_messages",
-		requiredBalance: 1,
-	});
-	if (!aiMessagesAccess.allowed) {
-		return new Response(
-			JSON.stringify({ error: "KI-Nachrichten-Limit erreicht." }),
-			{ status: 402, headers: { "Content-Type": "application/json" } },
-		);
-	}
+  const aiMessagesAccess = await checkAutumnFeature({
+    customerId: session.organizationId,
+    featureId: "ai_messages",
+    requiredBalance: 1,
+  });
+  if (!aiMessagesAccess.allowed) {
+    return new Response(
+      JSON.stringify({ error: "KI-Nachrichten-Limit erreicht." }),
+      { status: 402, headers: { "Content-Type": "application/json" } },
+    );
+  }
 
-	const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-	if (!posthogKey) {
-		return new Response(
-			JSON.stringify({ error: "PostHog is not configured." }),
-			{ status: 500, headers: { "Content-Type": "application/json" } },
-		);
-	}
+  const posthogKey = process.env.NEXT_PUBLIC_POSTHOG_KEY;
+  if (!posthogKey) {
+    return new Response(
+      JSON.stringify({ error: "PostHog is not configured." }),
+      { status: 500, headers: { "Content-Type": "application/json" } },
+    );
+  }
+  const openrouter = createOpenRouter({
+    apiKey: env.OPENROUTER_API_KEY,
+    compatibility: "strict",
+  });
 
-	const phClient = new PostHog(posthogKey, {
-		host: "https://eu.i.posthog.com",
-	});
+  const phClient = new PostHog(posthogKey, {
+    host: "https://eu.i.posthog.com",
+  });
 
-	const model = withTracing(selectedModel.model, phClient, {
-		posthogDistinctId: session.userId,
-		posthogTraceId:
-			messages.length > 0 ? messages[messages.length - 1].id : undefined,
-		// posthogProperties: { conversationId: "abc123", paid: true }, // optional
-		posthogPrivacyMode: false,
-		posthogGroups: { organization: session.organizationId },
-	});
+  const model = withTracing(openrouter.chat(selectedModel.id), phClient, {
+    posthogDistinctId: session.userId,
+    posthogTraceId:
+      messages.length > 0 ? messages[messages.length - 1].id : undefined,
+    // posthogProperties: { conversationId: "abc123", paid: true }, // optional
+    posthogPrivacyMode: false,
+    posthogGroups: { organization: session.organizationId },
+  });
 
-	const result = streamText({
-		model,
-		providerOptions: {
-			openai: { reasoningEffort: "low" },
-		},
-		system: `You are MatDesk AI, a helpful assistant for a martial arts school management platform.
+  const result = streamText({
+    model,
+    providerOptions: {
+      openrouter: { reasoning: { effort: "low" } },
+    },
+    system: `You are MatDesk AI, a helpful assistant for a martial arts school management platform.
 
 Context:
 - Organization: ${session.organizationName} (id: ${session.organizationId})
@@ -156,32 +162,32 @@ Formatting:
 - Use tables when they improve readability, especially for export-style lists.
 - Users usually do not care about internal IDs; include them only when useful.
 - If the user asks for "all" of something and a tool can answer directly, just run the tool and answer.`,
-		messages: await convertToModelMessages(messages),
-		stopWhen: stepCountIs(10),
-		tools: createTools(session.organizationId),
-		onFinish: async ({ totalUsage }) => {
-			const totalTokens = totalUsage.totalTokens;
+    messages: await convertToModelMessages(messages),
+    stopWhen: stepCountIs(10),
+    tools: createTools(session.organizationId),
+    onFinish: async ({ totalUsage }) => {
+      const totalTokens = totalUsage.totalTokens;
 
-			if (typeof totalTokens !== "number" || totalTokens <= 0) {
-				return;
-			}
+      if (typeof totalTokens !== "number" || totalTokens <= 0) {
+        return;
+      }
 
-			await trackAutumnUsage({
-				customerId: session.organizationId,
-				featureId: "ai_messages",
-				value: 1,
-				idempotencyKey: messages.at(-1)?.id,
-			});
-		},
-	});
+      await trackAutumnUsage({
+        customerId: session.organizationId,
+        featureId: "ai_messages",
+        value: 1,
+        idempotencyKey: messages.at(-1)?.id,
+      });
+    },
+  });
 
-	after(() => {
-		void result.consumeStream({
-			onError: (error) => {
-				console.error("web chat stream consume failed", error);
-			},
-		});
-	});
+  after(() => {
+    void result.consumeStream({
+      onError: (error) => {
+        console.error("web chat stream consume failed", error);
+      },
+    });
+  });
 
-	return result.toUIMessageStreamResponse();
+  return result.toUIMessageStreamResponse();
 }
