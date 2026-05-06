@@ -16,7 +16,7 @@ export function SidebarStyleToggle({
 	return (
 		<Button
 			className={cn(
-				"rounded-full border-border bg-background shadow-xl ring-1 ring-black/5 dark:ring-white/10",
+				"hidden rounded-full border-border bg-background shadow-xl ring-1 ring-black/5 md:inline-flex dark:ring-white/10",
 				className,
 			)}
 			onClick={() => setStyle(isExperimental ? "legacy" : "experimental")}
