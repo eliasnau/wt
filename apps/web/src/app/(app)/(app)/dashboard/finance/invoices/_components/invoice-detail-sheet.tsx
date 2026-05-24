@@ -348,7 +348,7 @@ export function InvoiceDetailSheet({
 									id="void-reason"
 									value={voidReason}
 									onChange={(e) => setVoidReason(e.target.value)}
-									placeholder="Bitte geben Sie einen Grund an..."
+									placeholder="Bitte gib einen Grund an..."
 									rows={3}
 								/>
 							</div>

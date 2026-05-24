@@ -33,7 +33,7 @@ export function EditMemberSheet({
 				<SheetHeader>
 					<SheetTitle>Mitglied bearbeiten</SheetTitle>
 					<SheetDescription>
-						Update member information and group assignments.
+						Aktualisiere die Mitgliedsdaten und Gruppenzuordnungen.
 					</SheetDescription>
 				</SheetHeader>
 				<SheetPanel>
@@ -61,7 +61,7 @@ export function EditMemberSheet({
 							/>
 						</Field>
 						<Field>
-							<FieldLabel>Phone</FieldLabel>
+							<FieldLabel>Telefon</FieldLabel>
 							<Input
 								type="tel"
 								defaultValue={member?.phone ?? ""}
@@ -100,14 +100,14 @@ export function EditMemberSheet({
 									member?.groupMembers?.map((gm) => gm.group.name).join(", ") ??
 									""
 								}
-								placeholder="Enter groups separated by commas"
+								placeholder="Gruppen durch Kommas getrennt eingeben"
 							/>
 						</Field>
 					</div>
 				</SheetPanel>
 				<SheetFooter>
 					<Button variant="ghost" onClick={() => onOpenChange(false)}>
-						Cancel
+						Abbrechen
 					</Button>
 					<Button onClick={() => onOpenChange(false)}>
 						Änderungen speichern

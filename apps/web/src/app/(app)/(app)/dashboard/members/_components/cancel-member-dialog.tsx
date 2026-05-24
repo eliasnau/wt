@@ -97,7 +97,7 @@ function formatEffectiveDate(monthValue: string): string {
     parsed.year,
     parsed.month - 1,
     getDaysInMonth(parsed.year, parsed.month),
-  ).toLocaleDateString("en-US", {
+  ).toLocaleDateString("de-DE", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -112,7 +112,7 @@ function formatDateLabel(dateValue?: string | null): string | null {
   const month = Number(match[2]);
   const day = Number(match[3]);
   if (!year || !month || !day) return null;
-  return new Date(year, month - 1, day).toLocaleDateString("en-US", {
+  return new Date(year, month - 1, day).toLocaleDateString("de-DE", {
     year: "numeric",
     month: "long",
     day: "numeric",
@@ -153,7 +153,7 @@ export function CancelMemberDialog({
     orpc.members.cancelContract.mutationOptions({
       onSuccess: () => {
         toast.success("Mitgliedschaft gekündigt", {
-          description: `${memberName} will stay active until ${formatEffectiveDate(effectiveMonth)}.`,
+          description: `${memberName} bleibt bis ${formatEffectiveDate(effectiveMonth)} aktiv.`,
         });
         queryClient.invalidateQueries();
         onOpenChange(false);
@@ -225,8 +225,8 @@ export function CancelMemberDialog({
         <DialogHeader>
           <DialogTitle>Mitgliedschaft kündigen</DialogTitle>
           <DialogDescription>
-            Set the cancellation effective month and provide a reason for this
-            member.
+            Lege den Wirksamkeitsmonat der Kündigung fest und gib einen Grund
+            an.
           </DialogDescription>
         </DialogHeader>
 
@@ -237,12 +237,13 @@ export function CancelMemberDialog({
             <AlertDescription>
               {commitmentEndLabel && (
                 <span>
-                  Commitment ends on <strong>{commitmentEndLabel}</strong>.{" "}
+                  Die Bindung endet am <strong>{commitmentEndLabel}</strong>.{" "}
                 </span>
               )}
-              The member will remain active and billable through{" "}
-              <strong>{formatEffectiveDate(effectiveMonth)}</strong>. After
-              that, they will be excluded from future payment batches.
+              Das Mitglied bleibt bis{" "}
+              <strong>{formatEffectiveDate(effectiveMonth)}</strong> aktiv und
+              wird bis dahin abgerechnet. Danach wird es aus zukünftigen
+              Zahlungsläufen ausgeschlossen.
             </AlertDescription>
           </Alert>
 
@@ -261,8 +262,8 @@ export function CancelMemberDialog({
               }}
             />
             <FieldDescription>
-              Contract ends on the last day of the selected month. Earliest
-              allowed end date: {formatEffectiveDate(minMonth)}.
+              Der Vertrag endet am letzten Tag des gewählten Monats. Frühestes
+              mögliches Enddatum: {formatEffectiveDate(minMonth)}.
             </FieldDescription>
             {monthError && <FieldError errors={[{ message: monthError }]} />}
           </Field>
@@ -281,7 +282,7 @@ export function CancelMemberDialog({
               placeholder="Warum wird diese Mitgliedschaft gekündigt?"
             />
             <FieldDescription>
-              This will be stored on the contract for audit and reporting.
+              Wird zur Dokumentation und Auswertung am Vertrag gespeichert.
             </FieldDescription>
             {reasonError && <FieldError errors={[{ message: reasonError }]} />}
           </Field>
@@ -289,7 +290,7 @@ export function CancelMemberDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Keep Membership
+            Mitgliedschaft behalten
           </Button>
           <Button
             variant="destructive"
