@@ -46,7 +46,7 @@ const routes: RouteConfig[] = [
 	{
 		id: "groups",
 		title: "Gruppen",
-		icon: <Layers className="size-4" animation="default-loop" />,
+		icon: <Layers className="size-4" />,
 		href: "/dashboard/groups",
 	},
 	{
