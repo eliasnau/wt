@@ -129,8 +129,8 @@ export function GenerateSepaBatchButton() {
 					</DialogTitle>
 					<DialogDescription>
 						{step === "date"
-							? "Wählen Sie das Einzugsdatum für den SEPA-Lastschrifteinzug."
-							: "Prüfen Sie die Vorschau bevor Sie die Lastschrift erzeugen."}
+							? "Wähle das Einzugsdatum für den SEPA-Lastschrifteinzug."
+							: "Prüfe die Vorschau, bevor du die Lastschrift erzeugst."}
 					</DialogDescription>
 				</DialogHeader>
 				<DialogPanel>

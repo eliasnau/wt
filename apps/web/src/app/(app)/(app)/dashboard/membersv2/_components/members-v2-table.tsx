@@ -10,7 +10,6 @@ import {
 	useReactTable,
 } from "@tanstack/react-table";
 import {
-	BotIcon,
 	DownloadIcon,
 	EditIcon,
 	ExternalLinkIcon,
@@ -312,7 +311,7 @@ const createColumns = (
 								}
 							>
 								<ExternalLinkIcon />
-								Open in new tab
+								In neuem Tab öffnen
 							</MenuItem>
 							<MenuItem
 								onClick={() => {
@@ -668,25 +667,7 @@ export function MembersV2Table({
 							}
 						>
 							<DownloadIcon />
-							<span className="hidden sm:inline">Export CSV</span>
-						</ToolbarButton>
-						<ToolbarButton
-							render={<Button disabled size="sm" variant="outline" />}
-						>
-							<MailIcon />
-							<span className="hidden sm:inline">E-Mail</span>
-							<Badge className="hidden sm:inline-flex" variant="outline">
-								Demnächst
-							</Badge>
-						</ToolbarButton>
-						<ToolbarButton
-							render={<Button disabled size="sm" variant="outline" />}
-						>
-							<BotIcon />
-							<span className="hidden sm:inline">KI fragen</span>
-							<Badge className="hidden sm:inline-flex" variant="outline">
-								Demnächst
-							</Badge>
+							<span className="hidden sm:inline">CSV exportieren</span>
 						</ToolbarButton>
 						<Menu>
 							<MenuTrigger
@@ -709,12 +690,6 @@ export function MembersV2Table({
 										<MenuShortcut>{selectedCount}</MenuShortcut>
 									</MenuItem>
 								</MenuGroup>
-								<MenuSeparator />
-								<MenuItem disabled>
-									<EditIcon />
-									Sammelbearbeitung
-									<MenuShortcut>Demnächst</MenuShortcut>
-								</MenuItem>
 							</MenuPopup>
 						</Menu>
 					</ToolbarGroup>

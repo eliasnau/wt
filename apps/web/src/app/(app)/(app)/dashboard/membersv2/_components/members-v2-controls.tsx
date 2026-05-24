@@ -421,7 +421,7 @@ export function MembersV2Controls({
 										<Drawer>
 											<DrawerMenuTrigger>
 												<SlidersHorizontalIcon />
-												Advanced Builder
+												Erweiterte Filter
 												{advancedFilterCount > 0
 													? ` (${advancedFilterCount})`
 													: ""}
@@ -431,7 +431,7 @@ export function MembersV2Controls({
 													<DrawerMenu>
 														<DrawerMenuGroup>
 															<DrawerMenuGroupLabel>
-																Advanced Builder
+																Erweiterte Filter
 															</DrawerMenuGroupLabel>
 														</DrawerMenuGroup>
 														<div className="px-4 py-2">
@@ -834,7 +834,7 @@ export function MembersV2Controls({
 								}
 							>
 								<SlidersHorizontalIcon />
-								<span className="sr-only">Advanced Builder öffnen</span>
+								<span className="sr-only">Erweiterte Filter öffnen</span>
 							</TooltipTrigger>
 							<TooltipContent>
 								Erweiterte Filter auf Mobilgeräten
@@ -854,7 +854,7 @@ export function MembersV2Controls({
 								}
 							>
 								<SlidersHorizontalIcon />
-								Advanced Builder
+								Erweiterte Filter
 								{advancedFilterCount > 0 ? ` (${advancedFilterCount})` : ""}
 							</TooltipTrigger>
 							<TooltipContent>
@@ -1123,7 +1123,7 @@ export function MembersV2Controls({
 				>
 					<SheetContent side="right" className="sm:hidden">
 						<SheetHeader>
-							<SheetTitle>Advanced Builder</SheetTitle>
+							<SheetTitle>Erweiterte Filter</SheetTitle>
 							<SheetDescription>
 								Erweiterte Filter für Mitglieder konfigurieren.
 							</SheetDescription>

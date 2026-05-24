@@ -10,7 +10,9 @@ type SidebarStyleContextValue = {
 	style: SidebarStyle;
 };
 
-const STORAGE_KEY = "app-sidebar-style";
+// Bumped to v2 so the previously auto-persisted "legacy" value doesn't pin
+// existing browsers now that experimental is the default.
+const STORAGE_KEY = "app-sidebar-style-v2";
 
 const SidebarStyleContext =
 	React.createContext<SidebarStyleContextValue | null>(null);
@@ -20,7 +22,7 @@ export function SidebarStyleProvider({
 }: {
 	children: React.ReactNode;
 }) {
-	const [style, setStyle] = React.useState<SidebarStyle>("legacy");
+	const [style, setStyle] = React.useState<SidebarStyle>("experimental");
 	const [isReady, setIsReady] = React.useState(false);
 
 	React.useEffect(() => {

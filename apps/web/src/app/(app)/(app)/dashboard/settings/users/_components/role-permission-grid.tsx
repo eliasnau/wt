@@ -84,7 +84,9 @@ export function RolePermissionGrid({
 						const selected = new Set(value[resource] ?? []);
 						const allSelected = actions.every((action) => selected.has(action));
 						const hasAny = actions.some((action) => selected.has(action));
-						const toggleAllLabel = allSelected ? "Clear" : "Alle auswählen";
+						const toggleAllLabel = allSelected
+							? "Alle abwählen"
+							: "Alle auswählen";
 						const showAccessControlInfo = resource === "ac";
 
 						return (
@@ -96,7 +98,7 @@ export function RolePermissionGrid({
 										</div>
 										<div className="text-muted-foreground text-xs">
 											{hasAny
-												? `${selected.size} selected`
+												? `${selected.size} ausgewählt`
 												: "Keine Berechtigungen ausgewählt"}
 										</div>
 									</div>
@@ -115,8 +117,8 @@ export function RolePermissionGrid({
 								</div>
 								{showAccessControlInfo && (
 									<div className="mt-3 rounded-lg border border-border border-dashed bg-muted/40 px-3 py-2 text-muted-foreground text-xs">
-										Access control (AC) permissions govern who can create, edit,
-										and manage roles and access rules.
+										Zugriffssteuerung (AC) regelt, wer Rollen und Zugriffsregeln
+										erstellen, bearbeiten und verwalten darf.
 									</div>
 								)}
 								<div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">

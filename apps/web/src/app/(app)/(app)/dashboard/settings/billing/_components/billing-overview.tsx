@@ -116,8 +116,8 @@ export function BillingOverview() {
 				<EmptyHeader>
 					<EmptyTitle>Noch keine Abrechnungsdaten</EmptyTitle>
 					<EmptyDescription>
-						Autumn hat fuer diese Organisation noch keine
-						Abrechnungsinformationen geliefert.
+						Für diese Organisation liegen noch keine
+						Abrechnungsinformationen vor.
 					</EmptyDescription>
 				</EmptyHeader>
 			</Empty>
@@ -276,7 +276,7 @@ export function BillingOverview() {
 				) : (
 					<FramePanel>
 						<p className="text-muted-foreground text-sm">
-							Fuer diese Organisation sind noch keine Nutzungsdaten verfuegbar.
+							Für diese Organisation sind noch keine Nutzungsdaten verfügbar.
 						</p>
 					</FramePanel>
 				)}

@@ -57,6 +57,7 @@ import {
 import { CreateMemberButton } from "../members/_components/create-member-button";
 import { MembersV2Controls } from "./_components/members-v2-controls";
 import { MembersV2PrintListSheet } from "./_components/members-v2-print-list-sheet";
+import { SaveViewDialog } from "./_components/save-view-dialog";
 import { MembersV2Table } from "./_components/members-v2-table";
 import { useMembersV2PrintList } from "./_components/use-members-v2-print-list";
 
@@ -227,9 +228,9 @@ const DEFAULT_VIEW_STATE: SavedMembersViewState = {
 const SYSTEM_MEMBERS_VIEWS: SystemMembersView[] = [
 	{
 		id: "system-all-members-include-cancelled",
-		name: "All members (include cancelled)",
+		name: "Alle Mitglieder (inkl. gekündigte)",
 		description:
-			"Shows active, cancelled, and cancelled-but-still-active members.",
+			"Zeigt aktive, gekündigte und gekündigt-aber-noch-aktive Mitglieder.",
 		state: {
 			...DEFAULT_VIEW_STATE,
 			includeCancelled: true,
@@ -954,15 +955,15 @@ export function MembersV2PageClient({
 		!matchedSystemView &&
 		!matchedSavedView;
 
-	const saveAsNewView = () => {
+	const [viewDialog, setViewDialog] = useState<
+		| { mode: "save"; initialName: string }
+		| { mode: "rename"; viewId: string; initialName: string }
+		| null
+	>(null);
+
+	const saveViewWithName = (rawName: string) => {
 		const suggestedName = `Ansicht ${savedViews.length + 1}`;
-		const enteredName = window.prompt("Name für Ansicht", suggestedName);
-
-		if (enteredName === null) {
-			return;
-		}
-
-		const name = enteredName.trim() || suggestedName;
+		const name = rawName.trim() || suggestedName;
 		const existingViewWithSameState = savedViews.find((entry) =>
 			areViewStatesEqual(entry.state, currentViewState),
 		);
@@ -991,7 +992,10 @@ export function MembersV2PageClient({
 	};
 
 	const requestSaveView = () => {
-		saveAsNewView();
+		setViewDialog({
+			mode: "save",
+			initialName: `Ansicht ${savedViews.length + 1}`,
+		});
 	};
 
 	const renameSelectedView = () => {
@@ -999,23 +1003,27 @@ export function MembersV2PageClient({
 			toast.error("Keine Ansicht ausgewählt");
 			return;
 		}
+		setViewDialog({
+			mode: "rename",
+			viewId: matchedSavedView.id,
+			initialName: matchedSavedView.name,
+		});
+	};
 
-		const enteredName = window.prompt(
-			"Ansicht umbenennen",
-			matchedSavedView.name,
-		);
-		if (enteredName === null) {
+	const renameViewWithName = (viewId: string, rawName: string) => {
+		const target = savedViews.find((entry) => entry.id === viewId);
+		if (!target) {
 			return;
 		}
 
-		const name = enteredName.trim() || matchedSavedView.name;
-		if (name === matchedSavedView.name) {
+		const name = rawName.trim() || target.name;
+		if (name === target.name) {
 			return;
 		}
 
 		const duplicateName = savedViews.find(
 			(entry) =>
-				entry.id !== matchedSavedView.id &&
+				entry.id !== target.id &&
 				entry.name.localeCompare(name, "de", { sensitivity: "base" }) === 0,
 		);
 		if (duplicateName) {
@@ -1027,7 +1035,7 @@ export function MembersV2PageClient({
 
 		const now = new Date().toISOString();
 		const nextViews = savedViews.map((entry) =>
-			entry.id === matchedSavedView.id
+			entry.id === target.id
 				? {
 						...entry,
 						name,
@@ -1038,8 +1046,20 @@ export function MembersV2PageClient({
 
 		persistSavedViews(nextViews);
 		toast.success("Ansicht umbenannt", {
-			description: `"${matchedSavedView.name}" heißt jetzt "${name}".`,
+			description: `"${target.name}" heißt jetzt "${name}".`,
 		});
+	};
+
+	const handleViewDialogSubmit = (name: string) => {
+		if (!viewDialog) {
+			return;
+		}
+		if (viewDialog.mode === "save") {
+			saveViewWithName(name);
+		} else {
+			renameViewWithName(viewDialog.viewId, name);
+		}
+		setViewDialog(null);
 	};
 
 	const applyViewState = ({
@@ -1096,7 +1116,7 @@ export function MembersV2PageClient({
 	const advancedFiltersPanel = (
 		<div className="space-y-3">
 			<div className="flex flex-wrap items-center gap-2">
-				<span className="font-medium text-sm">Advanced Query</span>
+				<span className="font-medium text-sm">Erweiterte Abfrage</span>
 				<Select
 					items={FILTER_MODE_OPTIONS}
 					value={filterMode}
@@ -1137,7 +1157,7 @@ export function MembersV2PageClient({
 						}}
 					>
 						<XIcon />
-						Advanced leeren
+						Abfrage leeren
 					</Button>
 				)}
 			</div>
@@ -1338,9 +1358,7 @@ export function MembersV2PageClient({
 								<EmptyDescription>
 									{isNoPermissionError
 										? "Du hast nicht die nötigen Berechtigungen, um Mitglieder anzusehen."
-										: error instanceof Error
-											? error.message
-											: "Etwas ist schiefgelaufen. Bitte versuche es erneut."}
+										: "Etwas ist schiefgelaufen. Bitte versuche es erneut."}
 								</EmptyDescription>
 							</EmptyHeader>
 							<EmptyContent>
@@ -1444,6 +1462,18 @@ export function MembersV2PageClient({
 						onOpenChange={setPrintSheetOpen}
 						onPrintList={(options) => printListMutation.mutate(options)}
 						printPending={printListMutation.isPending}
+					/>
+
+					<SaveViewDialog
+						open={viewDialog !== null}
+						mode={viewDialog?.mode ?? "save"}
+						initialName={viewDialog?.initialName ?? ""}
+						onOpenChange={(open) => {
+							if (!open) {
+								setViewDialog(null);
+							}
+						}}
+						onSubmit={handleViewDialogSubmit}
 					/>
 
 					<MembersV2Table

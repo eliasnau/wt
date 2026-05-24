@@ -211,9 +211,7 @@ export default function StatisticsOverviewPage() {
 									Statistiken konnten nicht geladen werden
 								</EmptyTitle>
 								<EmptyDescription>
-									{error instanceof Error
-										? error.message
-										: "Etwas ist schiefgelaufen. Bitte versuche es erneut."}
+									Etwas ist schiefgelaufen. Bitte versuche es erneut.
 								</EmptyDescription>
 							</EmptyHeader>
 							<EmptyContent>

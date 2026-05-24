@@ -93,13 +93,13 @@ export function CreateCreditGrantButton({
 			if (type === "money") {
 				const cents = Math.round(Number.parseFloat(amountEuros) * 100);
 				if (Number.isNaN(cents) || cents <= 0) {
-					throw new Error("Bitte geben Sie einen gültigen Betrag ein");
+					throw new Error("Bitte gib einen gültigen Betrag ein");
 				}
 				input.originalAmountCents = cents;
 			} else {
 				const cycleCount = Number.parseInt(cycles, 10);
 				if (Number.isNaN(cycleCount) || cycleCount <= 0) {
-					throw new Error("Bitte geben Sie eine gültige Anzahl an Monaten ein");
+					throw new Error("Bitte gib eine gültige Anzahl an Monaten ein");
 				}
 				input.originalCycles = cycleCount;
 			}
@@ -142,8 +142,8 @@ export function CreateCreditGrantButton({
 					<DialogTitle>Guthaben hinzufügen</DialogTitle>
 					<DialogDescription>
 						{memberName
-							? `Erstellen Sie ein neues Guthaben für ${memberName}.`
-							: "Erstellen Sie ein neues Guthaben für diesen Vertrag."}
+							? `Erstelle ein neues Guthaben für ${memberName}.`
+							: "Erstelle ein neues Guthaben für diesen Vertrag."}
 					</DialogDescription>
 				</DialogHeader>
 				<DialogPanel>
