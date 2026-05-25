@@ -3,14 +3,25 @@
 import { useQuery } from "@tanstack/react-query";
 import { eachMonthOfInterval, format, startOfMonth, subMonths } from "date-fns";
 import { de } from "date-fns/locale";
-import { AlertCircle, ChevronDownIcon } from "lucide-react";
-import { useMemo, useState } from "react";
+import {
+	AlertCircle,
+	ArrowRightLeft,
+	Banknote,
+	Layers,
+	type LucideIcon,
+	TrendingUp,
+	UserMinus,
+	Users,
+} from "lucide-react";
+import { type ReactNode, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-	Collapsible,
-	CollapsiblePanel,
-	CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+	Card,
+	CardFrame,
+	CardFrameHeader,
+	CardFrameTitle,
+	CardPanel,
+} from "@/components/ui/card";
 import {
 	Empty,
 	EmptyContent,
@@ -19,7 +30,6 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
-import { Frame, FrameHeader, FramePanel } from "@/components/ui/frame";
 import {
 	Select,
 	SelectItem,
@@ -27,6 +37,8 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { cn } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 import {
 	Header,
@@ -35,11 +47,12 @@ import {
 	HeaderDescription,
 	HeaderTitle,
 } from "../../_components/page-header";
-import { GroupsChart } from "../_components/groups-chart";
-import { TotalRevenueChart } from "../_components/income-chart";
-import { MembershipChart } from "../_components/membership-chart";
-import { RevenueChart } from "../_components/revenue-chart";
-import { TotalMembersChart } from "../_components/total-members-chart";
+import { ChartCard } from "../_components/chart-card";
+import { FlowTrendChart } from "../_components/flow-trend-chart";
+import { GroupTrendChart } from "../_components/group-trend-chart";
+import { TrendAreaChart } from "../_components/trend-area-chart";
+
+type TimelineGroupBy = "month" | "quarter" | "year";
 
 type GroupSeries = {
 	key: string;
@@ -47,7 +60,42 @@ type GroupSeries = {
 	color: string;
 };
 
-type TimelineGroupBy = "month" | "quarter" | "year";
+const PERIOD_NOUN: Record<TimelineGroupBy, string> = {
+	month: "Monat",
+	quarter: "Quartal",
+	year: "Jahr",
+};
+
+const numberFormatter = new Intl.NumberFormat("de-DE");
+const currencyFormatter = new Intl.NumberFormat("de-DE", {
+	style: "currency",
+	currency: "EUR",
+	maximumFractionDigits: 0,
+});
+const signedPercentFormatter = new Intl.NumberFormat("de-DE", {
+	style: "percent",
+	minimumFractionDigits: 1,
+	maximumFractionDigits: 1,
+	signDisplay: "always",
+});
+const percentFormatter = new Intl.NumberFormat("de-DE", {
+	style: "percent",
+	minimumFractionDigits: 1,
+	maximumFractionDigits: 1,
+});
+
+function toNumber(value: string | number | null | undefined) {
+	const numeric = typeof value === "number" ? value : Number(value ?? 0);
+	return Number.isFinite(numeric) ? numeric : 0;
+}
+
+function formatNumber(value: number) {
+	return numberFormatter.format(Number.isFinite(value) ? value : 0);
+}
+
+function formatCurrency(value: number) {
+	return currencyFormatter.format(Number.isFinite(value) ? value : 0);
+}
 
 function parseMonthValue(monthValue: string) {
 	const [year, month] = monthValue.split("-").map(Number);
@@ -55,32 +103,91 @@ function parseMonthValue(monthValue: string) {
 }
 
 function getPeriodChartLabel(
-	period: {
-		key: string;
-		startMonth: string;
-	},
+	period: { key: string; startMonth: string },
 	groupBy: TimelineGroupBy,
 ) {
 	if (groupBy === "year") {
 		return period.key.slice(2);
 	}
-
 	if (groupBy === "quarter") {
 		return period.key.split("-")[1] ?? period.key;
 	}
-
 	return format(parseMonthValue(period.startMonth), "MMM", { locale: de });
 }
 
-export default function RangeComparisonPage() {
-	const currentMonth = startOfMonth(new Date());
-	const monthOptions = useMemo(() => {
-		const start = startOfMonth(subMonths(currentMonth, 119));
-		return eachMonthOfInterval({
-			start,
-			end: currentMonth,
-		});
-	}, [currentMonth]);
+function SectionHeading({
+	title,
+	description,
+}: {
+	title: string;
+	description: string;
+}) {
+	return (
+		<div className="space-y-1">
+			<h2 className="font-heading text-lg tracking-tight">{title}</h2>
+			<p className="text-muted-foreground text-sm">{description}</p>
+		</div>
+	);
+}
+
+function TrendKpiCard({
+	icon: Icon,
+	label,
+	value,
+	hint,
+	valueClassName,
+	isLoading,
+}: {
+	icon: LucideIcon;
+	label: string;
+	value: string;
+	hint: ReactNode;
+	valueClassName?: string;
+	isLoading: boolean;
+}) {
+	return (
+		<CardFrame>
+			<CardFrameHeader className="px-4 py-2.5">
+				<CardFrameTitle className="flex items-center gap-1.5 font-medium text-muted-foreground text-xs">
+					<Icon className="size-3.5" aria-hidden="true" />
+					{label}
+				</CardFrameTitle>
+			</CardFrameHeader>
+			<Card>
+				<CardPanel className="flex flex-col gap-1 px-4 pt-2.5 pb-4">
+					{isLoading ? (
+						<Skeleton className="h-8 w-28 rounded-md" />
+					) : (
+						<span
+							className={cn(
+								"font-bold text-3xl tabular-nums tracking-tight",
+								valueClassName,
+							)}
+						>
+							{value}
+						</span>
+					)}
+					{isLoading ? (
+						<Skeleton className="mt-1 h-4 w-24 rounded" />
+					) : (
+						<p className="text-muted-foreground text-sm">{hint}</p>
+					)}
+				</CardPanel>
+			</Card>
+		</CardFrame>
+	);
+}
+
+export default function StatisticsTrendsPage() {
+	const currentMonth = useMemo(() => startOfMonth(new Date()), []);
+	const monthOptions = useMemo(
+		() =>
+			eachMonthOfInterval({
+				start: startOfMonth(subMonths(currentMonth, 119)),
+				end: currentMonth,
+			}),
+		[currentMonth],
+	);
 	const monthSelectItems = useMemo(
 		() =>
 			monthOptions.map((month) => ({
@@ -97,6 +204,7 @@ export default function RangeComparisonPage() {
 		],
 		[],
 	);
+
 	const [startMonth, setStartMonth] = useState(
 		format(startOfMonth(subMonths(currentMonth, 5)), "yyyy-MM"),
 	);
@@ -104,27 +212,24 @@ export default function RangeComparisonPage() {
 	const [groupBy, setGroupBy] = useState<TimelineGroupBy>("month");
 
 	const hasValidRange = startMonth <= endMonth;
-	const startMonthValue = startMonth;
-	const endMonthValue = endMonth;
 
-	const getRangeText = (start: string, end: string) => {
-		return `${format(parseMonthValue(start), "MMM yyyy", { locale: de })} - ${format(parseMonthValue(end), "MMM yyyy", { locale: de })}`;
-	};
-
-	const timelineQueryOptions = orpc.statistics.timeline.queryOptions({
-		input: {
-			startMonth: startMonthValue,
-			endMonth: endMonthValue,
-			groupBy,
-		},
+	const { data, error, refetch } = useQuery({
+		...orpc.statistics.timeline.queryOptions({
+			input: { startMonth, endMonth, groupBy },
+		}),
+		enabled: hasValidRange,
 	});
 
-	const { data, isPending, error, refetch } = useQuery({
-		...timelineQueryOptions,
-		enabled: hasValidRange && Boolean(startMonthValue && endMonthValue),
-	});
+	// Trust the data only when it matches the current range + grouping, so a
+	// control change drops into a loading state instead of flashing stale data.
+	const isLoading =
+		!data ||
+		data.range.startMonth !== startMonth ||
+		data.range.endMonth !== endMonth ||
+		data.groupBy !== groupBy;
 
 	const periods = data?.periods ?? [];
+
 	const periodLabels = useMemo(
 		() =>
 			new Map(
@@ -136,30 +241,30 @@ export default function RangeComparisonPage() {
 		[groupBy, periods],
 	);
 
-	const membershipData = useMemo(
+	const membersData = useMemo(
 		() =>
 			periods.map((period) => ({
-				month: periodLabels.get(period.key) ?? period.label,
-				newMembers: period.membership.newMembers,
+				label: periodLabels.get(period.key) ?? period.label,
+				value: period.kpis.activeMembers,
+			})),
+		[periodLabels, periods],
+	);
+
+	const flowData = useMemo(
+		() =>
+			periods.map((period) => ({
+				label: periodLabels.get(period.key) ?? period.label,
+				enrollments: period.membership.newMembers,
 				cancellations: period.membership.cancellations,
 			})),
 		[periodLabels, periods],
 	);
 
-	const totalMembersData = useMemo(
+	const revenueData = useMemo(
 		() =>
 			periods.map((period) => ({
-				month: periodLabels.get(period.key) ?? period.label,
-				total: period.kpis.activeMembers,
-			})),
-		[periodLabels, periods],
-	);
-
-	const totalRevenueData = useMemo(
-		() =>
-			periods.map((period) => ({
-				month: periodLabels.get(period.key) ?? period.label,
-				revenue: Number(period.kpis.revenueCollected ?? 0),
+				label: periodLabels.get(period.key) ?? period.label,
+				value: toNumber(period.kpis.revenueCollected),
 			})),
 		[periodLabels, periods],
 	);
@@ -169,27 +274,18 @@ export default function RangeComparisonPage() {
 			string,
 			{ label: string; color: string | null | undefined }
 		>();
-
 		for (const period of periods) {
 			for (const group of period.membership.groupMix) {
 				if (!groups.has(group.groupId)) {
-					groups.set(group.groupId, {
-						label: group.name,
-						color: group.color,
-					});
+					groups.set(group.groupId, { label: group.name, color: group.color });
 				}
 			}
-
 			for (const group of period.revenue.byGroup) {
 				if (!groups.has(group.groupId)) {
-					groups.set(group.groupId, {
-						label: group.name,
-						color: group.color,
-					});
+					groups.set(group.groupId, { label: group.name, color: group.color });
 				}
 			}
 		}
-
 		return Array.from(groups.entries()).map(([groupId, group], index) => ({
 			key: groupId,
 			label: group.label,
@@ -197,55 +293,81 @@ export default function RangeComparisonPage() {
 		}));
 	}, [periods]);
 
-	const groupsMemberData = useMemo(() => {
-		return periods.map((period) => {
-			const row: Record<string, string | number> = {
-				month: periodLabels.get(period.key) ?? period.label,
-			};
-			const countByGroupId = new Map(
-				period.membership.groupMix.map((group) => [group.groupId, group.count]),
-			);
+	const groupMembersData = useMemo(
+		() =>
+			periods.map((period) => {
+				const row: Record<string, string | number> = {
+					label: periodLabels.get(period.key) ?? period.label,
+				};
+				const countByGroupId = new Map(
+					period.membership.groupMix.map((group) => [
+						group.groupId,
+						group.count,
+					]),
+				);
+				for (const group of groupSeries) {
+					row[group.key] = countByGroupId.get(group.key) ?? 0;
+				}
+				return row;
+			}),
+		[groupSeries, periodLabels, periods],
+	);
 
-			for (const group of groupSeries) {
-				row[group.key] = countByGroupId.get(group.key) ?? 0;
-			}
+	const groupRevenueData = useMemo(
+		() =>
+			periods.map((period) => {
+				const row: Record<string, string | number> = {
+					label: periodLabels.get(period.key) ?? period.label,
+				};
+				const revenueByGroupId = new Map(
+					period.revenue.byGroup.map((group) => [
+						group.groupId,
+						toNumber(group.total),
+					]),
+				);
+				for (const group of groupSeries) {
+					row[group.key] = revenueByGroupId.get(group.key) ?? 0;
+				}
+				return row;
+			}),
+		[groupSeries, periodLabels, periods],
+	);
 
-			return row;
-		});
-	}, [groupSeries, periodLabels, periods]);
+	const activeStart = periods[0]?.kpis.activeMembers ?? 0;
+	const activeEnd = periods[periods.length - 1]?.kpis.activeMembers ?? 0;
+	const netGrowth = activeEnd - activeStart;
+	const netGrowthPct = activeStart > 0 ? netGrowth / activeStart : null;
+	const totalCancellations = periods.reduce(
+		(sum, period) => sum + period.membership.cancellations,
+		0,
+	);
+	const totalRevenue = periods.reduce(
+		(sum, period) => sum + toNumber(period.kpis.revenueCollected),
+		0,
+	);
+	const churnRate = activeStart > 0 ? totalCancellations / activeStart : null;
+	const avgRevenue = periods.length > 0 ? totalRevenue / periods.length : 0;
 
-	const groupsRevenueData = useMemo(() => {
-		return periods.map((period) => {
-			const row: Record<string, string | number> = {
-				month: periodLabels.get(period.key) ?? period.label,
-			};
-			const revenueByGroupId = new Map(
-				period.revenue.byGroup.map((group) => [
-					group.groupId,
-					Number(group.total ?? 0),
-				]),
-			);
-
-			for (const group of groupSeries) {
-				row[group.key] = revenueByGroupId.get(group.key) ?? 0;
-			}
-
-			return row;
-		});
-	}, [groupSeries, periodLabels, periods]);
+	const netGrowthValue = `${netGrowth > 0 ? "+" : ""}${formatNumber(netGrowth)}`;
+	const netGrowthTone =
+		netGrowth > 0
+			? "text-emerald-600 dark:text-emerald-400"
+			: netGrowth < 0
+				? "text-red-600 dark:text-red-400"
+				: undefined;
 
 	return (
 		<div className="flex flex-col gap-8">
 			<Header>
 				<HeaderContent>
-					<HeaderTitle>Monate vergleichen</HeaderTitle>
+					<HeaderTitle>Trends</HeaderTitle>
 					<HeaderDescription>
-						Analysiere Mitglieder- und Umsatztrends in einem frei wählbaren
-						Zeitraum
+						Wie sich Mitglieder und Umsatz über einen frei wählbaren Zeitraum
+						entwickeln.
 					</HeaderDescription>
 				</HeaderContent>
 				<HeaderActions>
-					<div className="flex items-center gap-2">
+					<div className="flex flex-wrap items-center gap-2">
 						<Select
 							items={monthSelectItems}
 							value={startMonth}
@@ -312,7 +434,7 @@ export default function RangeComparisonPage() {
 								setGroupBy(value as TimelineGroupBy);
 							}}
 						>
-							<SelectTrigger className="w-[140px]" size="sm">
+							<SelectTrigger className="w-[150px]" size="sm">
 								<SelectValue placeholder="Gruppieren nach" />
 							</SelectTrigger>
 							<SelectPopup>
@@ -321,108 +443,128 @@ export default function RangeComparisonPage() {
 								<SelectItem value="year">Jährlich</SelectItem>
 							</SelectPopup>
 						</Select>
-						<p className="text-muted-foreground text-sm tabular-nums">
-							{getRangeText(startMonth, endMonth)}
-						</p>
 					</div>
 				</HeaderActions>
 			</Header>
 
 			{error ? (
-				<Frame>
-					<FramePanel>
-						<Empty>
-							<EmptyHeader>
-								<EmptyMedia variant="icon">
-									<AlertCircle />
-								</EmptyMedia>
-								<EmptyTitle>
-									Statistiken konnten nicht geladen werden
-								</EmptyTitle>
-								<EmptyDescription>
-									{error instanceof Error
-										? error.message
-										: "Etwas ist schiefgelaufen. Bitte versuche es erneut."}
-								</EmptyDescription>
-							</EmptyHeader>
-							<EmptyContent>
-								<Button onClick={() => refetch()}>Erneut versuchen</Button>
-							</EmptyContent>
-						</Empty>
-					</FramePanel>
-				</Frame>
+				<CardFrame>
+					<Card>
+						<CardPanel className="py-4">
+							<Empty>
+								<EmptyHeader>
+									<EmptyMedia variant="icon">
+										<AlertCircle />
+									</EmptyMedia>
+									<EmptyTitle>Trends konnten nicht geladen werden</EmptyTitle>
+									<EmptyDescription>
+										Etwas ist schiefgelaufen. Bitte versuche es erneut.
+									</EmptyDescription>
+								</EmptyHeader>
+								<EmptyContent>
+									<Button onClick={() => refetch()}>Erneut versuchen</Button>
+								</EmptyContent>
+							</Empty>
+						</CardPanel>
+					</Card>
+				</CardFrame>
 			) : (
-				<div className="space-y-6">
-					<Frame>
-						<Collapsible defaultOpen>
-							<FrameHeader className="flex-row items-center justify-between px-4 py-3">
-								<CollapsibleTrigger
-									className="data-panel-open:[&_svg]:rotate-180"
-									render={(props) => (
-										<Button variant="ghost" {...props}>
-											<ChevronDownIcon className="mr-2 size-4" />
-											<span className="font-semibold text-sm">
-												Mitgliederanalyse
-											</span>
-										</Button>
-									)}
-								/>
-							</FrameHeader>
-							<CollapsiblePanel>
-								<FramePanel className="space-y-6">
-									<MembershipChart
-										data={membershipData}
-										isPending={isPending}
-									/>
-									<div className="grid gap-6 md:grid-cols-2">
-										<TotalMembersChart
-											data={totalMembersData}
-											isPending={isPending}
-										/>
-										<GroupsChart
-											data={groupsMemberData}
-											series={groupSeries}
-											isPending={isPending}
-										/>
-									</div>
-								</FramePanel>
-							</CollapsiblePanel>
-						</Collapsible>
-					</Frame>
+				<>
+					<div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+						<TrendKpiCard
+							icon={Users}
+							label="Aktive Mitglieder"
+							value={formatNumber(activeEnd)}
+							hint={`Start: ${formatNumber(activeStart)}`}
+							isLoading={isLoading}
+						/>
+						<TrendKpiCard
+							icon={TrendingUp}
+							label="Netto-Wachstum"
+							value={netGrowthValue}
+							valueClassName={netGrowthTone}
+							hint={
+								netGrowthPct !== null
+									? `${signedPercentFormatter.format(netGrowthPct)} ggü. Start`
+									: "im Zeitraum"
+							}
+							isLoading={isLoading}
+						/>
+						<TrendKpiCard
+							icon={UserMinus}
+							label="Churn-Rate"
+							value={
+								churnRate !== null ? percentFormatter.format(churnRate) : "—"
+							}
+							hint={`${formatNumber(totalCancellations)} Kündigungen`}
+							isLoading={isLoading}
+						/>
+						<TrendKpiCard
+							icon={Banknote}
+							label="Umsatz"
+							value={formatCurrency(totalRevenue)}
+							hint={`Ø ${formatCurrency(avgRevenue)} / ${PERIOD_NOUN[groupBy]}`}
+							isLoading={isLoading}
+						/>
+					</div>
 
-					<Frame>
-						<Collapsible defaultOpen>
-							<FrameHeader className="flex-row items-center justify-between px-4 py-3">
-								<CollapsibleTrigger
-									className="data-panel-open:[&_svg]:rotate-180"
-									render={(props) => (
-										<Button variant="ghost" {...props}>
-											<ChevronDownIcon className="mr-2 size-4" />
-											<span className="font-semibold text-sm">
-												Finanzanalyse
-											</span>
-										</Button>
-									)}
+					<section className="flex flex-col gap-4">
+						<SectionHeading
+							title="Mitglieder"
+							description="Wie sich Mitgliederzahl und Zusammensetzung im Zeitraum entwickeln."
+						/>
+						<ChartCard title="Mitglieder gesamt" icon={Users}>
+							<TrendAreaChart
+								data={membersData}
+								seriesLabel="Mitglieder gesamt"
+								color={{ light: "#4f46e5", dark: "#818cf8" }}
+								isLoading={isLoading}
+								emptyMessage="Keine Mitgliederdaten im Zeitraum."
+							/>
+						</ChartCard>
+						<div className="grid gap-4 md:grid-cols-2 lg:gap-5">
+							<ChartCard title="Zu- & Abgänge" icon={ArrowRightLeft}>
+								<FlowTrendChart data={flowData} isLoading={isLoading} />
+							</ChartCard>
+							<ChartCard title="Mitglieder nach Gruppe" icon={Layers}>
+								<GroupTrendChart
+									data={groupMembersData}
+									series={groupSeries}
+									isLoading={isLoading}
+									emptyMessage="Keine Gruppendaten im Zeitraum."
 								/>
-							</FrameHeader>
-							<CollapsiblePanel>
-								<FramePanel className="space-y-6">
-									<div className="grid gap-6 md:grid-cols-2">
-										<TotalRevenueChart
-											data={totalRevenueData}
-											isPending={isPending}
-										/>
-										<RevenueChart
-											data={groupsRevenueData}
-											series={groupSeries}
-											isPending={isPending}
-										/>
-									</div>
-								</FramePanel>
-							</CollapsiblePanel>
-						</Collapsible>
-					</Frame>
-				</div>
+							</ChartCard>
+						</div>
+					</section>
+
+					<section className="flex flex-col gap-4">
+						<SectionHeading
+							title="Finanzen"
+							description="Umsatzentwicklung und Verteilung des Beitragsumsatzes nach Gruppe."
+						/>
+						<div className="grid gap-4 md:grid-cols-2 lg:gap-5">
+							<ChartCard title="Umsatzentwicklung" icon={Banknote}>
+								<TrendAreaChart
+									data={revenueData}
+									seriesLabel="Umsatz"
+									color={{ light: "#d97706", dark: "#fbbf24" }}
+									valueFormat="currency"
+									isLoading={isLoading}
+									emptyMessage="Kein Umsatz im Zeitraum."
+								/>
+							</ChartCard>
+							<ChartCard title="Umsatz nach Gruppe" icon={Layers}>
+								<GroupTrendChart
+									data={groupRevenueData}
+									series={groupSeries}
+									valueFormat="currency"
+									isLoading={isLoading}
+									emptyMessage="Kein Beitragsumsatz im Zeitraum."
+								/>
+							</ChartCard>
+						</div>
+					</section>
+				</>
 			)}
 		</div>
 	);

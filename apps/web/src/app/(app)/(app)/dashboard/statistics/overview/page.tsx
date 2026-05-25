@@ -5,33 +5,26 @@ import { format, startOfMonth, subMonths } from "date-fns";
 import { de } from "date-fns/locale";
 import {
 	AlertCircle,
-	AreaChartIcon,
-	BarChartIcon,
-	ChevronDownIcon,
-	InfoIcon,
+	ArrowDown,
+	ArrowRightLeft,
+	ArrowUp,
+	Banknote,
+	type LucideIcon,
+	Minus,
+	PieChart,
+	UserMinus,
+	UserPlus,
+	Users,
 } from "lucide-react";
 import { useMemo, useState } from "react";
-import {
-	Bar,
-	CartesianGrid,
-	Cell,
-	BarChart as RechartsBarChart,
-	XAxis,
-} from "recharts";
-import { BarChart } from "@/components/charts/bar-chart";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { ChartConfig } from "@/components/ui/chart";
 import {
-	ChartContainer,
-	ChartTooltip,
-	ChartTooltipContent,
-} from "@/components/ui/chart";
-import {
-	Collapsible,
-	CollapsiblePanel,
-	CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+	Card,
+	CardFrame,
+	CardFrameHeader,
+	CardFrameTitle,
+	CardPanel,
+} from "@/components/ui/card";
 import {
 	Empty,
 	EmptyContent,
@@ -40,7 +33,6 @@ import {
 	EmptyMedia,
 	EmptyTitle,
 } from "@/components/ui/empty";
-import { Frame, FrameHeader, FramePanel } from "@/components/ui/frame";
 import {
 	Select,
 	SelectItem,
@@ -48,6 +40,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { orpc } from "@/utils/orpc";
 import {
@@ -57,10 +50,11 @@ import {
 	HeaderDescription,
 	HeaderTitle,
 } from "../../_components/page-header";
-import { EnrollmentCancellationPieChart } from "../_components/enrollment-cancellation-pie";
-import { FeesBreakdownChart } from "../_components/fees-breakdown-chart";
-import { GroupMixPieChart } from "../_components/group-mix-pie";
-import { PricingByGroupPieChart } from "../_components/pricing-by-group-pie";
+import { ChartCard } from "../_components/chart-card";
+import { EnrollmentCancellationChart } from "../_components/enrollment-cancellation-chart";
+import { FeeMixChart } from "../_components/fee-mix-chart";
+import { MembersByGroupChart } from "../_components/members-by-group-chart";
+import { RevenueByGroupChart } from "../_components/revenue-by-group-chart";
 
 function getMonthOptions() {
 	const currentMonth = startOfMonth(new Date());
@@ -74,13 +68,147 @@ function getMonthOptions() {
 	return months;
 }
 
-function getOptionalColor(value: unknown): string | undefined {
-	if (!value || typeof value !== "object" || !("color" in value)) {
-		return undefined;
+const numberFormatter = new Intl.NumberFormat("de-DE");
+const currencyFormatter = new Intl.NumberFormat("de-DE", {
+	style: "currency",
+	currency: "EUR",
+});
+const percentFormatter = new Intl.NumberFormat("de-DE", {
+	style: "percent",
+	minimumFractionDigits: 1,
+	maximumFractionDigits: 1,
+});
+
+function toNumber(value: string | number | null | undefined) {
+	const numeric = typeof value === "number" ? value : Number(value ?? 0);
+	return Number.isFinite(numeric) ? numeric : 0;
+}
+
+function formatNumber(value: string | number | null | undefined) {
+	return numberFormatter.format(toNumber(value));
+}
+
+function formatCurrency(value: string | number | null | undefined) {
+	return currencyFormatter.format(toNumber(value));
+}
+
+function getDeltaPct(current: number, previous: number) {
+	if (previous === 0) {
+		return null;
+	}
+	return ((current - previous) / Math.abs(previous)) * 100;
+}
+
+type Metric = {
+	label: string;
+	icon: LucideIcon;
+	display: string;
+	current: number;
+	previous: number | undefined;
+	/** Whether an increase is the good direction (members up = good, churn up = bad). */
+	goodWhenUp: boolean;
+};
+
+function SectionHeading({
+	title,
+	description,
+}: {
+	title: string;
+	description: string;
+}) {
+	return (
+		<div className="space-y-1">
+			<h2 className="font-heading text-lg tracking-tight">{title}</h2>
+			<p className="text-muted-foreground text-sm">{description}</p>
+		</div>
+	);
+}
+
+function MetricDelta({
+	current,
+	previous,
+	goodWhenUp,
+	isLoading,
+}: {
+	current: number;
+	previous: number | undefined;
+	goodWhenUp: boolean;
+	isLoading: boolean;
+}) {
+	if (isLoading) {
+		return <Skeleton className="h-4 w-28 rounded" />;
 	}
 
-	const color = value.color;
-	return typeof color === "string" ? color : undefined;
+	const pct = previous === undefined ? null : getDeltaPct(current, previous);
+
+	if (pct === null) {
+		return (
+			<span className="text-muted-foreground text-xs">Kein Vergleichswert</span>
+		);
+	}
+
+	const isUp = pct > 0.05;
+	const isDown = pct < -0.05;
+	const tone =
+		!isUp && !isDown ? "neutral" : isUp === goodWhenUp ? "good" : "bad";
+	const Arrow = isUp ? ArrowUp : isDown ? ArrowDown : Minus;
+
+	return (
+		<div className="flex items-center gap-1.5 text-sm">
+			<span
+				className={cn(
+					"inline-flex items-center gap-0.5 font-medium tabular-nums",
+					tone === "good" && "text-emerald-600 dark:text-emerald-400",
+					tone === "bad" && "text-red-600 dark:text-red-400",
+					tone === "neutral" && "text-muted-foreground",
+				)}
+			>
+				<Arrow className="size-3.5" aria-hidden="true" />
+				{percentFormatter.format(Math.abs(pct) / 100)}
+			</span>
+			<span className="text-muted-foreground">zum Vormonat</span>
+		</div>
+	);
+}
+
+function KpiCard({
+	metric,
+	isLoading,
+	isDeltaLoading,
+}: {
+	metric: Metric;
+	isLoading: boolean;
+	isDeltaLoading: boolean;
+}) {
+	const { icon: Icon, label, display } = metric;
+
+	return (
+		<CardFrame>
+			<CardFrameHeader className="px-4 py-2.5">
+				<CardFrameTitle className="flex items-center gap-1.5 font-medium text-muted-foreground text-xs">
+					<Icon className="size-3.5" aria-hidden="true" />
+					{label}
+				</CardFrameTitle>
+			</CardFrameHeader>
+			<Card>
+				<CardPanel className="flex flex-col gap-1 px-4 pt-2.5 pb-4">
+					{isLoading ? (
+						<Skeleton className="h-8 w-28 rounded-md" />
+					) : (
+						<span className="font-bold text-3xl tabular-nums tracking-tight">
+							{display}
+						</span>
+					)}
+					<MetricDelta
+						current={metric.current}
+						previous={metric.previous}
+						goodWhenUp={metric.goodWhenUp}
+						isLoading={isLoading || isDeltaLoading}
+					/>
+				</CardPanel>
+			</Card>
+		</CardFrame>
+	);
 }
 
 export default function StatisticsOverviewPage() {
@@ -95,62 +223,69 @@ export default function StatisticsOverviewPage() {
 	);
 	const currentMonth = startOfMonth(new Date());
 	const [selectedMonth, setSelectedMonth] = useState(currentMonth);
-	const [feeChartType, setFeeChartType] = useState<"pie" | "bar">("pie");
-	const [flowChartType, setFlowChartType] = useState<"pie" | "bar">("pie");
-	const [groupChartType, setGroupChartType] = useState<"pie" | "bar">("pie");
 	const selectedMonthValue = format(selectedMonth, "yyyy-MM");
+	const selectedMonthLabel = format(selectedMonth, "MMMM yyyy", { locale: de });
+	const previousMonthValue = format(subMonths(selectedMonth, 1), "yyyy-MM");
 
-	const selectedMonthLabel = format(selectedMonth, "MMMM yyyy", {
-		locale: de,
-	});
-	const isCurrentMonth =
-		format(selectedMonth, "yyyy-MM") === format(currentMonth, "yyyy-MM");
-
-	const statsQueryOptions = orpc.statistics.monthlyOverview.queryOptions({
-		input: { month: selectedMonthValue },
-	});
-
-	const { data, isPending, error, refetch } = useQuery({
-		...statsQueryOptions,
-	});
-
-	const formatCurrency = (value: string | number | null | undefined) => {
-		if (!value) return new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(0);
-		const numeric = typeof value === "number" ? value : Number(value);
-		return new Intl.NumberFormat("de-DE", {
-			style: "currency",
-			currency: "EUR",
-		}).format(Number.isFinite(numeric) ? numeric : 0);
-	};
-
-	const flowChartConfig = {
-		enrollments: { label: "Anmeldungen", color: "#16a34a" },
-		cancellations: { label: "Kündigungen", color: "#dc2626" },
-	} satisfies ChartConfig;
-
-	const groupBarChartConfig = {
-		value: { label: "Mitglieder", color: "var(--chart-3)" },
-	} satisfies ChartConfig;
-
-	const groupMixChartData = useMemo(
-		() =>
-			data?.membership.groupMix?.map((item) => ({
-				name: item.name,
-				value: item.count,
-				color: getOptionalColor(item),
-			})) ?? [],
-		[data?.membership.groupMix],
+	const { data, error, refetch } = useQuery(
+		orpc.statistics.monthlyOverview.queryOptions({
+			input: { month: selectedMonthValue },
+		}),
 	);
+	const previousData = useQuery(
+		orpc.statistics.monthlyOverview.queryOptions({
+			input: { month: previousMonthValue },
+		}),
+	).data;
 
-	const groupRevenueChartData = useMemo(
-		() =>
-			data?.revenue.byGroup?.map((item) => ({
-				name: item.name,
-				value: Number(item.total ?? 0),
-				color: getOptionalColor(item),
-			})) ?? [],
-		[data?.revenue.byGroup],
-	);
+	// Trust the loaded data only when it is for the selected month. On a month
+	// switch the held data is still the previous selection's, so this keeps the
+	// page in its loading state instead of flashing stale numbers.
+	const isLoading = data?.month !== selectedMonthValue;
+	const isDeltaReady = previousData?.month === previousMonthValue;
+
+	const metrics: Metric[] = [
+		{
+			label: "Aktive Mitglieder",
+			icon: Users,
+			display: formatNumber(data?.kpis.activeMembers),
+			current: toNumber(data?.kpis.activeMembers),
+			previous: isDeltaReady
+				? toNumber(previousData.kpis.activeMembers)
+				: undefined,
+			goodWhenUp: true,
+		},
+		{
+			label: "Neue Anmeldungen",
+			icon: UserPlus,
+			display: formatNumber(data?.kpis.newEnrollments),
+			current: toNumber(data?.kpis.newEnrollments),
+			previous: isDeltaReady
+				? toNumber(previousData.kpis.newEnrollments)
+				: undefined,
+			goodWhenUp: true,
+		},
+		{
+			label: "Umsatz",
+			icon: Banknote,
+			display: formatCurrency(data?.kpis.revenueCollected),
+			current: toNumber(data?.kpis.revenueCollected),
+			previous: isDeltaReady
+				? toNumber(previousData.kpis.revenueCollected)
+				: undefined,
+			goodWhenUp: true,
+		},
+		{
+			label: "Kündigungen",
+			icon: UserMinus,
+			display: formatNumber(data?.membership.cancellations),
+			current: toNumber(data?.membership.cancellations),
+			previous: isDeltaReady
+				? toNumber(previousData.membership.cancellations)
+				: undefined,
+			goodWhenUp: false,
+		},
+	];
 
 	return (
 		<div className="flex flex-col gap-8">
@@ -158,380 +293,120 @@ export default function StatisticsOverviewPage() {
 				<HeaderContent>
 					<HeaderTitle>Monatliche Übersicht</HeaderTitle>
 					<HeaderDescription>
-						Ein Überblick über die Entwicklung eines einzelnen Monats.
-						Zukünftige Monate sind deaktiviert.
+						So entwickeln sich Mitglieder und Beiträge im gewählten Monat.
 					</HeaderDescription>
 				</HeaderContent>
 				<HeaderActions>
-					<div className="flex items-center gap-2">
-						<Select
-							value={format(selectedMonth, "yyyy-MM")}
-							items={monthSelectItems}
-							onValueChange={(value) => {
-								const match = monthOptions.find(
-									(month) => format(month, "yyyy-MM") === value,
+					<Select
+						value={selectedMonthValue}
+						items={monthSelectItems}
+						onValueChange={(value) => {
+							const match = monthOptions.find(
+								(month) => format(month, "yyyy-MM") === value,
+							);
+							if (match) {
+								setSelectedMonth(match);
+							}
+						}}
+					>
+						<SelectTrigger className="w-[220px]" size="sm">
+							<SelectValue placeholder="Monat auswählen" />
+						</SelectTrigger>
+						<SelectPopup>
+							{monthOptions.map((month) => {
+								const value = format(month, "yyyy-MM");
+								return (
+									<SelectItem key={value} value={value}>
+										{format(month, "MMMM yyyy", { locale: de })}
+									</SelectItem>
 								);
-								if (match) {
-									setSelectedMonth(match);
-								}
-							}}
-						>
-							<SelectTrigger className="w-[220px]" size="sm">
-								<SelectValue placeholder="Monat auswählen" />
-							</SelectTrigger>
-							<SelectPopup>
-								{monthOptions.map((month) => {
-									const value = format(month, "yyyy-MM");
-									return (
-										<SelectItem key={value} value={value}>
-											{format(month, "MMMM yyyy", { locale: de })}
-										</SelectItem>
-									);
-								})}
-							</SelectPopup>
-						</Select>
-						{isCurrentMonth && (
-							<Badge variant="outline" className="text-xs">
-								Aktueller Monat
-							</Badge>
-						)}
-					</div>
+							})}
+						</SelectPopup>
+					</Select>
 				</HeaderActions>
 			</Header>
 
 			{error ? (
-				<Frame>
-					<FramePanel>
-						<Empty>
-							<EmptyHeader>
-								<EmptyMedia variant="icon">
-									<AlertCircle />
-								</EmptyMedia>
-								<EmptyTitle>
-									Statistiken konnten nicht geladen werden
-								</EmptyTitle>
-								<EmptyDescription>
-									Etwas ist schiefgelaufen. Bitte versuche es erneut.
-								</EmptyDescription>
-							</EmptyHeader>
-							<EmptyContent>
-								<Button onClick={() => refetch()}>Erneut versuchen</Button>
-							</EmptyContent>
-						</Empty>
-					</FramePanel>
-				</Frame>
+				<CardFrame>
+					<Card>
+						<CardPanel className="py-4">
+							<Empty>
+								<EmptyHeader>
+									<EmptyMedia variant="icon">
+										<AlertCircle />
+									</EmptyMedia>
+									<EmptyTitle>
+										Statistiken konnten nicht geladen werden
+									</EmptyTitle>
+									<EmptyDescription>
+										Etwas ist schiefgelaufen. Bitte versuche es erneut.
+									</EmptyDescription>
+								</EmptyHeader>
+								<EmptyContent>
+									<Button onClick={() => refetch()}>Erneut versuchen</Button>
+								</EmptyContent>
+							</Empty>
+						</CardPanel>
+					</Card>
+				</CardFrame>
 			) : (
-				<div className="grid gap-6 lg:grid-cols-3">
-					<Frame>
-						<FrameHeader className="flex-row items-start justify-between">
-							<div>
-								<p className="text-muted-foreground text-xs uppercase">
-									Aktive Mitglieder
-								</p>
-								<p className="font-semibold text-2xl">
-									{isPending ? "—" : (data?.kpis.activeMembers ?? 0)}
-								</p>
-								<p className="text-muted-foreground text-xs">
-									Stand: {selectedMonthLabel}
-								</p>
-							</div>
-							<InfoIcon className="size-4 text-muted-foreground" />
-						</FrameHeader>
-					</Frame>
-					<Frame>
-						<FrameHeader className="flex-row items-start justify-between">
-							<div>
-								<p className="text-muted-foreground text-xs uppercase">
-									Neue Anmeldungen
-								</p>
-								<p className="font-semibold text-2xl">
-									{isPending ? "—" : (data?.kpis.newEnrollments ?? 0)}
-								</p>
-								<p className="text-muted-foreground text-xs">
-									Gesamt für {selectedMonthLabel}
-								</p>
-							</div>
-							<InfoIcon className="size-4 text-muted-foreground" />
-						</FrameHeader>
-					</Frame>
-					<Frame>
-						<FrameHeader className="flex-row items-start justify-between">
-							<div>
-								<p className="text-muted-foreground text-xs uppercase">
-									Eingenommener Umsatz
-								</p>
-								<p className="font-semibold text-2xl">
-									{isPending
-										? "—"
-										: formatCurrency(data?.kpis.revenueCollected)}
-								</p>
-								<p className="text-muted-foreground text-xs">
-									Summe im Abrechnungszeitraum
-								</p>
-							</div>
-							<InfoIcon className="size-4 text-muted-foreground" />
-						</FrameHeader>
-					</Frame>
-					<Frame>
-						<FrameHeader className="flex-row items-start justify-between">
-							<div>
-								<p className="text-muted-foreground text-xs uppercase">
-									Kündigungen
-								</p>
-								<p className="font-semibold text-2xl">
-									{isPending ? "—" : (data?.membership.cancellations ?? 0)}
-								</p>
-								<p className="text-muted-foreground text-xs">
-									Gesamt für {selectedMonthLabel}
-								</p>
-							</div>
-							<InfoIcon className="size-4 text-muted-foreground" />
-						</FrameHeader>
-					</Frame>
-				</div>
+				<>
+					<div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+						{metrics.map((metric) => (
+							<KpiCard
+								key={metric.label}
+								metric={metric}
+								isLoading={isLoading}
+								isDeltaLoading={isLoading || !isDeltaReady}
+							/>
+						))}
+					</div>
+
+					<section className="flex flex-col gap-4">
+						<SectionHeading
+							title="Mitglieder"
+							description="Zu- und Abgänge sowie die Verteilung deiner Mitglieder."
+						/>
+						<div className="grid gap-4 md:grid-cols-2 lg:gap-5">
+							<ChartCard
+								title="Anmeldungen & Kündigungen"
+								icon={ArrowRightLeft}
+							>
+								<EnrollmentCancellationChart
+									period={selectedMonthLabel}
+									enrollments={data?.membership.newMembers ?? 0}
+									cancellations={data?.membership.cancellations ?? 0}
+									isLoading={isLoading}
+								/>
+							</ChartCard>
+							<ChartCard title="Mitglieder nach Gruppe" icon={Users}>
+								<MembersByGroupChart
+									data={data?.membership.groupMix}
+									isLoading={isLoading}
+								/>
+							</ChartCard>
+						</div>
+					</section>
+
+					<section className="flex flex-col gap-4">
+						<SectionHeading
+							title="Beiträge & Umsatz"
+							description="Woraus sich der Beitragsumsatz dieses Monats zusammensetzt."
+						/>
+						<div className="grid gap-4 md:grid-cols-2 lg:gap-5">
+							<ChartCard title="Beiträge nach Gruppe" icon={Banknote}>
+								<RevenueByGroupChart
+									data={data?.revenue.byGroup}
+									isLoading={isLoading}
+								/>
+							</ChartCard>
+							<ChartCard title="Beitragsmix" icon={PieChart}>
+								<FeeMixChart data={data?.revenue} isLoading={isLoading} />
+							</ChartCard>
+						</div>
+					</section>
+				</>
 			)}
-
-			<div className="space-y-6">
-				<Frame>
-					<Collapsible defaultOpen>
-						<FrameHeader className="flex-row items-center justify-between px-4 py-3">
-							<CollapsibleTrigger
-								className="data-panel-open:[&_svg]:rotate-180"
-								render={(props) => (
-									<Button variant="ghost" {...props}>
-										<ChevronDownIcon className="mr-2 size-4" />
-										<span className="font-semibold text-sm">
-											Mitgliederübersicht
-										</span>
-									</Button>
-								)}
-							/>
-						</FrameHeader>
-						<CollapsiblePanel>
-							<FramePanel className="grid gap-6 lg:grid-cols-2">
-								<Frame>
-									<FrameHeader className="flex-row items-center justify-between">
-										<div>
-											<p className="font-medium text-sm">
-												Anmeldungen vs. Kündigungen
-											</p>
-											<p className="text-muted-foreground text-xs">
-												{selectedMonthLabel}
-											</p>
-										</div>
-										<div className="flex gap-1 rounded-lg border p-1">
-											<Button
-												variant="ghost"
-												size="sm"
-												onClick={() => setFlowChartType("pie")}
-												className={cn(
-													"h-7 px-2",
-													flowChartType === "pie" && "bg-muted",
-												)}
-											>
-												<AreaChartIcon className="h-4 w-4" />
-											</Button>
-											<Button
-												variant="ghost"
-												size="sm"
-												onClick={() => setFlowChartType("bar")}
-												className={cn(
-													"h-7 px-2",
-													flowChartType === "bar" && "bg-muted",
-												)}
-											>
-												<BarChartIcon className="h-4 w-4" />
-											</Button>
-										</div>
-									</FrameHeader>
-									<FramePanel>
-										{flowChartType === "pie" ? (
-											<EnrollmentCancellationPieChart
-												enrollments={data?.membership.newMembers ?? 0}
-												cancellations={data?.membership.cancellations ?? 0}
-											/>
-										) : (
-											<BarChart
-												data={[
-													{
-														month: selectedMonthLabel,
-														enrollments: data?.membership.newMembers ?? 0,
-														cancellations: data?.membership.cancellations ?? 0,
-													},
-												]}
-												config={flowChartConfig}
-												dataKeys={["enrollments", "cancellations"]}
-												xAxisKey="month"
-												height="h-[240px]"
-											/>
-										)}
-									</FramePanel>
-								</Frame>
-								<Frame>
-									<FrameHeader className="flex-row items-center justify-between">
-										<div>
-											<p className="font-medium text-sm">
-												Mitglieder pro Gruppe
-											</p>
-											<p className="text-muted-foreground text-xs">
-												{selectedMonthLabel}
-											</p>
-										</div>
-										<div className="flex gap-1 rounded-lg border p-1">
-											<Button
-												variant="ghost"
-												size="sm"
-												onClick={() => setGroupChartType("pie")}
-												className={cn(
-													"h-7 px-2",
-													groupChartType === "pie" && "bg-muted",
-												)}
-											>
-												<AreaChartIcon className="h-4 w-4" />
-											</Button>
-											<Button
-												variant="ghost"
-												size="sm"
-												onClick={() => setGroupChartType("bar")}
-												className={cn(
-													"h-7 px-2",
-													groupChartType === "bar" && "bg-muted",
-												)}
-											>
-												<BarChartIcon className="h-4 w-4" />
-											</Button>
-										</div>
-									</FrameHeader>
-									<FramePanel>
-										{groupChartType === "pie" ? (
-											<GroupMixPieChart data={groupMixChartData} />
-										) : (
-											<ChartContainer
-												config={groupBarChartConfig}
-												className="h-[240px] w-full"
-											>
-												<RechartsBarChart
-													accessibilityLayer
-													data={groupMixChartData}
-												>
-													<CartesianGrid
-														vertical={false}
-														strokeDasharray="3 3"
-													/>
-													<XAxis
-														dataKey="name"
-														tickLine={false}
-														tickMargin={10}
-														axisLine={false}
-														tickFormatter={(value) =>
-															typeof value === "string" && value.length > 3
-																? value.slice(0, 3)
-																: value
-														}
-													/>
-													<ChartTooltip
-														cursor={false}
-														content={<ChartTooltipContent indicator="dashed" />}
-													/>
-													<Bar dataKey="value" radius={4}>
-														{groupMixChartData.map((entry, index) => (
-															<Cell
-																key={`${entry.name}-${index}`}
-																fill={entry.color ?? "var(--chart-3)"}
-															/>
-														))}
-													</Bar>
-												</RechartsBarChart>
-											</ChartContainer>
-										)}
-									</FramePanel>
-								</Frame>
-							</FramePanel>
-						</CollapsiblePanel>
-					</Collapsible>
-				</Frame>
-
-				<Frame>
-					<Collapsible defaultOpen>
-						<FrameHeader className="flex-row items-center justify-between px-4 py-3">
-							<CollapsibleTrigger
-								className="data-panel-open:[&_svg]:rotate-180"
-								render={(props) => (
-									<Button variant="ghost" {...props}>
-										<ChevronDownIcon className="mr-2 size-4" />
-										<span className="font-semibold text-sm">
-											Beitragsübersicht nach Gruppen
-										</span>
-									</Button>
-								)}
-							/>
-						</FrameHeader>
-						<CollapsiblePanel>
-							<FramePanel className="grid gap-6 lg:grid-cols-2">
-								<Frame>
-									<FrameHeader className="flex-row items-center justify-between">
-										<div>
-											<p className="font-medium text-sm">Mitgliedsbeiträge</p>
-											<p className="text-muted-foreground text-xs">
-												Nach Gruppen für {selectedMonthLabel}
-											</p>
-										</div>
-									</FrameHeader>
-									<FramePanel>
-										<PricingByGroupPieChart data={groupRevenueChartData} />
-									</FramePanel>
-								</Frame>
-
-								<Frame>
-									<FrameHeader className="flex-row items-center justify-between">
-										<div>
-											<p className="font-medium text-sm">Beitragsmix</p>
-											<p className="text-muted-foreground text-xs">
-												Mitgliedschaften vs. Gebühren
-											</p>
-										</div>
-										<div className="flex items-center gap-2">
-											<div className="flex gap-1 rounded-lg border p-1">
-												<Button
-													variant="ghost"
-													size="sm"
-													onClick={() => setFeeChartType("pie")}
-													className={cn(
-														"h-7 px-2",
-														feeChartType === "pie" && "bg-muted",
-													)}
-												>
-													<AreaChartIcon className="h-4 w-4" />
-												</Button>
-												<Button
-													variant="ghost"
-													size="sm"
-													onClick={() => setFeeChartType("bar")}
-													className={cn(
-														"h-7 px-2",
-														feeChartType === "bar" && "bg-muted",
-													)}
-												>
-													<BarChartIcon className="h-4 w-4" />
-												</Button>
-											</div>
-										</div>
-									</FrameHeader>
-									<FramePanel>
-										<FeesBreakdownChart
-											membership={Number(data?.revenue.membershipTotal ?? 0)}
-											joining={Number(data?.revenue.joiningFeeTotal ?? 0)}
-											yearly={Number(data?.revenue.yearlyFeeTotal ?? 0)}
-											label={selectedMonthLabel}
-											chartType={feeChartType}
-										/>
-									</FramePanel>
-								</Frame>
-							</FramePanel>
-						</CollapsiblePanel>
-					</Collapsible>
-				</Frame>
-			</div>
 		</div>
 	);
 }

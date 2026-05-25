@@ -74,7 +74,7 @@ const routes: RouteConfig[] = [
 				icon: <PieChart className="size-4" />,
 			},
 			{
-				title: "Monate vergleichen",
+				title: "Trends",
 				href: "/dashboard/statistics/range",
 				icon: <PieChart className="size-4" />,
 			},

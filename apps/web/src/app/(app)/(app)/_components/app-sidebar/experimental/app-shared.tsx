@@ -139,7 +139,7 @@ export function useAppShellNavigation() {
 										),
 									},
 									{
-										title: "Monate vergleichen",
+										title: "Trends",
 										path: "/dashboard/statistics/range",
 										isActive: isActivePath(
 											pathname,

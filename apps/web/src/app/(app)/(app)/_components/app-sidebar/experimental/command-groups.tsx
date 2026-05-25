@@ -77,7 +77,7 @@ export const commandGroups: CommandGroupType[] = [
           },
           {
             value: "statistics-range",
-            label: "Monate vergleichen",
+            label: "Trends",
             icon: <BarChart3Icon className={iconClassName} />,
             path: "/dashboard/statistics/range",
           },
