@@ -58,6 +58,3 @@ dev-dist
 .dev.vars*
 
 .open-next
-
-# clerk configuration (can include secrets)
-/.clerk/

@@ -1,26 +1,10 @@
-import { neon, Pool } from "@neondatabase/serverless";
-import { drizzle as httpDrizzle } from "drizzle-orm/neon-http";
-import { drizzle } from "drizzle-orm/neon-serverless";
+import { env } from "@matdesk/env/server";
+import { drizzle } from "drizzle-orm/node-postgres";
+
 import * as schema from "./schema";
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL! });
-export const wsDb = drizzle(pool, { schema });
+export function createDb() {
+  return drizzle(env.DATABASE_URL, { schema });
+}
 
-const sql = neon(process.env.DATABASE_URL!);
-export const db = httpDrizzle(sql, { schema });
-
-export {
-	asc,
-	and,
-	count,
-	desc,
-	eq,
-	type InferSelectModel,
-	ilike,
-	inArray,
-	isNotNull,
-	isNull,
-	lte,
-	or,
-	sql,
-} from "drizzle-orm";
+export const db = createDb();

@@ -1,0 +1,185 @@
+import { Button, Column, Host, Text as ExpoUIText } from "@expo/ui";
+import { useQuery } from "@tanstack/react-query";
+import { View, ScrollView, StyleSheet } from "react-native";
+
+import { Container } from "@/components/container";
+import { SignIn } from "@/components/sign-in";
+import { SignUp } from "@/components/sign-up";
+import { authClient } from "@/lib/auth-client";
+import { NAV_THEME } from "@/lib/constants";
+import { useColorScheme } from "@/lib/use-color-scheme";
+import { queryClient, orpc } from "@/utils/orpc";
+
+export default function Home() {
+  const { colorScheme } = useColorScheme();
+  const theme = colorScheme === "dark" ? NAV_THEME.dark : NAV_THEME.light;
+  const healthCheck = useQuery(orpc.healthCheck.queryOptions());
+  const privateData = useQuery(orpc.privateData.queryOptions());
+  const isConnected = healthCheck?.data === "OK";
+  const isLoading = healthCheck?.isLoading;
+  const { data: session } = authClient.useSession();
+
+  return (
+    <Container>
+      <ScrollView style={styles.scrollView}>
+        <View style={styles.content}>
+          <Host style={styles.titleHost} matchContents={{ vertical: true }}>
+            <Column>
+              <ExpoUIText textStyle={{ color: theme.text, fontSize: 24, fontWeight: "bold" }}>
+                BETTER T STACK
+              </ExpoUIText>
+            </Column>
+          </Host>
+
+          {session?.user ? (
+            <View
+              style={[styles.userCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+            >
+              <Host style={styles.userHeader} matchContents={{ vertical: true }}>
+                <Column spacing={8}>
+                  <ExpoUIText textStyle={{ color: theme.text, fontSize: 16 }}>
+                    {`Welcome, ${session.user.name}`}
+                  </ExpoUIText>
+                  <ExpoUIText
+                    textStyle={{ color: theme.text, fontSize: 14 }}
+                    style={{ opacity: 0.7 }}
+                  >
+                    {session.user.email}
+                  </ExpoUIText>
+                </Column>
+              </Host>
+              <Host matchContents={{ vertical: true }}>
+                <Button
+                  label="Sign Out"
+                  variant="outlined"
+                  onPress={() => {
+                    authClient.signOut();
+                    queryClient.invalidateQueries();
+                  }}
+                />
+              </Host>
+            </View>
+          ) : null}
+
+          <View
+            style={[styles.statusCard, { backgroundColor: theme.card, borderColor: theme.border }]}
+          >
+            <Host style={styles.cardTitleHost} matchContents={{ vertical: true }}>
+              <ExpoUIText textStyle={{ color: theme.text, fontSize: 16, fontWeight: "bold" }}>
+                System Status
+              </ExpoUIText>
+            </Host>
+            <View style={styles.statusRow}>
+              <View
+                style={[
+                  styles.statusIndicator,
+                  { backgroundColor: isConnected ? "#10b981" : "#ef4444" },
+                ]}
+              />
+              <View style={styles.statusContent}>
+                <Host matchContents={{ vertical: true }}>
+                  <Column spacing={4}>
+                    <ExpoUIText textStyle={{ color: theme.text, fontSize: 14, fontWeight: "bold" }}>
+                      ORPC Backend
+                    </ExpoUIText>
+                    <ExpoUIText
+                      textStyle={{ color: theme.text, fontSize: 12 }}
+                      style={{ opacity: 0.7 }}
+                    >
+                      {isLoading
+                        ? "Checking connection..."
+                        : isConnected
+                          ? "Connected to API"
+                          : "API Disconnected"}
+                    </ExpoUIText>
+                  </Column>
+                </Host>
+              </View>
+            </View>
+          </View>
+
+          <View
+            style={[
+              styles.privateDataCard,
+              { backgroundColor: theme.card, borderColor: theme.border },
+            ]}
+          >
+            <Host style={styles.cardTitleHost} matchContents={{ vertical: true }}>
+              <ExpoUIText textStyle={{ color: theme.text, fontSize: 16, fontWeight: "bold" }}>
+                Private Data
+              </ExpoUIText>
+            </Host>
+            {privateData && (
+              <Host matchContents={{ vertical: true }}>
+                <ExpoUIText
+                  textStyle={{ color: theme.text, fontSize: 14 }}
+                  style={{ opacity: 0.7 }}
+                >
+                  {privateData.data?.message ?? ""}
+                </ExpoUIText>
+              </Host>
+            )}
+          </View>
+
+          {!session?.user && (
+            <>
+              <SignIn />
+              <SignUp />
+            </>
+          )}
+        </View>
+      </ScrollView>
+    </Container>
+  );
+}
+
+const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 28,
+    paddingBottom: 32,
+  },
+  titleHost: {
+    alignSelf: "center",
+    marginBottom: 24,
+  },
+  userCard: {
+    marginBottom: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderRadius: 16,
+  },
+  userHeader: {
+    marginBottom: 8,
+  },
+  statusCard: {
+    marginBottom: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderRadius: 16,
+  },
+  cardTitleHost: {
+    marginBottom: 12,
+  },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+  },
+  statusIndicator: {
+    height: 8,
+    width: 8,
+  },
+  statusContent: {
+    flex: 1,
+  },
+  privateDataCard: {
+    marginBottom: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderRadius: 16,
+  },
+});

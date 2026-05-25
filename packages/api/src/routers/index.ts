@@ -1,39 +1,17 @@
 import type { RouterClient } from "@orpc/server";
-import { publicProcedure } from "../index";
-import { billingRouter } from "./billing";
-import { groupsRouter } from "./groups";
-import { inventoryRouter } from "./inventory";
-import { membersRouter } from "./members";
-import { organizationsRouter } from "./organizations";
-import { selfRegistrationsRouter } from "./selfRegistrations";
-import { statisticsRouter } from "./statistics";
+
+import { protectedProcedure, publicProcedure } from "../index";
 
 export const appRouter = {
-	healthCheck: publicProcedure
-		.handler(() => {
-			return "OK";
-		})
-		.route({ method: "GET", successStatus: 200 }),
-	members: { ...membersRouter },
-	billing: {
-		...billingRouter,
-	},
-	groups: {
-		...groupsRouter,
-	},
-	inventory: {
-		...inventoryRouter,
-	},
-	organizations: {
-		...organizationsRouter,
-	},
-	statistics: {
-		...statisticsRouter,
-	},
-	selfRegistrations: {
-		...selfRegistrationsRouter,
-	},
+  healthCheck: publicProcedure.handler(() => {
+    return "OK";
+  }),
+  privateData: protectedProcedure.handler(({ context }) => {
+    return {
+      message: "This is private",
+      user: context.session?.user,
+    };
+  }),
 };
-
 export type AppRouter = typeof appRouter;
 export type AppRouterClient = RouterClient<typeof appRouter>;

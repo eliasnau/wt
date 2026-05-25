@@ -1,30 +1,31 @@
-// Better-T-Stack configuration file
-// safe to delete
+// Better-T-Stack
+//
+// Website: https://www.better-t-stack.dev/
+// Stack Builder: https://www.better-t-stack.dev/new
+// Analytics: https://www.better-t-stack.dev/analytics
+// Showcase: https://www.better-t-stack.dev/showcase
+// Sponsor: https://github.com/sponsors/AmanVarshney01
+//
+// Add new addons with: pnpm dlx create-better-t-stack add
+// This file is safe to delete
 
 {
   "$schema": "https://r2.better-t-stack.dev/schema.json",
-  "version": "3.7.1",
-  "createdAt": "2025-12-06T19:32:00.602Z",
-  "database": "none",
-  "orm": "none",
-  "backend": "convex",
+  "version": "3.29.0",
+  "createdAt": "2026-05-25T18:17:51.823Z",
+  "reproducibleCommand": "pnpm create better-t-stack@latest matdesk --frontend tanstack-start native-bare --backend self --runtime none --database postgres --orm drizzle --api orpc --auth better-auth --payments none --addons evlog oxlint skills turborepo --examples none --db-setup none --web-deploy none --server-deploy none --no-git --package-manager pnpm --install",
+  "database": "postgres",
+  "orm": "drizzle",
+  "backend": "self",
   "runtime": "none",
-  "frontend": [
-    "next"
-  ],
-  "addons": [
-    "biome",
-    "fumadocs",
-    "pwa",
-    "turborepo"
-  ],
-  "examples": [
-    "todo"
-  ],
-  "auth": "clerk",
+  "frontend": ["tanstack-start", "native-bare"],
+  "addons": ["evlog", "oxlint", "skills", "turborepo"],
+  "examples": [],
+  "auth": "better-auth",
+  "payments": "none",
   "packageManager": "pnpm",
   "dbSetup": "none",
-  "api": "none",
+  "api": "orpc",
   "webDeploy": "none",
-  "serverDeploy": "none"
+  "serverDeploy": "none",
 }

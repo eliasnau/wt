@@ -1,12 +1,20 @@
-import { os } from "@orpc/server";
-import type { BaseContext } from "./context";
-import { authMiddleware } from "./middleware/auth";
-import { wideEventMiddleware } from "./middleware/wideEvent";
+import { ORPCError, os } from "@orpc/server";
 
-export const o = os.$context<BaseContext>();
+import type { Context } from "./context";
 
-export const publicProcedure = o.use(wideEventMiddleware());
+export const o = os.$context<Context>();
 
-export const protectedProcedure = o
-	.use(wideEventMiddleware())
-	.use(authMiddleware);
+export const publicProcedure = o;
+
+const requireAuth = o.middleware(async ({ context, next }) => {
+  if (!context.session?.user) {
+    throw new ORPCError("UNAUTHORIZED");
+  }
+  return next({
+    context: {
+      session: context.session,
+    },
+  });
+});
+
+export const protectedProcedure = publicProcedure.use(requireAuth);

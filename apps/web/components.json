@@ -1,11 +1,11 @@
 {
   "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "base-vega",
+  "style": "base-lyra",
   "rsc": false,
   "tsx": true,
   "tailwind": {
     "config": "",
-    "css": "src/index.css",
+    "css": "../../packages/ui/src/styles/globals.css",
     "baseColor": "neutral",
     "cssVariables": true,
     "prefix": ""
@@ -13,16 +13,12 @@
   "iconLibrary": "lucide",
   "aliases": {
     "components": "@/components",
-    "utils": "@/lib/utils",
-    "ui": "@/components/ui",
+    "utils": "@matdesk/ui/lib/utils",
+    "ui": "@matdesk/ui/components",
     "lib": "@/lib",
     "hooks": "@/hooks"
   },
-  "registries": {
-    "@coss": "https://coss.com/ui/r/{name}.json",
-    "@blocks": "https://blocks.so/r/{name}.json",
-    "@animate-ui": "https://animate-ui.com/r/{name}.json",
-    "@mapcn": "https://mapcn.dev/r/{name}.json",
-    "@efferd": "https://efferd.com/r/{style}/{name}.json"
-  }
+  "menuColor": "default",
+  "menuAccent": "subtle",
+  "registries": {}
 }
