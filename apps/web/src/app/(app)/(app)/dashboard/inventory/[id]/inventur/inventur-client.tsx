@@ -4,9 +4,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { AlertCircle, ArrowLeft, Check, Printer, Save } from "lucide-react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+	CelebrateButton,
+	type CelebrateButtonHandle,
+} from "@/components/ui/celebration";
 import {
 	Empty,
 	EmptyContent,
@@ -53,9 +57,9 @@ export function InventurClient() {
 	if (isPending) {
 		return (
 			<div className="flex flex-col gap-6">
-				<Skeleton className="h-9 w-40" />
-				<Skeleton className="h-10 w-72" />
-				<Skeleton className="h-96 rounded-xl" />
+				<Skeleton className="motion-safe:fade-in motion-safe:slide-in-from-bottom-1 h-9 w-40 motion-safe:animate-in motion-safe:duration-500" />
+				<Skeleton className="motion-safe:fade-in motion-safe:slide-in-from-bottom-1 h-10 w-72 motion-safe:animate-in motion-safe:fill-mode-backwards motion-safe:delay-100 motion-safe:duration-500" />
+				<Skeleton className="motion-safe:fade-in motion-safe:slide-in-from-bottom-1 h-96 rounded-xl motion-safe:animate-in motion-safe:fill-mode-backwards motion-safe:delay-200 motion-safe:duration-500" />
 			</div>
 		);
 	}
@@ -96,6 +100,7 @@ export function InventurClient() {
 
 function Inventur({ product }: { product: Product }) {
 	const queryClient = useQueryClient();
+	const celebrateRef = useRef<CelebrateButtonHandle>(null);
 
 	// --- Options ---
 	const [filters, setFilters] = useState<Record<string, Set<string>>>({});
@@ -234,10 +239,12 @@ function Inventur({ product }: { product: Product }) {
 			queryClient.invalidateQueries({
 				queryKey: orpc.inventory.listProducts.key(),
 			});
+			celebrateRef.current?.celebrate();
 			toast.success(
 				`${updated.length} ${
 					updated.length === 1 ? "Bestand" : "Bestände"
 				} aktualisiert`,
+				{ description: "Deine Inventur ist gespeichert." },
 			);
 			setCounts({});
 		},
@@ -297,7 +304,9 @@ function Inventur({ product }: { product: Product }) {
 							<Printer className="size-4" />
 							Drucken
 						</Button>
-						<Button
+						<CelebrateButton
+							ref={celebrateRef}
+							tier="minor"
 							size="sm"
 							onClick={() => saveMutation.mutate(pendingChanges)}
 							disabled={
@@ -316,7 +325,7 @@ function Inventur({ product }: { product: Product }) {
 								: pendingChanges.length > 0
 									? `Speichern (${pendingChanges.length})`
 									: "Speichern"}
-						</Button>
+						</CelebrateButton>
 					</div>
 				</div>
 

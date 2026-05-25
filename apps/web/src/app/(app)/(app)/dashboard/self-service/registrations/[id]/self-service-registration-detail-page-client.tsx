@@ -4,9 +4,13 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { ArrowLeft, CheckCircle2, Save } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import {
+  CelebrateButton,
+  type CelebrateButtonHandle,
+} from "@/components/ui/celebration";
 import {
   Empty,
   EmptyContent,
@@ -54,6 +58,7 @@ export function SelfServiceRegistrationDetailPageClient({ id }: Props) {
   );
 
   const [form, setForm] = useState<RegistrationFormState | null>(null);
+  const celebrateRef = useRef<CelebrateButtonHandle>(null);
 
   const hydratedForm = useMemo(() => {
     if (!data) return form;
@@ -111,7 +116,14 @@ export function SelfServiceRegistrationDetailPageClient({ id }: Props) {
   const createMemberMutation = useMutation({
     mutationFn: async () => client.selfRegistrations.createMemberFromRegistration({ id }),
     onSuccess: async () => {
-      toast.success("Mitglied erstellt");
+      celebrateRef.current?.celebrate();
+      const name = [hydratedForm?.firstName, hydratedForm?.lastName]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+      toast.success(name ? `${name} ist jetzt Mitglied` : "Mitglied erstellt", {
+        description: "Aus der Registrierung wurde ein Mitglied angelegt.",
+      });
       await refetch();
     },
     onError: (createError) => {
@@ -296,7 +308,10 @@ export function SelfServiceRegistrationDetailPageClient({ id }: Props) {
               <Save data-icon="inline-start" />
               {updateMutation.isPending ? "Speichert..." : "Speichern"}
             </Button>
-            <Button
+            <CelebrateButton
+              ref={celebrateRef}
+              tier="major"
+              origin="screen"
               onClick={() => createMemberMutation.mutate()}
               disabled={createMemberMutation.isPending || memberAlreadyCreated}
             >
@@ -306,7 +321,7 @@ export function SelfServiceRegistrationDetailPageClient({ id }: Props) {
                 : createMemberMutation.isPending
                   ? "Erstellt Mitglied..."
                   : "Mitglied erstellen"}
-            </Button>
+            </CelebrateButton>
           </div>
         </FramePanel>
       </Frame>
