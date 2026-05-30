@@ -3,10 +3,12 @@ import type { RouterClient } from "@orpc/server";
 import { protectedProcedure, publicProcedure } from "../index";
 
 export const appRouter = {
+  // Cheap call — uses the default token cost of 1.
   healthCheck: publicProcedure.handler(() => {
     return "OK";
   }),
-  privateData: protectedProcedure.handler(({ context }) => {
+  // Example of a heavier procedure: consumes 5 tokens per call.
+  privateData: protectedProcedure.meta({ cost: 5 }).handler(({ context }) => {
     return {
       message: "This is private",
       user: context.session?.user,

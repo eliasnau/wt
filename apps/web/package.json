@@ -8,6 +8,8 @@
     "dev": "vite dev"
   },
   "dependencies": {
+    "@better-auth/infra": "catalog:",
+    "@better-auth/passkey": "catalog:",
     "@matdesk/api": "workspace:*",
     "@matdesk/auth": "workspace:*",
     "@matdesk/env": "workspace:*",
@@ -25,7 +27,7 @@
     "@tanstack/react-start": "^1.167.41",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
-    "evlog": "^2.14.1",
+    "evlog": "^2.18.1",
     "lucide-react": "^1.8.0",
     "next-themes": "catalog:",
     "nitro": "^3.0.260429-beta",

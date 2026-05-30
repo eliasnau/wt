@@ -1,20 +1,13 @@
-import { ORPCError, os } from "@orpc/server";
+import { evlog } from "evlog/orpc";
 
-import type { Context } from "./context";
+import { requireAuth } from "./middlewares/auth";
+import { identify } from "./middlewares/identify";
+import { rateLimit } from "./middlewares/ratelimit";
+import { o } from "./orpc";
 
-export const o = os.$context<Context>();
+export { o };
 
-export const publicProcedure = o;
-
-const requireAuth = o.middleware(async ({ context, next }) => {
-  if (!context.session?.user) {
-    throw new ORPCError("UNAUTHORIZED");
-  }
-  return next({
-    context: {
-      session: context.session,
-    },
-  });
-});
+// evlog() outermost so it captures errors from inner middlewares + sets `operation`.
+export const publicProcedure = o.use(evlog()).use(identify).use(rateLimit);
 
 export const protectedProcedure = publicProcedure.use(requireAuth);

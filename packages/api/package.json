@@ -18,7 +18,10 @@
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.38.0",
     "dotenv": "catalog:",
+    "evlog": "^2.18.1",
     "zod": "catalog:"
   },
   "devDependencies": {
