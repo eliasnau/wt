@@ -1,12 +1,14 @@
 import { createContext } from "@matdesk/api/context";
 import { appRouter } from "@matdesk/api/routers/index";
+import { env } from "@matdesk/env/server";
 import { OpenAPIHandler } from "@orpc/openapi/fetch";
 import { OpenAPIReferencePlugin } from "@orpc/openapi/plugins";
 import { RPCHandler } from "@orpc/server/fetch";
 import { ResponseHeadersPlugin } from "@orpc/server/plugins";
 import { ZodToJsonSchemaConverter } from "@orpc/zod/zod4";
 import { createFileRoute } from "@tanstack/react-router";
-import type { EnrichContext } from "evlog";
+import type { DrainFn, EnrichContext } from "evlog";
+import { createAxiomDrain } from "evlog/axiom";
 import {
   createGeoEnricher,
   createRequestSizeEnricher,
@@ -32,9 +34,12 @@ const enrich = (ctx: EnrichContext) => {
 };
 
 // Enrichers run after emit, before drain — so the enriched fields only reach
-// drains, not the console line. Persist events as NDJSON in .evlog/logs/ so the
-// enrichment is actually captured (and queryable by the analyze-logs tooling).
-const drain = createFsDrain();
+// drains, not the console line. Ship to Axiom when configured, otherwise
+// persist events as NDJSON in `.evlog/logs/` for local dev.
+const drain: DrainFn =
+  env.AXIOM_API_KEY && env.AXIOM_DATASET
+    ? createAxiomDrain()
+    : createFsDrain();
 
 // Shared options for both oRPC handlers. Tag RPC events with their own service
 // (`matdesk-orpc`) so they're distinguishable from the web/SSR wide events
