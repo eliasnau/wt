@@ -1,8 +1,8 @@
 import { env } from "@matdesk/env/server";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import { createError } from "evlog";
 
+import { ratelimitErrors } from "../errors";
 import { o } from "../orpc";
 
 // Shared token-bucket limiter, built only when Upstash is configured (otherwise
@@ -66,12 +66,9 @@ export const rateLimit = o.middleware(async ({ context, procedure, next }) => {
     const retryAfterSec = Math.max(0, Math.ceil((reset - Date.now()) / 1000));
     context.resHeaders?.set("Retry-After", String(retryAfterSec));
 
-    throw createError({
-      message: "Rate limit exceeded",
-      code: "TOO_MANY_REQUESTS",
-      status: 429,
-      why: `Too many requests for ${identifier} (needed ${cost} token(s), ${remaining} remaining)`,
-      fix: `Retry after ${new Date(reset).toISOString()}`,
+    throw ratelimitErrors.EXCEEDED({
+      fix: `Try again in ${retryAfterSec} seconds.`,
+      internal: { identifier, cost, remaining, resetAt: reset },
     });
   }
 

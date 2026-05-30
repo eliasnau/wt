@@ -25,6 +25,10 @@ export async function createContext({ req }: { req: Request }) {
     auth: null,
     session,
     ipAddress,
+    // Original request headers — used by `requirePermission` to call into
+    // `auth.api.hasPermission`, which resolves the active member role from
+    // the session cookie.
+    headers: req.headers,
   };
 }
 
