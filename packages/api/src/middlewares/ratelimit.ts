@@ -45,6 +45,7 @@ export const rateLimit = o.middleware(async ({ context, procedure, next }) => {
 
   if (!ratelimit) {
     context.log?.set({ rateLimit: { enabled: false, cost } });
+    console.warn("[orpc] Ratelimit is disabled. Set UPSTASH_REDIS_REST_URL & UPSTASH_REDIS_REST_TOKEN to enable")
     return next();
   }
 
