@@ -9,11 +9,17 @@
       "default": "./src/*.ts"
     }
   },
-  "scripts": {},
+  "scripts": {
+    "auth:generate": "pnpm dlx dotenv-cli -e ../../apps/web/.env -- pnpm dlx @better-auth/cli@latest generate --config ./src/index.ts --output ../db/src/schema/auth.ts"
+  },
   "dependencies": {
     "@better-auth/expo": "catalog:",
+    "@better-auth/infra": "catalog:",
+    "@better-auth/passkey": "catalog:",
     "@matdesk/db": "workspace:*",
     "@matdesk/env": "workspace:*",
+    "@paralleldrive/cuid2": "^3.3.0",
+    "@simplewebauthn/server": "^13.3.0",
     "better-auth": "catalog:",
     "dotenv": "catalog:",
     "zod": "catalog:"

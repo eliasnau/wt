@@ -8,3 +8,22 @@ export function createDb() {
 }
 
 export const db = createDb();
+
+// Re-export commonly used Drizzle operators so consumers (auth, api) don't
+// each take a direct drizzle-orm dependency.
+export {
+  and,
+  asc,
+  count,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  type InferInsertModel,
+  type InferSelectModel,
+  isNotNull,
+  isNull,
+  lte,
+  or,
+  sql,
+} from "drizzle-orm";
