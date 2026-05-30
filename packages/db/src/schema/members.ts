@@ -1,0 +1,170 @@
+import { relations } from "drizzle-orm";
+import {
+  boolean,
+  date,
+  decimal,
+  index,
+  integer,
+  jsonb,
+  pgTable,
+  primaryKey,
+  text,
+  timestamp,
+  unique,
+  uuid,
+} from "drizzle-orm/pg-core";
+import { organization } from "./auth";
+
+export const clubMember = pgTable("club_member", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: text("organization_id")
+    .notNull()
+    .references(() => organization.id, { onDelete: "cascade" }),
+  firstName: text("first_name").notNull(),
+  lastName: text("last_name").notNull(),
+  birthdate: date("birthdate"),
+  email: text("email"),
+  phone: text("phone"),
+  street: text("street").notNull(),
+  city: text("city").notNull(),
+  state: text("state").notNull(),
+  postalCode: text("postal_code").notNull(),
+  country: text("country").notNull(),
+  latitude: decimal("latitude", { precision: 10, scale: 7, mode: "number" }),
+  longitude: decimal("longitude", { precision: 10, scale: 7, mode: "number" }),
+  iban: text("iban").notNull(),
+  bic: text("bic").notNull(),
+  cardHolder: text("card_holder").notNull(),
+  notes: text("notes"),
+  guardianName: text("guardian_name"),
+  guardianEmail: text("guardian_email"),
+  guardianPhone: text("guardian_phone"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export const group = pgTable("group", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  organizationId: text("organization_id")
+    .notNull()
+    .references(() => organization.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  color: text("color").default("#000000").notNull(),
+  defaultMembershipPriceCents: integer("default_membership_price_cents"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at")
+    .defaultNow()
+    .$onUpdate(() => new Date())
+    .notNull(),
+});
+
+export const groupMember = pgTable(
+  "group_member",
+  {
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => group.id, { onDelete: "cascade" }),
+    memberId: uuid("member_id")
+      .notNull()
+      .references(() => clubMember.id, { onDelete: "cascade" }),
+    membershipPriceCents: integer("membership_price_cents").notNull().default(0),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.groupId, table.memberId] }),
+    index("group_member_group_id_idx").on(table.groupId),
+    index("group_member_member_id_idx").on(table.memberId),
+    index("group_member_composite_idx").on(table.groupId, table.memberId),
+  ],
+);
+
+export const selfRegistration = pgTable(
+  "self_registration",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    name: text("name").notNull(),
+    code: text("code").notNull(),
+    description: text("description"),
+    isActive: boolean("is_active").default(true).notNull(),
+    submitted: boolean("submitted").default(false).notNull(),
+    // draft | submitted | created
+    status: text("status").notNull().default("draft"),
+    memberId: uuid("member_id").references(() => clubMember.id, {
+      onDelete: "set null",
+    }),
+    billingCycle: text("billing_cycle").notNull().default("monthly"),
+    joiningFeeCents: integer("joining_fee_cents"),
+    yearlyFeeCents: integer("yearly_fee_cents"),
+    contractStartDate: date("contract_start_date"),
+    notes: text("notes"),
+    groupsSnapshot: jsonb("groups_snapshot").notNull(),
+    firstName: text("first_name"),
+    lastName: text("last_name"),
+    email: text("email"),
+    phone: text("phone"),
+    birthdate: date("birthdate"),
+    street: text("street"),
+    city: text("city"),
+    state: text("state"),
+    postalCode: text("postal_code"),
+    country: text("country"),
+    accountHolder: text("account_holder"),
+    iban: text("iban"),
+    bic: text("bic"),
+    submittedAt: timestamp("submitted_at"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  (table) => [
+    index("self_registration_org_id_idx").on(table.organizationId),
+    index("self_registration_active_idx").on(table.isActive),
+    index("self_registration_submitted_idx").on(table.submitted),
+    index("self_registration_member_id_idx").on(table.memberId),
+    index("self_registration_status_idx").on(table.status),
+    unique("self_registration_code_unique").on(table.code),
+  ],
+);
+
+export const clubMemberRelations = relations(clubMember, ({ many }) => ({
+  groupMembers: many(groupMember),
+  // contracts relation is declared from billing.ts side via contract.memberId
+}));
+
+export const groupRelations = relations(group, ({ many }) => ({
+  groupMembers: many(groupMember),
+}));
+
+export const groupMemberRelations = relations(groupMember, ({ one }) => ({
+  group: one(group, {
+    fields: [groupMember.groupId],
+    references: [group.id],
+  }),
+  member: one(clubMember, {
+    fields: [groupMember.memberId],
+    references: [clubMember.id],
+  }),
+}));
+
+export const selfRegistrationRelations = relations(
+  selfRegistration,
+  ({ one }) => ({
+    organization: one(organization, {
+      fields: [selfRegistration.organizationId],
+      references: [organization.id],
+    }),
+  }),
+);
