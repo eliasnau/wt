@@ -1,6 +1,7 @@
 import type { RouterClient } from "@orpc/server";
 
 import { protectedProcedure, publicProcedure } from "../index";
+import { groupsRouter } from "./groups/router";
 
 export const appRouter = {
   // Cheap call — uses the default token cost of 1.
@@ -14,6 +15,7 @@ export const appRouter = {
       user: context.session?.user,
     };
   }),
+  groups: groupsRouter,
 };
 export type AppRouter = typeof appRouter;
 export type AppRouterClient = RouterClient<typeof appRouter>;

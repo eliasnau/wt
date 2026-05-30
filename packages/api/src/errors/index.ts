@@ -5,16 +5,19 @@
  */
 
 import type { authErrors } from "./auth";
+import type { groupsErrors } from "./groups";
 import type { orgErrors } from "./org";
 import type { ratelimitErrors } from "./ratelimit";
 
 export { authErrors } from "./auth";
+export { groupsErrors } from "./groups";
 export { orgErrors } from "./org";
 export { ratelimitErrors } from "./ratelimit";
 
 declare module "evlog" {
   interface RegisteredErrorCatalogs {
     auth: typeof authErrors;
+    groups: typeof groupsErrors;
     org: typeof orgErrors;
     ratelimit: typeof ratelimitErrors;
   }
