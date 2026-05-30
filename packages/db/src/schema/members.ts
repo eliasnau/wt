@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
   date,
@@ -7,10 +7,10 @@ import {
   integer,
   jsonb,
   pgTable,
-  primaryKey,
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 import { organization } from "./auth";
@@ -62,9 +62,14 @@ export const group = pgTable("group", {
     .notNull(),
 });
 
+/**
+ * Temporal membership history. Removing a member sets `endDate` instead of
+ * deleting; re-adding creates a new row. `endDate IS NULL` = currently active.
+ */
 export const groupMember = pgTable(
   "group_member",
   {
+    id: uuid("id").primaryKey().defaultRandom(),
     groupId: uuid("group_id")
       .notNull()
       .references(() => group.id, { onDelete: "cascade" }),
@@ -72,6 +77,8 @@ export const groupMember = pgTable(
       .notNull()
       .references(() => clubMember.id, { onDelete: "cascade" }),
     membershipPriceCents: integer("membership_price_cents").notNull().default(0),
+    startDate: date("start_date").notNull(),
+    endDate: date("end_date"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()
@@ -79,10 +86,19 @@ export const groupMember = pgTable(
       .notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.groupId, table.memberId] }),
     index("group_member_group_id_idx").on(table.groupId),
     index("group_member_member_id_idx").on(table.memberId),
-    index("group_member_composite_idx").on(table.groupId, table.memberId),
+    index("group_member_group_member_idx").on(table.groupId, table.memberId),
+    // At most one active (endDate IS NULL) row per (group, member).
+    uniqueIndex("group_member_active_unique_idx")
+      .on(table.groupId, table.memberId)
+      .where(sql`${table.endDate} IS NULL`),
+    // Speeds up "members in group X during range [start, end]" overlap queries.
+    index("group_member_range_idx").on(
+      table.groupId,
+      table.startDate,
+      table.endDate,
+    ),
   ],
 );
 

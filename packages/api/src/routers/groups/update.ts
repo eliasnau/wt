@@ -35,7 +35,12 @@ export const updateGroup = orgProcedure
       throw groupsErrors.NOTHING_TO_UPDATE();
     }
 
-    await getGroupById(id, context.organizationId);
+    const existing = await getGroupById(id, context.organizationId);
+    if (!existing) {
+      throw groupsErrors.NOT_FOUND({
+        internal: { groupId: id, organizationId: context.organizationId },
+      });
+    }
 
     const [updated] = await db
       .update(group)
@@ -56,7 +61,9 @@ export const updateGroup = orgProcedure
       });
     }
 
-    context.log?.set({ groupId: updated.id, groupName: updated.name });
+    context.log?.set({
+      data: { group: { id: updated.id, name: updated.name } },
+    });
     return updated;
   })
   .route({ method: "PATCH", path: "/groups/:id" });

@@ -17,8 +17,7 @@ const PERMISSION_SPEC = {
   member: {
     label: "Mitglieder",
     actions: {
-      view:         { label: "Ansehen",           description: "Mitgliederdetails öffnen." },
-      list:         { label: "Liste sehen",       description: "Mitgliederlisten ansehen." },
+      view:         { label: "Ansehen",           description: "Mitglieder ansehen (Liste und Details)." },
       create:       { label: "Erstellen",         description: "Neue Mitglieder anlegen." },
       update:       { label: "Bearbeiten",        description: "Stammdaten ändern." },
       delete:       { label: "Löschen",           description: "Mitglieder entfernen." },

@@ -58,7 +58,9 @@ export const deleteGroup = orgProcedure
         });
       }
 
-      context.log?.set({ groupId: deleted.id, groupName: deleted.name });
+      context.log?.set({
+        data: { group: { id: deleted.id, name: deleted.name } },
+      });
       return deleted;
     });
   })

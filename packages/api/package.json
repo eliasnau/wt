@@ -12,7 +12,10 @@
       "default": "./src/*.ts"
     }
   },
-  "scripts": {},
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
   "dependencies": {
     "@matdesk/auth": "workspace:*",
     "@matdesk/db": "workspace:*",
@@ -29,6 +32,7 @@
   },
   "devDependencies": {
     "@matdesk/config": "workspace:*",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "^3.2.4"
   }
 }

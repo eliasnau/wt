@@ -32,7 +32,9 @@ export const createGroup = orgProcedure
       });
     }
 
-    context.log?.set({ groupId: created.id, groupName: created.name });
+    context.log?.set({
+      data: { group: { id: created.id, name: created.name } },
+    });
     return created;
   })
   .route({ method: "POST", path: "/groups" });
