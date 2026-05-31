@@ -3,6 +3,8 @@ import { clubMember } from "@matdesk/db/schema";
 import { createError } from "evlog";
 import { z } from "zod";
 
+import { addressAffectsGeocode } from "../../domain/members/address";
+import { geocodeAddress } from "../../integrations/geocoding";
 import { membersErrors } from "../../errors";
 import { orgProcedure } from "../../index";
 import { requirePermission } from "../../middlewares/permissions";
@@ -41,6 +43,19 @@ export const updateMemberDetails = orgProcedure
       });
     }
 
+    // Re-geocode only when an address field that affects the lookup changed —
+    // avoids a network round-trip (and rate-limit pressure) on every edit.
+    // Done before the UPDATE so the call doesn't hold a DB connection.
+    const addressChanged = addressAffectsGeocode(existing, input);
+    const geo = addressChanged
+      ? await geocodeAddress({
+          street: input.street,
+          postalCode: input.postalCode,
+          city: input.city,
+          country: input.country,
+        })
+      : null;
+
     const [updated] = await db
       .update(clubMember)
       .set({
@@ -54,6 +69,11 @@ export const updateMemberDetails = orgProcedure
         state: input.state,
         postalCode: input.postalCode,
         country: input.country,
+        // Only overwrite coordinates when we re-geocoded; otherwise leave the
+        // stored lat/lng untouched.
+        ...(addressChanged
+          ? { latitude: geo?.latitude ?? null, longitude: geo?.longitude ?? null }
+          : {}),
       })
       .where(
         and(
@@ -71,7 +91,12 @@ export const updateMemberDetails = orgProcedure
       });
     }
 
-    context.log?.set({ data: { member: { id: updated.id } } });
+    context.log?.set({
+      data: {
+        member: { id: updated.id },
+        geocoding: { changed: addressChanged, ok: geo !== null },
+      },
+    });
     return updated;
   })
   .route({ method: "PATCH", path: "/members/:memberId/details" });

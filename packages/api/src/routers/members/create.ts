@@ -6,6 +6,7 @@ import { z } from "zod";
 import { ymdInBerlin } from "../../domain/members/cancellation";
 import { calculateInitialPeriodEndDate } from "../../domain/members/contract";
 import { generateMandateReference } from "../../domain/members/mandate-ref";
+import { geocodeAddress } from "../../integrations/geocoding";
 import { orgProcedure } from "../../index";
 import { requirePermission } from "../../middlewares/permissions";
 import {
@@ -71,6 +72,15 @@ export const createMember = orgProcedure
     const signatureDate = ymdInBerlin(new Date());
     const mandateReference = generateMandateReference();
 
+    // Geocode before opening the transaction — the external call (up to 8s)
+    // must not hold a DB connection. Fails soft to null coordinates.
+    const geo = await geocodeAddress({
+      street: input.street,
+      postalCode: input.postalCode,
+      city: input.city,
+      country: input.country,
+    });
+
     const result = await db.transaction(async (tx) => {
       const [member] = await tx
         .insert(clubMember)
@@ -86,6 +96,8 @@ export const createMember = orgProcedure
           state: input.state,
           postalCode: input.postalCode,
           country: input.country,
+          latitude: geo?.latitude ?? null,
+          longitude: geo?.longitude ?? null,
           iban: input.iban,
           bic: input.bic,
           cardHolder: input.cardHolder,
@@ -156,6 +168,7 @@ export const createMember = orgProcedure
         member: { id: result.member.id },
         contract: { id: result.contract.id },
         mandate: { reference: result.sepaMandate.mandateReference },
+        geocoding: { ok: geo !== null },
       },
     });
     return result;
