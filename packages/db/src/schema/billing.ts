@@ -59,6 +59,16 @@ export const contract = pgTable(
     unique("contract_member_unique").on(table.memberId),
     index("contract_member_id_idx").on(table.memberId),
     index("contract_org_id_idx").on(table.organizationId),
+    // Statistics: per-month enrollment + active-member-baseline scans.
+    index("contract_org_start_date_idx").on(
+      table.organizationId,
+      table.startDate,
+    ),
+    // Statistics: per-month cancellation (churn) scans.
+    index("contract_org_cancellation_effective_idx").on(
+      table.organizationId,
+      table.cancellationEffectiveDate,
+    ),
   ],
 );
 
@@ -165,6 +175,12 @@ export const invoice = pgTable(
     index("invoice_member_idx").on(table.memberId),
     index("invoice_contract_idx").on(table.contractId),
     index("invoice_period_idx").on(table.contractId, table.billingPeriodStart),
+    // Statistics: finalized-revenue-by-period scans (billed/submitted/outstanding).
+    index("invoice_org_status_period_idx").on(
+      table.organizationId,
+      table.status,
+      table.billingPeriodStart,
+    ),
   ],
 );
 

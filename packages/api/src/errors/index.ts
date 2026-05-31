@@ -10,6 +10,7 @@ import type { inventoryErrors } from "./inventory";
 import type { membersErrors } from "./members";
 import type { orgErrors } from "./org";
 import type { ratelimitErrors } from "./ratelimit";
+import type { statisticsErrors } from "./statistics";
 
 export { authErrors } from "./auth";
 export { groupsErrors } from "./groups";
@@ -17,6 +18,7 @@ export { inventoryErrors } from "./inventory";
 export { membersErrors } from "./members";
 export { orgErrors } from "./org";
 export { ratelimitErrors } from "./ratelimit";
+export { statisticsErrors } from "./statistics";
 
 declare module "evlog" {
   interface RegisteredErrorCatalogs {
@@ -26,5 +28,6 @@ declare module "evlog" {
     members: typeof membersErrors;
     org: typeof orgErrors;
     ratelimit: typeof ratelimitErrors;
+    statistics: typeof statisticsErrors;
   }
 }

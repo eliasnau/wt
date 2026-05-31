@@ -15,36 +15,41 @@ import {
 } from "drizzle-orm/pg-core";
 import { organization } from "./auth";
 
-export const clubMember = pgTable("club_member", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  organizationId: text("organization_id")
-    .notNull()
-    .references(() => organization.id, { onDelete: "cascade" }),
-  firstName: text("first_name").notNull(),
-  lastName: text("last_name").notNull(),
-  birthdate: date("birthdate"),
-  email: text("email"),
-  phone: text("phone"),
-  street: text("street").notNull(),
-  city: text("city").notNull(),
-  state: text("state").notNull(),
-  postalCode: text("postal_code").notNull(),
-  country: text("country").notNull(),
-  latitude: decimal("latitude", { precision: 10, scale: 7, mode: "number" }),
-  longitude: decimal("longitude", { precision: 10, scale: 7, mode: "number" }),
-  iban: text("iban").notNull(),
-  bic: text("bic").notNull(),
-  cardHolder: text("card_holder").notNull(),
-  notes: text("notes"),
-  guardianName: text("guardian_name"),
-  guardianEmail: text("guardian_email"),
-  guardianPhone: text("guardian_phone"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .$onUpdate(() => new Date())
-    .notNull(),
-});
+export const clubMember = pgTable(
+  "club_member",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => organization.id, { onDelete: "cascade" }),
+    firstName: text("first_name").notNull(),
+    lastName: text("last_name").notNull(),
+    birthdate: date("birthdate"),
+    email: text("email"),
+    phone: text("phone"),
+    street: text("street").notNull(),
+    city: text("city").notNull(),
+    state: text("state").notNull(),
+    postalCode: text("postal_code").notNull(),
+    country: text("country").notNull(),
+    latitude: decimal("latitude", { precision: 10, scale: 7, mode: "number" }),
+    longitude: decimal("longitude", { precision: 10, scale: 7, mode: "number" }),
+    iban: text("iban").notNull(),
+    bic: text("bic").notNull(),
+    cardHolder: text("card_holder").notNull(),
+    notes: text("notes"),
+    guardianName: text("guardian_name"),
+    guardianEmail: text("guardian_email"),
+    guardianPhone: text("guardian_phone"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => new Date())
+      .notNull(),
+  },
+  // Org boundary is in the WHERE of every member query (list, query, map).
+  (table) => [index("club_member_org_id_idx").on(table.organizationId)],
+);
 
 export const group = pgTable("group", {
   id: uuid("id").primaryKey().defaultRandom(),
