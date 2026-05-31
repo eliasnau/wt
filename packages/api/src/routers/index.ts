@@ -2,6 +2,7 @@ import type { RouterClient } from "@orpc/server";
 
 import { protectedProcedure, publicProcedure } from "../index";
 import { groupsRouter } from "./groups/router";
+import { inventoryRouter } from "./inventory/router";
 import { membersRouter } from "./members/router";
 
 export const appRouter = {
@@ -18,6 +19,7 @@ export const appRouter = {
   }),
   groups: groupsRouter,
   members: membersRouter,
+  inventory: inventoryRouter,
 };
 export type AppRouter = typeof appRouter;
 export type AppRouterClient = RouterClient<typeof appRouter>;
