@@ -1,27 +1,43 @@
 import { Button } from "@matdesk/ui/components/button";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@matdesk/ui/components/dropdown-menu";
+  Menu,
+  MenuGroup,
+  MenuGroupLabel,
+  MenuItem,
+  MenuPopup,
+  MenuRadioGroup,
+  MenuRadioItem,
+  MenuSeparator,
+  MenuSub,
+  MenuSubPopup,
+  MenuSubTrigger,
+  MenuTrigger,
+} from "@matdesk/ui/components/menu";
 import { Skeleton } from "@matdesk/ui/components/skeleton";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { LogOutIcon, MoonIcon, SunIcon, UserIcon } from "lucide-react";
 
-import { authClient } from "@/lib/auth-client";
+import { UserAvatar } from "@/components/auth/user-avatar";
+import { useAuth } from "@/components/auth/auth-provider";
+import { useTheme } from "@/components/theme-provider";
 
 export default function UserMenu() {
   const navigate = useNavigate();
-  const { data: session, isPending } = authClient.useSession();
+  const { theme, setTheme } = useTheme();
+  const { user, isPending, signOut } = useAuth();
 
+  // The session is hydrated from the server, so this only shows on the rare
+  // path where it isn't resolved yet (e.g. a fresh client-side navigation).
   if (isPending) {
-    return <Skeleton className="h-9 w-24" />;
+    return (
+      <Button aria-label="Loading account" disabled variant="ghost">
+        <UserAvatar className="size-6" loading />
+        <Skeleton className="h-4 w-20" />
+      </Button>
+    );
   }
 
-  if (!session) {
+  if (!user) {
     return (
       <Link to="/login">
         <Button variant="outline">Sign In</Button>
@@ -30,19 +46,45 @@ export default function UserMenu() {
   }
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="outline" />}>
-        {session.user.name}
-      </DropdownMenuTrigger>
-      <DropdownMenuContent className="bg-card">
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>{session.user.email}</DropdownMenuItem>
-          <DropdownMenuItem
+    <Menu>
+      <MenuTrigger aria-label="Account menu" render={<Button variant="ghost" />}>
+        <UserAvatar
+          className="size-6"
+          image={user.image}
+          name={user.name}
+          seed={user.id}
+        />
+        {user.name}
+      </MenuTrigger>
+      <MenuPopup align="end" className="bg-card">
+        <MenuGroup>
+          <MenuGroupLabel>My Account</MenuGroupLabel>
+          <MenuItem render={<Link to="/dashboard/account" />}>
+            <UserIcon />
+            Account
+          </MenuItem>
+          <MenuSub>
+            <MenuSubTrigger>
+              <SunIcon aria-hidden="true" className="hidden dark:block" />
+              <MoonIcon aria-hidden="true" className="block dark:hidden" />
+              Theme
+            </MenuSubTrigger>
+            <MenuSubPopup>
+              <MenuRadioGroup
+                value={theme}
+                onValueChange={(value) => setTheme(value as typeof theme)}
+              >
+                <MenuRadioItem value="light">Light</MenuRadioItem>
+                <MenuRadioItem value="dark">Dark</MenuRadioItem>
+                <MenuRadioItem value="system">System</MenuRadioItem>
+              </MenuRadioGroup>
+            </MenuSubPopup>
+          </MenuSub>
+          <MenuSeparator />
+          <MenuItem
             variant="destructive"
             onClick={() => {
-              authClient.signOut({
+              signOut({
                 fetchOptions: {
                   onSuccess: () => {
                     navigate({
@@ -53,10 +95,11 @@ export default function UserMenu() {
               });
             }}
           >
+            <LogOutIcon />
             Sign Out
-          </DropdownMenuItem>
-        </DropdownMenuGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          </MenuItem>
+        </MenuGroup>
+      </MenuPopup>
+    </Menu>
   );
 }

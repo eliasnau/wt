@@ -10,6 +10,8 @@
   "dependencies": {
     "@better-auth/infra": "catalog:",
     "@better-auth/passkey": "catalog:",
+    "@fontsource-variable/geist": "^5.2.9",
+    "@fontsource-variable/outfit": "^5.2.8",
     "@matdesk/api": "workspace:*",
     "@matdesk/auth": "workspace:*",
     "@matdesk/env": "workspace:*",
@@ -26,6 +28,8 @@
     "@tanstack/react-router-ssr-query": "^1.166.11",
     "@tanstack/react-start": "^1.167.41",
     "better-auth": "catalog:",
+    "class-variance-authority": "^0.7.1",
+    "dither-avatar": "^1.0.0",
     "dotenv": "catalog:",
     "evlog": "^2.18.1",
     "lucide-react": "^1.8.0",

@@ -1,0 +1,14 @@
+import { createFileRoute } from "@tanstack/react-router";
+
+export const Route = createFileRoute("/dashboard/groups")({
+  component: RouteComponent,
+});
+
+function RouteComponent() {
+  return (
+    <div className="flex flex-col gap-1">
+      <h1 className="text-2xl font-semibold tracking-tight">Gruppen</h1>
+      <p className="text-sm text-muted-foreground">Bald verfügbar.</p>
+    </div>
+  );
+}

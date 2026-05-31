@@ -9,18 +9,41 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SignUpRouteImport } from './routes/sign-up'
+import { Route as SignInRouteImport } from './routes/sign-in'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
+import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
+import { Route as DashboardMembersRouteImport } from './routes/dashboard/members'
+import { Route as DashboardInventoryRouteImport } from './routes/dashboard/inventory'
+import { Route as DashboardGroupsRouteImport } from './routes/dashboard/groups'
+import { Route as DashboardBillingRouteImport } from './routes/dashboard/billing'
+import { Route as DashboardAccountRouteImport } from './routes/dashboard/account'
+import { Route as DashboardStatisticsIndexRouteImport } from './routes/dashboard/statistics/index'
+import { Route as DashboardStatisticsTimelineRouteImport } from './routes/dashboard/statistics/timeline'
+import { Route as DashboardStatisticsSnapshotRouteImport } from './routes/dashboard/statistics/snapshot'
+import { Route as DashboardStatisticsMembersRouteImport } from './routes/dashboard/statistics/members'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
+const SignUpRoute = SignUpRouteImport.update({
+  id: '/sign-up',
+  path: '/sign-up',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SignInRoute = SignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
   getParentRoute: () => rootRouteImport,
 } as any)
-const DashboardRoute = DashboardRouteImport.update({
+const DashboardRouteRoute = DashboardRouteRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
@@ -30,6 +53,65 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DashboardIndexRoute = DashboardIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardMembersRoute = DashboardMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardInventoryRoute = DashboardInventoryRouteImport.update({
+  id: '/inventory',
+  path: '/inventory',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardGroupsRoute = DashboardGroupsRouteImport.update({
+  id: '/groups',
+  path: '/groups',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardBillingRoute = DashboardBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardAccountRoute = DashboardAccountRouteImport.update({
+  id: '/account',
+  path: '/account',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardStatisticsIndexRoute =
+  DashboardStatisticsIndexRouteImport.update({
+    id: '/statistics/',
+    path: '/statistics/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardStatisticsTimelineRoute =
+  DashboardStatisticsTimelineRouteImport.update({
+    id: '/statistics/timeline',
+    path: '/statistics/timeline',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardStatisticsSnapshotRoute =
+  DashboardStatisticsSnapshotRouteImport.update({
+    id: '/statistics/snapshot',
+    path: '/statistics/snapshot',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardStatisticsMembersRoute =
+  DashboardStatisticsMembersRouteImport.update({
+    id: '/statistics/members',
+    path: '/statistics/members',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
   id: '/api/rpc/$',
   path: '/api/rpc/$',
@@ -43,44 +125,152 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
+  '/dashboard': typeof DashboardRouteRouteWithChildren
   '/login': typeof LoginRoute
+  '/sign-in': typeof SignInRoute
+  '/sign-up': typeof SignUpRoute
+  '/dashboard/account': typeof DashboardAccountRoute
+  '/dashboard/billing': typeof DashboardBillingRoute
+  '/dashboard/groups': typeof DashboardGroupsRoute
+  '/dashboard/inventory': typeof DashboardInventoryRoute
+  '/dashboard/members': typeof DashboardMembersRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/dashboard/statistics/members': typeof DashboardStatisticsMembersRoute
+  '/dashboard/statistics/snapshot': typeof DashboardStatisticsSnapshotRoute
+  '/dashboard/statistics/timeline': typeof DashboardStatisticsTimelineRoute
+  '/dashboard/statistics/': typeof DashboardStatisticsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
   '/login': typeof LoginRoute
+  '/sign-in': typeof SignInRoute
+  '/sign-up': typeof SignUpRoute
+  '/dashboard/account': typeof DashboardAccountRoute
+  '/dashboard/billing': typeof DashboardBillingRoute
+  '/dashboard/groups': typeof DashboardGroupsRoute
+  '/dashboard/inventory': typeof DashboardInventoryRoute
+  '/dashboard/members': typeof DashboardMembersRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
+  '/dashboard': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/dashboard/statistics/members': typeof DashboardStatisticsMembersRoute
+  '/dashboard/statistics/snapshot': typeof DashboardStatisticsSnapshotRoute
+  '/dashboard/statistics/timeline': typeof DashboardStatisticsTimelineRoute
+  '/dashboard/statistics': typeof DashboardStatisticsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/dashboard': typeof DashboardRoute
+  '/dashboard': typeof DashboardRouteRouteWithChildren
   '/login': typeof LoginRoute
+  '/sign-in': typeof SignInRoute
+  '/sign-up': typeof SignUpRoute
+  '/dashboard/account': typeof DashboardAccountRoute
+  '/dashboard/billing': typeof DashboardBillingRoute
+  '/dashboard/groups': typeof DashboardGroupsRoute
+  '/dashboard/inventory': typeof DashboardInventoryRoute
+  '/dashboard/members': typeof DashboardMembersRoute
+  '/dashboard/settings': typeof DashboardSettingsRoute
+  '/dashboard/': typeof DashboardIndexRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/dashboard/statistics/members': typeof DashboardStatisticsMembersRoute
+  '/dashboard/statistics/snapshot': typeof DashboardStatisticsSnapshotRoute
+  '/dashboard/statistics/timeline': typeof DashboardStatisticsTimelineRoute
+  '/dashboard/statistics/': typeof DashboardStatisticsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/dashboard' | '/login' | '/api/auth/$' | '/api/rpc/$'
+  fullPaths:
+    | '/'
+    | '/dashboard'
+    | '/login'
+    | '/sign-in'
+    | '/sign-up'
+    | '/dashboard/account'
+    | '/dashboard/billing'
+    | '/dashboard/groups'
+    | '/dashboard/inventory'
+    | '/dashboard/members'
+    | '/dashboard/settings'
+    | '/dashboard/'
+    | '/api/auth/$'
+    | '/api/rpc/$'
+    | '/dashboard/statistics/members'
+    | '/dashboard/statistics/snapshot'
+    | '/dashboard/statistics/timeline'
+    | '/dashboard/statistics/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/dashboard' | '/login' | '/api/auth/$' | '/api/rpc/$'
-  id: '__root__' | '/' | '/dashboard' | '/login' | '/api/auth/$' | '/api/rpc/$'
+  to:
+    | '/'
+    | '/login'
+    | '/sign-in'
+    | '/sign-up'
+    | '/dashboard/account'
+    | '/dashboard/billing'
+    | '/dashboard/groups'
+    | '/dashboard/inventory'
+    | '/dashboard/members'
+    | '/dashboard/settings'
+    | '/dashboard'
+    | '/api/auth/$'
+    | '/api/rpc/$'
+    | '/dashboard/statistics/members'
+    | '/dashboard/statistics/snapshot'
+    | '/dashboard/statistics/timeline'
+    | '/dashboard/statistics'
+  id:
+    | '__root__'
+    | '/'
+    | '/dashboard'
+    | '/login'
+    | '/sign-in'
+    | '/sign-up'
+    | '/dashboard/account'
+    | '/dashboard/billing'
+    | '/dashboard/groups'
+    | '/dashboard/inventory'
+    | '/dashboard/members'
+    | '/dashboard/settings'
+    | '/dashboard/'
+    | '/api/auth/$'
+    | '/api/rpc/$'
+    | '/dashboard/statistics/members'
+    | '/dashboard/statistics/snapshot'
+    | '/dashboard/statistics/timeline'
+    | '/dashboard/statistics/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  DashboardRoute: typeof DashboardRoute
+  DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
+  SignInRoute: typeof SignInRoute
+  SignUpRoute: typeof SignUpRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sign-up': {
+      id: '/sign-up'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof SignUpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sign-in': {
+      id: '/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof SignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -92,7 +282,7 @@ declare module '@tanstack/react-router' {
       id: '/dashboard'
       path: '/dashboard'
       fullPath: '/dashboard'
-      preLoaderRoute: typeof DashboardRouteImport
+      preLoaderRoute: typeof DashboardRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -101,6 +291,83 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/dashboard/': {
+      id: '/dashboard/'
+      path: '/'
+      fullPath: '/dashboard/'
+      preLoaderRoute: typeof DashboardIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/settings': {
+      id: '/dashboard/settings'
+      path: '/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof DashboardSettingsRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/members': {
+      id: '/dashboard/members'
+      path: '/members'
+      fullPath: '/dashboard/members'
+      preLoaderRoute: typeof DashboardMembersRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/inventory': {
+      id: '/dashboard/inventory'
+      path: '/inventory'
+      fullPath: '/dashboard/inventory'
+      preLoaderRoute: typeof DashboardInventoryRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/groups': {
+      id: '/dashboard/groups'
+      path: '/groups'
+      fullPath: '/dashboard/groups'
+      preLoaderRoute: typeof DashboardGroupsRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/billing': {
+      id: '/dashboard/billing'
+      path: '/billing'
+      fullPath: '/dashboard/billing'
+      preLoaderRoute: typeof DashboardBillingRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/account': {
+      id: '/dashboard/account'
+      path: '/account'
+      fullPath: '/dashboard/account'
+      preLoaderRoute: typeof DashboardAccountRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/statistics/': {
+      id: '/dashboard/statistics/'
+      path: '/statistics'
+      fullPath: '/dashboard/statistics/'
+      preLoaderRoute: typeof DashboardStatisticsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/statistics/timeline': {
+      id: '/dashboard/statistics/timeline'
+      path: '/statistics/timeline'
+      fullPath: '/dashboard/statistics/timeline'
+      preLoaderRoute: typeof DashboardStatisticsTimelineRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/statistics/snapshot': {
+      id: '/dashboard/statistics/snapshot'
+      path: '/statistics/snapshot'
+      fullPath: '/dashboard/statistics/snapshot'
+      preLoaderRoute: typeof DashboardStatisticsSnapshotRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/statistics/members': {
+      id: '/dashboard/statistics/members'
+      path: '/statistics/members'
+      fullPath: '/dashboard/statistics/members'
+      preLoaderRoute: typeof DashboardStatisticsMembersRouteImport
+      parentRoute: typeof DashboardRouteRoute
     }
     '/api/rpc/$': {
       id: '/api/rpc/$'
@@ -119,10 +386,44 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface DashboardRouteRouteChildren {
+  DashboardAccountRoute: typeof DashboardAccountRoute
+  DashboardBillingRoute: typeof DashboardBillingRoute
+  DashboardGroupsRoute: typeof DashboardGroupsRoute
+  DashboardInventoryRoute: typeof DashboardInventoryRoute
+  DashboardMembersRoute: typeof DashboardMembersRoute
+  DashboardSettingsRoute: typeof DashboardSettingsRoute
+  DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardStatisticsMembersRoute: typeof DashboardStatisticsMembersRoute
+  DashboardStatisticsSnapshotRoute: typeof DashboardStatisticsSnapshotRoute
+  DashboardStatisticsTimelineRoute: typeof DashboardStatisticsTimelineRoute
+  DashboardStatisticsIndexRoute: typeof DashboardStatisticsIndexRoute
+}
+
+const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
+  DashboardAccountRoute: DashboardAccountRoute,
+  DashboardBillingRoute: DashboardBillingRoute,
+  DashboardGroupsRoute: DashboardGroupsRoute,
+  DashboardInventoryRoute: DashboardInventoryRoute,
+  DashboardMembersRoute: DashboardMembersRoute,
+  DashboardSettingsRoute: DashboardSettingsRoute,
+  DashboardIndexRoute: DashboardIndexRoute,
+  DashboardStatisticsMembersRoute: DashboardStatisticsMembersRoute,
+  DashboardStatisticsSnapshotRoute: DashboardStatisticsSnapshotRoute,
+  DashboardStatisticsTimelineRoute: DashboardStatisticsTimelineRoute,
+  DashboardStatisticsIndexRoute: DashboardStatisticsIndexRoute,
+}
+
+const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
+  DashboardRouteRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  DashboardRoute: DashboardRoute,
+  DashboardRouteRoute: DashboardRouteRouteWithChildren,
   LoginRoute: LoginRoute,
+  SignInRoute: SignInRoute,
+  SignUpRoute: SignUpRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
 }

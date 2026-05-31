@@ -6,6 +6,9 @@ import { TanStackRouterDevtools } from "@tanstack/react-router-devtools";
 import { createMiddleware } from "@tanstack/react-start";
 import { evlogErrorHandler } from "evlog/nitro/v3";
 
+import { AuthProvider } from "@/components/auth/auth-provider";
+import { ThemeProvider } from "@/components/theme-provider";
+import { sessionQueryOptions } from "@/functions/get-user";
 import type { orpc } from "@/utils/orpc";
 
 import appCss from "../index.css?url";
@@ -19,6 +22,12 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
     middleware: [createMiddleware().server(evlogErrorHandler)],
   },
 
+  // Resolve the session on the server and dehydrate it to the client so the
+  // auth-aware UI (e.g. the user menu) renders signed-in on first paint.
+  loader: async ({ context }) => {
+    await context.queryClient.ensureQueryData(sessionQueryOptions);
+  },
+
   head: () => ({
     meta: [
       {
@@ -29,7 +38,7 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
         content: "width=device-width, initial-scale=1",
       },
       {
-        title: "My App",
+        title: "matdesk",
       },
     ],
     links: [
@@ -45,15 +54,19 @@ export const Route = createRootRouteWithContext<RouterAppContext>()({
 
 function RootDocument() {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
       </head>
       <body>
-        <Outlet />
-        <Toaster richColors />
-        <TanStackRouterDevtools position="bottom-left" />
-        <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+        <ThemeProvider defaultTheme="system" storageKey="theme">
+          <AuthProvider>
+            <Outlet />
+            <Toaster richColors />
+            <TanStackRouterDevtools position="bottom-left" />
+            <ReactQueryDevtools position="bottom" buttonPosition="bottom-right" />
+          </AuthProvider>
+        </ThemeProvider>
         <Scripts />
       </body>
     </html>

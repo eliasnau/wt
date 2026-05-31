@@ -1,6 +1,6 @@
 {
   "$schema": "https://ui.shadcn.com/schema.json",
-  "style": "base-lyra",
+  "style": "base-nova",
   "rsc": false,
   "tsx": true,
   "tailwind": {
@@ -11,14 +11,16 @@
     "prefix": ""
   },
   "iconLibrary": "lucide",
+  "menuColor": "default",
+  "menuAccent": "subtle",
   "aliases": {
     "components": "@matdesk/ui/components",
     "utils": "@matdesk/ui/lib/utils",
-    "hooks": "@matdesk/ui/hooks",
+    "ui": "@matdesk/ui/components",
     "lib": "@matdesk/ui/lib",
-    "ui": "@matdesk/ui/components"
+    "hooks": "@matdesk/ui/hooks"
   },
-  "menuColor": "default",
-  "menuAccent": "subtle",
-  "registries": {}
+  "registries": {
+    "@coss": "https://coss.com/ui/r/{name}.json"
+  }
 }
