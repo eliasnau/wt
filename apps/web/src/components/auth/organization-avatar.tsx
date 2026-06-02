@@ -17,7 +17,9 @@ export function OrganizationAvatar({
     <Avatar className={cn("rounded-md", className)}>
       {logo ? <AvatarImage alt={name} src={logo} /> : null}
       <AvatarFallback className="rounded-md">
-        <DitherAvatar className="size-full" seed={id} />
+        {/* DitherAvatar defaults to a 50% (circular) borderRadius — square it off
+            so the Avatar's own rounded corners define the (slightly rounded) shape. */}
+        <DitherAvatar className="size-full" seed={id} style={{ borderRadius: 0 }} />
       </AvatarFallback>
     </Avatar>
   );

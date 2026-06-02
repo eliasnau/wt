@@ -1,5 +1,6 @@
 import { evlog } from "evlog/orpc";
 
+import { requireAdmin } from "./middlewares/admin";
 import { requireAuth } from "./middlewares/auth";
 import { identify } from "./middlewares/identify";
 import { requireOrganization } from "./middlewares/organization";
@@ -20,3 +21,9 @@ export const protectedProcedure = publicProcedure.use(requireAuth);
  * `requirePermission(...)` on top for per-resource permission checks.
  */
 export const orgProcedure = protectedProcedure.use(requireOrganization);
+
+/**
+ * Platform-admin base procedure: requires the better-auth admin-plugin
+ * `role === "admin"`. Operates across organizations, not scoped to one.
+ */
+export const adminProcedure = protectedProcedure.use(requireAdmin);

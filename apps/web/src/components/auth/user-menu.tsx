@@ -15,7 +15,7 @@ import {
 } from "@matdesk/ui/components/menu";
 import { Skeleton } from "@matdesk/ui/components/skeleton";
 import { Link, useNavigate } from "@tanstack/react-router";
-import { LogOutIcon, MoonIcon, SunIcon, UserIcon } from "lucide-react";
+import { LogOutIcon, MoonIcon, ShieldIcon, SunIcon, UserIcon } from "lucide-react";
 
 import { UserAvatar } from "@/components/auth/user-avatar";
 import { useAuth } from "@/components/auth/auth-provider";
@@ -63,6 +63,12 @@ export default function UserMenu() {
             <UserIcon />
             Account
           </MenuItem>
+          {user.role === "admin" ? (
+            <MenuItem render={<Link to="/admin" />}>
+              <ShieldIcon />
+              Admin
+            </MenuItem>
+          ) : null}
           <MenuSub>
             <MenuSubTrigger>
               <SunIcon aria-hidden="true" className="hidden dark:block" />
