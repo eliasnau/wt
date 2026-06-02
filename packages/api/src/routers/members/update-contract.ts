@@ -7,6 +7,7 @@ import { ymdInBerlin } from "../../domain/members/cancellation";
 import { membersErrors } from "../../errors";
 import { orgProcedure } from "../../index";
 import { requirePermission } from "../../middlewares/permissions";
+import { hasYearlyFeeBeenBilled } from "../../queries/billing";
 
 const ACTIVE_CONTRACT_STATUSES = new Set(["active", "cancelled"]);
 
@@ -29,6 +30,8 @@ export const updateMemberContract = orgProcedure
       .select({
         id: contract.id,
         status: contract.status,
+        startDate: contract.startDate,
+        yearlyFeeMode: contract.yearlyFeeMode,
         cancellationEffectiveDate: contract.cancellationEffectiveDate,
         joiningFeePaid: contract.joiningFeePaid,
       })
@@ -66,8 +69,13 @@ export const updateMemberContract = orgProcedure
       });
     }
 
-    // TODO(billing): gate `yearlyFeeCents` the same way once we port billing —
-    // see REWRITE_TODO.md → "Gate yearly fee updates after billing".
+    // Same lock for the yearly fee: once this cycle's yearly fee is on a
+    // non-void invoice, the amount can't be changed until that invoice is voided.
+    if (input.yearlyFeeCents !== undefined && (await hasYearlyFeeBeenBilled(db, row, today))) {
+      throw membersErrors.YEARLY_FEE_ALREADY_BILLED({
+        internal: { contractId: row.id },
+      });
+    }
 
     const [updated] = await db
       .update(contract)
@@ -75,12 +83,7 @@ export const updateMemberContract = orgProcedure
         joiningFeeCents: input.joiningFeeCents,
         yearlyFeeCents: input.yearlyFeeCents,
       })
-      .where(
-        and(
-          eq(contract.id, row.id),
-          eq(contract.organizationId, context.organizationId),
-        ),
-      )
+      .where(and(eq(contract.id, row.id), eq(contract.organizationId, context.organizationId)))
       .returning();
 
     if (!updated) {

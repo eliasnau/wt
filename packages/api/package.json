@@ -24,14 +24,18 @@
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
+    "@upstash/qstash": "^2.11.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.0",
     "dotenv": "catalog:",
     "evlog": "^2.18.1",
+    "sepa": "^3.0.0",
     "zod": "catalog:"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.2.17",
     "@matdesk/config": "workspace:*",
+    "drizzle-orm": "^0.45.1",
     "typescript": "catalog:",
     "vitest": "^3.2.4"
   }

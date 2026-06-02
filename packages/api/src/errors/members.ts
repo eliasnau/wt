@@ -43,6 +43,12 @@ export const membersErrors = defineErrorCatalog("members", {
     why: "The joining fee has already been added to an invoice for this member.",
     fix: "Void the invoice that contains the joining fee before changing the amount.",
   },
+  YEARLY_FEE_ALREADY_BILLED: {
+    status: 400,
+    message: "Yearly fee can't be changed",
+    why: "This cycle's yearly fee has already been added to an invoice for this member.",
+    fix: "Void the invoice that contains the yearly fee before changing the amount.",
+  },
   CANCELLATION_DATE_INVALID: {
     status: 400,
     message: "Invalid cancellation date",

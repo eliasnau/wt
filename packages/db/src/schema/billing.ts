@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   boolean,
   date,
@@ -8,6 +8,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from "drizzle-orm/pg-core";
 import { organization } from "./auth";
@@ -32,9 +33,7 @@ export const contract = pgTable(
     // always 1st of month
     startDate: date("start_date").notNull(),
     initialPeriodEndDate: date("initial_period_end_date").notNull(),
-    cancellationNoticeDays: integer("cancellation_notice_days")
-      .notNull()
-      .default(0),
+    cancellationNoticeDays: integer("cancellation_notice_days").notNull().default(0),
     // january | anniversary
     yearlyFeeMode: text("yearly_fee_mode").notNull().default("january"),
     settledThroughDate: date("settled_through_date"),
@@ -60,10 +59,7 @@ export const contract = pgTable(
     index("contract_member_id_idx").on(table.memberId),
     index("contract_org_id_idx").on(table.organizationId),
     // Statistics: per-month enrollment + active-member-baseline scans.
-    index("contract_org_start_date_idx").on(
-      table.organizationId,
-      table.startDate,
-    ),
+    index("contract_org_start_date_idx").on(table.organizationId, table.startDate),
     // Statistics: per-month cancellation (churn) scans.
     index("contract_org_cancellation_effective_idx").on(
       table.organizationId,
@@ -103,6 +99,11 @@ export const sepaMandate = pgTable(
     index("sepa_mandate_member_idx").on(table.memberId),
     index("sepa_mandate_contract_idx").on(table.contractId),
     unique("sepa_mandate_reference_unique").on(table.mandateReference),
+    // At most one active mandate per contract — DB-level guard that complements
+    // the per-contract advisory lock in createSepaMandate.
+    uniqueIndex("sepa_mandate_active_unique_idx")
+      .on(table.contractId)
+      .where(sql`${table.isActive} = true`),
   ],
 );
 
@@ -278,10 +279,7 @@ export const sepaBatchItem = pgTable(
     index("sepa_batch_item_org_idx").on(table.organizationId),
     index("sepa_batch_item_batch_idx").on(table.sepaBatchId),
     index("sepa_batch_item_invoice_idx").on(table.invoiceId),
-    unique("sepa_batch_item_batch_invoice_unique").on(
-      table.sepaBatchId,
-      table.invoiceId,
-    ),
+    unique("sepa_batch_item_batch_invoice_unique").on(table.sepaBatchId, table.invoiceId),
   ],
 );
 
@@ -307,9 +305,7 @@ export const organizationSettings = pgTable(
       .$onUpdate(() => new Date())
       .notNull(),
   },
-  (table) => [
-    index("organization_settings_org_id_idx").on(table.organizationId),
-  ],
+  (table) => [index("organization_settings_org_id_idx").on(table.organizationId)],
 );
 
 export const contractRelations = relations(contract, ({ one, many }) => ({

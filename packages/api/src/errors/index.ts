@@ -6,6 +6,7 @@
 
 import type { adminErrors } from "./admin";
 import type { authErrors } from "./auth";
+import type { billingErrors } from "./billing";
 import type { groupsErrors } from "./groups";
 import type { inventoryErrors } from "./inventory";
 import type { membersErrors } from "./members";
@@ -15,6 +16,7 @@ import type { statisticsErrors } from "./statistics";
 
 export { adminErrors } from "./admin";
 export { authErrors } from "./auth";
+export { billingErrors } from "./billing";
 export { groupsErrors } from "./groups";
 export { inventoryErrors } from "./inventory";
 export { membersErrors } from "./members";
@@ -26,6 +28,7 @@ declare module "evlog" {
   interface RegisteredErrorCatalogs {
     admin: typeof adminErrors;
     auth: typeof authErrors;
+    billing: typeof billingErrors;
     groups: typeof groupsErrors;
     inventory: typeof inventoryErrors;
     members: typeof membersErrors;
