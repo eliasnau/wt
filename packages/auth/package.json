@@ -17,7 +17,7 @@
     "@better-auth/core": "1.6.5",
     "@better-auth/infra": "^0.2.4",
     "@better-auth/passkey": "^1.6.5",
-    "@better-auth/sso": "1.6.5",
+    "@better-auth/sso": "1.6.11",
     "@paralleldrive/cuid2": "^3.3.0",
     "@repo/db": "workspace:*",
     "@repo/emails": "workspace:*",
