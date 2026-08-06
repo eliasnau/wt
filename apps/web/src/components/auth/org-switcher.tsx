@@ -34,6 +34,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/components/auth/auth-provider";
 import { NoOrganization } from "@/components/auth/no-organization";
 import { OrganizationAvatar } from "@/components/auth/organization-avatar";
+import { queryClient } from "@/utils/orpc";
 
 const CREATE_ITEM_VALUE = "create-new";
 
@@ -97,7 +98,10 @@ export function OrgSwitcher() {
 
   const switchOrganization = useMutation({
     mutationFn: (organizationId: string) => setActiveOrganization(organizationId),
-    onSuccess: () => setOpen(false),
+    onSuccess: async () => {
+      await queryClient.resetQueries();
+      setOpen(false);
+    },
     onError: (error) => toast.error(parseError(error).message),
   });
 
