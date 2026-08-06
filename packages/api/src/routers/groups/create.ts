@@ -12,6 +12,7 @@ const input = z.object({
   description: z.string().max(1000).optional(),
   color: groupColorSchema,
   defaultMembershipPriceCents: z.number().int().nonnegative().optional(),
+  progressionSystemId: z.string().trim().min(1).nullish(),
 });
 
 export const createGroup = orgProcedure
@@ -19,6 +20,17 @@ export const createGroup = orgProcedure
   .use(requirePermission({ groups: ["create"] }))
   .input(input)
   .handler(async ({ input, context }) => {
+    if (input.progressionSystemId) {
+      const [system] = await db.query.progressionSystem.findMany({
+        where: (table, { and, eq }) =>
+          and(
+            eq(table.id, input.progressionSystemId!),
+            eq(table.organizationId, context.organizationId),
+          ),
+        limit: 1,
+      });
+      if (!system) throw createError({ message: "Graduation system not found", status: 404 });
+    }
     const [created] = await db
       .insert(group)
       .values({ ...input, organizationId: context.organizationId })

@@ -52,6 +52,7 @@ import { AssignGroupDialog } from "@/components/dashboard/members/assign-group-d
 import { MemberContractSheet } from "@/components/dashboard/members/member-contract-sheet";
 import { MemberCreditsCard } from "@/components/dashboard/members/member-credits-card";
 import { MemberDetailsSheet } from "@/components/dashboard/members/member-details-sheet";
+import { MemberProgressionCard } from "@/components/dashboard/members/member-progression-card";
 import { UserAvatar } from "@/components/auth/user-avatar";
 import { formatCents, formatDate } from "@/lib/format";
 import { client, orpc, queryClient } from "@/utils/orpc";
@@ -438,6 +439,8 @@ function MemberDetail({ member }: { member: Member }) {
           </TableBody>
         </Table>
       </CardFrame>
+
+      <MemberProgressionCard memberId={member.id} />
 
       {/* 3) Contract */}
       <CardFrame>

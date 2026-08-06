@@ -12,6 +12,7 @@ import type { eventsErrors } from "./events";
 import type { inventoryErrors } from "./inventory";
 import type { membersErrors } from "./members";
 import type { orgErrors } from "./org";
+import type { progressionErrors } from "./progression";
 import type { ratelimitErrors } from "./ratelimit";
 import type { statisticsErrors } from "./statistics";
 
@@ -23,6 +24,7 @@ export { eventsErrors } from "./events";
 export { inventoryErrors } from "./inventory";
 export { membersErrors } from "./members";
 export { orgErrors } from "./org";
+export { progressionErrors } from "./progression";
 export { ratelimitErrors } from "./ratelimit";
 export { statisticsErrors } from "./statistics";
 
@@ -36,6 +38,7 @@ declare module "evlog" {
     inventory: typeof inventoryErrors;
     members: typeof membersErrors;
     org: typeof orgErrors;
+    progression: typeof progressionErrors;
     ratelimit: typeof ratelimitErrors;
     statistics: typeof statisticsErrors;
   }

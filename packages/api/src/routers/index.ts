@@ -7,6 +7,7 @@ import { groupsRouter } from "./groups/router";
 import { eventsRouter } from "./events/router";
 import { inventoryRouter } from "./inventory/router";
 import { membersRouter } from "./members/router";
+import { progressionRouter } from "./progression/router";
 import { statisticsRouter } from "./statistics/router";
 
 const healthCheck = publicProcedure.handler(() => {
@@ -26,6 +27,7 @@ type AppRouterDefinition = {
   groups: typeof groupsRouter;
   events: typeof eventsRouter;
   members: typeof membersRouter;
+  progression: typeof progressionRouter;
   inventory: typeof inventoryRouter;
   statistics: typeof statisticsRouter;
   billing: typeof billingRouter;
@@ -40,6 +42,7 @@ export const appRouter: AppRouterDefinition = {
   groups: groupsRouter,
   events: eventsRouter,
   members: membersRouter,
+  progression: progressionRouter,
   inventory: inventoryRouter,
   statistics: statisticsRouter,
   billing: billingRouter,
