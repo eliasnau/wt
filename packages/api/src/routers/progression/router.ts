@@ -1,0 +1,33 @@
+import {
+  assignGroupProgressionSystem,
+  awardProgressionRank,
+  createProgressionRank,
+  createProgressionPreset,
+  createProgressionSystem,
+  deleteProgressionRank,
+  deleteProgressionAward,
+  deleteProgressionSystem,
+  listMemberProgression,
+  listProgressionSystems,
+  reorderProgressionRanks,
+  updateProgressionRank,
+  updateProgressionAward,
+  updateProgressionSystem,
+} from "./procedures";
+
+export const progressionRouter = {
+  listSystems: listProgressionSystems,
+  createSystem: createProgressionSystem,
+  createPreset: createProgressionPreset,
+  updateSystem: updateProgressionSystem,
+  deleteSystem: deleteProgressionSystem,
+  createRank: createProgressionRank,
+  updateRank: updateProgressionRank,
+  deleteRank: deleteProgressionRank,
+  reorderRanks: reorderProgressionRanks,
+  listMemberRanks: listMemberProgression,
+  awardRank: awardProgressionRank,
+  updateAward: updateProgressionAward,
+  deleteAward: deleteProgressionAward,
+  assignGroup: assignGroupProgressionSystem,
+};

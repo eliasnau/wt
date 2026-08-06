@@ -14,6 +14,7 @@ import {
   SlidersHorizontalIcon,
   TrendingUpIcon,
   UsersIcon,
+  AwardIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -71,6 +72,11 @@ export const navGroups: NavGroup[] = [
         title: "Veranstaltungen",
         path: "/dashboard/events",
         icon: <CalendarDaysIcon />,
+      },
+      {
+        title: "Graduierungen",
+        path: "/dashboard/progression",
+        icon: <AwardIcon />,
       },
       {
         title: "Statistiken",

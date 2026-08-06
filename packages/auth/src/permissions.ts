@@ -43,6 +43,17 @@ const PERMISSION_SPEC = {
       delete: { label: "Löschen", description: "Veranstaltungen löschen." },
     },
   },
+  progression: {
+    label: "Graduierungen",
+    actions: {
+      view: {
+        label: "Ansehen",
+        description: "Graduierungssysteme und verliehene Graduierungen ansehen.",
+      },
+      configure: { label: "Konfigurieren", description: "Systeme und Graduierungen verwalten." },
+      award: { label: "Vergeben", description: "Graduierungen an Mitglieder vergeben." },
+    },
+  },
   inventory: {
     label: "Inventar",
     actions: {
@@ -173,6 +184,7 @@ export const member = ac.newRole({
   member: ["view"],
   groups: ["view"],
   events: ["view"],
+  progression: ["view"],
   inventory: ["view"],
   ai: ["chat"],
 });

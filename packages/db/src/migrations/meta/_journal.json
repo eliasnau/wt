@@ -22,6 +22,13 @@
       "when": 1786047719456,
       "tag": "0002_common_liz_osborn",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1786052457111,
+      "tag": "0003_bitter_colleen_wing",
+      "breakpoints": true
     }
   ]
 }

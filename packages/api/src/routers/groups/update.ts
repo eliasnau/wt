@@ -17,6 +17,7 @@ const input = z.object({
   // `nullish` lets the caller explicitly clear the default price (send `null`).
   // `undefined` means "no change".
   defaultMembershipPriceCents: z.number().int().nonnegative().nullish(),
+  progressionSystemId: z.string().trim().min(1).nullish(),
 });
 
 export const updateGroup = orgProcedure
@@ -28,9 +29,7 @@ export const updateGroup = orgProcedure
 
     // Drop undefined fields so they don't clobber existing values with NULL;
     // an explicit `null` (for `defaultMembershipPriceCents`) is kept.
-    const cleanPatch = Object.fromEntries(
-      Object.entries(patch).filter(([, v]) => v !== undefined),
-    );
+    const cleanPatch = Object.fromEntries(Object.entries(patch).filter(([, v]) => v !== undefined));
     if (Object.keys(cleanPatch).length === 0) {
       throw groupsErrors.NOTHING_TO_UPDATE();
     }
@@ -42,15 +41,22 @@ export const updateGroup = orgProcedure
       });
     }
 
+    if (input.progressionSystemId) {
+      const [system] = await db.query.progressionSystem.findMany({
+        where: (table, { and, eq }) =>
+          and(
+            eq(table.id, input.progressionSystemId!),
+            eq(table.organizationId, context.organizationId),
+          ),
+        limit: 1,
+      });
+      if (!system) throw createError({ message: "Graduation system not found", status: 404 });
+    }
+
     const [updated] = await db
       .update(group)
       .set(cleanPatch)
-      .where(
-        and(
-          eq(group.id, id),
-          eq(group.organizationId, context.organizationId),
-        ),
-      )
+      .where(and(eq(group.id, id), eq(group.organizationId, context.organizationId)))
       .returning();
 
     if (!updated) {

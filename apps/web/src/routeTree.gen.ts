@@ -33,6 +33,7 @@ import { Route as DashboardSettingsRouteRouteImport } from './routes/dashboard/s
 import { Route as DashboardFinanceRouteRouteImport } from './routes/dashboard/finance/route'
 import { Route as DashboardStatisticsIndexRouteImport } from './routes/dashboard/statistics/index'
 import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
+import { Route as DashboardProgressionIndexRouteImport } from './routes/dashboard/progression/index'
 import { Route as DashboardMembersIndexRouteImport } from './routes/dashboard/members/index'
 import { Route as DashboardInventoryIndexRouteImport } from './routes/dashboard/inventory/index'
 import { Route as DashboardFinanceIndexRouteImport } from './routes/dashboard/finance/index'
@@ -44,6 +45,7 @@ import { Route as DashboardStatisticsSnapshotRouteImport } from './routes/dashbo
 import { Route as DashboardStatisticsMembersRouteImport } from './routes/dashboard/statistics/members'
 import { Route as DashboardSettingsTeamRouteImport } from './routes/dashboard/settings/team'
 import { Route as DashboardSettingsSepaRouteImport } from './routes/dashboard/settings/sepa'
+import { Route as DashboardProgressionSystemIdRouteImport } from './routes/dashboard/progression/$systemId'
 import { Route as DashboardMembersNewRouteImport } from './routes/dashboard/members/new'
 import { Route as DashboardMembersMemberIdRouteImport } from './routes/dashboard/members/$memberId'
 import { Route as DashboardInventoryProductIdRouteImport } from './routes/dashboard/inventory/$productId'
@@ -174,6 +176,12 @@ const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardSettingsRouteRoute,
 } as any)
+const DashboardProgressionIndexRoute =
+  DashboardProgressionIndexRouteImport.update({
+    id: '/progression/',
+    path: '/progression/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardMembersIndexRoute = DashboardMembersIndexRouteImport.update({
   id: '/members/',
   path: '/members/',
@@ -232,6 +240,12 @@ const DashboardSettingsSepaRoute = DashboardSettingsSepaRouteImport.update({
   path: '/sepa',
   getParentRoute: () => DashboardSettingsRouteRoute,
 } as any)
+const DashboardProgressionSystemIdRoute =
+  DashboardProgressionSystemIdRouteImport.update({
+    id: '/progression/$systemId',
+    path: '/progression/$systemId',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardMembersNewRoute = DashboardMembersNewRouteImport.update({
   id: '/members/new',
   path: '/members/new',
@@ -312,6 +326,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/inventory/$productId': typeof DashboardInventoryProductIdRoute
   '/dashboard/members/$memberId': typeof DashboardMembersMemberIdRoute
   '/dashboard/members/new': typeof DashboardMembersNewRoute
+  '/dashboard/progression/$systemId': typeof DashboardProgressionSystemIdRoute
   '/dashboard/settings/sepa': typeof DashboardSettingsSepaRoute
   '/dashboard/settings/team': typeof DashboardSettingsTeamRoute
   '/dashboard/statistics/members': typeof DashboardStatisticsMembersRoute
@@ -323,6 +338,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/finance/': typeof DashboardFinanceIndexRoute
   '/dashboard/inventory/': typeof DashboardInventoryIndexRoute
   '/dashboard/members/': typeof DashboardMembersIndexRoute
+  '/dashboard/progression/': typeof DashboardProgressionIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/dashboard/statistics/': typeof DashboardStatisticsIndexRoute
 }
@@ -352,6 +368,7 @@ export interface FileRoutesByTo {
   '/dashboard/inventory/$productId': typeof DashboardInventoryProductIdRoute
   '/dashboard/members/$memberId': typeof DashboardMembersMemberIdRoute
   '/dashboard/members/new': typeof DashboardMembersNewRoute
+  '/dashboard/progression/$systemId': typeof DashboardProgressionSystemIdRoute
   '/dashboard/settings/sepa': typeof DashboardSettingsSepaRoute
   '/dashboard/settings/team': typeof DashboardSettingsTeamRoute
   '/dashboard/statistics/members': typeof DashboardStatisticsMembersRoute
@@ -363,6 +380,7 @@ export interface FileRoutesByTo {
   '/dashboard/finance': typeof DashboardFinanceIndexRoute
   '/dashboard/inventory': typeof DashboardInventoryIndexRoute
   '/dashboard/members': typeof DashboardMembersIndexRoute
+  '/dashboard/progression': typeof DashboardProgressionIndexRoute
   '/dashboard/settings': typeof DashboardSettingsIndexRoute
   '/dashboard/statistics': typeof DashboardStatisticsIndexRoute
 }
@@ -399,6 +417,7 @@ export interface FileRoutesById {
   '/dashboard/inventory/$productId': typeof DashboardInventoryProductIdRoute
   '/dashboard/members/$memberId': typeof DashboardMembersMemberIdRoute
   '/dashboard/members/new': typeof DashboardMembersNewRoute
+  '/dashboard/progression/$systemId': typeof DashboardProgressionSystemIdRoute
   '/dashboard/settings/sepa': typeof DashboardSettingsSepaRoute
   '/dashboard/settings/team': typeof DashboardSettingsTeamRoute
   '/dashboard/statistics/members': typeof DashboardStatisticsMembersRoute
@@ -410,6 +429,7 @@ export interface FileRoutesById {
   '/dashboard/finance/': typeof DashboardFinanceIndexRoute
   '/dashboard/inventory/': typeof DashboardInventoryIndexRoute
   '/dashboard/members/': typeof DashboardMembersIndexRoute
+  '/dashboard/progression/': typeof DashboardProgressionIndexRoute
   '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/dashboard/statistics/': typeof DashboardStatisticsIndexRoute
 }
@@ -446,6 +466,7 @@ export interface FileRouteTypes {
     | '/dashboard/inventory/$productId'
     | '/dashboard/members/$memberId'
     | '/dashboard/members/new'
+    | '/dashboard/progression/$systemId'
     | '/dashboard/settings/sepa'
     | '/dashboard/settings/team'
     | '/dashboard/statistics/members'
@@ -457,6 +478,7 @@ export interface FileRouteTypes {
     | '/dashboard/finance/'
     | '/dashboard/inventory/'
     | '/dashboard/members/'
+    | '/dashboard/progression/'
     | '/dashboard/settings/'
     | '/dashboard/statistics/'
   fileRoutesByTo: FileRoutesByTo
@@ -486,6 +508,7 @@ export interface FileRouteTypes {
     | '/dashboard/inventory/$productId'
     | '/dashboard/members/$memberId'
     | '/dashboard/members/new'
+    | '/dashboard/progression/$systemId'
     | '/dashboard/settings/sepa'
     | '/dashboard/settings/team'
     | '/dashboard/statistics/members'
@@ -497,6 +520,7 @@ export interface FileRouteTypes {
     | '/dashboard/finance'
     | '/dashboard/inventory'
     | '/dashboard/members'
+    | '/dashboard/progression'
     | '/dashboard/settings'
     | '/dashboard/statistics'
   id:
@@ -532,6 +556,7 @@ export interface FileRouteTypes {
     | '/dashboard/inventory/$productId'
     | '/dashboard/members/$memberId'
     | '/dashboard/members/new'
+    | '/dashboard/progression/$systemId'
     | '/dashboard/settings/sepa'
     | '/dashboard/settings/team'
     | '/dashboard/statistics/members'
@@ -543,6 +568,7 @@ export interface FileRouteTypes {
     | '/dashboard/finance/'
     | '/dashboard/inventory/'
     | '/dashboard/members/'
+    | '/dashboard/progression/'
     | '/dashboard/settings/'
     | '/dashboard/statistics/'
   fileRoutesById: FileRoutesById
@@ -728,6 +754,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardSettingsIndexRouteImport
       parentRoute: typeof DashboardSettingsRouteRoute
     }
+    '/dashboard/progression/': {
+      id: '/dashboard/progression/'
+      path: '/progression'
+      fullPath: '/dashboard/progression/'
+      preLoaderRoute: typeof DashboardProgressionIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/members/': {
       id: '/dashboard/members/'
       path: '/members'
@@ -804,6 +837,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/settings/sepa'
       preLoaderRoute: typeof DashboardSettingsSepaRouteImport
       parentRoute: typeof DashboardSettingsRouteRoute
+    }
+    '/dashboard/progression/$systemId': {
+      id: '/dashboard/progression/$systemId'
+      path: '/progression/$systemId'
+      fullPath: '/dashboard/progression/$systemId'
+      preLoaderRoute: typeof DashboardProgressionSystemIdRouteImport
+      parentRoute: typeof DashboardRouteRoute
     }
     '/dashboard/members/new': {
       id: '/dashboard/members/new'
@@ -953,12 +993,14 @@ interface DashboardRouteRouteChildren {
   DashboardInventoryProductIdRoute: typeof DashboardInventoryProductIdRoute
   DashboardMembersMemberIdRoute: typeof DashboardMembersMemberIdRoute
   DashboardMembersNewRoute: typeof DashboardMembersNewRoute
+  DashboardProgressionSystemIdRoute: typeof DashboardProgressionSystemIdRoute
   DashboardStatisticsMembersRoute: typeof DashboardStatisticsMembersRoute
   DashboardStatisticsSnapshotRoute: typeof DashboardStatisticsSnapshotRoute
   DashboardStatisticsTimelineRoute: typeof DashboardStatisticsTimelineRoute
   DashboardEventsIndexRoute: typeof DashboardEventsIndexRoute
   DashboardInventoryIndexRoute: typeof DashboardInventoryIndexRoute
   DashboardMembersIndexRoute: typeof DashboardMembersIndexRoute
+  DashboardProgressionIndexRoute: typeof DashboardProgressionIndexRoute
   DashboardStatisticsIndexRoute: typeof DashboardStatisticsIndexRoute
 }
 
@@ -973,12 +1015,14 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardInventoryProductIdRoute: DashboardInventoryProductIdRoute,
   DashboardMembersMemberIdRoute: DashboardMembersMemberIdRoute,
   DashboardMembersNewRoute: DashboardMembersNewRoute,
+  DashboardProgressionSystemIdRoute: DashboardProgressionSystemIdRoute,
   DashboardStatisticsMembersRoute: DashboardStatisticsMembersRoute,
   DashboardStatisticsSnapshotRoute: DashboardStatisticsSnapshotRoute,
   DashboardStatisticsTimelineRoute: DashboardStatisticsTimelineRoute,
   DashboardEventsIndexRoute: DashboardEventsIndexRoute,
   DashboardInventoryIndexRoute: DashboardInventoryIndexRoute,
   DashboardMembersIndexRoute: DashboardMembersIndexRoute,
+  DashboardProgressionIndexRoute: DashboardProgressionIndexRoute,
   DashboardStatisticsIndexRoute: DashboardStatisticsIndexRoute,
 }
 

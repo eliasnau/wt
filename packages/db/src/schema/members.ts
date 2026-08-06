@@ -14,6 +14,7 @@ import {
   uuid,
 } from "drizzle-orm/pg-core";
 import { organization } from "./auth";
+import { progressionSystem } from "./progression";
 
 export const clubMember = pgTable(
   "club_member",
@@ -60,6 +61,9 @@ export const group = pgTable("group", {
   description: text("description"),
   color: text("color").default("#000000").notNull(),
   defaultMembershipPriceCents: integer("default_membership_price_cents"),
+  progressionSystemId: uuid("progression_system_id").references(() => progressionSystem.id, {
+    onDelete: "set null",
+  }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at")
     .defaultNow()
@@ -99,11 +103,7 @@ export const groupMember = pgTable(
       .on(table.groupId, table.memberId)
       .where(sql`${table.endDate} IS NULL`),
     // Speeds up "members in group X during range [start, end]" overlap queries.
-    index("group_member_range_idx").on(
-      table.groupId,
-      table.startDate,
-      table.endDate,
-    ),
+    index("group_member_range_idx").on(table.groupId, table.startDate, table.endDate),
   ],
 );
 
@@ -165,8 +165,12 @@ export const clubMemberRelations = relations(clubMember, ({ many }) => ({
   // contracts relation is declared from billing.ts side via contract.memberId
 }));
 
-export const groupRelations = relations(group, ({ many }) => ({
+export const groupRelations = relations(group, ({ one, many }) => ({
   groupMembers: many(groupMember),
+  progressionSystem: one(progressionSystem, {
+    fields: [group.progressionSystemId],
+    references: [progressionSystem.id],
+  }),
 }));
 
 export const groupMemberRelations = relations(groupMember, ({ one }) => ({
@@ -180,12 +184,9 @@ export const groupMemberRelations = relations(groupMember, ({ one }) => ({
   }),
 }));
 
-export const selfRegistrationRelations = relations(
-  selfRegistration,
-  ({ one }) => ({
-    organization: one(organization, {
-      fields: [selfRegistration.organizationId],
-      references: [organization.id],
-    }),
+export const selfRegistrationRelations = relations(selfRegistration, ({ one }) => ({
+  organization: one(organization, {
+    fields: [selfRegistration.organizationId],
+    references: [organization.id],
   }),
-);
+}));
