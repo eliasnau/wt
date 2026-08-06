@@ -1,5 +1,5 @@
-import { db } from "@matdesk/db";
-import { clubMember, contract, sepaMandate } from "@matdesk/db/schema";
+import { and, db, eq, inArray } from "@matdesk/db";
+import { clubMember, contract, group, groupMember, sepaMandate } from "@matdesk/db/schema";
 import { createError } from "evlog";
 import { z } from "zod";
 
@@ -7,6 +7,8 @@ import { ymdInBerlin } from "../../domain/members/cancellation";
 import { calculateInitialPeriodEndDate } from "../../domain/members/contract";
 import { generateMandateReference } from "../../domain/members/mandate-ref";
 import { geocodeAddress } from "../../integrations/geocoding";
+import { validateIban } from "../../integrations/sepa";
+import { groupsErrors, membersErrors } from "../../errors";
 import { orgProcedure } from "../../index";
 import { requirePermission } from "../../middlewares/permissions";
 import {
@@ -58,6 +60,17 @@ const input = addressSchema.extend({
   guardianName: optionalShortText,
   guardianEmail: optionalEmail,
   guardianPhone: optionalPhone,
+
+  // Groups to assign on creation. Price defaults to the group's default when
+  // omitted; an empty/omitted array assigns none.
+  groups: z
+    .array(
+      z.object({
+        groupId: z.uuid(),
+        membershipPriceCents: z.number().int().nonnegative().optional(),
+      }),
+    )
+    .optional(),
 });
 
 export const createMember = orgProcedure
@@ -65,6 +78,10 @@ export const createMember = orgProcedure
   .use(requirePermission({ member: ["create"] }))
   .input(input)
   .handler(async ({ input, context }) => {
+    if (!(await validateIban(input.iban))) {
+      throw membersErrors.INVALID_IBAN({ internal: { reason: "member iban" } });
+    }
+
     const initialPeriodEndDate = calculateInitialPeriodEndDate(
       input.contractStartDate,
       input.initialPeriod,
@@ -72,14 +89,17 @@ export const createMember = orgProcedure
     const signatureDate = ymdInBerlin(new Date());
     const mandateReference = generateMandateReference();
 
-    // Geocode before opening the transaction — the external call (up to 8s)
-    // must not hold a DB connection. Fails soft to null coordinates.
-    const geo = await geocodeAddress({
-      street: input.street,
-      postalCode: input.postalCode,
-      city: input.city,
-      country: input.country,
-    });
+    // Geocode before opening the transaction — never hold a tx open across a
+    // network call. Fails soft to `null` (the member just has no map pin).
+    const geo = await geocodeAddress(
+      {
+        street: input.street,
+        postalCode: input.postalCode,
+        city: input.city,
+        country: input.country,
+      },
+      context.log,
+    );
 
     const result = await db.transaction(async (tx) => {
       const [member] = await tx
@@ -96,6 +116,8 @@ export const createMember = orgProcedure
           state: input.state,
           postalCode: input.postalCode,
           country: input.country,
+          // Resolved above; null when the address couldn't be geocoded — the
+          // member is created either way, just without a map pin.
           latitude: geo?.latitude ?? null,
           longitude: geo?.longitude ?? null,
           iban: input.iban,
@@ -158,6 +180,44 @@ export const createMember = orgProcedure
           status: 500,
           internal: { reason: "INSERT sepaMandate returned no row" },
         });
+      }
+
+      // Assign requested groups. Validate they belong to the org, then insert
+      // one membership per group using the provided price (falling back to the
+      // group's default). Last entry wins for any duplicate groupId.
+      const priceByGroupId = new Map(
+        (input.groups ?? []).map((g) => [g.groupId, g.membershipPriceCents]),
+      );
+      const uniqueGroupIds = [...priceByGroupId.keys()];
+      if (uniqueGroupIds.length > 0) {
+        const groups = await tx
+          .select({
+            id: group.id,
+            defaultPriceCents: group.defaultMembershipPriceCents,
+          })
+          .from(group)
+          .where(
+            and(
+              eq(group.organizationId, context.organizationId),
+              inArray(group.id, uniqueGroupIds),
+            ),
+          );
+
+        if (groups.length !== uniqueGroupIds.length) {
+          const found = new Set(groups.map((g) => g.id));
+          const missing = uniqueGroupIds.find((id) => !found.has(id));
+          throw groupsErrors.NOT_FOUND({ internal: { groupId: missing } });
+        }
+
+        await tx.insert(groupMember).values(
+          groups.map((g) => ({
+            memberId: member.id,
+            groupId: g.id,
+            membershipPriceCents:
+              priceByGroupId.get(g.id) ?? g.defaultPriceCents ?? 0,
+            startDate: signatureDate,
+          })),
+        );
       }
 
       return { member, contract: newContract, sepaMandate: mandate };

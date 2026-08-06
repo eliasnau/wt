@@ -183,8 +183,8 @@ export function createAuth(): Auth<any> {
           ]
         : []),
 
-      tanstackStartCookies(),
       expo(),
+      tanstackStartCookies(),
     ],
   });
 }

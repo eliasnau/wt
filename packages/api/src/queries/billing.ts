@@ -201,6 +201,8 @@ export async function loadActiveCreditGrants(
         eq(creditGrant.organizationId, params.organizationId),
         eq(creditGrant.memberId, params.memberId),
         eq(creditGrant.contractId, params.contractId),
+        // Revoked grants are excluded from allocation but keep their history.
+        isNull(creditGrant.revokedAt),
         or(isNull(creditGrant.validFrom), lte(creditGrant.validFrom, params.monthStart)),
         or(isNull(creditGrant.expiresAt), gte(creditGrant.expiresAt, params.monthStart)),
       ),
@@ -355,6 +357,7 @@ export type BatchEligibilityData = {
 export async function loadBatchEligibility(
   executor: BillingExecutor,
   organizationId: string,
+  throughDate?: string,
 ): Promise<BatchEligibilityData> {
   const invoices = await executor
     .select({
@@ -374,6 +377,7 @@ export async function loadBatchEligibility(
         eq(invoice.organizationId, organizationId),
         eq(invoice.status, "finalized"),
         sql`${invoice.totalCents} > 0`,
+        throughDate ? lte(invoice.billingPeriodStart, throughDate) : undefined,
       ),
     )
     .orderBy(asc(invoice.billingPeriodStart), asc(clubMember.lastName), asc(clubMember.firstName));

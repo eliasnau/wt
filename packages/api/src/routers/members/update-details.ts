@@ -9,12 +9,7 @@ import { membersErrors } from "../../errors";
 import { orgProcedure } from "../../index";
 import { requirePermission } from "../../middlewares/permissions";
 import { getMemberById } from "../../queries/members";
-import {
-  addressSchema,
-  optionalEmail,
-  optionalPhone,
-  optionalYmdSchema,
-} from "./schemas";
+import { addressSchema, optionalEmail, optionalPhone, optionalYmdSchema } from "./schemas";
 
 const input = addressSchema.extend({
   memberId: z.uuid(),
@@ -30,10 +25,7 @@ export const updateMemberDetails = orgProcedure
   .use(requirePermission({ member: ["update"] }))
   .input(input)
   .handler(async ({ input, context }) => {
-    const existing = await getMemberById(
-      input.memberId,
-      context.organizationId,
-    );
+    const existing = await getMemberById(input.memberId, context.organizationId);
     if (!existing) {
       throw membersErrors.NOT_FOUND({
         internal: {
@@ -45,15 +37,22 @@ export const updateMemberDetails = orgProcedure
 
     // Re-geocode only when an address field that affects the lookup changed —
     // avoids a network round-trip (and rate-limit pressure) on every edit.
-    // Done before the UPDATE so the call doesn't hold a DB connection.
     const addressChanged = addressAffectsGeocode(existing, input);
+
+    // Geocode before the UPDATE (fails soft to `null`). When the address changed
+    // but the lookup failed we deliberately write `null` for both coordinates:
+    // stale coordinates pointing at the member's *previous* address are worse
+    // than no pin at all.
     const geo = addressChanged
-      ? await geocodeAddress({
-          street: input.street,
-          postalCode: input.postalCode,
-          city: input.city,
-          country: input.country,
-        })
+      ? await geocodeAddress(
+          {
+            street: input.street,
+            postalCode: input.postalCode,
+            city: input.city,
+            country: input.country,
+          },
+          context.log,
+        )
       : null;
 
     const [updated] = await db
@@ -69,8 +68,9 @@ export const updateMemberDetails = orgProcedure
         state: input.state,
         postalCode: input.postalCode,
         country: input.country,
-        // Only overwrite coordinates when we re-geocoded; otherwise leave the
-        // stored lat/lng untouched.
+        // Only touch the coordinates when the address actually changed —
+        // otherwise the columns stay out of the `set` entirely so an existing
+        // pin (e.g. from a back-fill) survives a plain name/email edit.
         ...(addressChanged
           ? { latitude: geo?.latitude ?? null, longitude: geo?.longitude ?? null }
           : {}),
@@ -94,7 +94,12 @@ export const updateMemberDetails = orgProcedure
     context.log?.set({
       data: {
         member: { id: updated.id },
-        geocoding: { changed: addressChanged, ok: geo !== null },
+        // `ok` only when a lookup actually ran — a bare `ok: false` on every
+        // name-only edit would skew any geocode-failure-rate query.
+        geocoding: {
+          changed: addressChanged,
+          ...(addressChanged ? { ok: geo !== null } : {}),
+        },
       },
     });
     return updated;

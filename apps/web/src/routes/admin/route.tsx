@@ -9,9 +9,9 @@ export const Route = createFileRoute("/admin")({
 		const session = await getUser();
 		return { session };
 	},
-	loader: async ({ context }) => {
+	loader: async ({ context, location }) => {
 		if (!context.session) {
-			throw redirect({ to: "/login" });
+			throw redirect({ search: { redirectUrl: location.href }, to: "/sign-in" });
 		}
 		// Platform admins only (better-auth admin plugin role) — not org admins.
 		// The server session user type is a union; the role lives on the admin branch.

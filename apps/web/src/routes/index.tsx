@@ -1,9 +1,9 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
-  component: HomeComponent,
+  beforeLoad: () => {
+    // No homepage yet — send everyone to sign-in. The _auth layout bounces
+    // already-authenticated users on to /organizations.
+    throw redirect({ to: "/sign-in" });
+  },
 });
-
-function HomeComponent() {
-  return <div />;
-}

@@ -1,3 +1,4 @@
+CREATE TYPE "public"."credit_grant_type" AS ENUM('money', 'billing_cycles');--> statement-breakpoint
 CREATE TABLE "account" (
 	"id" text PRIMARY KEY NOT NULL,
 	"account_id" text NOT NULL,
@@ -142,7 +143,7 @@ CREATE TABLE "credit_grant" (
 	"organization_id" text NOT NULL,
 	"member_id" uuid NOT NULL,
 	"contract_id" uuid NOT NULL,
-	"type" text NOT NULL,
+	"type" "public"."credit_grant_type" NOT NULL,
 	"original_amount_cents" integer,
 	"remaining_amount_cents" integer,
 	"original_cycles" integer,
@@ -151,6 +152,7 @@ CREATE TABLE "credit_grant" (
 	"expires_at" date,
 	"description" text,
 	"notes" text,
+	"revoked_at" timestamp,
 	"created_at" timestamp DEFAULT now() NOT NULL,
 	"updated_at" timestamp DEFAULT now() NOT NULL
 );

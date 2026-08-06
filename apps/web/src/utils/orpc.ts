@@ -5,22 +5,31 @@ import { RPCLink } from "@orpc/client/fetch";
 import { createRouterClient } from "@orpc/server";
 import type { RouterClient } from "@orpc/server";
 import { createTanstackQueryUtils } from "@orpc/tanstack-query";
-import { QueryCache, QueryClient } from "@tanstack/react-query";
+import { QueryClient } from "@tanstack/react-query";
 import { createIsomorphicFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
-import { toast } from "sonner";
+import { parseError } from "evlog";
+
+// Codes that will never succeed on retry — fail fast instead of hammering the server.
+const NON_RETRYABLE_CODES = new Set([
+  "org.NO_ACTIVE_ORGANIZATION",
+  "ratelimit.EXCEEDED",
+]);
 
 export const queryClient = new QueryClient({
-  queryCache: new QueryCache({
-    onError: (error, query) => {
-      toast.error(`Error: ${error.message}`, {
-        action: {
-          label: "retry",
-          onClick: query.invalidate,
-        },
-      });
+  defaultOptions: {
+    queries: {
+      retry: (failureCount, error) => {
+        // Surface failures immediately in development.
+        if (import.meta.env.DEV) return false;
+        const { code, status } = parseError(error);
+        if (code && NON_RETRYABLE_CODES.has(code)) return false;
+        // Client errors (no active org, rate limit, auth, …) won't fix themselves.
+        if (status >= 400 && status < 500) return false;
+        return failureCount < 2;
+      },
     },
-  }),
+  },
 });
 
 const getORPCClient = createIsomorphicFn()

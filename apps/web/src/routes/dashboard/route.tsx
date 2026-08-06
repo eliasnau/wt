@@ -10,10 +10,22 @@ export const Route = createFileRoute("/dashboard")({
     const session = await getUser();
     return { session };
   },
-  loader: async ({ context }) => {
+  loader: async ({ context, location }) => {
     if (!context.session) {
       throw redirect({
-        to: "/login",
+        search: { redirectUrl: location.href },
+        to: "/sign-in",
+      });
+    }
+
+    const session = context.session.session;
+    const activeOrganizationId =
+      "activeOrganizationId" in session ? session.activeOrganizationId : null;
+
+    if (!activeOrganizationId) {
+      throw redirect({
+        to: "/organizations",
+        search: { redirect: location.href },
       });
     }
   },

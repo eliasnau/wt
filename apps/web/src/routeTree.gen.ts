@@ -9,43 +9,71 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as SignUpRouteImport } from './routes/sign-up'
-import { Route as SignInRouteImport } from './routes/sign-in'
-import { Route as LoginRouteImport } from './routes/login'
+import { Route as OrganizationsRouteImport } from './routes/organizations'
+import { Route as AuthRouteImport } from './routes/_auth'
 import { Route as DashboardRouteRouteImport } from './routes/dashboard/route'
+import { Route as AdminRouteRouteImport } from './routes/admin/route'
+import { Route as AccountRouteRouteImport } from './routes/account/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DashboardIndexRouteImport } from './routes/dashboard/index'
-import { Route as DashboardSettingsRouteImport } from './routes/dashboard/settings'
-import { Route as DashboardMembersRouteImport } from './routes/dashboard/members'
-import { Route as DashboardInventoryRouteImport } from './routes/dashboard/inventory'
+import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as AccountIndexRouteImport } from './routes/account/index'
 import { Route as DashboardGroupsRouteImport } from './routes/dashboard/groups'
 import { Route as DashboardBillingRouteImport } from './routes/dashboard/billing'
 import { Route as DashboardAccountRouteImport } from './routes/dashboard/account'
+import { Route as AdminAuditLogRouteImport } from './routes/admin/audit-log'
+import { Route as AccountSecurityRouteImport } from './routes/account/security'
+import { Route as AccountProfileRouteImport } from './routes/account/profile'
+import { Route as AuthVerify2faRouteImport } from './routes/_auth/verify-2fa'
+import { Route as AuthSignUpRouteImport } from './routes/_auth/sign-up'
+import { Route as AuthSignInRouteImport } from './routes/_auth/sign-in'
+import { Route as AuthResetPasswordRouteImport } from './routes/_auth/reset-password'
+import { Route as AuthForgotPasswordRouteImport } from './routes/_auth/forgot-password'
+import { Route as DashboardSettingsRouteRouteImport } from './routes/dashboard/settings/route'
+import { Route as DashboardFinanceRouteRouteImport } from './routes/dashboard/finance/route'
 import { Route as DashboardStatisticsIndexRouteImport } from './routes/dashboard/statistics/index'
+import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/settings/index'
+import { Route as DashboardMembersIndexRouteImport } from './routes/dashboard/members/index'
+import { Route as DashboardInventoryIndexRouteImport } from './routes/dashboard/inventory/index'
+import { Route as DashboardFinanceIndexRouteImport } from './routes/dashboard/finance/index'
+import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
+import { Route as AdminOrganizationsIndexRouteImport } from './routes/admin/organizations/index'
 import { Route as DashboardStatisticsTimelineRouteImport } from './routes/dashboard/statistics/timeline'
 import { Route as DashboardStatisticsSnapshotRouteImport } from './routes/dashboard/statistics/snapshot'
 import { Route as DashboardStatisticsMembersRouteImport } from './routes/dashboard/statistics/members'
+import { Route as DashboardSettingsTeamRouteImport } from './routes/dashboard/settings/team'
+import { Route as DashboardSettingsSepaRouteImport } from './routes/dashboard/settings/sepa'
+import { Route as DashboardMembersNewRouteImport } from './routes/dashboard/members/new'
+import { Route as DashboardMembersMemberIdRouteImport } from './routes/dashboard/members/$memberId'
+import { Route as DashboardInventoryProductIdRouteImport } from './routes/dashboard/inventory/$productId'
+import { Route as DashboardFinanceInvoicesRouteImport } from './routes/dashboard/finance/invoices'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
+import { Route as AdminUsersUserIdRouteImport } from './routes/admin/users/$userId'
+import { Route as AdminOrganizationsOrgIdRouteImport } from './routes/admin/organizations/$orgId'
 
-const SignUpRoute = SignUpRouteImport.update({
-  id: '/sign-up',
-  path: '/sign-up',
+const OrganizationsRoute = OrganizationsRouteImport.update({
+  id: '/organizations',
+  path: '/organizations',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SignInRoute = SignInRouteImport.update({
-  id: '/sign-in',
-  path: '/sign-in',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LoginRoute = LoginRouteImport.update({
-  id: '/login',
-  path: '/login',
+const AuthRoute = AuthRouteImport.update({
+  id: '/_auth',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DashboardRouteRoute = DashboardRouteRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdminRouteRoute = AdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AccountRouteRoute = AccountRouteRouteImport.update({
+  id: '/account',
+  path: '/account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -58,20 +86,15 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
-const DashboardSettingsRoute = DashboardSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => DashboardRouteRoute,
+const AdminIndexRoute = AdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AdminRouteRoute,
 } as any)
-const DashboardMembersRoute = DashboardMembersRouteImport.update({
-  id: '/members',
-  path: '/members',
-  getParentRoute: () => DashboardRouteRoute,
-} as any)
-const DashboardInventoryRoute = DashboardInventoryRouteImport.update({
-  id: '/inventory',
-  path: '/inventory',
-  getParentRoute: () => DashboardRouteRoute,
+const AccountIndexRoute = AccountIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AccountRouteRoute,
 } as any)
 const DashboardGroupsRoute = DashboardGroupsRouteImport.update({
   id: '/groups',
@@ -88,12 +111,92 @@ const DashboardAccountRoute = DashboardAccountRouteImport.update({
   path: '/account',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const AdminAuditLogRoute = AdminAuditLogRouteImport.update({
+  id: '/audit-log',
+  path: '/audit-log',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AccountSecurityRoute = AccountSecurityRouteImport.update({
+  id: '/security',
+  path: '/security',
+  getParentRoute: () => AccountRouteRoute,
+} as any)
+const AccountProfileRoute = AccountProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AccountRouteRoute,
+} as any)
+const AuthVerify2faRoute = AuthVerify2faRouteImport.update({
+  id: '/verify-2fa',
+  path: '/verify-2fa',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSignUpRoute = AuthSignUpRouteImport.update({
+  id: '/sign-up',
+  path: '/sign-up',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthSignInRoute = AuthSignInRouteImport.update({
+  id: '/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthResetPasswordRoute = AuthResetPasswordRouteImport.update({
+  id: '/reset-password',
+  path: '/reset-password',
+  getParentRoute: () => AuthRoute,
+} as any)
+const AuthForgotPasswordRoute = AuthForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
+  getParentRoute: () => AuthRoute,
+} as any)
+const DashboardSettingsRouteRoute = DashboardSettingsRouteRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardFinanceRouteRoute = DashboardFinanceRouteRouteImport.update({
+  id: '/finance',
+  path: '/finance',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardStatisticsIndexRoute =
   DashboardStatisticsIndexRouteImport.update({
     id: '/statistics/',
     path: '/statistics/',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardSettingsIndexRoute = DashboardSettingsIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardSettingsRouteRoute,
+} as any)
+const DashboardMembersIndexRoute = DashboardMembersIndexRouteImport.update({
+  id: '/members/',
+  path: '/members/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardInventoryIndexRoute = DashboardInventoryIndexRouteImport.update({
+  id: '/inventory/',
+  path: '/inventory/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardFinanceIndexRoute = DashboardFinanceIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => DashboardFinanceRouteRoute,
+} as any)
+const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
+  id: '/users/',
+  path: '/users/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminOrganizationsIndexRoute = AdminOrganizationsIndexRouteImport.update({
+  id: '/organizations/',
+  path: '/organizations/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const DashboardStatisticsTimelineRoute =
   DashboardStatisticsTimelineRouteImport.update({
     id: '/statistics/timeline',
@@ -112,6 +215,39 @@ const DashboardStatisticsMembersRoute =
     path: '/statistics/members',
     getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardSettingsTeamRoute = DashboardSettingsTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => DashboardSettingsRouteRoute,
+} as any)
+const DashboardSettingsSepaRoute = DashboardSettingsSepaRouteImport.update({
+  id: '/sepa',
+  path: '/sepa',
+  getParentRoute: () => DashboardSettingsRouteRoute,
+} as any)
+const DashboardMembersNewRoute = DashboardMembersNewRouteImport.update({
+  id: '/members/new',
+  path: '/members/new',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
+const DashboardMembersMemberIdRoute =
+  DashboardMembersMemberIdRouteImport.update({
+    id: '/members/$memberId',
+    path: '/members/$memberId',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardInventoryProductIdRoute =
+  DashboardInventoryProductIdRouteImport.update({
+    id: '/inventory/$productId',
+    path: '/inventory/$productId',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
+const DashboardFinanceInvoicesRoute =
+  DashboardFinanceInvoicesRouteImport.update({
+    id: '/invoices',
+    path: '/invoices',
+    getParentRoute: () => DashboardFinanceRouteRoute,
+  } as any)
 const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
   id: '/api/rpc/$',
   path: '/api/rpc/$',
@@ -122,160 +258,296 @@ const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
   path: '/api/auth/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminUsersUserIdRoute = AdminUsersUserIdRouteImport.update({
+  id: '/users/$userId',
+  path: '/users/$userId',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
+const AdminOrganizationsOrgIdRoute = AdminOrganizationsOrgIdRouteImport.update({
+  id: '/organizations/$orgId',
+  path: '/organizations/$orgId',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/account': typeof AccountRouteRouteWithChildren
+  '/admin': typeof AdminRouteRouteWithChildren
   '/dashboard': typeof DashboardRouteRouteWithChildren
-  '/login': typeof LoginRoute
-  '/sign-in': typeof SignInRoute
-  '/sign-up': typeof SignUpRoute
+  '/organizations': typeof OrganizationsRoute
+  '/dashboard/finance': typeof DashboardFinanceRouteRouteWithChildren
+  '/dashboard/settings': typeof DashboardSettingsRouteRouteWithChildren
+  '/forgot-password': typeof AuthForgotPasswordRoute
+  '/reset-password': typeof AuthResetPasswordRoute
+  '/sign-in': typeof AuthSignInRoute
+  '/sign-up': typeof AuthSignUpRoute
+  '/verify-2fa': typeof AuthVerify2faRoute
+  '/account/profile': typeof AccountProfileRoute
+  '/account/security': typeof AccountSecurityRoute
+  '/admin/audit-log': typeof AdminAuditLogRoute
   '/dashboard/account': typeof DashboardAccountRoute
   '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/groups': typeof DashboardGroupsRoute
-  '/dashboard/inventory': typeof DashboardInventoryRoute
-  '/dashboard/members': typeof DashboardMembersRoute
-  '/dashboard/settings': typeof DashboardSettingsRoute
+  '/account/': typeof AccountIndexRoute
+  '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/admin/organizations/$orgId': typeof AdminOrganizationsOrgIdRoute
+  '/admin/users/$userId': typeof AdminUsersUserIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/dashboard/finance/invoices': typeof DashboardFinanceInvoicesRoute
+  '/dashboard/inventory/$productId': typeof DashboardInventoryProductIdRoute
+  '/dashboard/members/$memberId': typeof DashboardMembersMemberIdRoute
+  '/dashboard/members/new': typeof DashboardMembersNewRoute
+  '/dashboard/settings/sepa': typeof DashboardSettingsSepaRoute
+  '/dashboard/settings/team': typeof DashboardSettingsTeamRoute
   '/dashboard/statistics/members': typeof DashboardStatisticsMembersRoute
   '/dashboard/statistics/snapshot': typeof DashboardStatisticsSnapshotRoute
   '/dashboard/statistics/timeline': typeof DashboardStatisticsTimelineRoute
+  '/admin/organizations/': typeof AdminOrganizationsIndexRoute
+  '/admin/users/': typeof AdminUsersIndexRoute
+  '/dashboard/finance/': typeof DashboardFinanceIndexRoute
+  '/dashboard/inventory/': typeof DashboardInventoryIndexRoute
+  '/dashboard/members/': typeof DashboardMembersIndexRoute
+  '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/dashboard/statistics/': typeof DashboardStatisticsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/login': typeof LoginRoute
-  '/sign-in': typeof SignInRoute
-  '/sign-up': typeof SignUpRoute
+  '/organizations': typeof OrganizationsRoute
+  '/forgot-password': typeof AuthForgotPasswordRoute
+  '/reset-password': typeof AuthResetPasswordRoute
+  '/sign-in': typeof AuthSignInRoute
+  '/sign-up': typeof AuthSignUpRoute
+  '/verify-2fa': typeof AuthVerify2faRoute
+  '/account/profile': typeof AccountProfileRoute
+  '/account/security': typeof AccountSecurityRoute
+  '/admin/audit-log': typeof AdminAuditLogRoute
   '/dashboard/account': typeof DashboardAccountRoute
   '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/groups': typeof DashboardGroupsRoute
-  '/dashboard/inventory': typeof DashboardInventoryRoute
-  '/dashboard/members': typeof DashboardMembersRoute
-  '/dashboard/settings': typeof DashboardSettingsRoute
+  '/account': typeof AccountIndexRoute
+  '/admin': typeof AdminIndexRoute
   '/dashboard': typeof DashboardIndexRoute
+  '/admin/organizations/$orgId': typeof AdminOrganizationsOrgIdRoute
+  '/admin/users/$userId': typeof AdminUsersUserIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/dashboard/finance/invoices': typeof DashboardFinanceInvoicesRoute
+  '/dashboard/inventory/$productId': typeof DashboardInventoryProductIdRoute
+  '/dashboard/members/$memberId': typeof DashboardMembersMemberIdRoute
+  '/dashboard/members/new': typeof DashboardMembersNewRoute
+  '/dashboard/settings/sepa': typeof DashboardSettingsSepaRoute
+  '/dashboard/settings/team': typeof DashboardSettingsTeamRoute
   '/dashboard/statistics/members': typeof DashboardStatisticsMembersRoute
   '/dashboard/statistics/snapshot': typeof DashboardStatisticsSnapshotRoute
   '/dashboard/statistics/timeline': typeof DashboardStatisticsTimelineRoute
+  '/admin/organizations': typeof AdminOrganizationsIndexRoute
+  '/admin/users': typeof AdminUsersIndexRoute
+  '/dashboard/finance': typeof DashboardFinanceIndexRoute
+  '/dashboard/inventory': typeof DashboardInventoryIndexRoute
+  '/dashboard/members': typeof DashboardMembersIndexRoute
+  '/dashboard/settings': typeof DashboardSettingsIndexRoute
   '/dashboard/statistics': typeof DashboardStatisticsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/account': typeof AccountRouteRouteWithChildren
+  '/admin': typeof AdminRouteRouteWithChildren
   '/dashboard': typeof DashboardRouteRouteWithChildren
-  '/login': typeof LoginRoute
-  '/sign-in': typeof SignInRoute
-  '/sign-up': typeof SignUpRoute
+  '/_auth': typeof AuthRouteWithChildren
+  '/organizations': typeof OrganizationsRoute
+  '/dashboard/finance': typeof DashboardFinanceRouteRouteWithChildren
+  '/dashboard/settings': typeof DashboardSettingsRouteRouteWithChildren
+  '/_auth/forgot-password': typeof AuthForgotPasswordRoute
+  '/_auth/reset-password': typeof AuthResetPasswordRoute
+  '/_auth/sign-in': typeof AuthSignInRoute
+  '/_auth/sign-up': typeof AuthSignUpRoute
+  '/_auth/verify-2fa': typeof AuthVerify2faRoute
+  '/account/profile': typeof AccountProfileRoute
+  '/account/security': typeof AccountSecurityRoute
+  '/admin/audit-log': typeof AdminAuditLogRoute
   '/dashboard/account': typeof DashboardAccountRoute
   '/dashboard/billing': typeof DashboardBillingRoute
   '/dashboard/groups': typeof DashboardGroupsRoute
-  '/dashboard/inventory': typeof DashboardInventoryRoute
-  '/dashboard/members': typeof DashboardMembersRoute
-  '/dashboard/settings': typeof DashboardSettingsRoute
+  '/account/': typeof AccountIndexRoute
+  '/admin/': typeof AdminIndexRoute
   '/dashboard/': typeof DashboardIndexRoute
+  '/admin/organizations/$orgId': typeof AdminOrganizationsOrgIdRoute
+  '/admin/users/$userId': typeof AdminUsersUserIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/dashboard/finance/invoices': typeof DashboardFinanceInvoicesRoute
+  '/dashboard/inventory/$productId': typeof DashboardInventoryProductIdRoute
+  '/dashboard/members/$memberId': typeof DashboardMembersMemberIdRoute
+  '/dashboard/members/new': typeof DashboardMembersNewRoute
+  '/dashboard/settings/sepa': typeof DashboardSettingsSepaRoute
+  '/dashboard/settings/team': typeof DashboardSettingsTeamRoute
   '/dashboard/statistics/members': typeof DashboardStatisticsMembersRoute
   '/dashboard/statistics/snapshot': typeof DashboardStatisticsSnapshotRoute
   '/dashboard/statistics/timeline': typeof DashboardStatisticsTimelineRoute
+  '/admin/organizations/': typeof AdminOrganizationsIndexRoute
+  '/admin/users/': typeof AdminUsersIndexRoute
+  '/dashboard/finance/': typeof DashboardFinanceIndexRoute
+  '/dashboard/inventory/': typeof DashboardInventoryIndexRoute
+  '/dashboard/members/': typeof DashboardMembersIndexRoute
+  '/dashboard/settings/': typeof DashboardSettingsIndexRoute
   '/dashboard/statistics/': typeof DashboardStatisticsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/account'
+    | '/admin'
     | '/dashboard'
-    | '/login'
+    | '/organizations'
+    | '/dashboard/finance'
+    | '/dashboard/settings'
+    | '/forgot-password'
+    | '/reset-password'
     | '/sign-in'
     | '/sign-up'
+    | '/verify-2fa'
+    | '/account/profile'
+    | '/account/security'
+    | '/admin/audit-log'
     | '/dashboard/account'
     | '/dashboard/billing'
     | '/dashboard/groups'
-    | '/dashboard/inventory'
-    | '/dashboard/members'
-    | '/dashboard/settings'
+    | '/account/'
+    | '/admin/'
     | '/dashboard/'
+    | '/admin/organizations/$orgId'
+    | '/admin/users/$userId'
     | '/api/auth/$'
     | '/api/rpc/$'
+    | '/dashboard/finance/invoices'
+    | '/dashboard/inventory/$productId'
+    | '/dashboard/members/$memberId'
+    | '/dashboard/members/new'
+    | '/dashboard/settings/sepa'
+    | '/dashboard/settings/team'
     | '/dashboard/statistics/members'
     | '/dashboard/statistics/snapshot'
     | '/dashboard/statistics/timeline'
+    | '/admin/organizations/'
+    | '/admin/users/'
+    | '/dashboard/finance/'
+    | '/dashboard/inventory/'
+    | '/dashboard/members/'
+    | '/dashboard/settings/'
     | '/dashboard/statistics/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/login'
+    | '/organizations'
+    | '/forgot-password'
+    | '/reset-password'
     | '/sign-in'
     | '/sign-up'
+    | '/verify-2fa'
+    | '/account/profile'
+    | '/account/security'
+    | '/admin/audit-log'
     | '/dashboard/account'
     | '/dashboard/billing'
     | '/dashboard/groups'
-    | '/dashboard/inventory'
-    | '/dashboard/members'
-    | '/dashboard/settings'
+    | '/account'
+    | '/admin'
     | '/dashboard'
+    | '/admin/organizations/$orgId'
+    | '/admin/users/$userId'
     | '/api/auth/$'
     | '/api/rpc/$'
+    | '/dashboard/finance/invoices'
+    | '/dashboard/inventory/$productId'
+    | '/dashboard/members/$memberId'
+    | '/dashboard/members/new'
+    | '/dashboard/settings/sepa'
+    | '/dashboard/settings/team'
     | '/dashboard/statistics/members'
     | '/dashboard/statistics/snapshot'
     | '/dashboard/statistics/timeline'
+    | '/admin/organizations'
+    | '/admin/users'
+    | '/dashboard/finance'
+    | '/dashboard/inventory'
+    | '/dashboard/members'
+    | '/dashboard/settings'
     | '/dashboard/statistics'
   id:
     | '__root__'
     | '/'
+    | '/account'
+    | '/admin'
     | '/dashboard'
-    | '/login'
-    | '/sign-in'
-    | '/sign-up'
+    | '/_auth'
+    | '/organizations'
+    | '/dashboard/finance'
+    | '/dashboard/settings'
+    | '/_auth/forgot-password'
+    | '/_auth/reset-password'
+    | '/_auth/sign-in'
+    | '/_auth/sign-up'
+    | '/_auth/verify-2fa'
+    | '/account/profile'
+    | '/account/security'
+    | '/admin/audit-log'
     | '/dashboard/account'
     | '/dashboard/billing'
     | '/dashboard/groups'
-    | '/dashboard/inventory'
-    | '/dashboard/members'
-    | '/dashboard/settings'
+    | '/account/'
+    | '/admin/'
     | '/dashboard/'
+    | '/admin/organizations/$orgId'
+    | '/admin/users/$userId'
     | '/api/auth/$'
     | '/api/rpc/$'
+    | '/dashboard/finance/invoices'
+    | '/dashboard/inventory/$productId'
+    | '/dashboard/members/$memberId'
+    | '/dashboard/members/new'
+    | '/dashboard/settings/sepa'
+    | '/dashboard/settings/team'
     | '/dashboard/statistics/members'
     | '/dashboard/statistics/snapshot'
     | '/dashboard/statistics/timeline'
+    | '/admin/organizations/'
+    | '/admin/users/'
+    | '/dashboard/finance/'
+    | '/dashboard/inventory/'
+    | '/dashboard/members/'
+    | '/dashboard/settings/'
     | '/dashboard/statistics/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AccountRouteRoute: typeof AccountRouteRouteWithChildren
+  AdminRouteRoute: typeof AdminRouteRouteWithChildren
   DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
-  LoginRoute: typeof LoginRoute
-  SignInRoute: typeof SignInRoute
-  SignUpRoute: typeof SignUpRoute
+  AuthRoute: typeof AuthRouteWithChildren
+  OrganizationsRoute: typeof OrganizationsRoute
   ApiAuthSplatRoute: typeof ApiAuthSplatRoute
   ApiRpcSplatRoute: typeof ApiRpcSplatRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/sign-up': {
-      id: '/sign-up'
-      path: '/sign-up'
-      fullPath: '/sign-up'
-      preLoaderRoute: typeof SignUpRouteImport
+    '/organizations': {
+      id: '/organizations'
+      path: '/organizations'
+      fullPath: '/organizations'
+      preLoaderRoute: typeof OrganizationsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/sign-in': {
-      id: '/sign-in'
-      path: '/sign-in'
-      fullPath: '/sign-in'
-      preLoaderRoute: typeof SignInRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/login': {
-      id: '/login'
-      path: '/login'
-      fullPath: '/login'
-      preLoaderRoute: typeof LoginRouteImport
+    '/_auth': {
+      id: '/_auth'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dashboard': {
@@ -283,6 +555,20 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin': {
+      id: '/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AdminRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/account': {
+      id: '/account'
+      path: '/account'
+      fullPath: '/account'
+      preLoaderRoute: typeof AccountRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -299,26 +585,19 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
-    '/dashboard/settings': {
-      id: '/dashboard/settings'
-      path: '/settings'
-      fullPath: '/dashboard/settings'
-      preLoaderRoute: typeof DashboardSettingsRouteImport
-      parentRoute: typeof DashboardRouteRoute
+    '/admin/': {
+      id: '/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AdminIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
-    '/dashboard/members': {
-      id: '/dashboard/members'
-      path: '/members'
-      fullPath: '/dashboard/members'
-      preLoaderRoute: typeof DashboardMembersRouteImport
-      parentRoute: typeof DashboardRouteRoute
-    }
-    '/dashboard/inventory': {
-      id: '/dashboard/inventory'
-      path: '/inventory'
-      fullPath: '/dashboard/inventory'
-      preLoaderRoute: typeof DashboardInventoryRouteImport
-      parentRoute: typeof DashboardRouteRoute
+    '/account/': {
+      id: '/account/'
+      path: '/'
+      fullPath: '/account/'
+      preLoaderRoute: typeof AccountIndexRouteImport
+      parentRoute: typeof AccountRouteRoute
     }
     '/dashboard/groups': {
       id: '/dashboard/groups'
@@ -341,12 +620,124 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardAccountRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/admin/audit-log': {
+      id: '/admin/audit-log'
+      path: '/audit-log'
+      fullPath: '/admin/audit-log'
+      preLoaderRoute: typeof AdminAuditLogRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/account/security': {
+      id: '/account/security'
+      path: '/security'
+      fullPath: '/account/security'
+      preLoaderRoute: typeof AccountSecurityRouteImport
+      parentRoute: typeof AccountRouteRoute
+    }
+    '/account/profile': {
+      id: '/account/profile'
+      path: '/profile'
+      fullPath: '/account/profile'
+      preLoaderRoute: typeof AccountProfileRouteImport
+      parentRoute: typeof AccountRouteRoute
+    }
+    '/_auth/verify-2fa': {
+      id: '/_auth/verify-2fa'
+      path: '/verify-2fa'
+      fullPath: '/verify-2fa'
+      preLoaderRoute: typeof AuthVerify2faRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/sign-up': {
+      id: '/_auth/sign-up'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof AuthSignUpRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/sign-in': {
+      id: '/_auth/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof AuthSignInRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/reset-password': {
+      id: '/_auth/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof AuthResetPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/_auth/forgot-password': {
+      id: '/_auth/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof AuthForgotPasswordRouteImport
+      parentRoute: typeof AuthRoute
+    }
+    '/dashboard/settings': {
+      id: '/dashboard/settings'
+      path: '/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof DashboardSettingsRouteRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/finance': {
+      id: '/dashboard/finance'
+      path: '/finance'
+      fullPath: '/dashboard/finance'
+      preLoaderRoute: typeof DashboardFinanceRouteRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/dashboard/statistics/': {
       id: '/dashboard/statistics/'
       path: '/statistics'
       fullPath: '/dashboard/statistics/'
       preLoaderRoute: typeof DashboardStatisticsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/settings/': {
+      id: '/dashboard/settings/'
+      path: '/'
+      fullPath: '/dashboard/settings/'
+      preLoaderRoute: typeof DashboardSettingsIndexRouteImport
+      parentRoute: typeof DashboardSettingsRouteRoute
+    }
+    '/dashboard/members/': {
+      id: '/dashboard/members/'
+      path: '/members'
+      fullPath: '/dashboard/members/'
+      preLoaderRoute: typeof DashboardMembersIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/inventory/': {
+      id: '/dashboard/inventory/'
+      path: '/inventory'
+      fullPath: '/dashboard/inventory/'
+      preLoaderRoute: typeof DashboardInventoryIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/finance/': {
+      id: '/dashboard/finance/'
+      path: '/'
+      fullPath: '/dashboard/finance/'
+      preLoaderRoute: typeof DashboardFinanceIndexRouteImport
+      parentRoute: typeof DashboardFinanceRouteRoute
+    }
+    '/admin/users/': {
+      id: '/admin/users/'
+      path: '/users'
+      fullPath: '/admin/users/'
+      preLoaderRoute: typeof AdminUsersIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/organizations/': {
+      id: '/admin/organizations/'
+      path: '/organizations'
+      fullPath: '/admin/organizations/'
+      preLoaderRoute: typeof AdminOrganizationsIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
     }
     '/dashboard/statistics/timeline': {
       id: '/dashboard/statistics/timeline'
@@ -369,6 +760,48 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardStatisticsMembersRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/settings/team': {
+      id: '/dashboard/settings/team'
+      path: '/team'
+      fullPath: '/dashboard/settings/team'
+      preLoaderRoute: typeof DashboardSettingsTeamRouteImport
+      parentRoute: typeof DashboardSettingsRouteRoute
+    }
+    '/dashboard/settings/sepa': {
+      id: '/dashboard/settings/sepa'
+      path: '/sepa'
+      fullPath: '/dashboard/settings/sepa'
+      preLoaderRoute: typeof DashboardSettingsSepaRouteImport
+      parentRoute: typeof DashboardSettingsRouteRoute
+    }
+    '/dashboard/members/new': {
+      id: '/dashboard/members/new'
+      path: '/members/new'
+      fullPath: '/dashboard/members/new'
+      preLoaderRoute: typeof DashboardMembersNewRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/members/$memberId': {
+      id: '/dashboard/members/$memberId'
+      path: '/members/$memberId'
+      fullPath: '/dashboard/members/$memberId'
+      preLoaderRoute: typeof DashboardMembersMemberIdRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/inventory/$productId': {
+      id: '/dashboard/inventory/$productId'
+      path: '/inventory/$productId'
+      fullPath: '/dashboard/inventory/$productId'
+      preLoaderRoute: typeof DashboardInventoryProductIdRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/dashboard/finance/invoices': {
+      id: '/dashboard/finance/invoices'
+      path: '/invoices'
+      fullPath: '/dashboard/finance/invoices'
+      preLoaderRoute: typeof DashboardFinanceInvoicesRouteImport
+      parentRoute: typeof DashboardFinanceRouteRoute
+    }
     '/api/rpc/$': {
       id: '/api/rpc/$'
       path: '/api/rpc/$'
@@ -383,34 +816,127 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAuthSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/users/$userId': {
+      id: '/admin/users/$userId'
+      path: '/users/$userId'
+      fullPath: '/admin/users/$userId'
+      preLoaderRoute: typeof AdminUsersUserIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
+    '/admin/organizations/$orgId': {
+      id: '/admin/organizations/$orgId'
+      path: '/organizations/$orgId'
+      fullPath: '/admin/organizations/$orgId'
+      preLoaderRoute: typeof AdminOrganizationsOrgIdRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
   }
 }
 
+interface AccountRouteRouteChildren {
+  AccountProfileRoute: typeof AccountProfileRoute
+  AccountSecurityRoute: typeof AccountSecurityRoute
+  AccountIndexRoute: typeof AccountIndexRoute
+}
+
+const AccountRouteRouteChildren: AccountRouteRouteChildren = {
+  AccountProfileRoute: AccountProfileRoute,
+  AccountSecurityRoute: AccountSecurityRoute,
+  AccountIndexRoute: AccountIndexRoute,
+}
+
+const AccountRouteRouteWithChildren = AccountRouteRoute._addFileChildren(
+  AccountRouteRouteChildren,
+)
+
+interface AdminRouteRouteChildren {
+  AdminAuditLogRoute: typeof AdminAuditLogRoute
+  AdminIndexRoute: typeof AdminIndexRoute
+  AdminOrganizationsOrgIdRoute: typeof AdminOrganizationsOrgIdRoute
+  AdminUsersUserIdRoute: typeof AdminUsersUserIdRoute
+  AdminOrganizationsIndexRoute: typeof AdminOrganizationsIndexRoute
+  AdminUsersIndexRoute: typeof AdminUsersIndexRoute
+}
+
+const AdminRouteRouteChildren: AdminRouteRouteChildren = {
+  AdminAuditLogRoute: AdminAuditLogRoute,
+  AdminIndexRoute: AdminIndexRoute,
+  AdminOrganizationsOrgIdRoute: AdminOrganizationsOrgIdRoute,
+  AdminUsersUserIdRoute: AdminUsersUserIdRoute,
+  AdminOrganizationsIndexRoute: AdminOrganizationsIndexRoute,
+  AdminUsersIndexRoute: AdminUsersIndexRoute,
+}
+
+const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
+  AdminRouteRouteChildren,
+)
+
+interface DashboardFinanceRouteRouteChildren {
+  DashboardFinanceInvoicesRoute: typeof DashboardFinanceInvoicesRoute
+  DashboardFinanceIndexRoute: typeof DashboardFinanceIndexRoute
+}
+
+const DashboardFinanceRouteRouteChildren: DashboardFinanceRouteRouteChildren = {
+  DashboardFinanceInvoicesRoute: DashboardFinanceInvoicesRoute,
+  DashboardFinanceIndexRoute: DashboardFinanceIndexRoute,
+}
+
+const DashboardFinanceRouteRouteWithChildren =
+  DashboardFinanceRouteRoute._addFileChildren(
+    DashboardFinanceRouteRouteChildren,
+  )
+
+interface DashboardSettingsRouteRouteChildren {
+  DashboardSettingsSepaRoute: typeof DashboardSettingsSepaRoute
+  DashboardSettingsTeamRoute: typeof DashboardSettingsTeamRoute
+  DashboardSettingsIndexRoute: typeof DashboardSettingsIndexRoute
+}
+
+const DashboardSettingsRouteRouteChildren: DashboardSettingsRouteRouteChildren =
+  {
+    DashboardSettingsSepaRoute: DashboardSettingsSepaRoute,
+    DashboardSettingsTeamRoute: DashboardSettingsTeamRoute,
+    DashboardSettingsIndexRoute: DashboardSettingsIndexRoute,
+  }
+
+const DashboardSettingsRouteRouteWithChildren =
+  DashboardSettingsRouteRoute._addFileChildren(
+    DashboardSettingsRouteRouteChildren,
+  )
+
 interface DashboardRouteRouteChildren {
+  DashboardFinanceRouteRoute: typeof DashboardFinanceRouteRouteWithChildren
+  DashboardSettingsRouteRoute: typeof DashboardSettingsRouteRouteWithChildren
   DashboardAccountRoute: typeof DashboardAccountRoute
   DashboardBillingRoute: typeof DashboardBillingRoute
   DashboardGroupsRoute: typeof DashboardGroupsRoute
-  DashboardInventoryRoute: typeof DashboardInventoryRoute
-  DashboardMembersRoute: typeof DashboardMembersRoute
-  DashboardSettingsRoute: typeof DashboardSettingsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardInventoryProductIdRoute: typeof DashboardInventoryProductIdRoute
+  DashboardMembersMemberIdRoute: typeof DashboardMembersMemberIdRoute
+  DashboardMembersNewRoute: typeof DashboardMembersNewRoute
   DashboardStatisticsMembersRoute: typeof DashboardStatisticsMembersRoute
   DashboardStatisticsSnapshotRoute: typeof DashboardStatisticsSnapshotRoute
   DashboardStatisticsTimelineRoute: typeof DashboardStatisticsTimelineRoute
+  DashboardInventoryIndexRoute: typeof DashboardInventoryIndexRoute
+  DashboardMembersIndexRoute: typeof DashboardMembersIndexRoute
   DashboardStatisticsIndexRoute: typeof DashboardStatisticsIndexRoute
 }
 
 const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
+  DashboardFinanceRouteRoute: DashboardFinanceRouteRouteWithChildren,
+  DashboardSettingsRouteRoute: DashboardSettingsRouteRouteWithChildren,
   DashboardAccountRoute: DashboardAccountRoute,
   DashboardBillingRoute: DashboardBillingRoute,
   DashboardGroupsRoute: DashboardGroupsRoute,
-  DashboardInventoryRoute: DashboardInventoryRoute,
-  DashboardMembersRoute: DashboardMembersRoute,
-  DashboardSettingsRoute: DashboardSettingsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardInventoryProductIdRoute: DashboardInventoryProductIdRoute,
+  DashboardMembersMemberIdRoute: DashboardMembersMemberIdRoute,
+  DashboardMembersNewRoute: DashboardMembersNewRoute,
   DashboardStatisticsMembersRoute: DashboardStatisticsMembersRoute,
   DashboardStatisticsSnapshotRoute: DashboardStatisticsSnapshotRoute,
   DashboardStatisticsTimelineRoute: DashboardStatisticsTimelineRoute,
+  DashboardInventoryIndexRoute: DashboardInventoryIndexRoute,
+  DashboardMembersIndexRoute: DashboardMembersIndexRoute,
   DashboardStatisticsIndexRoute: DashboardStatisticsIndexRoute,
 }
 
@@ -418,12 +944,31 @@ const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
   DashboardRouteRouteChildren,
 )
 
+interface AuthRouteChildren {
+  AuthForgotPasswordRoute: typeof AuthForgotPasswordRoute
+  AuthResetPasswordRoute: typeof AuthResetPasswordRoute
+  AuthSignInRoute: typeof AuthSignInRoute
+  AuthSignUpRoute: typeof AuthSignUpRoute
+  AuthVerify2faRoute: typeof AuthVerify2faRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthForgotPasswordRoute: AuthForgotPasswordRoute,
+  AuthResetPasswordRoute: AuthResetPasswordRoute,
+  AuthSignInRoute: AuthSignInRoute,
+  AuthSignUpRoute: AuthSignUpRoute,
+  AuthVerify2faRoute: AuthVerify2faRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AccountRouteRoute: AccountRouteRouteWithChildren,
+  AdminRouteRoute: AdminRouteRouteWithChildren,
   DashboardRouteRoute: DashboardRouteRouteWithChildren,
-  LoginRoute: LoginRoute,
-  SignInRoute: SignInRoute,
-  SignUpRoute: SignUpRoute,
+  AuthRoute: AuthRouteWithChildren,
+  OrganizationsRoute: OrganizationsRoute,
   ApiAuthSplatRoute: ApiAuthSplatRoute,
   ApiRpcSplatRoute: ApiRpcSplatRoute,
 }

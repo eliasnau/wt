@@ -8,6 +8,9 @@
     "./errors": {
       "default": "./src/errors/index.ts"
     },
+    "./audit": {
+      "default": "./src/audit/index.ts"
+    },
     "./*": {
       "default": "./src/*.ts"
     }
@@ -24,7 +27,6 @@
     "@orpc/openapi": "catalog:",
     "@orpc/server": "catalog:",
     "@orpc/zod": "catalog:",
-    "@upstash/qstash": "^2.11.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.0",
     "dotenv": "catalog:",

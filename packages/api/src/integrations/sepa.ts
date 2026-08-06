@@ -11,11 +11,16 @@
 
 import type { InferSelectModel } from "@matdesk/db";
 import type { organizationSettings } from "@matdesk/db/schema";
-import type { SepaStatic } from "sepa";
 
 import { billingErrors } from "../errors";
 
-type SepaModule = SepaStatic;
+/**
+ * The `sepa` package ships a `declare module "sepa"` with named exports
+ * (`Document`, `validateIBAN`, `validateCreditorID`, …) and no default — so its
+ * shape is `typeof import("sepa")`. It previously imported a `SepaStatic` type
+ * that the package doesn't export, which was a hard typecheck failure.
+ */
+type SepaModule = typeof import("sepa");
 
 const BIC_REGEX = /^[A-Z0-9]{8}([A-Z0-9]{3})?$/;
 

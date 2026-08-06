@@ -39,8 +39,8 @@ export default function UserMenu() {
 
   if (!user) {
     return (
-      <Link to="/login">
-        <Button variant="outline">Sign In</Button>
+      <Link to="/sign-in">
+        <Button variant="outline">Anmelden</Button>
       </Link>
     );
   }
@@ -48,18 +48,13 @@ export default function UserMenu() {
   return (
     <Menu>
       <MenuTrigger aria-label="Account menu" render={<Button variant="ghost" />}>
-        <UserAvatar
-          className="size-6"
-          image={user.image}
-          name={user.name}
-          seed={user.id}
-        />
+        <UserAvatar className="size-6" image={user.image} name={user.name} seed={user.id} />
         {user.name}
       </MenuTrigger>
       <MenuPopup align="end" className="bg-card">
         <MenuGroup>
           <MenuGroupLabel>My Account</MenuGroupLabel>
-          <MenuItem render={<Link to="/dashboard/account" />}>
+          <MenuItem render={<Link to="/account/profile" />}>
             <UserIcon />
             Account
           </MenuItem>

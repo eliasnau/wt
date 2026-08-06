@@ -183,7 +183,7 @@ export async function loadBilledSubmittedByMonth(
       submittedCents: sql<number>`COALESCE(SUM(${invoice.totalCents}) FILTER (WHERE EXISTS (
         SELECT 1 FROM sepa_batch_item sbi
         JOIN sepa_batch sb ON sb.id = sbi.sepa_batch_id
-        WHERE sbi.invoice_id = ${invoice.id}
+        WHERE sbi.invoice_id = "invoice"."id"
           AND sbi.status = 'included'
           AND sb.status = 'downloaded'
       )), 0)::int`,
@@ -347,7 +347,7 @@ export async function sumOutstandingCents(
         sql`NOT EXISTS (
           SELECT 1 FROM sepa_batch_item sbi
           JOIN sepa_batch sb ON sb.id = sbi.sepa_batch_id
-          WHERE sbi.invoice_id = ${invoice.id}
+          WHERE sbi.invoice_id = "invoice"."id"
             AND sbi.status = 'included'
             AND sb.status = 'downloaded'
         )`,

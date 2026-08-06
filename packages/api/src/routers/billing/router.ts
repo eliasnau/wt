@@ -12,7 +12,9 @@ import { listSepaBatches } from "./list-sepa-batches";
 import { listSepaMandates } from "./list-sepa-mandates";
 import { markSepaBatchDownloaded } from "./mark-sepa-batch-downloaded";
 import { previewSepaBatch } from "./preview-sepa-batch";
+import { prepareSepaCollection } from "./prepare-sepa-collection";
 import { replaceInvoice } from "./replace-invoice";
+import { revokeCreditGrant } from "./revoke-credit-grant";
 import { revokeSepaMandate } from "./revoke-sepa-mandate";
 import { supersedeSepaBatch } from "./supersede-sepa-batch";
 import { updateSepaSettings } from "./update-sepa-settings";
@@ -29,6 +31,7 @@ export const billingRouter = {
   // Credit grants
   createCreditGrant,
   listCreditGrants,
+  revokeCreditGrant,
   // SEPA mandates
   createSepaMandate,
   listSepaMandates,
@@ -36,6 +39,7 @@ export const billingRouter = {
   // SEPA batches
   listSepaBatches,
   previewSepaBatch,
+  prepareSepaCollection,
   generateSepaBatch,
   getSepaBatch,
   downloadSepaBatch,

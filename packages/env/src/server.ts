@@ -26,10 +26,12 @@ export const env = createEnv({
     //   US East 1 (AWS) → https://us-east-1.aws.edge.axiom.co
     //   EU Central 1 (AWS) → https://eu-central-1.aws.edge.axiom.co
     AXIOM_EDGE_URL: z.url().optional(),
-    // Geocoding (member addresses → lat/lng). Defaults to public Nominatim
-    // (OpenStreetMap). Override BASE_URL to point at a self-hosted Nominatim or
-    // any Nominatim-compatible `/search` endpoint (e.g. LocationIQ, which also
-    // needs API_KEY). USER_AGENT should carry a real contact per Nominatim ToS.
+    // Geocoding (member addresses → lat/lng), called inline on member
+    // create/update. Currently LocationIQ (`https://eu1.locationiq.com/v1/search`
+    // + API_KEY); unset BASE_URL falls back to public OpenStreetMap Nominatim,
+    // which has a ~1 req/s policy and no SLA — fine for dev only. Any
+    // Nominatim-compatible `/search` endpoint (self-hosted included) works.
+    // USER_AGENT should carry a real contact per Nominatim ToS.
     GEOCODING_BASE_URL: z.url().optional(),
     GEOCODING_USER_AGENT: z.string().min(1).optional(),
     GEOCODING_API_KEY: z.string().min(1).optional(),

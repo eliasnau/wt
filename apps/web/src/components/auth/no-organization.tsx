@@ -9,26 +9,20 @@ import {
 } from "@matdesk/ui/components/empty";
 import { Building2Icon, PlusIcon } from "lucide-react";
 
-export function NoOrganization({
-  onCreate,
-}: {
-  onCreate?: () => void;
-}) {
+export function NoOrganization({ onCreate }: { onCreate?: () => void }) {
   return (
     <Empty className="px-4 py-8 md:py-8">
       <EmptyHeader>
         <EmptyMedia variant="icon">
           <Building2Icon />
         </EmptyMedia>
-        <EmptyTitle className="text-base">No organizations</EmptyTitle>
-        <EmptyDescription>
-          Create your first organization to get started.
-        </EmptyDescription>
+        <EmptyTitle className="text-base">Keine Organisationen</EmptyTitle>
+        <EmptyDescription>Erstelle deine erste Organisation, um zu starten.</EmptyDescription>
       </EmptyHeader>
       <EmptyContent>
         <Button onClick={onCreate} size="sm">
           <PlusIcon />
-          Create organization
+          Organisation erstellen
         </Button>
       </EmptyContent>
     </Empty>

@@ -12,7 +12,10 @@ const input = z.object({
 
 export const listCreditGrants = orgProcedure
   .meta({ cost: 1 })
-  .use(requirePermission({ member: ["view_payment"] }))
+  // `member:view` rather than `view_payment`: credits are surfaced inline on the
+  // member detail page, which every member-viewer can already open. Gating them
+  // separately meant the card 403'd for exactly the people looking at it.
+  .use(requirePermission({ member: ["view"] }))
   .input(input)
   .handler(({ input, context }) => {
     const conditions = [

@@ -7,6 +7,7 @@ import {
   invoice,
   invoiceLine,
   organization,
+  organizationSettings,
   sepaMandate,
 } from "@matdesk/db/schema";
 import { eq } from "@matdesk/db";
@@ -22,6 +23,7 @@ import {
   nextBatchSequenceNumber,
 } from "../../queries/billing";
 import { createTestDb, type TestDb } from "../../../test/helpers/pg";
+import { prepareSepaCollection } from "./collection-engine";
 import { generateInvoicesForMonth } from "./engine";
 
 let db: TestDb;
@@ -255,6 +257,67 @@ describe("billing integration — credits", () => {
     const [afterGrant] = await db.select().from(creditGrant).where(eq(creditGrant.id, grant!.id));
     expect(afterGrant?.remainingAmountCents).toBe(3000);
   });
+
+  it("does not allocate a revoked grant, and leaves its balance untouched", async () => {
+    const member = await seedMember();
+    const c = await seedContract(member.id);
+    await seedGroupMembership(member.id, 5000);
+    const [grant] = await db
+      .insert(creditGrant)
+      .values({
+        organizationId: ORG,
+        memberId: member.id,
+        contractId: c.id,
+        type: "money",
+        originalAmountCents: 3000,
+        remainingAmountCents: 3000,
+        revokedAt: new Date(),
+      })
+      .returning();
+
+    const created = await generate("2026-03-01");
+    // Full membership fee — no credit line, no discount.
+    expect(created[0]?.totalCents).toBe(5000);
+
+    const lines = await linesFor(created[0]!.id);
+    expect(lines.some((l) => l.type === "credit_money")).toBe(false);
+
+    const [afterGrant] = await db.select().from(creditGrant).where(eq(creditGrant.id, grant!.id));
+    expect(afterGrant?.remainingAmountCents).toBe(3000);
+  });
+
+  it("still allocates a grant revoked *after* it was partly consumed, only up to the revocation", async () => {
+    const member = await seedMember();
+    const c = await seedContract(member.id);
+    await seedGroupMembership(member.id, 5000);
+    const [grant] = await db
+      .insert(creditGrant)
+      .values({
+        organizationId: ORG,
+        memberId: member.id,
+        contractId: c.id,
+        type: "money",
+        originalAmountCents: 8000,
+        remainingAmountCents: 8000,
+      })
+      .returning();
+
+    // March draws 5000 of the 8000.
+    const march = await generate("2026-03-01");
+    expect(march[0]?.totalCents).toBe(0);
+
+    await db
+      .update(creditGrant)
+      .set({ revokedAt: new Date() })
+      .where(eq(creditGrant.id, grant!.id));
+
+    // April gets nothing — the remaining 3000 is no longer allocatable.
+    const april = await generate("2026-04-01");
+    expect(april[0]?.totalCents).toBe(5000);
+
+    const [afterGrant] = await db.select().from(creditGrant).where(eq(creditGrant.id, grant!.id));
+    expect(afterGrant?.remainingAmountCents).toBe(3000);
+  });
 });
 
 describe("billing integration — mandate constraint", () => {
@@ -380,5 +443,64 @@ describe("billing integration — SEPA batch", () => {
     });
     expect(afterPart.included).toHaveLength(0);
     expect(afterPart.excluded[0]?.reason).toBe("already_exported");
+  });
+
+  async function seedCreditorSettings() {
+    await db.insert(organizationSettings).values({
+      organizationId: ORG,
+      creditorName: "Test Dojo e. V.",
+      creditorIban: "DE89370400440532013000",
+      creditorBic: "COBADEFFXXX",
+      creditorId: "DE98ZZZ09999999999",
+      initiatorName: "Test Dojo e. V.",
+      batchBooking: true,
+    });
+  }
+
+  it("generates invoices, renders XML, and completes the batch in one run", async () => {
+    const member = await seedMember();
+    const c = await seedContract(member.id);
+    await seedGroupMembership(member.id, 5000);
+    await seedMandate(member.id, c.id);
+    await seedCreditorSettings();
+
+    const result = await db.transaction((tx) =>
+      prepareSepaCollection(tx, {
+        organizationId: ORG,
+        collectionDate: "2026-03-15",
+      }),
+    );
+
+    expect(result.createdInvoiceCount).toBe(1);
+    expect(result.batch.status).toBe("downloaded");
+    expect(result.batch.transactionCount).toBe(1);
+    expect(result.batch.totalAmountCents).toBe(5000);
+    expect(result.xml).toContain("pain.008.001.08");
+  });
+
+  it("does not collect an invoice from a month after the collection date", async () => {
+    const member = await seedMember();
+    const c = await seedContract(member.id);
+    await seedGroupMembership(member.id, 5000);
+    await seedMandate(member.id, c.id);
+    await seedCreditorSettings();
+    await generate("2026-04-01");
+
+    const result = await db.transaction((tx) =>
+      prepareSepaCollection(tx, {
+        organizationId: ORG,
+        collectionDate: "2026-03-15",
+      }),
+    );
+
+    expect(result.batch.transactionCount).toBe(1);
+    expect(result.includedInvoices[0]?.billingPeriodStart).toBe("2026-03-01");
+
+    const aprilEligibility = await loadBatchEligibility(db, ORG, "2026-04-30");
+    const aprilInvoice = aprilEligibility.invoices.find(
+      (candidate) => candidate.billingPeriodStart === "2026-04-01",
+    );
+    expect(aprilInvoice).toBeDefined();
+    expect(aprilEligibility.exportedInvoiceIds.has(aprilInvoice!.id)).toBe(false);
   });
 });

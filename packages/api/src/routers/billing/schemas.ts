@@ -1,3 +1,4 @@
+import { creditGrantType } from "@matdesk/db/schema";
 import { z } from "zod";
 
 import { parseYmd } from "../../domain/billing/dates";
@@ -13,6 +14,9 @@ export const monthStartSchema = z
   .refine((v) => parseYmd(v) !== null, "Must be a real month");
 
 export const invoiceStatusSchema = z.enum(["draft", "finalized", "void"]);
-export const creditGrantTypeSchema = z.enum(["money", "billing_cycles"]);
+// Derived from the pg enum so the DB constraint and the input validator can
+// never drift. (`invoice.status` above is still a bare text column — when it
+// becomes an enum too, give it the same treatment.)
+export const creditGrantTypeSchema = z.enum(creditGrantType.enumValues);
 
 export const idInput = z.object({ id: z.uuid() });

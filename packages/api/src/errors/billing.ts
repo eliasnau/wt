@@ -31,6 +31,18 @@ export const billingErrors = defineErrorCatalog("billing", {
     why: "The mandate doesn't exist or belongs to another organization.",
     fix: "Refresh the mandate list and try again.",
   },
+  CREDIT_GRANT_NOT_FOUND: {
+    status: 404,
+    message: "Credit grant not found",
+    why: "The credit grant doesn't exist or belongs to another organization.",
+    fix: "Refresh the credit list and try again.",
+  },
+  CREDIT_GRANT_ALREADY_REVOKED: {
+    status: 409,
+    message: "Credit grant is already revoked",
+    why: "This grant was withdrawn earlier and is no longer being allocated.",
+    fix: "Nothing to do — create a new grant if the member should get credit.",
+  },
   NO_ELIGIBLE_INVOICES: {
     status: 400,
     message: "No eligible invoices for SEPA export",

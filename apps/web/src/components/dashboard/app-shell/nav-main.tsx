@@ -97,7 +97,7 @@ function NavCollapsible({
 						{subItems.map((sub) => (
 							<MenuItem
 								key={sub.title}
-								className={cn(isActive(sub.path) && "bg-accent text-accent-foreground")}
+								className={cn(isActive(sub.path, sub.exact) && "bg-accent text-accent-foreground")}
 								render={<Link to={sub.path} />}
 							>
 								{sub.icon}
@@ -129,7 +129,7 @@ function NavCollapsible({
 					{subItems.map((sub) => (
 						<SidebarMenuSubItem key={sub.title}>
 							<SidebarMenuSubButton
-								isActive={isActive(sub.path)}
+								isActive={isActive(sub.path, sub.exact)}
 								render={<Link to={sub.path} />}
 							>
 								{sub.icon}

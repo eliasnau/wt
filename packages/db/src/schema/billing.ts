@@ -4,6 +4,7 @@ import {
   date,
   index,
   integer,
+  pgEnum,
   pgTable,
   text,
   timestamp,
@@ -107,6 +108,14 @@ export const sepaMandate = pgTable(
   ],
 );
 
+/**
+ * A credit grant is either a money balance or a number of free billing cycles.
+ * Enforced at the DB level (rather than the comment-only convention the older
+ * billing columns use) because the allocation engine branches on this value —
+ * an unexpected string would silently skip a member's credit.
+ */
+export const creditGrantType = pgEnum("credit_grant_type", ["money", "billing_cycles"]);
+
 export const creditGrant = pgTable(
   "credit_grant",
   {
@@ -120,8 +129,7 @@ export const creditGrant = pgTable(
     contractId: uuid("contract_id")
       .notNull()
       .references(() => contract.id, { onDelete: "restrict" }),
-    // money | billing_cycles
-    type: text("type").notNull(),
+    type: creditGrantType("type").notNull(),
     originalAmountCents: integer("original_amount_cents"),
     remainingAmountCents: integer("remaining_amount_cents"),
     originalCycles: integer("original_cycles"),
@@ -130,6 +138,10 @@ export const creditGrant = pgTable(
     expiresAt: date("expires_at"),
     description: text("description"),
     notes: text("notes"),
+    // Withdrawn by an operator. Revoked grants keep their consumption history
+    // (invoice_line rows still reference them) but stop being allocated —
+    // `NULL` is the active state, so there's no second boolean to disagree with.
+    revokedAt: timestamp("revoked_at"),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at")
       .defaultNow()

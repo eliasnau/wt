@@ -25,6 +25,7 @@ type AuthContextValue = {
   organizations: Organization[];
   activeOrganization: ActiveOrganization | null;
   isOrganizationsPending: boolean;
+  organizationsError: OrganizationsQuery["error"];
 
   /** Refetch everything (session + organizations). */
   refetch: () => Promise<void>;
@@ -50,9 +51,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const organizationsQuery = authClient.useListOrganizations();
   const activeOrganizationQuery = authClient.useActiveOrganization();
 
-  const session = (
-    liveSession.isPending ? hydratedSession.data : liveSession.data
-  ) as Session | null | undefined;
+  const session = (liveSession.isPending ? hydratedSession.data : liveSession.data) as
+    | Session
+    | null
+    | undefined;
   const isSessionPending = liveSession.isPending && hydratedSession.isPending;
 
   const refetchSession = liveSession.refetch;
@@ -60,16 +62,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refetchActiveOrganization = activeOrganizationQuery.refetch;
 
   const refetch = useCallback(async () => {
-    await Promise.all([
-      refetchSession(),
-      refetchOrganizations(),
-      refetchActiveOrganization(),
-    ]);
+    await Promise.all([refetchSession(), refetchOrganizations(), refetchActiveOrganization()]);
   }, [refetchSession, refetchOrganizations, refetchActiveOrganization]);
 
   const setActiveOrganization = useCallback(
     async (organizationId: string | null) => {
-      await authClient.organization.setActive({ organizationId });
+      const result = await authClient.organization.setActive({ organizationId });
+      if (result.error) {
+        throw new Error(result.error.message ?? "Could not activate organization");
+      }
       await Promise.all([refetchSession(), refetchActiveOrganization()]);
     },
     [refetchSession, refetchActiveOrganization],
@@ -85,6 +86,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       organizations: organizationsQuery.data ?? [],
       activeOrganization: activeOrganizationQuery.data ?? null,
       isOrganizationsPending: organizationsQuery.isPending,
+      organizationsError: organizationsQuery.error,
 
       refetch,
       refetchSession,
@@ -100,6 +102,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       liveSession.error,
       organizationsQuery.data,
       organizationsQuery.isPending,
+      organizationsQuery.error,
       activeOrganizationQuery.data,
       refetch,
       refetchSession,

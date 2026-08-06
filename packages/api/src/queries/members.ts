@@ -1,5 +1,5 @@
 import { and, db, eq, inArray, isNull } from "@matdesk/db";
-import { group, groupMember } from "@matdesk/db/schema";
+import { contract, group, groupMember } from "@matdesk/db/schema";
 
 /** Fetch a member by id within an organization. Returns `undefined` if missing —
  *  callers decide how to handle (typically throw `members.NOT_FOUND`). */
@@ -18,17 +18,25 @@ export async function getMemberWithDetails(
   memberId: string,
   organizationId: string,
 ) {
-  return db.query.clubMember.findFirst({
+  const member = await db.query.clubMember.findFirst({
     where: (m, { and, eq }) =>
       and(eq(m.id, memberId), eq(m.organizationId, organizationId)),
     with: {
-      contracts: true,
       groupMembers: {
         where: (gm, { isNull }) => isNull(gm.endDate),
         with: { group: true },
       },
     },
   });
+  if (!member) return undefined;
+
+  // `contract` has no declared clubMember-side relation, so load it explicitly.
+  const contracts = await db
+    .select()
+    .from(contract)
+    .where(eq(contract.memberId, memberId));
+
+  return { ...member, contracts };
 }
 
 export type MemberGroupMembership = {
