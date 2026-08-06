@@ -5,7 +5,7 @@ import { ResponsiveContainer, AreaChart, Area, LineChart, Line, BarChart, Bar } 
 import { ChartStyle, getColorsCount, type ChartConfig } from "@/components/evilcharts/ui/chart";
 import { useCallback, useEffect, type ComponentProps } from "react";
 import type { MotionValue } from "motion/react";
-import { cn } from "@/lib/utils";
+import { cn } from "@matdesk/ui/lib/utils";
 import * as React from "react";
 
 // ─── Types ──────────────────────────────────────────────────────────────────

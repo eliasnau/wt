@@ -1,33 +1,35 @@
-import type { NextRequest } from "next/server";
-import type { WideEvent } from "./middleware/wideEvent";
+import { auth } from "@matdesk/auth";
 
-export interface BaseContext {
-	headers: Headers;
-	req: NextRequest;
+const IP_ADDRESS_HEADERS = ["x-forwarded-for", "x-real-ip", "x-vercel-forwarded-for"] as const;
+
+function getIpAddress(headers: Headers) {
+  for (const header of IP_ADDRESS_HEADERS) {
+    const ipAddress = headers.get(header)?.split(",")[0]?.trim();
+    if (ipAddress) return ipAddress;
+  }
+
+  return null;
 }
 
-export interface Context extends BaseContext {
-	wideEvent: WideEvent;
-	session?: {
-		id: string;
-		createdAt: Date;
-		updatedAt: Date;
-		userId: string;
-		expiresAt: Date;
-		token: string;
-		ipAddress?: string | null;
-		userAgent?: string | null;
-		activeOrganizationId?: string | null;
-	};
-	user?: {
-		id: string;
-	};
-	userId?: string;
+export async function createContext({ req }: { req: Request }) {
+  const session = await auth.api.getSession({
+    headers: req.headers,
+  });
+
+  // Client IP for rate-limiting anonymous requests (authed requests key on the
+  // user id instead). `x-forwarded-for` may be a comma-separated list — the
+  // left-most entry is the original client.
+  const ipAddress = getIpAddress(req.headers);
+
+  return {
+    auth: null,
+    session,
+    ipAddress,
+    // Original request headers — used by `requirePermission` to call into
+    // `auth.api.hasPermission`, which resolves the active member role from
+    // the session cookie.
+    headers: req.headers,
+  };
 }
 
-export async function createContext(req: NextRequest): Promise<BaseContext> {
-	return {
-		headers: req.headers,
-		req,
-	};
-}
+export type Context = Awaited<ReturnType<typeof createContext>>;

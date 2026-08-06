@@ -1,46 +1,44 @@
 {
-	"name": "@repo/api",
-	"exports": {
-		".": {
-			"default": "./src/index.ts"
-		},
-		"./*": {
-			"default": "./src/*.ts"
-		}
-	},
-	"type": "module",
-	"scripts": {},
-	"devDependencies": {
-		"@repo/config": "workspace:*"
-	},
-	"peerDependencies": {
-		"typescript": "^5 || ^6"
-	},
-	"dependencies": {
-		"@arcjet/next": "^1.4.0",
-		"@axiomhq/js": "^1.6.0",
-		"@axiomhq/logging": "^0.2.0",
-		"@axiomhq/nextjs": "^0.2.0",
-		"@opentelemetry/api-logs": "^0.215.0",
-		"@opentelemetry/exporter-logs-otlp-http": "^0.215.0",
-		"@opentelemetry/resources": "^2.7.0",
-		"@opentelemetry/sdk-logs": "^0.215.0",
-		"@orpc/client": "catalog:",
-		"@orpc/contract": "catalog:",
-		"@orpc/openapi": "catalog:",
-		"@orpc/server": "catalog:",
-		"@orpc/zod": "catalog:",
-		"@repo/auth": "workspace:*",
-		"@repo/autumn": "workspace:*",
-		"@repo/db": "workspace:*",
-		"@repo/env": "workspace:*",
-		"@vercel/functions": "^3.4.3",
-		"@vercel/sdk": "^1.19.39",
-		"botid": "^1.5.11",
-		"dotenv": "catalog:",
-		"next": "16.2.4",
-		"posthog-node": "^5.29.2",
-		"sepa": "^3.0.0",
-		"zod": "catalog:"
-	}
+  "name": "@matdesk/api",
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    },
+    "./errors": {
+      "default": "./src/errors/index.ts"
+    },
+    "./audit": {
+      "default": "./src/audit/index.ts"
+    },
+    "./*": {
+      "default": "./src/*.ts"
+    }
+  },
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@matdesk/auth": "workspace:*",
+    "@matdesk/db": "workspace:*",
+    "@matdesk/env": "workspace:*",
+    "@orpc/client": "catalog:",
+    "@orpc/openapi": "catalog:",
+    "@orpc/server": "catalog:",
+    "@orpc/zod": "catalog:",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.38.0",
+    "dotenv": "catalog:",
+    "evlog": "^2.18.1",
+    "sepa": "^3.0.0",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@electric-sql/pglite": "^0.2.17",
+    "@matdesk/config": "workspace:*",
+    "drizzle-orm": "^0.45.1",
+    "typescript": "catalog:",
+    "vitest": "^3.2.4"
+  }
 }

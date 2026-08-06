@@ -1,44 +1,28 @@
 # Dependencies
 node_modules
 .pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
-
-# Testing
-coverage
-*.test.js.snap
+.pnp.js
 
 # Build outputs
-.next/
-out/
-build/
-dist/
-.vinxi
-.output
-.react-router/
-.tanstack/
-.nitro/
-.turbo
-.open-next
+dist
+build
+*.tsbuildinfo
 
-# Deployment
-.vercel
-.netlify
-.wrangler
-.alchemy
-
-# Environment & local files
+# Environment variables
 .env
-.env.local
 .env*.local
-!.env.example
+
+# IDEs and editors
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea
+*.swp
+*.swo
+*~
 .DS_Store
-*.pem
-*.local
 
 # Logs
 logs
@@ -46,35 +30,25 @@ logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
 lerna-debug.log*
+.pnpm-debug.log*
 
-# TypeScript
-*.tsbuildinfo
-next-env.d.ts
+# evlog filesystem drain (.evlog/logs NDJSON)
+.evlog/
 
-# IDE
-.vscode/*
-!.vscode/extensions.json
-!.vscode/settings.json
-.idea
-*.swp
-*.swo
-*~
+# Turbo
+.turbo
+.nx
 
-# OS
-.DS_Store
-Thumbs.db
+# Better-T-Stack
+.alchemy
 
-# Convex
-.convex/
-_generated/
+# Testing
+coverage
+.nyc_output
 
-# Clerk
-.clerk/
-
-# Other
-dev-dist
-.wrangler
-.dev.vars*
+# Misc
+*.tgz
 .cache
+tmp
+temp

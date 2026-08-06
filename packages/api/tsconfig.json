@@ -1,11 +1,15 @@
 {
-	"extends": "@repo/config/tsconfig.base.json",
-	"compilerOptions": {
-		"declaration": true,
-		"declarationMap": true,
-		"sourceMap": true,
-		"outDir": "dist",
-		"composite": true,
-		"jsx": "react-jsx"
-	}
+  "extends": "@matdesk/config/tsconfig.base.json",
+  "compilerOptions": {
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "outDir": "dist",
+    "composite": true,
+    // `DOM` makes the global `Headers` / `Request` / `Response` / `URL` types
+    // reachable via a portable lib reference. Without it, exported inferred
+    // types that touch `Headers` fall back to `undici-types`, which isn't a
+    // portable path and fails the composite declaration emit.
+    "lib": ["ESNext", "DOM"]
+  }
 }

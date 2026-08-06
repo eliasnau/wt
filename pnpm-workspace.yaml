@@ -1,16 +1,24 @@
 packages:
   - apps/*
   - packages/*
-
+allowBuilds:
+  esbuild: true
+  msw: true
+  msgpackr-extract: true
 catalog:
-  '@orpc/client': ^1.13.14
-  '@orpc/contract': ^1.13.14
-  '@orpc/openapi': ^1.13.14
-  '@orpc/server': ^1.13.14
-  '@orpc/tanstack-query': ^1.13.14
-  '@orpc/zod': ^1.13.14
-  convex: ^1.35.1
-  dotenv: 17.4.2
-  next: ^16.2.4
-  typescript: ^6.0.3
-  zod: ^4.3.6
+  dotenv: ^17.2.2
+  zod: ^4.1.13
+  typescript: ^6
+  "@types/node": ^22.13.14
+  next-themes: ^0.4.6
+  "@orpc/server": ^1.13.14
+  "@orpc/client": ^1.13.14
+  "@orpc/openapi": ^1.13.14
+  "@orpc/zod": ^1.13.14
+  "@orpc/tanstack-query": ^1.13.14
+  better-auth: 1.6.11
+  "@better-auth/passkey": 1.6.11
+  "@better-auth/infra": 0.2.8
+  "@tanstack/react-form": ^1.28.0
+  "@types/react-dom": ^19.2.3
+  "@better-auth/expo": 1.6.11

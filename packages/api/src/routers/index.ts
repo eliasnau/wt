@@ -1,39 +1,31 @@
 import type { RouterClient } from "@orpc/server";
-import { publicProcedure } from "../index";
-import { billingRouter } from "./billing";
-import { groupsRouter } from "./groups";
-import { inventoryRouter } from "./inventory";
-import { membersRouter } from "./members";
-import { organizationsRouter } from "./organizations";
-import { selfRegistrationsRouter } from "./selfRegistrations";
-import { statisticsRouter } from "./statistics";
+
+import { protectedProcedure, publicProcedure } from "../index";
+import { adminRouter } from "./admin/router";
+import { billingRouter } from "./billing/router";
+import { groupsRouter } from "./groups/router";
+import { inventoryRouter } from "./inventory/router";
+import { membersRouter } from "./members/router";
+import { statisticsRouter } from "./statistics/router";
 
 export const appRouter = {
-	healthCheck: publicProcedure
-		.handler(() => {
-			return "OK";
-		})
-		.route({ method: "GET", successStatus: 200 }),
-	members: { ...membersRouter },
-	billing: {
-		...billingRouter,
-	},
-	groups: {
-		...groupsRouter,
-	},
-	inventory: {
-		...inventoryRouter,
-	},
-	organizations: {
-		...organizationsRouter,
-	},
-	statistics: {
-		...statisticsRouter,
-	},
-	selfRegistrations: {
-		...selfRegistrationsRouter,
-	},
+  // Cheap call — uses the default token cost of 1.
+  healthCheck: publicProcedure.handler(() => {
+    return "OK";
+  }),
+  // Example of a heavier procedure: consumes 5 tokens per call.
+  privateData: protectedProcedure.meta({ cost: 5 }).handler(({ context }) => {
+    return {
+      message: "This is private",
+      user: context.session?.user,
+    };
+  }),
+  groups: groupsRouter,
+  members: membersRouter,
+  inventory: inventoryRouter,
+  statistics: statisticsRouter,
+  billing: billingRouter,
+  admin: adminRouter,
 };
-
 export type AppRouter = typeof appRouter;
 export type AppRouterClient = RouterClient<typeof appRouter>;

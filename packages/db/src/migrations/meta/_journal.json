@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1786037520800,
+      "tag": "0000_baseline_at_migration_adoption",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1786037528909,
+      "tag": "0001_credit_grant_type_enum_and_revoked_at",
+      "breakpoints": true
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 import { getPayloadConfigFromPayload, getColorsCount, useChart } from "@/components/evilcharts/ui/chart";
 import type { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
 import * as RechartsPrimitive from "recharts";
-import { cn } from "@/lib/utils";
+import { cn } from "@matdesk/ui/lib/utils";
 import * as React from "react";
 
 type TooltipRoundness = "sm" | "md" | "lg" | "xl";
