@@ -28,6 +28,7 @@ export {
   isNull,
   lt,
   lte,
+  ne,
   or,
   type SQL,
   sql,

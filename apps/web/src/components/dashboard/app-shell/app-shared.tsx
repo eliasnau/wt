@@ -1,5 +1,6 @@
 import {
   BarChart3Icon,
+  CalendarDaysIcon,
   BoxesIcon,
   CameraIcon,
   CreditCardIcon,
@@ -10,7 +11,7 @@ import {
   PackageIcon,
   ReceiptTextIcon,
   SettingsIcon,
-	SlidersHorizontalIcon,
+  SlidersHorizontalIcon,
   TrendingUpIcon,
   UsersIcon,
 } from "lucide-react";
@@ -65,6 +66,11 @@ export const navGroups: NavGroup[] = [
         title: "Gruppen",
         path: "/dashboard/groups",
         icon: <BoxesIcon />,
+      },
+      {
+        title: "Veranstaltungen",
+        path: "/dashboard/events",
+        icon: <CalendarDaysIcon />,
       },
       {
         title: "Statistiken",

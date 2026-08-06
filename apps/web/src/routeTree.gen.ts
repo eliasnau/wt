@@ -36,6 +36,7 @@ import { Route as DashboardSettingsIndexRouteImport } from './routes/dashboard/s
 import { Route as DashboardMembersIndexRouteImport } from './routes/dashboard/members/index'
 import { Route as DashboardInventoryIndexRouteImport } from './routes/dashboard/inventory/index'
 import { Route as DashboardFinanceIndexRouteImport } from './routes/dashboard/finance/index'
+import { Route as DashboardEventsIndexRouteImport } from './routes/dashboard/events/index'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AdminOrganizationsIndexRouteImport } from './routes/admin/organizations/index'
 import { Route as DashboardStatisticsTimelineRouteImport } from './routes/dashboard/statistics/timeline'
@@ -47,6 +48,7 @@ import { Route as DashboardMembersNewRouteImport } from './routes/dashboard/memb
 import { Route as DashboardMembersMemberIdRouteImport } from './routes/dashboard/members/$memberId'
 import { Route as DashboardInventoryProductIdRouteImport } from './routes/dashboard/inventory/$productId'
 import { Route as DashboardFinanceInvoicesRouteImport } from './routes/dashboard/finance/invoices'
+import { Route as DashboardEventsEventIdRouteImport } from './routes/dashboard/events/$eventId'
 import { Route as ApiRpcSplatRouteImport } from './routes/api/rpc/$'
 import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 import { Route as AdminUsersUserIdRouteImport } from './routes/admin/users/$userId'
@@ -187,6 +189,11 @@ const DashboardFinanceIndexRoute = DashboardFinanceIndexRouteImport.update({
   path: '/',
   getParentRoute: () => DashboardFinanceRouteRoute,
 } as any)
+const DashboardEventsIndexRoute = DashboardEventsIndexRouteImport.update({
+  id: '/events/',
+  path: '/events/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
   id: '/users/',
   path: '/users/',
@@ -248,6 +255,11 @@ const DashboardFinanceInvoicesRoute =
     path: '/invoices',
     getParentRoute: () => DashboardFinanceRouteRoute,
   } as any)
+const DashboardEventsEventIdRoute = DashboardEventsEventIdRouteImport.update({
+  id: '/events/$eventId',
+  path: '/events/$eventId',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const ApiRpcSplatRoute = ApiRpcSplatRouteImport.update({
   id: '/api/rpc/$',
   path: '/api/rpc/$',
@@ -295,6 +307,7 @@ export interface FileRoutesByFullPath {
   '/admin/users/$userId': typeof AdminUsersUserIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/dashboard/events/$eventId': typeof DashboardEventsEventIdRoute
   '/dashboard/finance/invoices': typeof DashboardFinanceInvoicesRoute
   '/dashboard/inventory/$productId': typeof DashboardInventoryProductIdRoute
   '/dashboard/members/$memberId': typeof DashboardMembersMemberIdRoute
@@ -306,6 +319,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/statistics/timeline': typeof DashboardStatisticsTimelineRoute
   '/admin/organizations/': typeof AdminOrganizationsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
+  '/dashboard/events/': typeof DashboardEventsIndexRoute
   '/dashboard/finance/': typeof DashboardFinanceIndexRoute
   '/dashboard/inventory/': typeof DashboardInventoryIndexRoute
   '/dashboard/members/': typeof DashboardMembersIndexRoute
@@ -333,6 +347,7 @@ export interface FileRoutesByTo {
   '/admin/users/$userId': typeof AdminUsersUserIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/dashboard/events/$eventId': typeof DashboardEventsEventIdRoute
   '/dashboard/finance/invoices': typeof DashboardFinanceInvoicesRoute
   '/dashboard/inventory/$productId': typeof DashboardInventoryProductIdRoute
   '/dashboard/members/$memberId': typeof DashboardMembersMemberIdRoute
@@ -344,6 +359,7 @@ export interface FileRoutesByTo {
   '/dashboard/statistics/timeline': typeof DashboardStatisticsTimelineRoute
   '/admin/organizations': typeof AdminOrganizationsIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
+  '/dashboard/events': typeof DashboardEventsIndexRoute
   '/dashboard/finance': typeof DashboardFinanceIndexRoute
   '/dashboard/inventory': typeof DashboardInventoryIndexRoute
   '/dashboard/members': typeof DashboardMembersIndexRoute
@@ -378,6 +394,7 @@ export interface FileRoutesById {
   '/admin/users/$userId': typeof AdminUsersUserIdRoute
   '/api/auth/$': typeof ApiAuthSplatRoute
   '/api/rpc/$': typeof ApiRpcSplatRoute
+  '/dashboard/events/$eventId': typeof DashboardEventsEventIdRoute
   '/dashboard/finance/invoices': typeof DashboardFinanceInvoicesRoute
   '/dashboard/inventory/$productId': typeof DashboardInventoryProductIdRoute
   '/dashboard/members/$memberId': typeof DashboardMembersMemberIdRoute
@@ -389,6 +406,7 @@ export interface FileRoutesById {
   '/dashboard/statistics/timeline': typeof DashboardStatisticsTimelineRoute
   '/admin/organizations/': typeof AdminOrganizationsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
+  '/dashboard/events/': typeof DashboardEventsIndexRoute
   '/dashboard/finance/': typeof DashboardFinanceIndexRoute
   '/dashboard/inventory/': typeof DashboardInventoryIndexRoute
   '/dashboard/members/': typeof DashboardMembersIndexRoute
@@ -423,6 +441,7 @@ export interface FileRouteTypes {
     | '/admin/users/$userId'
     | '/api/auth/$'
     | '/api/rpc/$'
+    | '/dashboard/events/$eventId'
     | '/dashboard/finance/invoices'
     | '/dashboard/inventory/$productId'
     | '/dashboard/members/$memberId'
@@ -434,6 +453,7 @@ export interface FileRouteTypes {
     | '/dashboard/statistics/timeline'
     | '/admin/organizations/'
     | '/admin/users/'
+    | '/dashboard/events/'
     | '/dashboard/finance/'
     | '/dashboard/inventory/'
     | '/dashboard/members/'
@@ -461,6 +481,7 @@ export interface FileRouteTypes {
     | '/admin/users/$userId'
     | '/api/auth/$'
     | '/api/rpc/$'
+    | '/dashboard/events/$eventId'
     | '/dashboard/finance/invoices'
     | '/dashboard/inventory/$productId'
     | '/dashboard/members/$memberId'
@@ -472,6 +493,7 @@ export interface FileRouteTypes {
     | '/dashboard/statistics/timeline'
     | '/admin/organizations'
     | '/admin/users'
+    | '/dashboard/events'
     | '/dashboard/finance'
     | '/dashboard/inventory'
     | '/dashboard/members'
@@ -505,6 +527,7 @@ export interface FileRouteTypes {
     | '/admin/users/$userId'
     | '/api/auth/$'
     | '/api/rpc/$'
+    | '/dashboard/events/$eventId'
     | '/dashboard/finance/invoices'
     | '/dashboard/inventory/$productId'
     | '/dashboard/members/$memberId'
@@ -516,6 +539,7 @@ export interface FileRouteTypes {
     | '/dashboard/statistics/timeline'
     | '/admin/organizations/'
     | '/admin/users/'
+    | '/dashboard/events/'
     | '/dashboard/finance/'
     | '/dashboard/inventory/'
     | '/dashboard/members/'
@@ -725,6 +749,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardFinanceIndexRouteImport
       parentRoute: typeof DashboardFinanceRouteRoute
     }
+    '/dashboard/events/': {
+      id: '/dashboard/events/'
+      path: '/events'
+      fullPath: '/dashboard/events/'
+      preLoaderRoute: typeof DashboardEventsIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/admin/users/': {
       id: '/admin/users/'
       path: '/users'
@@ -801,6 +832,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/dashboard/finance/invoices'
       preLoaderRoute: typeof DashboardFinanceInvoicesRouteImport
       parentRoute: typeof DashboardFinanceRouteRoute
+    }
+    '/dashboard/events/$eventId': {
+      id: '/dashboard/events/$eventId'
+      path: '/events/$eventId'
+      fullPath: '/dashboard/events/$eventId'
+      preLoaderRoute: typeof DashboardEventsEventIdRouteImport
+      parentRoute: typeof DashboardRouteRoute
     }
     '/api/rpc/$': {
       id: '/api/rpc/$'
@@ -911,12 +949,14 @@ interface DashboardRouteRouteChildren {
   DashboardBillingRoute: typeof DashboardBillingRoute
   DashboardGroupsRoute: typeof DashboardGroupsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
+  DashboardEventsEventIdRoute: typeof DashboardEventsEventIdRoute
   DashboardInventoryProductIdRoute: typeof DashboardInventoryProductIdRoute
   DashboardMembersMemberIdRoute: typeof DashboardMembersMemberIdRoute
   DashboardMembersNewRoute: typeof DashboardMembersNewRoute
   DashboardStatisticsMembersRoute: typeof DashboardStatisticsMembersRoute
   DashboardStatisticsSnapshotRoute: typeof DashboardStatisticsSnapshotRoute
   DashboardStatisticsTimelineRoute: typeof DashboardStatisticsTimelineRoute
+  DashboardEventsIndexRoute: typeof DashboardEventsIndexRoute
   DashboardInventoryIndexRoute: typeof DashboardInventoryIndexRoute
   DashboardMembersIndexRoute: typeof DashboardMembersIndexRoute
   DashboardStatisticsIndexRoute: typeof DashboardStatisticsIndexRoute
@@ -929,12 +969,14 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardBillingRoute: DashboardBillingRoute,
   DashboardGroupsRoute: DashboardGroupsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
+  DashboardEventsEventIdRoute: DashboardEventsEventIdRoute,
   DashboardInventoryProductIdRoute: DashboardInventoryProductIdRoute,
   DashboardMembersMemberIdRoute: DashboardMembersMemberIdRoute,
   DashboardMembersNewRoute: DashboardMembersNewRoute,
   DashboardStatisticsMembersRoute: DashboardStatisticsMembersRoute,
   DashboardStatisticsSnapshotRoute: DashboardStatisticsSnapshotRoute,
   DashboardStatisticsTimelineRoute: DashboardStatisticsTimelineRoute,
+  DashboardEventsIndexRoute: DashboardEventsIndexRoute,
   DashboardInventoryIndexRoute: DashboardInventoryIndexRoute,
   DashboardMembersIndexRoute: DashboardMembersIndexRoute,
   DashboardStatisticsIndexRoute: DashboardStatisticsIndexRoute,

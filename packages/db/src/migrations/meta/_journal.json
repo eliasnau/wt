@@ -15,6 +15,13 @@
       "when": 1786037528909,
       "tag": "0001_credit_grant_type_enum_and_revoked_at",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1786047719456,
+      "tag": "0002_common_liz_osborn",
+      "breakpoints": true
     }
   ]
 }
