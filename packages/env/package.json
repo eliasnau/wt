@@ -17,5 +17,8 @@
     "@matdesk/config": "workspace:*",
     "@types/node": "catalog:",
     "typescript": "catalog:"
+  },
+  "scripts": {
+    "check-types": "tsc --noEmit"
   }
 }

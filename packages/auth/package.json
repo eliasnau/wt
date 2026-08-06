@@ -10,7 +10,8 @@
     }
   },
   "scripts": {
-    "auth:generate": "pnpm dlx dotenv-cli -e ../../apps/web/.env -- pnpm dlx @better-auth/cli@latest generate --config ./src/index.ts --output ../db/src/schema/auth.ts"
+    "auth:generate": "pnpm dlx dotenv-cli -e ../../apps/web/.env -- pnpm dlx @better-auth/cli@latest generate --config ./src/index.ts --output ../db/src/schema/auth.ts",
+    "check-types": "tsc --noEmit"
   },
   "dependencies": {
     "@better-auth/expo": "catalog:",
