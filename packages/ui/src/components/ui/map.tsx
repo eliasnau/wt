@@ -1732,12 +1732,13 @@ function MapClusterLayer<
         features?: MapLibreGL.MapGeoJSONFeature[];
       },
     ) => {
-      const features = map.queryRenderedFeatures(e.point, {
+      // Destructure instead of indexing: `noUncheckedIndexedAccess` doesn't
+      // narrow `features[0]` from a `.length` test.
+      const [feature] = map.queryRenderedFeatures(e.point, {
         layers: [clusterLayerId],
       });
-      if (!features.length) return;
+      if (!feature) return;
 
-      const feature = features[0];
       const clusterId = feature.properties?.cluster_id as number;
       const pointCount = feature.properties?.point_count as number;
       const coordinates = (feature.geometry as GeoJSON.Point).coordinates as [
@@ -1764,9 +1765,9 @@ function MapClusterLayer<
         features?: MapLibreGL.MapGeoJSONFeature[];
       },
     ) => {
-      if (!onPointClick || !e.features?.length) return;
+      const [feature] = e.features ?? [];
+      if (!onPointClick || !feature) return;
 
-      const feature = e.features[0];
       const coordinates = (
         feature.geometry as GeoJSON.Point
       ).coordinates.slice() as [number, number];

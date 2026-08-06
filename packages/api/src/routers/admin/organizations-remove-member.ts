@@ -14,15 +14,18 @@ export const removeOrganizationMemberAdmin = adminProcedure
   .meta({ cost: 3 })
   .input(input)
   .handler(async ({ input }) => {
-    const removed = await db
+    // Destructure rather than checking `.length` — `noUncheckedIndexedAccess`
+    // doesn't narrow `removed[0]` from a length test, and this matches how the
+    // other single-row writes in this repo read.
+    const [removed] = await db
       .delete(member)
       .where(and(eq(member.organizationId, input.organizationId), eq(member.userId, input.userId)))
       .returning({ id: member.id });
 
-    if (removed.length === 0) {
+    if (!removed) {
       throw createError({ message: "Mitgliedschaft nicht gefunden", status: 404 });
     }
 
-    return { id: removed[0].id };
+    return { id: removed.id };
   })
   .route({ method: "POST", path: "/admin/organizations/remove-member" });
