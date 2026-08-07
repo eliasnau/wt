@@ -1,7 +1,7 @@
 "use client";
 
 import { Dialog as CommandDialogPrimitive } from "@base-ui/react/dialog";
-import { SearchIcon } from "lucide-react";
+import { Loader2Icon, SearchIcon } from "lucide-react";
 import type * as React from "react";
 import { cn } from "@matdesk/ui/lib/utils";
 import {
@@ -16,8 +16,7 @@ import {
   AutocompleteSeparator,
 } from "@matdesk/ui/components/autocomplete";
 
-export const CommandDialog: typeof CommandDialogPrimitive.Root =
-  CommandDialogPrimitive.Root;
+export const CommandDialog: typeof CommandDialogPrimitive.Root = CommandDialogPrimitive.Root;
 
 export const CommandDialogPortal: typeof CommandDialogPrimitive.Portal =
   CommandDialogPrimitive.Portal;
@@ -28,12 +27,7 @@ export const CommandCreateHandle: typeof CommandDialogPrimitive.createHandle =
 export function CommandDialogTrigger(
   props: CommandDialogPrimitive.Trigger.Props,
 ): React.ReactElement {
-  return (
-    <CommandDialogPrimitive.Trigger
-      data-slot="command-dialog-trigger"
-      {...props}
-    />
-  );
+  return <CommandDialogPrimitive.Trigger data-slot="command-dialog-trigger" {...props} />;
 }
 
 export function CommandDialogBackdrop({
@@ -113,9 +107,12 @@ export function Command({
 
 export function CommandInput({
   className,
+  loading = false,
   placeholder = undefined,
   ...props
-}: React.ComponentProps<typeof AutocompleteInput>): React.ReactElement {
+}: React.ComponentProps<typeof AutocompleteInput> & {
+  loading?: boolean;
+}): React.ReactElement {
   return (
     <div className="px-2.5 py-1.5">
       <AutocompleteInput
@@ -126,7 +123,8 @@ export function CommandInput({
         )}
         placeholder={placeholder}
         size="lg"
-        startAddon={<SearchIcon />}
+        aria-busy={loading || undefined}
+        startAddon={loading ? <Loader2Icon className="animate-spin" /> : <SearchIcon />}
         {...props}
       />
     </div>
@@ -178,13 +176,7 @@ export function CommandGroup({
   className,
   ...props
 }: React.ComponentProps<typeof AutocompleteGroup>): React.ReactElement {
-  return (
-    <AutocompleteGroup
-      className={className}
-      data-slot="command-group"
-      {...props}
-    />
-  );
+  return <AutocompleteGroup className={className} data-slot="command-group" {...props} />;
 }
 
 export function CommandGroupLabel({
@@ -192,11 +184,7 @@ export function CommandGroupLabel({
   ...props
 }: React.ComponentProps<typeof AutocompleteGroupLabel>): React.ReactElement {
   return (
-    <AutocompleteGroupLabel
-      className={className}
-      data-slot="command-group-label"
-      {...props}
-    />
+    <AutocompleteGroupLabel className={className} data-slot="command-group-label" {...props} />
   );
 }
 
@@ -211,11 +199,7 @@ export function CommandItem({
   ...props
 }: React.ComponentProps<typeof AutocompleteItem>): React.ReactElement {
   return (
-    <AutocompleteItem
-      className={cn("py-1.5", className)}
-      data-slot="command-item"
-      {...props}
-    />
+    <AutocompleteItem className={cn("py-1.5", className)} data-slot="command-item" {...props} />
   );
 }
 
