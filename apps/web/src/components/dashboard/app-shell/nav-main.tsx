@@ -25,8 +25,6 @@ import { type NavItem, navGroups } from "@/components/dashboard/app-shell/app-sh
 
 type IsActive = (path: string, exact?: boolean) => boolean;
 
-const collapsibleTextClass = "font-normal text-muted-foreground";
-
 export function NavMain() {
   const { state, isMobile } = useSidebar();
   const collapsed = state === "collapsed" && !isMobile;
@@ -94,7 +92,7 @@ function NavCollapsible({
           <MenuTrigger
             render={
               <SidebarMenuButton
-                className={cn("cursor-pointer", collapsibleTextClass)}
+                className="cursor-pointer"
                 isActive={false}
               />
             }
@@ -129,7 +127,7 @@ function NavCollapsible({
       <CollapsibleTrigger
         render={
           <SidebarMenuButton
-            className={cn("cursor-pointer", collapsibleTextClass)}
+            className="cursor-pointer"
             isActive={false}
           />
         }
@@ -143,7 +141,6 @@ function NavCollapsible({
           {subItems.map((sub) => (
             <SidebarMenuSubItem key={sub.title}>
               <SidebarMenuSubButton
-                className="font-normal text-muted-foreground data-active:text-muted-foreground [&_svg]:text-current"
                 isActive={isActive(sub.path, sub.exact)}
                 render={<Link to={sub.path} />}
               >
