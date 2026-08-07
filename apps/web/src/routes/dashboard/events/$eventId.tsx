@@ -263,8 +263,34 @@ function ParticipantsSection({
   );
   const updateMutation = useMutation(
     orpc.events.updateParticipant.mutationOptions({
-      onSuccess: refresh,
-      onError: (error) => toast.error(parseError(error).message),
+      onMutate: async ({ participantId, status }) => {
+        const query = eventDetailQueryOptions(eventId);
+        await queryClient.cancelQueries({ queryKey: query.queryKey });
+
+        const previousEvent = queryClient.getQueryData(query.queryKey);
+        queryClient.setQueryData(query.queryKey, (currentEvent) =>
+          currentEvent
+            ? {
+                ...currentEvent,
+                participants: currentEvent.participants.map((participant) =>
+                  participant.id === participantId ? { ...participant, status } : participant,
+                ),
+              }
+            : currentEvent,
+        );
+
+        return { previousEvent };
+      },
+      onError: (error, _variables, context) => {
+        if (context?.previousEvent) {
+          queryClient.setQueryData(
+            eventDetailQueryOptions(eventId).queryKey,
+            context.previousEvent,
+          );
+        }
+        toast.error(parseError(error).message);
+      },
+      onSettled: refresh,
     }),
   );
   const removeMutation = useMutation(
