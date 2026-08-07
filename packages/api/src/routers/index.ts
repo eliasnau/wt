@@ -3,6 +3,7 @@ import type { RouterClient } from "@orpc/server";
 import { protectedProcedure, publicProcedure } from "../index";
 import { adminRouter } from "./admin/router";
 import { billingRouter } from "./billing/router";
+import { coachingRouter } from "./coaching/router";
 import { groupsRouter } from "./groups/router";
 import { eventsRouter } from "./events/router";
 import { inventoryRouter } from "./inventory/router";
@@ -31,6 +32,7 @@ type AppRouterDefinition = {
   inventory: typeof inventoryRouter;
   statistics: typeof statisticsRouter;
   billing: typeof billingRouter;
+  coaching: typeof coachingRouter;
   admin: typeof adminRouter;
 };
 
@@ -46,6 +48,7 @@ export const appRouter: AppRouterDefinition = {
   inventory: inventoryRouter,
   statistics: statisticsRouter,
   billing: billingRouter,
+  coaching: coachingRouter,
   admin: adminRouter,
 };
 export type AppRouter = typeof appRouter;

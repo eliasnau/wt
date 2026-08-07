@@ -50,6 +50,7 @@ import { toast } from "sonner";
 
 import { AssignGroupDialog } from "@/components/dashboard/members/assign-group-dialog";
 import { MemberContractSheet } from "@/components/dashboard/members/member-contract-sheet";
+import { MemberCoachingCard } from "@/components/dashboard/members/member-coaching-card";
 import { MemberCreditsCard } from "@/components/dashboard/members/member-credits-card";
 import { MemberDetailsSheet } from "@/components/dashboard/members/member-details-sheet";
 import { MemberProgressionCard } from "@/components/dashboard/members/member-progression-card";
@@ -441,6 +442,11 @@ function MemberDetail({ member }: { member: Member }) {
       </CardFrame>
 
       <MemberProgressionCard memberId={member.id} />
+
+      <MemberCoachingCard
+        memberId={member.id}
+        memberName={`${member.firstName} ${member.lastName}`}
+      />
 
       {/* 3) Contract */}
       <CardFrame>
