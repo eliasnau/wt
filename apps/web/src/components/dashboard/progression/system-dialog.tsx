@@ -19,13 +19,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@matdesk/ui/components/select";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { cn } from "@matdesk/ui/lib/utils";
 import { parseError } from "evlog";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { orpc, queryClient } from "@/utils/orpc";
+import { orpc } from "@/utils/orpc";
 
 export type ProgressionSystemRow = {
   id: string;
@@ -75,6 +75,7 @@ export function SystemDialog({
   const [unitLabel, setUnitLabel] = useState("Graduierung");
   const [mode, setMode] = useState<"sequential" | "collection">("sequential");
   const [presetId, setPresetId] = useState<PresetId | null>(null);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!open) return;

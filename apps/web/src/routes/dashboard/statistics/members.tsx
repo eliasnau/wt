@@ -1,8 +1,16 @@
+import { Skeleton } from "@matdesk/ui/components/skeleton";
 import { createFileRoute } from "@tanstack/react-router";
 
 import { MemberMap } from "@/components/dashboard/statistics/member-map";
+import { groupsQueryOptions } from "@/queries/groups";
+import { statisticsMemberMapQueryOptions } from "@/queries/statistics";
 
 export const Route = createFileRoute("/dashboard/statistics/members")({
+  loader: ({ context }) => {
+    void context.queryClient.prefetchQuery(statisticsMemberMapQueryOptions());
+    void context.queryClient.prefetchQuery(groupsQueryOptions());
+  },
+  pendingComponent: () => <Skeleton className="h-[600px] rounded-2xl" />,
   component: RouteComponent,
 });
 

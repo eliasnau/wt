@@ -41,7 +41,7 @@ import {
 import { Textarea } from "@matdesk/ui/components/textarea";
 import { Map, MapControls, MapMarker, MarkerContent } from "@matdesk/ui/components/ui/map";
 import { cn } from "@matdesk/ui/lib/utils";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { parseError } from "evlog";
 import { ArrowLeftIcon, MapPinIcon, PlusIcon, Trash2Icon } from "lucide-react";
@@ -56,11 +56,16 @@ import { MemberDetailsSheet } from "@/components/dashboard/members/member-detail
 import { MemberProgressionCard } from "@/components/dashboard/members/member-progression-card";
 import { UserAvatar } from "@/components/auth/user-avatar";
 import { formatCents, formatDate } from "@/lib/format";
-import { client, orpc, queryClient } from "@/utils/orpc";
+import { memberDetailQueryOptions } from "@/queries/members";
+import { client, orpc } from "@/utils/orpc";
 
 type Member = Awaited<ReturnType<typeof client.members.get>>;
 
 export const Route = createFileRoute("/dashboard/members/$memberId")({
+  loader: ({ context, params }) => {
+    void context.queryClient.prefetchQuery(memberDetailQueryOptions(params.memberId));
+  },
+  pendingComponent: HeaderSkeleton,
   component: RouteComponent,
 });
 
@@ -150,7 +155,7 @@ function Detail({ label, value }: { label: string; value: ReactNode }) {
 
 function RouteComponent() {
   const { memberId } = Route.useParams();
-  const memberQuery = useQuery(orpc.members.get.queryOptions({ input: { memberId } }));
+  const memberQuery = useQuery(memberDetailQueryOptions(memberId));
 
   return (
     <div className="flex flex-col gap-6">
@@ -192,14 +197,8 @@ function HeaderSkeleton() {
   );
 }
 
-function invalidateMember(memberId: string) {
-  queryClient.invalidateQueries({
-    queryKey: orpc.members.get.key({ input: { memberId } }),
-  });
-  queryClient.invalidateQueries({ queryKey: orpc.members.query.key() });
-}
-
 function MemberDetail({ member }: { member: Member }) {
+  const queryClient = useQueryClient();
   const contract = member.contracts[0] ?? null;
 
   const [detailsOpen, setDetailsOpen] = useState(false);
@@ -214,6 +213,13 @@ function MemberDetail({ member }: { member: Member }) {
   const [mapOpen, setMapOpen] = useState(false);
   const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
 
+  function invalidateMember() {
+    queryClient.invalidateQueries({
+      queryKey: orpc.members.get.key({ input: { memberId: member.id } }),
+    });
+    queryClient.invalidateQueries({ queryKey: orpc.members.query.key() });
+  }
+
   const status = STATUS_META[memberStatus(contract)];
   const memberAge = age(member.birthdate);
   const isCancelled = Boolean(contract?.cancelledAt);
@@ -222,7 +228,7 @@ function MemberDetail({ member }: { member: Member }) {
     orpc.members.cancelContract.mutationOptions({
       onSuccess: () => {
         toast.success("Mitgliedschaft gekündigt");
-        invalidateMember(member.id);
+        invalidateMember();
         setCancelOpen(false);
         setCancelReason("");
       },
@@ -234,7 +240,7 @@ function MemberDetail({ member }: { member: Member }) {
     orpc.members.updateGroupMembership.mutationOptions({
       onSuccess: () => {
         toast.success("Beitrag aktualisiert");
-        invalidateMember(member.id);
+        invalidateMember();
         setPriceDrafts({});
       },
       onError: (error) => toast.error(parseError(error).message),
@@ -245,7 +251,7 @@ function MemberDetail({ member }: { member: Member }) {
     orpc.members.removeGroupMembership.mutationOptions({
       onSuccess: () => {
         toast.success("Aus Gruppe entfernt");
-        invalidateMember(member.id);
+        invalidateMember();
         setRemoving(null);
       },
       onError: (error) => toast.error(parseError(error).message),

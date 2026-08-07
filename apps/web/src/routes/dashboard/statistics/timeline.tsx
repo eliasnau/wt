@@ -35,13 +35,25 @@ import { ChartCard } from "@/components/dashboard/statistics/charts/chart-card";
 import { FlowTrendChart } from "@/components/dashboard/statistics/charts/flow-trend-chart";
 import { GroupTrendChart } from "@/components/dashboard/statistics/charts/group-trend-chart";
 import { TrendAreaChart } from "@/components/dashboard/statistics/charts/trend-area-chart";
-import { orpc } from "@/utils/orpc";
+import {
+	statisticsTimelineQueryOptions,
+	type TimelineGroupBy,
+} from "@/queries/statistics";
 
 export const Route = createFileRoute("/dashboard/statistics/timeline")({
+	loader: ({ context }) => {
+		const currentMonth = startOfMonth(new Date());
+		void context.queryClient.prefetchQuery(
+			statisticsTimelineQueryOptions({
+				startMonth: format(startOfMonth(subMonths(currentMonth, 5)), "yyyy-MM"),
+				endMonth: format(currentMonth, "yyyy-MM"),
+				groupBy: "month",
+			}),
+		);
+	},
+	pendingComponent: () => <Skeleton className="h-96 rounded-2xl" />,
 	component: RouteComponent,
 });
-
-type TimelineGroupBy = "month" | "quarter" | "year";
 
 const PERIOD_NOUN: Record<TimelineGroupBy, string> = {
 	month: "Monat",
@@ -163,7 +175,7 @@ function RouteComponent() {
 	const hasValidRange = startMonth <= endMonth;
 
 	const { data, isError, error, refetch } = useQuery({
-		...orpc.statistics.timeline.queryOptions({ input: { startMonth, endMonth, groupBy } }),
+		...statisticsTimelineQueryOptions({ startMonth, endMonth, groupBy }),
 		enabled: hasValidRange,
 	});
 

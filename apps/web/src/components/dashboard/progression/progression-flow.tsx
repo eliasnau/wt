@@ -212,9 +212,11 @@ function buildCollectionLayout(system: FlowSystem) {
 export function ProgressionFlow({
   system,
   onRankClick,
+  onRankHover,
 }: {
   system: FlowSystem;
   onRankClick?: (rankId: string) => void;
+  onRankHover?: (rankId: string) => void;
 }) {
   const { theme } = useTheme();
   const layout = useMemo(
@@ -285,6 +287,9 @@ export function ProgressionFlow({
         onEdgesChange={onEdgesChange}
         onNodeClick={(_, node) => {
           if (node.type === "rank") onRankClick?.(node.id);
+        }}
+        onNodeMouseEnter={(_, node) => {
+          if (node.type === "rank") onRankHover?.(node.id);
         }}
         onNodesChange={onNodesChange}
         panOnDrag

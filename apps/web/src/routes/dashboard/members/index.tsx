@@ -1,10 +1,25 @@
 import { Button } from "@matdesk/ui/components/button";
+import { Skeleton } from "@matdesk/ui/components/skeleton";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
 
 import { MembersCard } from "@/components/dashboard/members/members-card";
+import { groupsQueryOptions } from "@/queries/groups";
+import { membersListQueryOptions } from "@/queries/members";
 
 export const Route = createFileRoute("/dashboard/members/")({
+	loader: ({ context }) => {
+		void context.queryClient.prefetchQuery(groupsQueryOptions());
+		void context.queryClient.prefetchQuery(
+			membersListQueryOptions({
+					page: 1,
+					limit: 20,
+					statuses: ["active", "cancelled_but_active"],
+					sort: { field: "createdAt", direction: "desc" },
+			}),
+		);
+	},
+	pendingComponent: () => <Skeleton className="h-96 rounded-2xl" />,
 	component: RouteComponent,
 });
 

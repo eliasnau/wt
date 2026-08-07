@@ -1,12 +1,18 @@
 import { Button } from "@matdesk/ui/components/button";
+import { Skeleton } from "@matdesk/ui/components/skeleton";
 import { createFileRoute } from "@tanstack/react-router";
 import { PlusIcon } from "lucide-react";
 import { useState } from "react";
 
 import { InventoryCard } from "@/components/dashboard/inventory/inventory-card";
 import { ProductSheet } from "@/components/dashboard/inventory/product-sheet";
+import { inventoryListQueryOptions } from "@/queries/inventory";
 
 export const Route = createFileRoute("/dashboard/inventory/")({
+	loader: ({ context }) => {
+		void context.queryClient.prefetchQuery(inventoryListQueryOptions());
+	},
+	pendingComponent: () => <Skeleton className="h-96 rounded-2xl" />,
 	component: RouteComponent,
 });
 

@@ -22,7 +22,8 @@ import { parseError } from "evlog";
 import { FlameIcon, GridIcon, ListFilterIcon } from "lucide-react";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 
-import { orpc } from "@/utils/orpc";
+import { groupsQueryOptions } from "@/queries/groups";
+import { statisticsMemberMapQueryOptions } from "@/queries/statistics";
 
 type ViewMode = "cluster" | "heatmap";
 
@@ -156,8 +157,8 @@ export function MemberMap() {
 		setMounted(true);
 	}, []);
 
-	const mapQuery = useQuery(orpc.statistics.memberMap.queryOptions({ input: {} }));
-	const groupsQuery = useQuery(orpc.groups.list.queryOptions({}));
+	const mapQuery = useQuery(statisticsMemberMapQueryOptions());
+	const groupsQuery = useQuery(groupsQueryOptions());
 
 	const members = mapQuery.data?.members ?? [];
 	const groupOptions = (groupsQuery.data ?? []).map((group) => ({

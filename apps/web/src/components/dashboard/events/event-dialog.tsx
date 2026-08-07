@@ -17,7 +17,7 @@ import { Form } from "@matdesk/ui/components/form";
 import { Input } from "@matdesk/ui/components/input";
 import { Popover, PopoverPopup, PopoverTrigger } from "@matdesk/ui/components/popover";
 import { Textarea } from "@matdesk/ui/components/textarea";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { parseError } from "evlog";
@@ -25,7 +25,7 @@ import { CalendarIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { orpc, queryClient } from "@/utils/orpc";
+import { orpc } from "@/utils/orpc";
 
 export type EventRow = {
   id: string;
@@ -61,6 +61,7 @@ export function EventDialog({
   onOpenChange: (open: boolean) => void;
   event?: EventRow | null;
 }) {
+  const queryClient = useQueryClient();
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");

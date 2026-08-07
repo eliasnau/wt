@@ -40,7 +40,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@matdesk/ui/components/table";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { parseError } from "evlog";
 import {
 	BoxesIcon,
@@ -54,7 +54,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import type { GroupRow } from "@/components/dashboard/groups/group-dialog";
-import { orpc, queryClient } from "@/utils/orpc";
+import { groupsQueryOptions } from "@/queries/groups";
+import { orpc } from "@/utils/orpc";
 
 function formatPrice(cents: number | null) {
 	if (cents == null) return "—";
@@ -64,8 +65,9 @@ function formatPrice(cents: number | null) {
 export function GroupsCard({ onEdit }: { onEdit: (group: GroupRow) => void }) {
 	const [searchInput, setSearchInput] = useState("");
 	const [deleting, setDeleting] = useState<GroupRow | null>(null);
+	const queryClient = useQueryClient();
 
-	const groupsQuery = useQuery(orpc.groups.list.queryOptions({}));
+	const groupsQuery = useQuery(groupsQueryOptions());
 
 	const deleteMutation = useMutation(
 		orpc.groups.delete.mutationOptions({

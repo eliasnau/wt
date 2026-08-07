@@ -22,12 +22,12 @@ import {
   SelectValue,
 } from "@matdesk/ui/components/select";
 import { cn } from "@matdesk/ui/lib/utils";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { parseError } from "evlog";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { orpc, queryClient } from "@/utils/orpc";
+import { orpc } from "@/utils/orpc";
 
 export type GroupRow = {
   id: string;
@@ -68,7 +68,11 @@ export function GroupDialog({
   const [color, setColor] = useState("#3b82f6");
   const [price, setPrice] = useState("");
   const [progressionSystemId, setProgressionSystemId] = useState("");
-  const systemsQuery = useQuery(orpc.progression.listSystems.queryOptions());
+  const queryClient = useQueryClient();
+  const systemsQuery = useQuery({
+    ...orpc.progression.listSystems.queryOptions(),
+    enabled: open,
+  });
 
   // Prefill (edit) / reset (create) whenever the dialog opens.
   useEffect(() => {

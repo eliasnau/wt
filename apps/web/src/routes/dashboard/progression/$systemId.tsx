@@ -67,7 +67,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { parseError } from "evlog";
 import {
@@ -88,9 +88,17 @@ import { toast } from "sonner";
 import { ProgressionFlow } from "@/components/dashboard/progression/progression-flow";
 import { SystemDialog } from "@/components/dashboard/progression/system-dialog";
 import { UserAvatar } from "@/components/auth/user-avatar";
-import { orpc, queryClient } from "@/utils/orpc";
+import {
+  progressionSystemsQueryOptions,
+  rankMembersQueryOptions,
+} from "@/queries/progression";
+import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/progression/$systemId")({
+  loader: ({ context }) => {
+    void context.queryClient.prefetchQuery(progressionSystemsQueryOptions());
+  },
+  pendingComponent: () => <Skeleton className="h-72 rounded-2xl" />,
   component: RouteComponent,
 });
 
@@ -106,14 +114,11 @@ const COLOR_PRESETS = [
   "#000000",
 ];
 
-function invalidateProgression() {
-  queryClient.invalidateQueries({ queryKey: orpc.progression.key() });
-}
-
 function RouteComponent() {
   const { systemId } = Route.useParams();
   const navigate = useNavigate();
-  const systemsQuery = useQuery(orpc.progression.listSystems.queryOptions());
+  const queryClient = useQueryClient();
+  const systemsQuery = useQuery(progressionSystemsQueryOptions());
   const system = systemsQuery.data?.find((item) => item.id === systemId);
   const [rankIds, setRankIds] = useState<string[]>([]);
   const sensors = useSensors(
@@ -130,11 +135,11 @@ function RouteComponent() {
     color: string | null;
   } | null>(null);
   const rankMembersQuery = useQuery({
-    ...orpc.progression.listRankMembers.queryOptions({
-      input: { rankId: selectedRankId ?? "" },
-    }),
+    ...rankMembersQueryOptions(selectedRankId ?? ""),
     enabled: selectedRankId !== null,
   });
+  const invalidateProgression = () =>
+    queryClient.invalidateQueries({ queryKey: orpc.progression.key() });
 
   useEffect(() => {
     if (system) setRankIds(system.ranks.map((rank) => rank.id));
@@ -186,6 +191,17 @@ function RouteComponent() {
   }
 
   if (systemsQuery.isPending) return <Skeleton className="h-72 rounded-2xl" />;
+  if (systemsQuery.isError)
+    return (
+      <CardFrame className="flex min-h-72 flex-col items-center justify-center gap-3 p-6 text-center">
+        <p className="text-muted-foreground text-sm">
+          {parseError(systemsQuery.error).message}
+        </p>
+        <Button onClick={() => systemsQuery.refetch()} size="sm" variant="outline">
+          Erneut versuchen
+        </Button>
+      </CardFrame>
+    );
   if (!system)
     return (
       <div className="py-20 text-center text-muted-foreground">
@@ -312,6 +328,9 @@ function RouteComponent() {
         <TabsPanel className="pt-2" value="nodes">
           <ProgressionFlow
             onRankClick={setSelectedRankId}
+            onRankHover={(rankId) => {
+              void queryClient.prefetchQuery(rankMembersQueryOptions(rankId));
+            }}
             system={system}
           />
         </TabsPanel>
@@ -567,6 +586,7 @@ function RankDialog({
 }) {
   const [name, setName] = useState("");
   const [color, setColor] = useState<string | null>(null);
+  const queryClient = useQueryClient();
   useEffect(() => {
     if (!open) return;
     setName(rank?.name ?? "");
@@ -574,7 +594,7 @@ function RankDialog({
   }, [open, rank]);
   const done = (message: string) => {
     toast.success(message);
-    invalidateProgression();
+    queryClient.invalidateQueries({ queryKey: orpc.progression.key() });
     onOpenChange(false);
   };
   const create = useMutation(
