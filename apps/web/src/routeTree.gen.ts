@@ -38,6 +38,7 @@ import { Route as DashboardMembersIndexRouteImport } from './routes/dashboard/me
 import { Route as DashboardInventoryIndexRouteImport } from './routes/dashboard/inventory/index'
 import { Route as DashboardFinanceIndexRouteImport } from './routes/dashboard/finance/index'
 import { Route as DashboardEventsIndexRouteImport } from './routes/dashboard/events/index'
+import { Route as DashboardCoachingIndexRouteImport } from './routes/dashboard/coaching/index'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AdminOrganizationsIndexRouteImport } from './routes/admin/organizations/index'
 import { Route as DashboardStatisticsTimelineRouteImport } from './routes/dashboard/statistics/timeline'
@@ -202,6 +203,11 @@ const DashboardEventsIndexRoute = DashboardEventsIndexRouteImport.update({
   path: '/events/',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardCoachingIndexRoute = DashboardCoachingIndexRouteImport.update({
+  id: '/coaching/',
+  path: '/coaching/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
   id: '/users/',
   path: '/users/',
@@ -334,6 +340,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/statistics/timeline': typeof DashboardStatisticsTimelineRoute
   '/admin/organizations/': typeof AdminOrganizationsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
+  '/dashboard/coaching/': typeof DashboardCoachingIndexRoute
   '/dashboard/events/': typeof DashboardEventsIndexRoute
   '/dashboard/finance/': typeof DashboardFinanceIndexRoute
   '/dashboard/inventory/': typeof DashboardInventoryIndexRoute
@@ -376,6 +383,7 @@ export interface FileRoutesByTo {
   '/dashboard/statistics/timeline': typeof DashboardStatisticsTimelineRoute
   '/admin/organizations': typeof AdminOrganizationsIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
+  '/dashboard/coaching': typeof DashboardCoachingIndexRoute
   '/dashboard/events': typeof DashboardEventsIndexRoute
   '/dashboard/finance': typeof DashboardFinanceIndexRoute
   '/dashboard/inventory': typeof DashboardInventoryIndexRoute
@@ -425,6 +433,7 @@ export interface FileRoutesById {
   '/dashboard/statistics/timeline': typeof DashboardStatisticsTimelineRoute
   '/admin/organizations/': typeof AdminOrganizationsIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
+  '/dashboard/coaching/': typeof DashboardCoachingIndexRoute
   '/dashboard/events/': typeof DashboardEventsIndexRoute
   '/dashboard/finance/': typeof DashboardFinanceIndexRoute
   '/dashboard/inventory/': typeof DashboardInventoryIndexRoute
@@ -474,6 +483,7 @@ export interface FileRouteTypes {
     | '/dashboard/statistics/timeline'
     | '/admin/organizations/'
     | '/admin/users/'
+    | '/dashboard/coaching/'
     | '/dashboard/events/'
     | '/dashboard/finance/'
     | '/dashboard/inventory/'
@@ -516,6 +526,7 @@ export interface FileRouteTypes {
     | '/dashboard/statistics/timeline'
     | '/admin/organizations'
     | '/admin/users'
+    | '/dashboard/coaching'
     | '/dashboard/events'
     | '/dashboard/finance'
     | '/dashboard/inventory'
@@ -564,6 +575,7 @@ export interface FileRouteTypes {
     | '/dashboard/statistics/timeline'
     | '/admin/organizations/'
     | '/admin/users/'
+    | '/dashboard/coaching/'
     | '/dashboard/events/'
     | '/dashboard/finance/'
     | '/dashboard/inventory/'
@@ -789,6 +801,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardEventsIndexRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/dashboard/coaching/': {
+      id: '/dashboard/coaching/'
+      path: '/coaching'
+      fullPath: '/dashboard/coaching/'
+      preLoaderRoute: typeof DashboardCoachingIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/admin/users/': {
       id: '/admin/users/'
       path: '/users'
@@ -997,6 +1016,7 @@ interface DashboardRouteRouteChildren {
   DashboardStatisticsMembersRoute: typeof DashboardStatisticsMembersRoute
   DashboardStatisticsSnapshotRoute: typeof DashboardStatisticsSnapshotRoute
   DashboardStatisticsTimelineRoute: typeof DashboardStatisticsTimelineRoute
+  DashboardCoachingIndexRoute: typeof DashboardCoachingIndexRoute
   DashboardEventsIndexRoute: typeof DashboardEventsIndexRoute
   DashboardInventoryIndexRoute: typeof DashboardInventoryIndexRoute
   DashboardMembersIndexRoute: typeof DashboardMembersIndexRoute
@@ -1019,6 +1039,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardStatisticsMembersRoute: DashboardStatisticsMembersRoute,
   DashboardStatisticsSnapshotRoute: DashboardStatisticsSnapshotRoute,
   DashboardStatisticsTimelineRoute: DashboardStatisticsTimelineRoute,
+  DashboardCoachingIndexRoute: DashboardCoachingIndexRoute,
   DashboardEventsIndexRoute: DashboardEventsIndexRoute,
   DashboardInventoryIndexRoute: DashboardInventoryIndexRoute,
   DashboardMembersIndexRoute: DashboardMembersIndexRoute,

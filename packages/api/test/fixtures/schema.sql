@@ -560,3 +560,41 @@ CREATE INDEX "member_rank_org_member_idx" ON "member_rank" USING btree ("organiz
 CREATE INDEX "member_rank_system_idx" ON "member_rank" USING btree ("progression_system_id");
 CREATE INDEX "member_rank_rank_idx" ON "member_rank" USING btree ("progression_rank_id");
 CREATE UNIQUE INDEX "member_rank_member_rank_unique_idx" ON "member_rank" USING btree ("member_id","progression_rank_id");
+CREATE TABLE "coaching_appointment" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "organization_id" text NOT NULL REFERENCES "organization"("id") ON DELETE cascade,
+  "coach_user_id" text NOT NULL REFERENCES "user"("id") ON DELETE restrict,
+  "date" date NOT NULL,
+  "start_time" time NOT NULL,
+  "end_time" time NOT NULL,
+  "location" text,
+  "status" text DEFAULT 'scheduled' NOT NULL,
+  "price_cents" integer,
+  "payment_status" text DEFAULT 'open' NOT NULL,
+  "notes" text,
+  "cancellation_reason" text,
+  "attendance_recorded_at" timestamp,
+  "attendance_recorded_by_user_id" text REFERENCES "user"("id") ON DELETE set null,
+  "created_by_user_id" text REFERENCES "user"("id") ON DELETE set null,
+  "created_at" timestamp DEFAULT now() NOT NULL,
+  "updated_at" timestamp DEFAULT now() NOT NULL,
+  CONSTRAINT "coaching_appointment_time_order" CHECK ("end_time" > "start_time"),
+  CONSTRAINT "coaching_appointment_price_nonnegative" CHECK ("price_cents" IS NULL OR "price_cents" >= 0),
+  CONSTRAINT "coaching_appointment_status" CHECK ("status" IN ('scheduled', 'attended', 'no_show', 'cancelled')),
+  CONSTRAINT "coaching_appointment_payment_status" CHECK ("payment_status" IN ('open', 'paid', 'waived'))
+);
+CREATE TABLE "coaching_participant" (
+  "id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+  "appointment_id" uuid NOT NULL REFERENCES "coaching_appointment"("id") ON DELETE cascade,
+  "member_id" uuid REFERENCES "club_member"("id") ON DELETE cascade,
+  "guest_name" text,
+  "guest_email" text,
+  "guest_phone" text,
+  "created_at" timestamp DEFAULT now() NOT NULL,
+  CONSTRAINT "coaching_participant_identity" CHECK (num_nonnulls("member_id", "guest_name") = 1)
+);
+CREATE INDEX "coaching_appointment_org_date_idx" ON "coaching_appointment" ("organization_id", "date");
+CREATE INDEX "coaching_appointment_coach_date_idx" ON "coaching_appointment" ("coach_user_id", "date");
+CREATE INDEX "coaching_participant_appointment_idx" ON "coaching_participant" ("appointment_id");
+CREATE INDEX "coaching_participant_member_idx" ON "coaching_participant" ("member_id");
+CREATE UNIQUE INDEX "coaching_participant_member_unique_idx" ON "coaching_participant" ("appointment_id", "member_id") WHERE "member_id" IS NOT NULL;

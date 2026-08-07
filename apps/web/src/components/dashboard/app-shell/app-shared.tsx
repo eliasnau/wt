@@ -4,17 +4,16 @@ import {
   BoxesIcon,
   CameraIcon,
   CreditCardIcon,
-  HandCoinsIcon,
   LandmarkIcon,
   LayoutGridIcon,
   MapIcon,
   PackageIcon,
-  ReceiptTextIcon,
   SettingsIcon,
   SlidersHorizontalIcon,
   TrendingUpIcon,
   UsersIcon,
   AwardIcon,
+  DumbbellIcon,
 } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -26,6 +25,7 @@ export type NavSubItem = {
   title: string;
   path: RoutePath;
   icon?: ReactNode;
+  badge?: string;
   /** Match the route exactly (used when a sub-path equals its parent). */
   exact?: boolean;
 };
@@ -34,6 +34,7 @@ export type NavItem = {
   title: string;
   path: RoutePath;
   icon?: ReactNode;
+  badge?: string;
   /** Match the route exactly (used for the index/overview link). */
   exact?: boolean;
   subItems?: NavSubItem[];
@@ -69,14 +70,16 @@ export const navGroups: NavGroup[] = [
         icon: <BoxesIcon />,
       },
       {
-        title: "Veranstaltungen",
-        path: "/dashboard/events",
-        icon: <CalendarDaysIcon />,
-      },
-      {
         title: "Graduierungen",
         path: "/dashboard/progression",
         icon: <AwardIcon />,
+        badge: "Neu",
+      },
+      {
+        title: "Einzelcoaching",
+        path: "/dashboard/coaching",
+        icon: <DumbbellIcon />,
+        badge: "Neu",
       },
       {
         title: "Statistiken",
@@ -100,33 +103,21 @@ export const navGroups: NavGroup[] = [
           },
         ],
       },
+    ],
+  },
+  {
+    label: "Verwaltung",
+    items: [
       {
         title: "Inventar",
         path: "/dashboard/inventory",
         icon: <PackageIcon />,
       },
-    ],
-  },
-  {
-    label: "Finanzen",
-    items: [
       {
-        title: "Finanzen",
-        path: "/dashboard/finance",
-        icon: <HandCoinsIcon />,
-        subItems: [
-          {
-            title: "SEPA-Einzüge",
-            path: "/dashboard/finance",
-            icon: <LandmarkIcon />,
-            exact: true,
-          },
-          {
-            title: "Rechnungen",
-            path: "/dashboard/finance/invoices",
-            icon: <ReceiptTextIcon />,
-          },
-        ],
+        title: "Veranstaltungen",
+        path: "/dashboard/events",
+        icon: <CalendarDaysIcon />,
+        badge: "Neu",
       },
     ],
   },

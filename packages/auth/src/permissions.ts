@@ -54,6 +54,18 @@ const PERMISSION_SPEC = {
       award: { label: "Vergeben", description: "Graduierungen an Mitglieder vergeben." },
     },
   },
+  coaching: {
+    label: "Einzelcoaching",
+    actions: {
+      view: { label: "Ansehen", description: "Coachings und Teilnehmer ansehen." },
+      create: { label: "Erstellen", description: "Coachings anlegen." },
+      update: {
+        label: "Bearbeiten",
+        description: "Coachings, Anwesenheit und Zahlung bearbeiten.",
+      },
+      delete: { label: "Löschen", description: "Unberührte Coachings löschen." },
+    },
+  },
   inventory: {
     label: "Inventar",
     actions: {
@@ -185,6 +197,7 @@ export const member = ac.newRole({
   groups: ["view"],
   events: ["view"],
   progression: ["view"],
+  coaching: ["view"],
   inventory: ["view"],
   ai: ["chat"],
 });
