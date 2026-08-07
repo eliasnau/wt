@@ -293,6 +293,41 @@ export const listMemberProgression = orgProcedure
     return loadMemberRanks(context.organizationId, input.memberId);
   });
 
+export const listProgressionRankMembers = orgProcedure
+  .use(view)
+  .input(z.object({ rankId: progressionIdSchema }))
+  .handler(async ({ input, context }) => {
+    const [rank] = await db
+      .select({ id: progressionRank.id })
+      .from(progressionRank)
+      .innerJoin(progressionSystem, eq(progressionRank.progressionSystemId, progressionSystem.id))
+      .where(
+        and(
+          eq(progressionRank.id, input.rankId),
+          eq(progressionSystem.organizationId, context.organizationId),
+        ),
+      )
+      .limit(1);
+    if (!rank) throw progressionErrors.RANK_NOT_FOUND();
+
+    return db
+      .select({
+        id: clubMember.id,
+        firstName: clubMember.firstName,
+        lastName: clubMember.lastName,
+        awardedOn: memberRank.awardedOn,
+      })
+      .from(memberRank)
+      .innerJoin(clubMember, eq(clubMember.id, memberRank.memberId))
+      .where(
+        and(
+          eq(memberRank.organizationId, context.organizationId),
+          eq(memberRank.progressionRankId, input.rankId),
+        ),
+      )
+      .orderBy(asc(clubMember.lastName), asc(clubMember.firstName));
+  });
+
 export const awardProgressionRank = orgProcedure
   .meta({ cost: 5 })
   .use(award)

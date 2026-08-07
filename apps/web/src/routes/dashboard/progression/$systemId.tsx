@@ -33,6 +33,14 @@ import { Input } from "@matdesk/ui/components/input";
 import { Popover, PopoverPopup, PopoverTrigger } from "@matdesk/ui/components/popover";
 import { Skeleton } from "@matdesk/ui/components/skeleton";
 import {
+  Sheet,
+  SheetDescription,
+  SheetHeader,
+  SheetPanel,
+  SheetPopup,
+  SheetTitle,
+} from "@matdesk/ui/components/sheet";
+import {
   Table,
   TableBody,
   TableCell,
@@ -40,6 +48,7 @@ import {
   TableHeader,
   TableRow,
 } from "@matdesk/ui/components/table";
+import { Tabs, TabsList, TabsPanel, TabsTab } from "@matdesk/ui/components/tabs";
 import { cn } from "@matdesk/ui/lib/utils";
 import {
   closestCenter,
@@ -65,16 +74,20 @@ import {
   ArrowLeftIcon,
   AwardIcon,
   GripVerticalIcon,
+  ListIcon,
   PencilIcon,
   PlusIcon,
   Trash2Icon,
   UsersIcon,
+  WorkflowIcon,
   XIcon,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { ProgressionFlow } from "@/components/dashboard/progression/progression-flow";
 import { SystemDialog } from "@/components/dashboard/progression/system-dialog";
+import { UserAvatar } from "@/components/auth/user-avatar";
 import { orpc, queryClient } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/progression/$systemId")({
@@ -110,11 +123,18 @@ function RouteComponent() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [systemDialogOpen, setSystemDialogOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [selectedRankId, setSelectedRankId] = useState<string | null>(null);
   const [editingRank, setEditingRank] = useState<{
     id: string;
     name: string;
     color: string | null;
   } | null>(null);
+  const rankMembersQuery = useQuery({
+    ...orpc.progression.listRankMembers.queryOptions({
+      input: { rankId: selectedRankId ?? "" },
+    }),
+    enabled: selectedRankId !== null,
+  });
 
   useEffect(() => {
     if (system) setRankIds(system.ranks.map((rank) => rank.id));
@@ -183,7 +203,7 @@ function RouteComponent() {
           <ArrowLeftIcon /> Graduierungen
         </Button>
       </div>
-      <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <h1 className="text-balance font-semibold text-2xl tracking-tight">{system.name}</h1>
@@ -191,81 +211,111 @@ function RouteComponent() {
               {system.mode === "sequential" ? "Aufeinanderfolgend" : "Sammlung"}
             </Badge>
           </div>
-          <p className="mt-1 text-muted-foreground text-sm">
-            {system.mode === "sequential"
-              ? "Stufen per Drag-and-drop in ihre Fortschrittsreihenfolge bringen."
-              : "Auszeichnungen per Drag-and-drop in die gewünschte Anzeige-Reihenfolge bringen."}
-          </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             onClick={() => {
               setEditingRank(null);
               setDialogOpen(true);
             }}
+            size="sm"
           >
             <PlusIcon /> {system.unitLabel} hinzufügen
           </Button>
-          <Button onClick={() => setSystemDialogOpen(true)} variant="outline">
-            <PencilIcon /> System bearbeiten
+          <Button
+            aria-label="System bearbeiten"
+            onClick={() => setSystemDialogOpen(true)}
+            size="icon-sm"
+            title="System bearbeiten"
+            variant="outline"
+          >
+            <PencilIcon />
           </Button>
-          <Button onClick={() => setDeleteOpen(true)} variant="destructive-outline">
-            <Trash2Icon /> System löschen
+          <Button
+            aria-label="System löschen"
+            onClick={() => setDeleteOpen(true)}
+            size="icon-sm"
+            title="System löschen"
+            variant="destructive-outline"
+          >
+            <Trash2Icon />
           </Button>
         </div>
       </div>
 
-      <CardFrame className="w-full min-w-0 overflow-hidden">
-        <DndContext collisionDetection={closestCenter} onDragEnd={finishDrag} sensors={sensors}>
-          <Table className="min-w-[680px]" variant="card">
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12" />
-                <TableHead>Reihenfolge</TableHead>
-                <TableHead>Graduierung</TableHead>
-                <TableHead>Farbe</TableHead>
-                <TableHead>Mitglieder</TableHead>
-                <TableHead className="w-px" />
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {orderedRanks.length === 0 ? (
-                <TableRow className="hover:bg-transparent">
-                  <TableCell className="p-0" colSpan={6}>
-                    <Empty className="py-14">
-                      <EmptyHeader>
-                        <EmptyMedia variant="icon">
-                          <AwardIcon />
-                        </EmptyMedia>
-                        <EmptyTitle>Noch keine {system.unitLabel.toLowerCase()}en</EmptyTitle>
-                        <EmptyDescription>
-                          Füge die erste Stufe zu diesem System hinzu.
-                        </EmptyDescription>
-                      </EmptyHeader>
-                    </Empty>
-                  </TableCell>
-                </TableRow>
-              ) : (
-                <SortableContext items={rankIds} strategy={verticalListSortingStrategy}>
-                  {orderedRanks.map((rank, index) => (
-                    <SortableRankRow
-                      index={index}
-                      key={rank.id}
-                      onDelete={() => deleteRank.mutate({ rankId: rank.id })}
-                      onColorChange={(color) => updateRankColor.mutate({ rankId: rank.id, color })}
-                      onEdit={() => {
-                        setEditingRank(rank);
-                        setDialogOpen(true);
-                      }}
-                      rank={rank}
-                    />
-                  ))}
-                </SortableContext>
-              )}
-            </TableBody>
-          </Table>
-        </DndContext>
-      </CardFrame>
+      <Tabs defaultValue="nodes">
+        <TabsList variant="underline">
+          <TabsTab value="nodes">
+            <WorkflowIcon /> Übersicht
+          </TabsTab>
+          <TabsTab value="list">
+            <ListIcon /> Liste
+          </TabsTab>
+        </TabsList>
+
+        <TabsPanel className="pt-2" value="list">
+          <CardFrame className="w-full min-w-0 overflow-hidden">
+            <DndContext collisionDetection={closestCenter} onDragEnd={finishDrag} sensors={sensors}>
+              <Table className="min-w-[680px]" variant="card">
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12" />
+                    <TableHead>Reihenfolge</TableHead>
+                    <TableHead>Graduierung</TableHead>
+                    <TableHead>Farbe</TableHead>
+                    <TableHead>Mitglieder</TableHead>
+                    <TableHead className="w-px" />
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {orderedRanks.length === 0 ? (
+                    <TableRow className="hover:bg-transparent">
+                      <TableCell className="p-0" colSpan={6}>
+                        <Empty className="py-14">
+                          <EmptyHeader>
+                            <EmptyMedia variant="icon">
+                              <AwardIcon />
+                            </EmptyMedia>
+                            <EmptyTitle>Noch keine {system.unitLabel.toLowerCase()}en</EmptyTitle>
+                            <EmptyDescription>
+                              Füge die erste Stufe zu diesem System hinzu.
+                            </EmptyDescription>
+                          </EmptyHeader>
+                        </Empty>
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    <SortableContext items={rankIds} strategy={verticalListSortingStrategy}>
+                      {orderedRanks.map((rank, index) => (
+                        <SortableRankRow
+                          index={index}
+                          key={rank.id}
+                          onDelete={() => deleteRank.mutate({ rankId: rank.id })}
+                          onColorChange={(color) =>
+                            updateRankColor.mutate({ rankId: rank.id, color })
+                          }
+                          onEdit={() => {
+                            setEditingRank(rank);
+                            setDialogOpen(true);
+                          }}
+                          rank={rank}
+                        />
+                      ))}
+                    </SortableContext>
+                  )}
+                </TableBody>
+              </Table>
+            </DndContext>
+          </CardFrame>
+        </TabsPanel>
+
+        <TabsPanel className="pt-2" value="nodes">
+          <ProgressionFlow
+            onRankClick={setSelectedRankId}
+            system={system}
+          />
+        </TabsPanel>
+      </Tabs>
 
       <RankDialog
         open={dialogOpen}
@@ -275,6 +325,64 @@ function RouteComponent() {
         onOpenChange={setDialogOpen}
       />
       <SystemDialog onOpenChange={setSystemDialogOpen} open={systemDialogOpen} system={system} />
+      <Sheet
+        onOpenChange={(open) => {
+          if (!open) setSelectedRankId(null);
+        }}
+        open={selectedRankId !== null}
+      >
+        <SheetPopup className="max-w-md">
+          <SheetHeader>
+            <SheetTitle>
+              {system.ranks.find((rank) => rank.id === selectedRankId)?.name ?? "Mitglieder"}
+            </SheetTitle>
+            <SheetDescription>
+              {rankMembersQuery.data?.length ?? 0} Mitglieder mit dieser Graduierung.
+            </SheetDescription>
+          </SheetHeader>
+          <SheetPanel>
+            {rankMembersQuery.isPending ? (
+              <div className="space-y-2">
+                {Array.from({ length: 4 }).map((_, index) => (
+                  <Skeleton className="h-16 w-full rounded-lg" key={index} />
+                ))}
+              </div>
+            ) : rankMembersQuery.data?.length ? (
+              <div className="space-y-2">
+                {rankMembersQuery.data.map((member) => {
+                  const name = `${member.firstName} ${member.lastName}`;
+                  return (
+                    <Link
+                      className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-muted"
+                      key={member.id}
+                      params={{ memberId: member.id }}
+                      to="/dashboard/members/$memberId"
+                    >
+                      <UserAvatar className="size-9" name={name} seed={member.id} />
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate font-medium text-sm">{name}</p>
+                        <p className="text-muted-foreground text-xs">
+                          Verliehen am {new Intl.DateTimeFormat("de-DE").format(new Date(member.awardedOn))}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            ) : (
+              <Empty className="py-16">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <UsersIcon />
+                  </EmptyMedia>
+                  <EmptyTitle>Noch keine Mitglieder</EmptyTitle>
+                  <EmptyDescription>Diese Graduierung wurde noch nicht verliehen.</EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            )}
+          </SheetPanel>
+        </SheetPopup>
+      </Sheet>
       <AlertDialog onOpenChange={setDeleteOpen} open={deleteOpen}>
         <AlertDialogPopup>
           <AlertDialogHeader>
