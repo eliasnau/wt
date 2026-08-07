@@ -5,6 +5,7 @@ import { createContext, useCallback, useContext, useMemo } from "react";
 
 import { sessionQueryOptions } from "@/functions/get-user";
 import { authClient } from "@/lib/auth-client";
+import { queryClient } from "@/utils/orpc";
 
 type SessionQuery = ReturnType<typeof authClient.useSession>;
 type OrganizationsQuery = ReturnType<typeof authClient.useListOrganizations>;
@@ -72,6 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(result.error.message ?? "Could not activate organization");
       }
       await Promise.all([refetchSession(), refetchActiveOrganization()]);
+      await queryClient.invalidateQueries();
     },
     [refetchSession, refetchActiveOrganization],
   );
