@@ -8,6 +8,7 @@ import {
   LayoutGridIcon,
   MapIcon,
   PackageIcon,
+  ReceiptTextIcon,
   SettingsIcon,
   SlidersHorizontalIcon,
   TrendingUpIcon,
@@ -118,6 +119,22 @@ export const navGroups: NavGroup[] = [
         path: "/dashboard/events",
         icon: <CalendarDaysIcon />,
         badge: "Neu",
+      },
+    ],
+  },
+  {
+    label: "Finanzen",
+    items: [
+      {
+        title: "SEPA-Einzüge",
+        path: "/dashboard/finance",
+        exact: true,
+        icon: <LandmarkIcon />,
+      },
+      {
+        title: "Rechnungen",
+        path: "/dashboard/finance/invoices",
+        icon: <ReceiptTextIcon />,
       },
     ],
   },
