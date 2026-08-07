@@ -67,6 +67,90 @@ type CommandGroupOption = {
   items: CommandOption[];
 };
 
+function normalizeSearchText(value: string) {
+  return value
+    .toLocaleLowerCase("de-DE")
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .replace(/ß/g, "ss")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+function isSubsequence(needle: string, haystack: string) {
+  let needleIndex = 0;
+  for (const character of haystack) {
+    if (character === needle[needleIndex]) needleIndex += 1;
+    if (needleIndex === needle.length) return true;
+  }
+  return false;
+}
+
+function commandScore(value: string, query: string) {
+  const normalizedValue = normalizeSearchText(value);
+  const normalizedQuery = normalizeSearchText(query);
+  if (!normalizedQuery) return 0;
+  if (normalizedValue === normalizedQuery) return 10_000;
+  if (normalizedValue.startsWith(normalizedQuery)) return 8_000 - normalizedValue.length;
+  if (normalizedValue.includes(normalizedQuery))
+    return 6_000 - normalizedValue.indexOf(normalizedQuery);
+
+  const words = normalizedValue.split(" ");
+  const tokens = normalizedQuery.split(" ");
+  let score = 0;
+
+  for (const token of tokens) {
+    const bestWordScore = Math.max(
+      ...words.map((word) => {
+        if (word === token) return 500;
+        if (word.startsWith(token)) return 400 - Math.min(word.length - token.length, 40);
+        if (word.includes(token)) return 250 - Math.min(word.indexOf(token), 40);
+        if (token.length >= 3 && isSubsequence(token, word)) {
+          return 120 - Math.min(word.length - token.length, 40);
+        }
+        return Number.NEGATIVE_INFINITY;
+      }),
+    );
+    if (!Number.isFinite(bestWordScore)) return Number.NEGATIVE_INFINITY;
+    score += bestWordScore;
+  }
+
+  return score;
+}
+
+function commandFilter(
+  itemValue: unknown,
+  query: string,
+  itemToString?: (itemValue: unknown) => string,
+) {
+  const value =
+    typeof itemValue === "string"
+      ? itemValue
+      : (itemToString?.(itemValue) ??
+        (typeof itemValue === "object" && itemValue && "value" in itemValue
+          ? String(itemValue.value)
+          : ""));
+  return Number.isFinite(commandScore(value, query));
+}
+
+function rankCommandGroups(groups: CommandGroupOption[], query: string) {
+  if (!query.trim()) return groups;
+  return groups
+    .map((group, groupIndex) => ({
+      group: {
+        ...group,
+        items: group.items
+          .map((item, itemIndex) => ({ item, itemIndex, score: commandScore(item.value, query) }))
+          .sort((left, right) => right.score - left.score || left.itemIndex - right.itemIndex)
+          .map(({ item }) => item),
+      },
+      groupIndex,
+      score: Math.max(...group.items.map((item) => commandScore(item.value, query))),
+    }))
+    .sort((left, right) => right.score - left.score || left.groupIndex - right.groupIndex)
+    .map(({ group }) => group);
+}
+
 function toCustomCommandOption(
   command: CustomCommandAction,
   context: CommandActionContext,
@@ -253,6 +337,7 @@ export function GlobalCommandMenu() {
     remoteSearchEnabled &&
     (membersQuery.isFetching || (memberAction === null && groupsQuery.isFetching));
   const remoteSearchError = membersQuery.isError || (memberAction === null && groupsQuery.isError);
+  const displayedCommandGroups = rankCommandGroups(commandGroups, search);
 
   return (
     <>
@@ -284,7 +369,12 @@ export function GlobalCommandMenu() {
           <CommandDialogPrimitive.Title className="sr-only">
             Befehlsmenü
           </CommandDialogPrimitive.Title>
-          <Command items={commandGroups} onValueChange={setSearch} value={search}>
+          <Command
+            filter={commandFilter}
+            items={displayedCommandGroups}
+            onValueChange={setSearch}
+            value={search}
+          >
             <CommandInput
               loading={remoteSearchPending}
               placeholder={
@@ -331,7 +421,7 @@ export function GlobalCommandMenu() {
                         )}
                       </CommandCollection>
                     </CommandGroup>
-                    {index < commandGroups.length - 1 ? <CommandSeparator /> : null}
+                    {index < displayedCommandGroups.length - 1 ? <CommandSeparator /> : null}
                   </Fragment>
                 )}
               </CommandList>

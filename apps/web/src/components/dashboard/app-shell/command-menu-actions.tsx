@@ -86,7 +86,7 @@ export const customCommandActions: CustomCommandAction[] = [
     label: "Mitglied einer Gruppe zuweisen",
     description: "Mitglied auswählen",
     icon: UsersRoundIcon,
-    keywords: ["gruppe", "zuordnen", "aufnahme"],
+    keywords: ["gruppe", "zuordnen", "aufnahme", "hinzufügen", "hinzufuegen"],
     action: ({ startMemberAction }) => startMemberAction("assign-group"),
   },
   {
