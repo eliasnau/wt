@@ -4,9 +4,10 @@ import { z } from "zod";
 
 import { orgProcedure } from "../../index";
 import { requirePermission } from "../../middlewares/permissions";
+import { databaseIdSchema } from "../../schemas";
 
 const input = z.object({
-  memberId: z.uuid().optional(),
+  memberId: databaseIdSchema.optional(),
   contractId: z.uuid().optional(),
 });
 

@@ -7,11 +7,12 @@ import { ymdInBerlin } from "../../domain/members/cancellation";
 import { groupsErrors, membersErrors } from "../../errors";
 import { orgProcedure } from "../../index";
 import { requirePermission } from "../../middlewares/permissions";
+import { databaseIdSchema } from "../../schemas";
 import { getGroupById } from "../../queries/groups";
 import { getMemberById } from "../../queries/members";
 
 const input = z.object({
-  memberId: z.uuid(),
+  memberId: databaseIdSchema,
   groupId: z.uuid(),
   membershipPriceCents: z.number().int().nonnegative().optional(),
 });
@@ -33,8 +34,7 @@ export const assignGroup = orgProcedure
     }
 
     // Default to the group's standard price when the caller doesn't override.
-    const price =
-      input.membershipPriceCents ?? group.defaultMembershipPriceCents ?? 0;
+    const price = input.membershipPriceCents ?? group.defaultMembershipPriceCents ?? 0;
 
     try {
       const [row] = await db

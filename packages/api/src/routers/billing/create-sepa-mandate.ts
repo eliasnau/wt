@@ -7,11 +7,12 @@ import { billingErrors } from "../../errors";
 import { orgProcedure } from "../../index";
 import { normalizeSepaIdentifier, validateIban } from "../../integrations/sepa";
 import { requirePermission } from "../../middlewares/permissions";
+import { databaseIdSchema } from "../../schemas";
 import { acquireContractMandateLock, ensureOwnedMemberContract } from "../../queries/billing";
 import { ymdSchema } from "./schemas";
 
 const input = z.object({
-  memberId: z.uuid(),
+  memberId: databaseIdSchema,
   contractId: z.uuid(),
   mandateReference: z.string().min(1).max(35),
   accountHolder: z.string().min(1).max(255),

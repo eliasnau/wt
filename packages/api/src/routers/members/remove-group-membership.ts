@@ -6,11 +6,12 @@ import { ymdInBerlin } from "../../domain/members/cancellation";
 import { groupsErrors, membersErrors } from "../../errors";
 import { orgProcedure } from "../../index";
 import { requirePermission } from "../../middlewares/permissions";
+import { databaseIdSchema } from "../../schemas";
 import { getGroupById } from "../../queries/groups";
 import { getMemberById } from "../../queries/members";
 
 const input = z.object({
-  memberId: z.uuid(),
+  memberId: databaseIdSchema,
   groupId: z.uuid(),
 });
 

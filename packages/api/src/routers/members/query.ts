@@ -1,20 +1,11 @@
-import {
-  and,
-  count,
-  db,
-  eq,
-  ilike,
-  inArray,
-  or,
-  sql,
-  type SQL,
-} from "@matdesk/db";
+import { and, count, db, eq, ilike, inArray, or, sql, type SQL } from "@matdesk/db";
 import { clubMember, contract, groupMember } from "@matdesk/db/schema";
 import { z } from "zod";
 
 import { ymdInBerlin } from "../../domain/members/cancellation";
 import { orgProcedure } from "../../index";
 import { requirePermission } from "../../middlewares/permissions";
+import { databaseIdSchema } from "../../schemas";
 import { loadGroupMembershipsByMember } from "../../queries/members";
 
 // ─── Filterable field set ────────────────────────────────────────────────────
@@ -52,11 +43,7 @@ const FILTER_FIELDS = [
 ] as const;
 type FilterField = (typeof FILTER_FIELDS)[number];
 
-const NUMERIC_FIELDS = new Set<FilterField>([
-  "joiningFeeCents",
-  "yearlyFeeCents",
-  "groupCount",
-]);
+const NUMERIC_FIELDS = new Set<FilterField>(["joiningFeeCents", "yearlyFeeCents", "groupCount"]);
 
 // ─── Status filter ───────────────────────────────────────────────────────────
 const STATUSES = ["active", "cancelled_but_active", "cancelled"] as const;
@@ -103,15 +90,7 @@ type SortField = (typeof SORT_FIELDS)[number];
 const filterClauseSchema = z.union([
   z.object({
     field: z.enum(FILTER_FIELDS),
-    operator: z.enum([
-      "contains",
-      "startsWith",
-      "endsWith",
-      "eq",
-      "neq",
-      "gte",
-      "lte",
-    ]),
+    operator: z.enum(["contains", "startsWith", "endsWith", "eq", "neq", "gte", "lte"]),
     value: z.string().min(1),
   }),
   z.object({
@@ -228,9 +207,7 @@ function parseNumericOrFalse(raw: string): number | null {
   return Number.isFinite(n) ? n : null;
 }
 
-function buildFilterClause(
-  filter: z.infer<typeof filterClauseSchema>,
-): SQL {
+function buildFilterClause(filter: z.infer<typeof filterClauseSchema>): SQL {
   const { compare, text } = getFieldExprs(filter.field);
   const isNumeric = NUMERIC_FIELDS.has(filter.field);
 
@@ -247,13 +224,17 @@ function buildFilterClause(
       return sql`${compare} IS NOT NULL`;
     case "in": {
       if (isNumeric) {
-        const nums = filter.value
-          .map(parseNumericOrFalse)
-          .filter((n): n is number => n !== null);
+        const nums = filter.value.map(parseNumericOrFalse).filter((n): n is number => n !== null);
         if (nums.length === 0) return sql`FALSE`;
-        return sql`${compare} IN (${sql.join(nums.map((n) => sql`${n}`), sql`, `)})`;
+        return sql`${compare} IN (${sql.join(
+          nums.map((n) => sql`${n}`),
+          sql`, `,
+        )})`;
       }
-      return sql`${compare} IN (${sql.join(filter.value.map((v) => sql`${v}`), sql`, `)})`;
+      return sql`${compare} IN (${sql.join(
+        filter.value.map((v) => sql`${v}`),
+        sql`, `,
+      )})`;
     }
     case "eq":
     case "neq":
@@ -278,10 +259,7 @@ function buildFilterClause(
 }
 
 // ─── Group filter (mode-aware) ───────────────────────────────────────────────
-function groupFilterExpr(groups: {
-  mode: "any" | "all" | "none";
-  ids: string[];
-}): SQL | undefined {
+function groupFilterExpr(groups: { mode: "any" | "all" | "none"; ids: string[] }): SQL | undefined {
   if (groups.ids.length === 0) return undefined;
   const idsList = sql.join(
     groups.ids.map((id) => sql`${id}`),
@@ -334,10 +312,10 @@ const input = z.object({
   groups: z
     .object({
       mode: z.enum(["any", "all", "none"]),
-      ids: z.array(z.uuid()).min(1),
+      ids: z.array(databaseIdSchema).min(1),
     })
     .optional(),
-  memberIds: z.array(z.uuid()).optional(),
+  memberIds: z.array(databaseIdSchema).optional(),
 
   // Generic filter array. `filterMode` controls AND-vs-OR between *these*
   // clauses; the result still ANDs against the shortcuts above and `search`.
@@ -386,17 +364,11 @@ export const queryMembers = orgProcedure
           ilike(clubMember.guardianName, `%${search}%`),
           ilike(clubMember.guardianEmail, `%${search}%`),
           ilike(clubMember.guardianPhone, `%${search}%`),
-          ilike(
-            sql`${clubMember.firstName} || ' ' || ${clubMember.lastName}`,
-            `%${search}%`,
-          ),
+          ilike(sql`${clubMember.firstName} || ' ' || ${clubMember.lastName}`, `%${search}%`),
           ilike(contract.initialPeriod, `%${search}%`),
           ilike(contract.cancellationReason, `%${search}%`),
           ilike(sql`CAST(${contract.startDate} AS TEXT)`, `%${search}%`),
-          ilike(
-            sql`CAST(${contract.cancellationEffectiveDate} AS TEXT)`,
-            `%${search}%`,
-          ),
+          ilike(sql`CAST(${contract.cancellationEffectiveDate} AS TEXT)`, `%${search}%`),
           ilike(sql`CAST(${contract.cancelledAt} AS TEXT)`, `%${search}%`),
         )
       : undefined;
@@ -422,8 +394,7 @@ export const queryMembers = orgProcedure
     const sortField: SortField = input.sort?.field ?? "createdAt";
     const sortDirection = input.sort?.direction ?? "desc";
     const sortExpr = SORT_EXPRS[sortField];
-    const orderBy =
-      sortDirection === "asc" ? sql`${sortExpr} ASC` : sql`${sortExpr} DESC`;
+    const orderBy = sortDirection === "asc" ? sql`${sortExpr} ASC` : sql`${sortExpr} DESC`;
 
     // ─── Fetch ──────────────────────────────────────────────────────────────
     const [rows, totalRow] = await Promise.all([
@@ -444,9 +415,7 @@ export const queryMembers = orgProcedure
     ]);
 
     const totalCount = totalRow?.count ?? 0;
-    const groupsByMember = await loadGroupMembershipsByMember(
-      rows.map((r) => r.member.id),
-    );
+    const groupsByMember = await loadGroupMembershipsByMember(rows.map((r) => r.member.id));
 
     const totalPages = Math.ceil(totalCount / limit);
     context.log?.set({

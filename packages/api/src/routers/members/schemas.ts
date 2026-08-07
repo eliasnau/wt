@@ -1,8 +1,8 @@
 import { z } from "zod";
 
-export const ymdSchema = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD");
+import { databaseIdSchema } from "../../schemas";
+
+export const ymdSchema = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Must be YYYY-MM-DD");
 
 export const monthStartSchema = z
   .string()
@@ -45,7 +45,7 @@ export const addressSchema = z.object({
   country: z.string().trim().min(1, "Country is required").max(255),
 });
 
-export const memberIdInput = z.object({ memberId: z.uuid() });
+export const memberIdInput = z.object({ memberId: databaseIdSchema });
 
 export const initialPeriodSchema = z.enum(["monthly", "half_yearly", "yearly"]);
 export const yearlyFeeModeSchema = z.enum(["january", "anniversary"]);

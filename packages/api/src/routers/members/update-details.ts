@@ -9,10 +9,11 @@ import { membersErrors } from "../../errors";
 import { orgProcedure } from "../../index";
 import { requirePermission } from "../../middlewares/permissions";
 import { getMemberById } from "../../queries/members";
+import { databaseIdSchema } from "../../schemas";
 import { addressSchema, optionalEmail, optionalPhone, optionalYmdSchema } from "./schemas";
 
 const input = addressSchema.extend({
-  memberId: z.uuid(),
+  memberId: databaseIdSchema,
   firstName: z.string().trim().min(1, "First name is required").max(255),
   lastName: z.string().trim().min(1, "Last name is required").max(255),
   birthdate: optionalYmdSchema,

@@ -10,23 +10,20 @@ import {
 import { membersErrors } from "../../errors";
 import { orgProcedure } from "../../index";
 import { requirePermission } from "../../middlewares/permissions";
+import { databaseIdSchema } from "../../schemas";
 import { ymdSchema } from "./schemas";
 
 const input = z.object({
-  memberId: z.uuid(),
+  memberId: databaseIdSchema,
   cancelReason: z.string().trim().min(1, "Cancel reason is required").max(1000),
   cancellationEffectiveDate: ymdSchema,
 });
 
-const VIOLATION_TO_ERROR: Record<
-  CancellationViolation,
-  () => Error
-> = {
+const VIOLATION_TO_ERROR: Record<CancellationViolation, () => Error> = {
   INVALID_DATE: () => membersErrors.CANCELLATION_DATE_INVALID(),
   NOT_LAST_DAY: () => membersErrors.CANCELLATION_DATE_NOT_LAST_DAY(),
   IN_PAST: () => membersErrors.CANCELLATION_DATE_IN_PAST(),
-  BEFORE_INITIAL_PERIOD: () =>
-    membersErrors.CANCELLATION_BEFORE_INITIAL_PERIOD(),
+  BEFORE_INITIAL_PERIOD: () => membersErrors.CANCELLATION_BEFORE_INITIAL_PERIOD(),
 };
 
 export const cancelMemberContract = orgProcedure

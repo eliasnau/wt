@@ -6,12 +6,13 @@ import { z } from "zod";
 import { billingErrors } from "../../errors";
 import { orgProcedure } from "../../index";
 import { requirePermission } from "../../middlewares/permissions";
+import { databaseIdSchema } from "../../schemas";
 import { ensureOwnedMemberContract } from "../../queries/billing";
 import { creditGrantTypeSchema, ymdSchema } from "./schemas";
 
 const input = z
   .object({
-    memberId: z.uuid(),
+    memberId: databaseIdSchema,
     contractId: z.uuid(),
     type: creditGrantTypeSchema,
     description: z.string().max(255).optional(),

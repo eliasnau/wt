@@ -7,12 +7,13 @@ import { ymdInBerlin } from "../../domain/members/cancellation";
 import { membersErrors } from "../../errors";
 import { orgProcedure } from "../../index";
 import { requirePermission } from "../../middlewares/permissions";
+import { databaseIdSchema } from "../../schemas";
 import { hasYearlyFeeBeenBilled } from "../../queries/billing";
 
 const ACTIVE_CONTRACT_STATUSES = new Set(["active", "cancelled"]);
 
 const input = z.object({
-  memberId: z.uuid(),
+  memberId: databaseIdSchema,
   joiningFeeCents: z.number().int().nonnegative().optional(),
   yearlyFeeCents: z.number().int().nonnegative().optional(),
 });

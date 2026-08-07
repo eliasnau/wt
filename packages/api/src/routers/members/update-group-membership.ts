@@ -5,11 +5,12 @@ import { z } from "zod";
 import { groupsErrors, membersErrors } from "../../errors";
 import { orgProcedure } from "../../index";
 import { requirePermission } from "../../middlewares/permissions";
+import { databaseIdSchema } from "../../schemas";
 import { getGroupById } from "../../queries/groups";
 import { getMemberById } from "../../queries/members";
 
 const input = z.object({
-  memberId: z.uuid(),
+  memberId: databaseIdSchema,
   groupId: z.uuid(),
   // `null` → reset to the group's default price.
   membershipPriceCents: z.number().int().nonnegative().nullable(),
@@ -31,8 +32,7 @@ export const updateGroupMembership = orgProcedure
       throw groupsErrors.NOT_FOUND({ internal: { groupId: input.groupId } });
     }
 
-    const price =
-      input.membershipPriceCents ?? group.defaultMembershipPriceCents ?? 0;
+    const price = input.membershipPriceCents ?? group.defaultMembershipPriceCents ?? 0;
 
     // Only the currently-active membership row is editable. Historical (closed)
     // spells are immutable — they're the audit trail.
