@@ -1,7 +1,7 @@
 import { expo } from "@better-auth/expo";
 import { dash } from "@better-auth/infra";
 import { passkey } from "@better-auth/passkey";
-import { and, count, createDb, eq } from "@matdesk/db";
+import { and, count, db, eq } from "@matdesk/db";
 import { member as organizationMember } from "@matdesk/db/schema";
 import * as authSchema from "@matdesk/db/schema/auth";
 import { env } from "@matdesk/env/server";
@@ -40,8 +40,6 @@ const organizationHooks = {
 } satisfies NonNullable<OrganizationOptions["organizationHooks"]>;
 
 export function createAuth(): Auth<any> {
-  const db = createDb();
-
   return betterAuth({
     appName: "matdesk",
     database: drizzleAdapter(db, {

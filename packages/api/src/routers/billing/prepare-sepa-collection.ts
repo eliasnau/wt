@@ -1,4 +1,4 @@
-import { db } from "@matdesk/db";
+import { transactionDb } from "@matdesk/db";
 import { z } from "zod";
 
 import { orgProcedure } from "../../index";
@@ -11,7 +11,7 @@ export const prepareSepaCollection = orgProcedure
   .use(requirePermission({ billing: ["generate", "download"] }))
   .input(z.object({ collectionDate: ymdSchema }))
   .handler(async ({ input, context }) => {
-    const result = await db.transaction((tx) =>
+    const result = await transactionDb.transaction((tx) =>
       prepareCollection(tx, {
         organizationId: context.organizationId,
         collectionDate: input.collectionDate,

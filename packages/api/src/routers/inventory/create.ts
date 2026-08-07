@@ -1,4 +1,4 @@
-import { db } from "@matdesk/db";
+import { transactionDb } from "@matdesk/db";
 import { inventoryProduct } from "@matdesk/db/schema";
 import { createError } from "evlog";
 import { z } from "zod";
@@ -29,7 +29,7 @@ export const createProduct = orgProcedure
     }
     const attributes = normalized.attributes;
 
-    const created = await db.transaction(async (tx) => {
+    const created = await transactionDb.transaction(async (tx) => {
       const [product] = await tx
         .insert(inventoryProduct)
         .values({

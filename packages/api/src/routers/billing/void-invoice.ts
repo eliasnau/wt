@@ -1,4 +1,4 @@
-import { db, eq } from "@matdesk/db";
+import { eq, transactionDb } from "@matdesk/db";
 import { invoice } from "@matdesk/db/schema";
 import { z } from "zod";
 
@@ -25,7 +25,7 @@ export const voidInvoice = orgProcedure
   .use(requirePermission({ billing: ["generate"] }))
   .input(input)
   .handler(async ({ input, context }) => {
-    const voided = await db.transaction(async (tx) => {
+    const voided = await transactionDb.transaction(async (tx) => {
       await lockInvoiceIds(tx, [input.id]);
 
       if (await invoiceIsExported(tx, input.id)) {

@@ -1,4 +1,4 @@
-import { and, db, eq, inArray } from "@matdesk/db";
+import { and, eq, inArray, transactionDb } from "@matdesk/db";
 import { clubMember, contract, group, groupMember, sepaMandate } from "@matdesk/db/schema";
 import { createError } from "evlog";
 import { z } from "zod";
@@ -101,7 +101,7 @@ export const createMember = orgProcedure
       context.log,
     );
 
-    const result = await db.transaction(async (tx) => {
+    const result = await transactionDb.transaction(async (tx) => {
       const [member] = await tx
         .insert(clubMember)
         .values({

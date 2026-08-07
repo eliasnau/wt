@@ -7,7 +7,7 @@
  * runs inside or outside a transaction. Lock + write helpers require a tx.
  */
 
-import { and, asc, db, eq, gte, inArray, isNull, lte, or, sql } from "@matdesk/db";
+import { and, asc, db, eq, gte, inArray, isNull, lte, or, sql, transactionDb } from "@matdesk/db";
 import {
   clubMember,
   contract,
@@ -28,8 +28,8 @@ import type { CreditGrantForAllocation, GrantUpdate } from "../domain/billing/cr
 import type { GroupCharge, InvoiceLineDraft } from "../domain/billing/lines";
 import type { SepaRenderItem, SepaRenderMandate } from "../integrations/sepa";
 
-export type BillingTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
-export type BillingExecutor = typeof db | BillingTx;
+export type BillingTx = Parameters<Parameters<typeof transactionDb.transaction>[0]>[0];
+export type BillingExecutor = typeof db | typeof transactionDb | BillingTx;
 
 type ContractRow = typeof contract.$inferSelect;
 type InvoiceRow = typeof invoice.$inferSelect;

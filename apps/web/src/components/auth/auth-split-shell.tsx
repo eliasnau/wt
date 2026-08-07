@@ -13,7 +13,13 @@ import { Logo } from "@/components/logo";
  * (hidden below `lg`), form column on the right. Children are rendered inside
  * the centered `max-w-sm` stack.
  */
-export function AuthSplitShell({ children }: { children: React.ReactNode }): React.ReactElement {
+export function AuthSplitShell({
+  children,
+  rightAction,
+}: {
+  children: React.ReactNode;
+  rightAction?: React.ReactNode;
+}): React.ReactElement {
   return (
     <main className="relative md:h-screen md:overflow-hidden lg:grid lg:grid-cols-2">
       <div className="relative hidden h-full flex-col border-r bg-secondary p-10 lg:flex dark:bg-secondary/20">
@@ -37,6 +43,8 @@ export function AuthSplitShell({ children }: { children: React.ReactNode }): Rea
           <ChevronLeftIcon />
           Startseite
         </Button>
+
+        {rightAction ? <div className="absolute top-7 right-5">{rightAction}</div> : null}
 
         <div className="mx-auto w-full max-w-sm space-y-4">
           <Logo className="h-4.5 lg:hidden" monochrome />

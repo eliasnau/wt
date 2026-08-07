@@ -1,4 +1,4 @@
-import { db, eq, inArray } from "@matdesk/db";
+import { db, eq, inArray, transactionDb } from "@matdesk/db";
 import { inventoryProduct, inventoryVariant } from "@matdesk/db/schema";
 import { createError } from "evlog";
 import { z } from "zod";
@@ -64,7 +64,7 @@ export const updateVariantQuantities = orgProcedure
       });
     }
 
-    const updated = await db.transaction(async (tx) => {
+    const updated = await transactionDb.transaction(async (tx) => {
       const results: Array<{ id: string; quantity: number }> = [];
 
       for (const variantId of authorizedVariantIds) {

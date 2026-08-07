@@ -1,4 +1,4 @@
-import { and, asc, count, db, eq, sql } from "@matdesk/db";
+import { and, asc, count, db, eq, sql, transactionDb } from "@matdesk/db";
 import {
   clubMember,
   event,
@@ -55,7 +55,7 @@ export const createProgressionPreset = orgProcedure
   .input(z.object({ presetId: z.enum(["judo_djb", "taekwondo_dtu", "wing_tzun_wtfb"]) }))
   .handler(async ({ input, context }) => {
     const preset = progressionPresets[input.presetId];
-    return db.transaction(async (tx) => {
+    return transactionDb.transaction(async (tx) => {
       const [created] = await tx
         .insert(progressionSystem)
         .values({
@@ -260,7 +260,7 @@ export const reorderProgressionRanks = orgProcedure
         status: 400,
       });
     }
-    await db.transaction(async (tx) => {
+    await transactionDb.transaction(async (tx) => {
       for (const [index, rankId] of input.rankIds.entries())
         await tx
           .update(progressionRank)

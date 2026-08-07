@@ -1,4 +1,4 @@
-import { and, count, db, eq } from "@matdesk/db";
+import { and, count, eq, transactionDb } from "@matdesk/db";
 import { group, groupMember } from "@matdesk/db/schema";
 import { createError } from "evlog";
 
@@ -12,7 +12,7 @@ export const deleteGroup = orgProcedure
   .use(requirePermission({ groups: ["delete"] }))
   .input(groupIdInput)
   .handler(async ({ input, context }) => {
-    return db.transaction(async (tx) => {
+    return transactionDb.transaction(async (tx) => {
       const existing = await tx.query.group.findFirst({
         where: (g, { and, eq }) =>
           and(

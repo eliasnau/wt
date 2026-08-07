@@ -1,4 +1,4 @@
-import { and, asc, db, eq, ne } from "@matdesk/db";
+import { and, asc, db, eq, ne, transactionDb } from "@matdesk/db";
 import { coachingAppointment, coachingParticipant, clubMember, member } from "@matdesk/db/schema";
 import { createError } from "evlog";
 import { z } from "zod";
@@ -126,7 +126,7 @@ export const createCoaching = orgProcedure
       assertParticipants(context.organizationId, input.participants),
       assertNoConflict(input, context.organizationId),
     ]);
-    return db.transaction(async (tx) => {
+    return transactionDb.transaction(async (tx) => {
       const { participants, allowConflict: _, ...values } = input;
       const [created] = await tx
         .insert(coachingAppointment)
@@ -174,7 +174,7 @@ export const updateCoaching = orgProcedure
       assertParticipants(context.organizationId, input.participants),
       assertNoConflict(input, context.organizationId, input.appointmentId),
     ]);
-    return db.transaction(async (tx) => {
+    return transactionDb.transaction(async (tx) => {
       const { appointmentId, participants, allowConflict: _, ...values } = input;
       const [updated] = await tx
         .update(coachingAppointment)

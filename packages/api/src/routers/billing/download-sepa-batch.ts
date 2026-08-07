@@ -1,4 +1,4 @@
-import { and, db, eq } from "@matdesk/db";
+import { and, eq, transactionDb } from "@matdesk/db";
 import { sepaBatch } from "@matdesk/db/schema";
 
 import { billingErrors } from "../../errors";
@@ -20,7 +20,7 @@ export const downloadSepaBatch = orgProcedure
   .use(requirePermission({ billing: ["download"] }))
   .input(idInput)
   .handler(async ({ input, context }) => {
-    const result = await db.transaction(async (tx) => {
+    const result = await transactionDb.transaction(async (tx) => {
       const batch = await getBatchByIdForUpdate(tx, input.id, context.organizationId);
       if (!batch) {
         throw billingErrors.BATCH_NOT_FOUND({ internal: { batchId: input.id } });

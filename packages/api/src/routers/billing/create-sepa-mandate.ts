@@ -1,4 +1,4 @@
-import { and, db, eq } from "@matdesk/db";
+import { and, eq, transactionDb } from "@matdesk/db";
 import { sepaMandate } from "@matdesk/db/schema";
 import { createError } from "evlog";
 import { z } from "zod";
@@ -34,7 +34,7 @@ export const createSepaMandate = orgProcedure
       throw billingErrors.INVALID_IBAN({ internal: { reason: "mandate iban" } });
     }
 
-    const created = await db.transaction(async (tx) => {
+    const created = await transactionDb.transaction(async (tx) => {
       // Serialize mandate changes for this contract so two concurrent creates
       // can't both deactivate the old row and insert a new active one.
       await acquireContractMandateLock(tx, input.contractId);

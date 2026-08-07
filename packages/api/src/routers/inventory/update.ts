@@ -1,4 +1,4 @@
-import { and, db, eq } from "@matdesk/db";
+import { and, eq, transactionDb } from "@matdesk/db";
 import { inventoryProduct } from "@matdesk/db/schema";
 import { z } from "zod";
 
@@ -33,7 +33,7 @@ export const updateProduct = orgProcedure
     }
     const attributes = normalized.attributes;
 
-    await db.transaction(async (tx) => {
+    await transactionDb.transaction(async (tx) => {
       const [product] = await tx
         .select({ id: inventoryProduct.id })
         .from(inventoryProduct)

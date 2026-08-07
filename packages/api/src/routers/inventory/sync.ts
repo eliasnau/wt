@@ -1,4 +1,4 @@
-import { db, eq, inArray } from "@matdesk/db";
+import { eq, inArray, transactionDb } from "@matdesk/db";
 import {
   inventoryProductAttribute,
   inventoryProductAttributeValue,
@@ -12,8 +12,8 @@ import {
   getCombinationTuple,
 } from "../../domain/inventory/variants";
 
-/** Transaction handle, derived from the single `db` client. */
-type DbTx = Parameters<Parameters<typeof db.transaction>[0]>[0];
+/** Transaction handle for mutations that require an interactive session. */
+type DbTx = Parameters<Parameters<typeof transactionDb.transaction>[0]>[0];
 
 /**
  * Read a product's current attribute definition (ordered attributes, each with

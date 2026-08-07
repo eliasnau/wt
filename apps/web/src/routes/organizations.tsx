@@ -2,14 +2,6 @@
 
 import { Button } from "@matdesk/ui/components/button";
 import {
-  Card,
-  CardAction,
-  CardDescription,
-  CardHeader,
-  CardPanel,
-  CardTitle,
-} from "@matdesk/ui/components/card";
-import {
   Empty,
   EmptyContent,
   EmptyDescription,
@@ -24,9 +16,9 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { useAuth } from "@/components/auth/auth-provider";
+import { AuthSplitShell } from "@/components/auth/auth-split-shell";
 import { OrganizationAvatar } from "@/components/auth/organization-avatar";
 import UserMenu from "@/components/auth/user-menu";
-import { Logo } from "@/components/logo";
 import { getUser } from "@/functions/get-user";
 
 type OrganizationsSearch = {
@@ -69,121 +61,85 @@ function OrganizationsPage() {
   }
 
   return (
-    <div className="relative min-h-svh overflow-hidden bg-background">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 top-0 h-80 bg-[radial-gradient(ellipse_at_top,var(--color-muted),transparent_70%)] opacity-70"
-      />
-      <header className="relative flex h-16 items-center justify-between border-b bg-background/80 px-4 backdrop-blur-sm md:px-8">
-        <Link aria-label="matdesk home" to="/">
-          <Logo className="h-5 w-auto" />
-        </Link>
-        <UserMenu />
-      </header>
+    <AuthSplitShell rightAction={<UserMenu />}>
+      <div>
+        <h1 className="font-bold text-2xl tracking-wide">Organisation auswählen</h1>
+      </div>
 
-      <main className="relative mx-auto flex w-full max-w-2xl flex-col gap-8 px-4 py-12 md:px-6 md:py-20">
+      <section aria-label="Organisationen" className="pt-2">
         <div className="flex flex-col gap-2">
-          <p className="font-medium text-muted-foreground text-sm">Workspace</p>
-          <h1 className="font-heading font-semibold text-3xl tracking-tight md:text-4xl">
-            Choose an organization
-          </h1>
-          <p className="max-w-lg text-muted-foreground">
-            Select the organization you want to work in. You can switch again later from the
-            dashboard.
-          </p>
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Your organizations</CardTitle>
-            <CardDescription>
-              {isOrganizationsPending
-                ? "Loading organizations..."
-                : `${organizations.length} available`}
-            </CardDescription>
-            {user?.role === "admin" ? (
-              <CardAction>
-                <Button render={<Link to="/admin/organizations" />} size="sm" variant="outline">
-                  <PlusIcon data-icon="inline-start" />
-                  Create
-                </Button>
-              </CardAction>
-            ) : null}
-          </CardHeader>
-          <CardPanel className="flex flex-col gap-3">
-            {isOrganizationsPending ? (
-              <OrganizationListSkeleton />
-            ) : organizationsError ? (
-              <Empty className="py-10 md:py-10">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <Building2Icon />
-                  </EmptyMedia>
-                  <EmptyTitle>Organizations unavailable</EmptyTitle>
-                  <EmptyDescription>
-                    We could not load your organizations. Refresh the page to try again.
-                  </EmptyDescription>
-                </EmptyHeader>
-              </Empty>
-            ) : organizations.length === 0 ? (
-              <Empty className="py-10 md:py-10">
-                <EmptyHeader>
-                  <EmptyMedia variant="icon">
-                    <Building2Icon />
-                  </EmptyMedia>
-                  <EmptyTitle>No organizations yet</EmptyTitle>
-                  <EmptyDescription>
-                    Ask an administrator to add you to an organization.
-                  </EmptyDescription>
-                </EmptyHeader>
-                {user?.role === "admin" ? (
-                  <EmptyContent>
-                    <Button render={<Link to="/admin/organizations" />}>
-                      <PlusIcon data-icon="inline-start" />
-                      Create organization
-                    </Button>
-                  </EmptyContent>
-                ) : null}
-              </Empty>
-            ) : (
-              organizations.map((organization) => (
-                <Button
-                  className="h-auto w-full justify-start p-4 text-left"
-                  disabled={activatingId !== null}
-                  key={organization.id}
-                  onClick={() => selectOrganization(organization.id)}
-                  variant="outline"
-                >
-                  <OrganizationAvatar
-                    className="size-10 shrink-0"
-                    id={organization.id}
-                    logo={organization.logo}
-                    name={organization.name}
-                  />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate font-semibold">{organization.name}</span>
-                    <span className="block truncate font-normal text-muted-foreground text-xs">
-                      {organization.slug}
-                    </span>
+          {isOrganizationsPending ? (
+            <OrganizationListSkeleton />
+          ) : organizationsError ? (
+            <Empty className="rounded-xl border bg-muted/20 py-10 md:py-10">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Building2Icon />
+                </EmptyMedia>
+                <EmptyTitle>Organisationen nicht verfügbar</EmptyTitle>
+                <EmptyDescription>
+                  Die Organisationen konnten nicht geladen werden. Lade die Seite erneut.
+                </EmptyDescription>
+              </EmptyHeader>
+            </Empty>
+          ) : organizations.length === 0 ? (
+            <Empty className="rounded-xl border bg-muted/20 py-10 md:py-10">
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <Building2Icon />
+                </EmptyMedia>
+                <EmptyTitle>Noch keine Organisation</EmptyTitle>
+                <EmptyDescription>
+                  Bitte einen Administrator, dich zu einer Organisation hinzuzufügen.
+                </EmptyDescription>
+              </EmptyHeader>
+              {user?.role === "admin" ? (
+                <EmptyContent>
+                  <Button render={<Link to="/admin/organizations" />}>
+                    <PlusIcon data-icon="inline-start" />
+                    Organisation erstellen
+                  </Button>
+                </EmptyContent>
+              ) : null}
+            </Empty>
+          ) : (
+            organizations.map((organization) => (
+              <Button
+                className="group grid h-auto w-full grid-cols-[2.5rem_minmax(0,1fr)_auto] items-center gap-3 rounded-xl p-3 text-left sm:h-auto"
+                disabled={activatingId !== null}
+                key={organization.id}
+                onClick={() => selectOrganization(organization.id)}
+                variant="outline"
+              >
+                <OrganizationAvatar
+                  className="size-10"
+                  id={organization.id}
+                  logo={organization.logo}
+                  name={organization.name}
+                />
+                <span className="min-w-0">
+                  <span className="block truncate font-semibold">{organization.name}</span>
+                  <span className="block truncate font-normal text-muted-foreground text-xs">
+                    {organization.slug}
                   </span>
-                  {activatingId === organization.id ? (
-                    <span className="text-muted-foreground text-xs">Opening...</span>
-                  ) : (
-                    <ArrowRightIcon data-icon="inline-end" />
-                  )}
-                </Button>
-              ))
-            )}
-          </CardPanel>
-        </Card>
-      </main>
-    </div>
+                </span>
+                {activatingId === organization.id ? (
+                  <span className="text-muted-foreground text-xs">Wird geöffnet …</span>
+                ) : (
+                  <ArrowRightIcon className="text-muted-foreground transition-transform duration-200 group-hover:translate-x-0.5 group-hover:text-foreground" />
+                )}
+              </Button>
+            ))
+          )}
+        </div>
+      </section>
+    </AuthSplitShell>
   );
 }
 
 function OrganizationListSkeleton() {
   return Array.from({ length: 2 }, (_, index) => (
-    <div className="flex items-center gap-3 rounded-lg border p-4" key={index}>
+    <div className="flex items-center gap-3 rounded-xl border p-3" key={index}>
       <Skeleton className="size-10 rounded-md" />
       <div className="flex flex-1 flex-col gap-2">
         <Skeleton className="h-4 w-36" />

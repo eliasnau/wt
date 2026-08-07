@@ -1,4 +1,4 @@
-import { db } from "@matdesk/db";
+import { db, transactionDb } from "@matdesk/db";
 import { z } from "zod";
 
 import {
@@ -52,7 +52,7 @@ export const generateSepaBatch = orgProcedure
     const organizationId = context.organizationId;
     const initial = await partition(db, organizationId);
 
-    const { batch, finalPartition } = await db.transaction(async (tx) => {
+    const { batch, finalPartition } = await transactionDb.transaction(async (tx) => {
       const lockedInvoiceIds = new Set<string>();
       let pendingInvoiceIds = initial.included.map((inv) => inv.id);
       let finalPartition = initial;

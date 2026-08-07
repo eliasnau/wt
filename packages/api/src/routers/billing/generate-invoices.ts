@@ -1,4 +1,4 @@
-import { db } from "@matdesk/db";
+import { transactionDb } from "@matdesk/db";
 import { z } from "zod";
 
 import { orgProcedure } from "../../index";
@@ -24,7 +24,7 @@ export const generateInvoices = orgProcedure
   .use(requirePermission({ billing: ["generate"] }))
   .input(input)
   .handler(async ({ input, context }) => {
-    const createdInvoices = await db.transaction(async (tx) => {
+    const createdInvoices = await transactionDb.transaction(async (tx) => {
       await acquireOrgGenerationLock(tx, context.organizationId);
       return generateInvoicesForMonth(tx, {
         organizationId: context.organizationId,
