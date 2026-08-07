@@ -71,9 +71,8 @@ export function GroupsCard({ onEdit }: { onEdit: (group: GroupRow) => void }) {
 
 	const deleteMutation = useMutation(
 		orpc.groups.delete.mutationOptions({
-			onSuccess: () => {
-				toast.success("Gruppe gelöscht");
-				queryClient.invalidateQueries({ queryKey: orpc.groups.key() });
+		onSuccess: () => {
+				void queryClient.invalidateQueries({ queryKey: groupsQueryOptions().queryKey });
 				setDeleting(null);
 			},
 			onError: (error) => toast.error(parseError(error).message),

@@ -44,7 +44,6 @@ function ProfilePage() {
     },
     onSuccess: async () => {
       await refetchSession();
-      toast.success("Profil aktualisiert");
     },
     onError: (error) => toast.error(parseError(error).message),
   });
@@ -120,7 +119,7 @@ function ProfilePage() {
             onClick={() => mutation.mutate()}
             size="sm"
           >
-            Speichern
+            {mutation.isSuccess && !changed ? "Gespeichert" : "Speichern"}
           </Button>
         </CardFrameFooter>
       </CardFrame>

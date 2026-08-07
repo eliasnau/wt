@@ -98,7 +98,6 @@ function RouteComponent() {
 			if (error) throw new Error(error.message);
 		},
 		onSuccess: async () => {
-			toast.success("Rolle aktualisiert");
 			await refetch();
 		},
 		onError: (error) => toast.error(parseError(error).message),

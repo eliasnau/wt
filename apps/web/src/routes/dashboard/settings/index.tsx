@@ -47,7 +47,6 @@ function RouteComponent() {
 			if (error) throw new Error(error.message);
 		},
 		onSuccess: async () => {
-			toast.success("Organisation aktualisiert");
 			await refetch();
 		},
 		onError: (error) => toast.error(parseError(error).message),
@@ -62,7 +61,6 @@ function RouteComponent() {
 			if (error) throw new Error(error.message);
 		},
 		onSuccess: async () => {
-			toast.success("Slug aktualisiert");
 			await refetch();
 		},
 		onError: (error) => toast.error(parseError(error).message),
@@ -111,7 +109,7 @@ function RouteComponent() {
 						onClick={() => infoMutation.mutate()}
 						size="sm"
 					>
-						Speichern
+						{infoMutation.isSuccess && !infoChanged ? "Gespeichert" : "Speichern"}
 					</Button>
 				</CardFrameFooter>
 			</CardFrame>
@@ -142,7 +140,7 @@ function RouteComponent() {
 						onClick={() => slugMutation.mutate()}
 						size="sm"
 					>
-						Speichern
+						{slugMutation.isSuccess && !slugChanged ? "Gespeichert" : "Speichern"}
 					</Button>
 				</CardFrameFooter>
 			</CardFrame>

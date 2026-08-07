@@ -27,6 +27,7 @@ import { parseError } from "evlog";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { groupsQueryOptions } from "@/queries/groups";
 import { orpc } from "@/utils/orpc";
 
 export type GroupRow = {
@@ -88,22 +89,21 @@ export function GroupDialog({
     setProgressionSystemId(group?.progressionSystemId ?? "none");
   }, [open, group]);
 
-  function onDone(message: string) {
-    toast.success(message);
-    queryClient.invalidateQueries({ queryKey: orpc.groups.key() });
+  function onDone() {
+    void queryClient.invalidateQueries({ queryKey: groupsQueryOptions().queryKey });
     onOpenChange(false);
   }
 
   const createMutation = useMutation(
     orpc.groups.create.mutationOptions({
-      onSuccess: () => onDone("Gruppe erstellt"),
+      onSuccess: onDone,
       onError: (error) => toast.error(parseError(error).message),
     }),
   );
 
   const updateMutation = useMutation(
     orpc.groups.update.mutationOptions({
-      onSuccess: () => onDone("Gruppe aktualisiert"),
+      onSuccess: onDone,
       onError: (error) => toast.error(parseError(error).message),
     }),
   );

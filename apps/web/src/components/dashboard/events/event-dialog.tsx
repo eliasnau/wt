@@ -25,6 +25,7 @@ import { CalendarIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { eventDetailQueryOptions, eventsListQueryOptions } from "@/queries/events";
 import { orpc } from "@/utils/orpc";
 
 export type EventRow = {
@@ -85,21 +86,23 @@ export function EventDialog({
     setCapacity(event?.capacity == null ? "" : String(event.capacity));
   }, [event, open]);
 
-  function done(message: string) {
-    toast.success(message);
-    queryClient.invalidateQueries({ queryKey: orpc.events.key() });
+  function done() {
+    void queryClient.invalidateQueries({ queryKey: eventsListQueryOptions().queryKey });
+    if (event) {
+      void queryClient.invalidateQueries({ queryKey: eventDetailQueryOptions(event.id).queryKey });
+    }
     onOpenChange(false);
   }
 
   const createMutation = useMutation(
     orpc.events.create.mutationOptions({
-      onSuccess: () => done("Veranstaltung erstellt"),
+      onSuccess: done,
       onError: (error) => toast.error(parseError(error).message),
     }),
   );
   const updateMutation = useMutation(
     orpc.events.update.mutationOptions({
-      onSuccess: () => done("Veranstaltung aktualisiert"),
+      onSuccess: done,
       onError: (error) => toast.error(parseError(error).message),
     }),
   );

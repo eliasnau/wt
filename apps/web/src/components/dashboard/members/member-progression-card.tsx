@@ -66,7 +66,8 @@ import {
   SparklesIcon,
   Trash2Icon,
 } from "lucide-react";
-import { type ReactNode, useEffect, useMemo, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { type ReactNode, type Ref, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { client, orpc, queryClient } from "@/utils/orpc";
@@ -75,6 +76,18 @@ type Systems = Awaited<ReturnType<typeof client.progression.listSystems>>;
 type Awards = Awaited<ReturnType<typeof client.progression.listMemberRanks>>;
 type System = Systems[number];
 type Award = Awards[number];
+type Celebration = { systemId: string; rankId: string };
+
+const CONFETTI_PARTICLES = [
+  { x: -42, y: -34, rotate: -75, color: "#f59e0b" },
+  { x: -24, y: -48, rotate: 55, color: "#22c55e" },
+  { x: -8, y: -42, rotate: -35, color: "#3b82f6" },
+  { x: 13, y: -50, rotate: 80, color: "#a855f7" },
+  { x: 31, y: -38, rotate: -60, color: "#ef4444" },
+  { x: 45, y: -19, rotate: 45, color: "#f59e0b" },
+  { x: -46, y: -12, rotate: 70, color: "#06b6d4" },
+  { x: 28, y: -8, rotate: -85, color: "#ec4899" },
+] as const;
 
 function todayYmd() {
   return new Date().toISOString().slice(0, 10);
@@ -89,7 +102,7 @@ function formatAwardDate(value: string) {
 }
 
 function refreshMemberRanks(memberId: string) {
-  queryClient.invalidateQueries({
+  void queryClient.invalidateQueries({
     queryKey: orpc.progression.listMemberRanks.key({ input: { memberId } }),
   });
 }
@@ -105,6 +118,13 @@ export function MemberProgressionCard({ memberId }: { memberId: string }) {
   const [dialogSystemId, setDialogSystemId] = useState<string | undefined>();
   const [dialogRankId, setDialogRankId] = useState<string | undefined>();
   const [editingAward, setEditingAward] = useState<Award | undefined>();
+  const [celebration, setCelebration] = useState<Celebration | null>(null);
+
+  useEffect(() => {
+    if (!celebration) return;
+    const timeout = window.setTimeout(() => setCelebration(null), 1800);
+    return () => window.clearTimeout(timeout);
+  }, [celebration]);
 
   function openAwardDialog(systemId?: string, rankId?: string, award?: Award) {
     setDialogSystemId(systemId);
@@ -163,7 +183,11 @@ export function MemberProgressionCard({ memberId }: { memberId: string }) {
                   <TabsPanel className="p-5" key={system.id} value={system.id}>
                     <SystemProgression
                       awards={awards.filter((item) => item.system.id === system.id)}
+                      celebratedRankId={
+                        celebration?.systemId === system.id ? celebration.rankId : undefined
+                      }
                       memberId={memberId}
+                      onAwarded={(rankId) => setCelebration({ systemId: system.id, rankId })}
                       onEditAward={(award) => openAwardDialog(system.id, award.rank.id, award)}
                       onSelectRank={(rankId) => openAwardDialog(system.id, rankId)}
                       system={system}
@@ -180,6 +204,7 @@ export function MemberProgressionCard({ memberId }: { memberId: string }) {
         initialSystemId={dialogSystemId}
         editingAward={editingAward}
         memberId={memberId}
+        onAwarded={(systemId, rankId) => setCelebration({ systemId, rankId })}
         onOpenChange={setDialogOpen}
         open={dialogOpen}
         systems={systems}
@@ -191,13 +216,17 @@ export function MemberProgressionCard({ memberId }: { memberId: string }) {
 function SystemProgression({
   system,
   awards,
+  celebratedRankId,
   memberId,
+  onAwarded,
   onSelectRank,
   onEditAward,
 }: {
   system: System;
   awards: Awards;
+  celebratedRankId?: string;
   memberId: string;
+  onAwarded: (rankId: string) => void;
   onSelectRank: (rankId?: string) => void;
   onEditAward: (award: Award) => void;
 }) {
@@ -225,8 +254,8 @@ function SystemProgression({
     system.mode === "collection" ? system.ranks.find((rank) => !heldIds.has(rank.id)) : undefined;
   const awardNext = useMutation(
     orpc.progression.awardRank.mutationOptions({
-      onSuccess: () => {
-        toast.success(`${nextRank?.name ?? system.unitLabel} verliehen`);
+      onSuccess: (_data, variables) => {
+        onAwarded(variables.rankId);
         refreshMemberRanks(memberId);
       },
       onError: (error) => toast.error(parseError(error).message),
@@ -316,52 +345,55 @@ function SystemProgression({
             className="absolute top-[4.25rem] right-[16.67%] left-[16.67%] h-px bg-border"
           />
         ) : null}
-        {progressionNodes.map((node, index) => (
-          <ProgressNode
-            action={
-              system.mode === "sequential" && !node.award ? (
-                <Button
-                  className="mt-3 w-full"
-                  disabled={node.rank.id !== nextRank?.id}
-                  loading={awardNext.isPending && node.rank.id === nextRank?.id}
-                  onClick={() =>
-                    awardNext.mutate({
-                      memberId,
-                      systemId: system.id,
-                      rankId: node.rank.id,
-                      awardedOn: todayYmd(),
-                    })
-                  }
-                  size="sm"
-                >
-                  <SparklesIcon /> Stufe verleihen
-                </Button>
-              ) : system.mode === "collection" && !node.award ? (
-                <Button
-                  className="mt-3 w-full"
-                  disabled={node.rank.id !== nextCollectionRank?.id}
-                  onClick={() => onSelectRank(node.rank.id)}
-                  size="sm"
-                >
-                  <PlusIcon /> Verleihen
-                </Button>
-              ) : undefined
-            }
-            award={node.award}
-            className={
-              progressionNodes.length === 1
-                ? "col-start-1"
-                : progressionNodes.length === 2 && index === 1
-                  ? "col-start-3"
-                  : undefined
-            }
-            current={node.current}
-            key={node.rank.id}
-            label={node.label}
-            rank={node.rank}
-            onEditAward={onEditAward}
-          />
-        ))}
+        <AnimatePresence initial={false} mode="popLayout">
+          {progressionNodes.map((node, index) => (
+            <ProgressNode
+              action={
+                system.mode === "sequential" && !node.award ? (
+                  <Button
+                    className="mt-3 w-full"
+                    disabled={node.rank.id !== nextRank?.id}
+                    loading={awardNext.isPending && node.rank.id === nextRank?.id}
+                    onClick={() =>
+                      awardNext.mutate({
+                        memberId,
+                        systemId: system.id,
+                        rankId: node.rank.id,
+                        awardedOn: todayYmd(),
+                      })
+                    }
+                    size="sm"
+                  >
+                    <SparklesIcon /> Stufe verleihen
+                  </Button>
+                ) : system.mode === "collection" && !node.award ? (
+                  <Button
+                    className="mt-3 w-full"
+                    disabled={node.rank.id !== nextCollectionRank?.id}
+                    onClick={() => onSelectRank(node.rank.id)}
+                    size="sm"
+                  >
+                    <PlusIcon /> Verleihen
+                  </Button>
+                ) : undefined
+              }
+              award={node.award}
+              className={
+                progressionNodes.length === 1
+                  ? "col-start-1"
+                  : progressionNodes.length === 2 && index === 1
+                    ? "col-start-3"
+                    : undefined
+              }
+              current={node.current}
+              celebrating={node.rank.id === celebratedRankId}
+              key={node.rank.id}
+              label={node.label}
+              rank={node.rank}
+              onEditAward={onEditAward}
+            />
+          ))}
+        </AnimatePresence>
       </div>
 
       <Sheet onOpenChange={setAllRanksOpen} open={allRanksOpen}>
@@ -438,27 +470,39 @@ function ProgressNode({
   label,
   rank,
   current,
+  celebrating,
   action,
   award,
   className,
   onEditAward,
+  ref,
 }: {
   label: string;
   rank: { name: string; color: string | null };
   current?: boolean;
+  celebrating?: boolean;
   action?: ReactNode;
   award?: Award;
   className?: string;
   onEditAward: (award: Award) => void;
+  ref?: Ref<HTMLDivElement>;
 }) {
+  const shouldReduceMotion = useReducedMotion();
+
   return (
-    <div
+    <motion.div
+      animate={{ opacity: 1, x: 0 }}
       className={cn("relative z-10 flex min-w-0 flex-col items-center px-2 text-center", className)}
+      exit={{ opacity: 0, x: -36 }}
+      initial={{ opacity: 0, x: 36 }}
+      layout="position"
+      ref={ref}
+      transition={{ duration: 0.42, ease: [0.16, 1, 0.3, 1] }}
     >
       <p className="text-muted-foreground text-xs">{label}</p>
       <button
         className={cn(
-          "mt-2 flex size-10 items-center justify-center rounded-full border-4 border-background bg-muted shadow-sm ring-1 ring-border",
+          "relative mt-2 flex size-10 items-center justify-center rounded-full border-4 border-background bg-muted shadow-sm ring-1 ring-border",
           current && "ring-2 ring-primary ring-offset-2 ring-offset-background",
         )}
         disabled={!award}
@@ -467,6 +511,11 @@ function ProgressNode({
         type="button"
       >
         {current ? <CheckIcon className="size-4 text-white drop-shadow-sm" /> : null}
+        <AnimatePresence>
+          {celebrating ? (
+            <RankCelebration color={rank.color} reducedMotion={Boolean(shouldReduceMotion)} />
+          ) : null}
+        </AnimatePresence>
       </button>
       <span className="mt-2 max-w-full truncate font-medium text-sm">{rank.name}</span>
       {award ? (
@@ -479,7 +528,66 @@ function ProgressNode({
         </button>
       ) : null}
       {action ? <div className="w-full max-w-44">{action}</div> : null}
-    </div>
+    </motion.div>
+  );
+}
+
+function RankCelebration({
+  color,
+  reducedMotion,
+}: {
+  color: string | null;
+  reducedMotion: boolean;
+}) {
+  const accent = color ?? "var(--primary)";
+
+  return (
+    <>
+      <span className="sr-only" role="status">
+        Graduierung erfolgreich verliehen
+      </span>
+      <motion.span
+        animate={{ opacity: 0, scale: reducedMotion ? 1.15 : 1.8 }}
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 rounded-full ring-2 ring-primary"
+        exit={{ opacity: 0 }}
+        initial={{ opacity: 0.8, scale: 0.8 }}
+        transition={{ duration: reducedMotion ? 0.2 : 0.65, ease: [0.16, 1, 0.3, 1] }}
+      />
+      {reducedMotion ? null : (
+        <>
+          <motion.span
+            animate={{ opacity: [0, 1, 0], scale: [0.7, 1.2, 0.6], x: [-72, 0, 4] }}
+            aria-hidden="true"
+            className="pointer-events-none absolute left-1/2 top-1/2 size-2 rounded-full shadow-[0_0_12px_currentColor]"
+            initial={{ opacity: 0, x: -72 }}
+            style={{ backgroundColor: accent, color: accent }}
+            transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+          />
+          {CONFETTI_PARTICLES.map((particle, index) => (
+            <motion.span
+              animate={{
+                opacity: [0, 1, 1, 0],
+                rotate: particle.rotate,
+                scale: [0.5, 1, 0.85],
+                x: particle.x,
+                y: particle.y,
+              }}
+              aria-hidden="true"
+              className="pointer-events-none absolute left-1/2 top-1/2 h-1.5 w-1 rounded-[1px]"
+              initial={{ opacity: 0, rotate: 0, scale: 0.5, x: 0, y: 0 }}
+              key={`${particle.x}:${particle.y}`}
+              style={{ backgroundColor: particle.color }}
+              transition={{
+                delay: 0.28 + index * 0.018,
+                duration: 0.75,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+            />
+          ))}
+        </>
+      )}
+    </>
   );
 }
 
@@ -491,6 +599,7 @@ function AwardDialog({
   initialSystemId,
   initialRankId,
   editingAward,
+  onAwarded,
 }: {
   memberId: string;
   open: boolean;
@@ -499,6 +608,7 @@ function AwardDialog({
   initialSystemId?: string;
   initialRankId?: string;
   editingAward?: Award;
+  onAwarded: (systemId: string, rankId: string) => void;
 }) {
   const available = useMemo(() => systems.filter((system) => system.ranks.length > 0), [systems]);
   const [systemId, setSystemId] = useState("");
@@ -516,8 +626,8 @@ function AwardDialog({
   const selectedSystem = available.find((system) => system.id === systemId) ?? available[0];
   const mutation = useMutation(
     orpc.progression.awardRank.mutationOptions({
-      onSuccess: () => {
-        toast.success("Graduierung verliehen");
+      onSuccess: (_data, variables) => {
+        onAwarded(variables.systemId, variables.rankId);
         refreshMemberRanks(memberId);
         onOpenChange(false);
       },
@@ -527,7 +637,6 @@ function AwardDialog({
   const updateMutation = useMutation(
     orpc.progression.updateAward.mutationOptions({
       onSuccess: () => {
-        toast.success("Verleihungsdatum aktualisiert");
         refreshMemberRanks(memberId);
         onOpenChange(false);
       },
@@ -537,7 +646,6 @@ function AwardDialog({
   const deleteMutation = useMutation(
     orpc.progression.deleteAward.mutationOptions({
       onSuccess: () => {
-        toast.success("Graduierung entfernt");
         refreshMemberRanks(memberId);
         setDeleteOpen(false);
         onOpenChange(false);
@@ -549,7 +657,7 @@ function AwardDialog({
   return (
     <>
       <Dialog onOpenChange={onOpenChange} open={open}>
-        <DialogPopup className="sm:max-w-md">
+        <DialogPopup className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {editingAward ? "Verleihungsdatum bearbeiten" : "Graduierung verleihen"}
@@ -644,9 +752,10 @@ function AwardDialog({
                 />
               </Field>
             </DialogPanel>
-            <DialogFooter>
+            <DialogFooter className="sm:flex-wrap">
               {editingAward ? (
                 <Button
+                  className="sm:mr-auto"
                   onClick={() => setDeleteOpen(true)}
                   type="button"
                   variant="destructive-outline"

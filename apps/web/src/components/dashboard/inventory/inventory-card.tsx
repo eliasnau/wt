@@ -74,8 +74,7 @@ export function InventoryCard() {
 	const deleteMutation = useMutation(
 		orpc.inventory.delete.mutationOptions({
 			onSuccess: () => {
-				toast.success("Produkt gelöscht");
-				queryClient.invalidateQueries({ queryKey: orpc.inventory.list.key() });
+				void queryClient.invalidateQueries({ queryKey: inventoryListQueryOptions().queryKey });
 				setDeleting(null);
 			},
 			onError: (error) => toast.error(parseError(error).message),

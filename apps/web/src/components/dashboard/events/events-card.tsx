@@ -59,8 +59,7 @@ export function EventsCard({
   const deleteMutation = useMutation(
     orpc.events.delete.mutationOptions({
       onSuccess: () => {
-        toast.success("Veranstaltung gelöscht");
-        queryClient.invalidateQueries({ queryKey: orpc.events.key() });
+        void queryClient.invalidateQueries({ queryKey: orpc.events.key() });
         setDeleting(null);
       },
       onError: (error) => toast.error(parseError(error).message),

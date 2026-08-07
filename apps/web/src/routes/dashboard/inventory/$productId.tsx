@@ -118,11 +118,10 @@ function ProductDetail({ product }: { product: Product }) {
 	const saveMutation = useMutation(
 		orpc.inventory.updateVariantQuantities.mutationOptions({
 			onSuccess: () => {
-				toast.success("Bestand gespeichert");
-				queryClient.invalidateQueries({
+				void queryClient.invalidateQueries({
 					queryKey: orpc.inventory.get.key({ input: { productId: product.id } }),
 				});
-				queryClient.invalidateQueries({ queryKey: orpc.inventory.list.key() });
+				void queryClient.invalidateQueries({ queryKey: orpc.inventory.list.key() });
 				setDrafts({});
 			},
 			onError: (error) => toast.error(parseError(error).message),

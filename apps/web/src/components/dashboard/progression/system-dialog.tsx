@@ -85,27 +85,26 @@ export function SystemDialog({
     setPresetId(null);
   }, [open, system]);
 
-  function done(message: string) {
-    toast.success(message);
-    queryClient.invalidateQueries({ queryKey: orpc.progression.key() });
+  function done() {
+    void queryClient.invalidateQueries({ queryKey: orpc.progression.key() });
     onOpenChange(false);
   }
 
   const create = useMutation(
     orpc.progression.createSystem.mutationOptions({
-      onSuccess: () => done("Graduierungssystem erstellt"),
+      onSuccess: done,
       onError: (error) => toast.error(parseError(error).message),
     }),
   );
   const update = useMutation(
     orpc.progression.updateSystem.mutationOptions({
-      onSuccess: () => done("Graduierungssystem aktualisiert"),
+      onSuccess: done,
       onError: (error) => toast.error(parseError(error).message),
     }),
   );
   const createPreset = useMutation(
     orpc.progression.createPreset.mutationOptions({
-      onSuccess: () => done("Graduierungssystem aus Vorlage erstellt"),
+      onSuccess: done,
       onError: (error) => toast.error(parseError(error).message),
     }),
   );

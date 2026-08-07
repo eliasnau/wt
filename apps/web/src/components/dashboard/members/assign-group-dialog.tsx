@@ -74,11 +74,10 @@ export function AssignGroupDialog({
   const mutation = useMutation(
     orpc.members.assignGroup.mutationOptions({
       onSuccess: () => {
-        toast.success("Gruppe zugewiesen");
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: orpc.members.get.key({ input: { memberId } }),
         });
-        queryClient.invalidateQueries({ queryKey: orpc.members.query.key() });
+        void queryClient.invalidateQueries({ queryKey: orpc.members.query.key() });
         onOpenChange(false);
       },
       onError: (error) => toast.error(parseError(error).message),

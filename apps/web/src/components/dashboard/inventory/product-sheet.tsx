@@ -21,6 +21,7 @@ import { PlusIcon, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { inventoryListQueryOptions, inventoryProductQueryOptions } from "@/queries/inventory";
 import { orpc } from "@/utils/orpc";
 
 export type ProductForEdit = {
@@ -62,12 +63,11 @@ export function ProductSheet({
 		);
 	}, [open, product]);
 
-	function onDone(message: string) {
-		toast.success(message);
-		queryClient.invalidateQueries({ queryKey: orpc.inventory.list.key() });
+	function onDone() {
+		void queryClient.invalidateQueries({ queryKey: inventoryListQueryOptions().queryKey });
 		if (product) {
-			queryClient.invalidateQueries({
-				queryKey: orpc.inventory.get.key({ input: { productId: product.id } }),
+			void queryClient.invalidateQueries({
+				queryKey: inventoryProductQueryOptions(product.id).queryKey,
 			});
 		}
 		onOpenChange(false);
@@ -75,13 +75,13 @@ export function ProductSheet({
 
 	const createMutation = useMutation(
 		orpc.inventory.create.mutationOptions({
-			onSuccess: () => onDone("Produkt erstellt"),
+			onSuccess: onDone,
 			onError: (error) => toast.error(parseError(error).message),
 		}),
 	);
 	const updateMutation = useMutation(
 		orpc.inventory.update.mutationOptions({
-			onSuccess: () => onDone("Produkt aktualisiert"),
+			onSuccess: onDone,
 			onError: (error) => toast.error(parseError(error).message),
 		}),
 	);

@@ -103,8 +103,7 @@ function RouteComponent() {
   const deleteMutation = useMutation(
     orpc.progression.deleteSystem.mutationOptions({
       onSuccess: () => {
-        toast.success("Graduierungssystem gelöscht");
-        queryClient.invalidateQueries({ queryKey: orpc.progression.key() });
+        void queryClient.invalidateQueries({ queryKey: orpc.progression.key() });
         setDeleting(null);
       },
       onError: (error) => toast.error(parseError(error).message),

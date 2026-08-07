@@ -73,11 +73,10 @@ export function MemberDetailsSheet({
   const mutation = useMutation(
     orpc.members.updateDetails.mutationOptions({
       onSuccess: () => {
-        toast.success("Daten aktualisiert");
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: orpc.members.get.key({ input: { memberId: member.id } }),
         });
-        queryClient.invalidateQueries({ queryKey: orpc.members.query.key() });
+        void queryClient.invalidateQueries({ queryKey: orpc.members.query.key() });
         onOpenChange(false);
       },
       onError: (error) => toast.error(parseError(error).message),

@@ -139,7 +139,7 @@ function RouteComponent() {
     enabled: selectedRankId !== null,
   });
   const invalidateProgression = () =>
-    queryClient.invalidateQueries({ queryKey: orpc.progression.key() });
+    queryClient.invalidateQueries({ queryKey: progressionSystemsQueryOptions().queryKey });
 
   useEffect(() => {
     if (system) setRankIds(system.ranks.map((rank) => rank.id));
@@ -157,7 +157,6 @@ function RouteComponent() {
   const deleteRank = useMutation(
     orpc.progression.deleteRank.mutationOptions({
       onSuccess: () => {
-        toast.success("Graduierung gelöscht");
         invalidateProgression();
       },
       onError: (error) => toast.error(parseError(error).message),
@@ -616,20 +615,19 @@ function RankDialog({
     setName(rank?.name ?? "");
     setColor(rank?.color ?? null);
   }, [open, rank]);
-  const done = (message: string) => {
-    toast.success(message);
-    queryClient.invalidateQueries({ queryKey: orpc.progression.key() });
+  const done = () => {
+    void queryClient.invalidateQueries({ queryKey: orpc.progression.key() });
     onOpenChange(false);
   };
   const create = useMutation(
     orpc.progression.createRank.mutationOptions({
-      onSuccess: () => done(`${unitLabel} hinzugefügt`),
+      onSuccess: done,
       onError: (error) => toast.error(parseError(error).message),
     }),
   );
   const update = useMutation(
     orpc.progression.updateRank.mutationOptions({
-      onSuccess: () => done(`${unitLabel} aktualisiert`),
+      onSuccess: done,
       onError: (error) => toast.error(parseError(error).message),
     }),
   );

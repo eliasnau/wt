@@ -58,7 +58,7 @@ import { toast } from "sonner";
 
 import { UserAvatar } from "@/components/auth/user-avatar";
 import { EventDialog, type EventRow } from "@/components/dashboard/events/event-dialog";
-import { eventDetailQueryOptions } from "@/queries/events";
+import { eventDetailQueryOptions, eventsListQueryOptions } from "@/queries/events";
 import { client, orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/events/$eventId")({
@@ -249,12 +249,12 @@ function ParticipantsSection({
   const full = event != null && event.capacity != null && activeCount >= event.capacity;
 
   function refresh() {
-    queryClient.invalidateQueries({ queryKey: orpc.events.key() });
+    void queryClient.invalidateQueries({ queryKey: eventDetailQueryOptions(eventId).queryKey });
+    void queryClient.invalidateQueries({ queryKey: eventsListQueryOptions().queryKey });
   }
   const addMutation = useMutation(
     orpc.events.addParticipant.mutationOptions({
       onSuccess: () => {
-        toast.success("Teilnehmer hinzugefügt");
         setAddOpen(false);
         refresh();
       },
@@ -296,7 +296,6 @@ function ParticipantsSection({
   const removeMutation = useMutation(
     orpc.events.removeParticipant.mutationOptions({
       onSuccess: () => {
-        toast.success("Teilnehmer entfernt");
         refresh();
       },
       onError: (error) => toast.error(parseError(error).message),

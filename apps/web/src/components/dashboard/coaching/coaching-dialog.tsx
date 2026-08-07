@@ -138,8 +138,7 @@ export function CoachingDialog({
   }, [appointment, coaches, initialMemberId, initialMemberName, open]);
 
   function done() {
-    toast.success(appointment ? "Coaching aktualisiert" : "Coaching erstellt");
-    queryClient.invalidateQueries({ queryKey: orpc.coaching.key() });
+    void queryClient.invalidateQueries({ queryKey: orpc.coaching.key() });
     onOpenChange(false);
   }
   const create = useMutation(

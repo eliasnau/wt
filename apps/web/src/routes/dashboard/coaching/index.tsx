@@ -340,11 +340,37 @@ function CoachingSheet({
   const queryClient = useQueryClient();
   const state = useMutation(
     orpc.coaching.setState.mutationOptions({
-      onSuccess: () => {
-        toast.success("Coaching aktualisiert");
-        queryClient.invalidateQueries({ queryKey: orpc.coaching.key() });
+      onMutate: async ({ appointmentId, status, paymentStatus }) => {
+        const listQuery = coachingListQueryOptions();
+        await queryClient.cancelQueries({ queryKey: listQuery.queryKey });
+
+        const previousAppointments = queryClient.getQueryData(listQuery.queryKey);
+        queryClient.setQueryData(listQuery.queryKey, (appointments) =>
+          appointments?.map((item) =>
+            item.id === appointmentId
+              ? {
+                  ...item,
+                  ...(status === undefined ? {} : { status }),
+                  ...(paymentStatus === undefined ? {} : { paymentStatus }),
+                }
+              : item,
+          ),
+        );
+
+        return { previousAppointments };
       },
-      onError: (error) => toast.error(parseError(error).message),
+      onError: (error, _variables, context) => {
+        if (context?.previousAppointments) {
+          queryClient.setQueryData(
+            coachingListQueryOptions().queryKey,
+            context.previousAppointments,
+          );
+        }
+        toast.error(parseError(error).message);
+      },
+      onSettled: () => {
+        void queryClient.invalidateQueries({ queryKey: coachingListQueryOptions().queryKey });
+      },
     }),
   );
   if (!appointment) return <Sheet onOpenChange={onOpenChange} open={false} />;

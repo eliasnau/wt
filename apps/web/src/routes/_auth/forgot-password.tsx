@@ -56,7 +56,6 @@ function ForgotPasswordPage() {
     }
 
     setSent(true);
-    toast.success("E-Mail zum Zurücksetzen des Passworts gesendet!");
   }
 
   if (sent) {

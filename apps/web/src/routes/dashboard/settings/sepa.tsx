@@ -12,19 +12,20 @@ import { Checkbox } from "@matdesk/ui/components/checkbox";
 import { Field, FieldDescription, FieldLabel } from "@matdesk/ui/components/field";
 import { Input } from "@matdesk/ui/components/input";
 import { Skeleton } from "@matdesk/ui/components/skeleton";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { parseError } from "evlog";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { orpc, queryClient } from "@/utils/orpc";
+import { orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/settings/sepa")({
 	component: RouteComponent,
 });
 
 function RouteComponent() {
+	const queryClient = useQueryClient();
 	const settingsQuery = useQuery(orpc.billing.getSepaSettings.queryOptions({ input: {} }));
 
 	const [creditorName, setCreditorName] = useState("");
@@ -54,11 +55,25 @@ function RouteComponent() {
 	const mutation = useMutation(
 		orpc.billing.updateSepaSettings.mutationOptions({
 			onSuccess: () => {
-				toast.success("SEPA-Einstellungen gespeichert");
-				queryClient.invalidateQueries({ queryKey: orpc.billing.getSepaSettings.key() });
+				void queryClient.invalidateQueries({
+					queryKey: orpc.billing.getSepaSettings.key(),
+				});
 			},
 			onError: (error) => toast.error(parseError(error).message),
 		}),
+	);
+	const savedSettings = settingsQuery.data;
+	const changed = Boolean(
+		savedSettings &&
+			(creditorName.trim() !== (savedSettings.creditorName ?? "") ||
+				creditorIban.trim() !== (savedSettings.creditorIban ?? "") ||
+				creditorBic.trim() !== (savedSettings.creditorBic ?? "") ||
+				creditorId.trim() !== (savedSettings.creditorId ?? "") ||
+				initiatorName.trim() !== (savedSettings.initiatorName ?? "") ||
+				batchBooking !== (savedSettings.batchBooking ?? true) ||
+				remittanceMembership.trim() !== (savedSettings.remittanceMembership ?? "") ||
+				remittanceJoiningFee.trim() !== (savedSettings.remittanceJoiningFee ?? "") ||
+				remittanceYearlyFee.trim() !== (savedSettings.remittanceYearlyFee ?? "")),
 	);
 
 	function submit() {
@@ -203,8 +218,8 @@ function RouteComponent() {
 					</CardPanel>
 				</Card>
 				<CardFrameFooter className="flex justify-end">
-					<Button loading={mutation.isPending} type="submit">
-						Speichern
+					<Button disabled={!changed} loading={mutation.isPending} type="submit">
+						{mutation.isSuccess && !changed ? "Gespeichert" : "Speichern"}
 					</Button>
 				</CardFrameFooter>
 			</CardFrame>

@@ -214,10 +214,10 @@ function MemberDetail({ member }: { member: Member }) {
   const [priceDrafts, setPriceDrafts] = useState<Record<string, string>>({});
 
   function invalidateMember() {
-    queryClient.invalidateQueries({
+    void queryClient.invalidateQueries({
       queryKey: orpc.members.get.key({ input: { memberId: member.id } }),
     });
-    queryClient.invalidateQueries({ queryKey: orpc.members.query.key() });
+    void queryClient.invalidateQueries({ queryKey: orpc.members.query.key() });
   }
 
   const status = STATUS_META[memberStatus(contract)];
@@ -239,7 +239,6 @@ function MemberDetail({ member }: { member: Member }) {
   const updatePriceMutation = useMutation(
     orpc.members.updateGroupMembership.mutationOptions({
       onSuccess: () => {
-        toast.success("Beitrag aktualisiert");
         invalidateMember();
         setPriceDrafts({});
       },
@@ -250,7 +249,6 @@ function MemberDetail({ member }: { member: Member }) {
   const removeMutation = useMutation(
     orpc.members.removeGroupMembership.mutationOptions({
       onSuccess: () => {
-        toast.success("Aus Gruppe entfernt");
         invalidateMember();
         setRemoving(null);
       },
