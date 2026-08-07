@@ -88,7 +88,7 @@ function RouteComponent() {
 		return (
 			<div className="flex flex-col gap-6">
 				{header}
-				<Skeleton className="h-96 w-full rounded-2xl" />
+				<SepaSettingsSkeleton />
 			</div>
 		);
 	}
@@ -209,5 +209,58 @@ function RouteComponent() {
 				</CardFrameFooter>
 			</CardFrame>
 		</form>
+	);
+}
+
+function SepaSettingsSkeleton() {
+	return (
+		<>
+			<SettingsCardSkeleton checkbox fields={[1, 2, 2]} />
+			<SettingsCardSkeleton fields={[1, 1, 1]} footer />
+		</>
+	);
+}
+
+function SettingsCardSkeleton({
+	fields,
+	checkbox = false,
+	footer = false,
+}: {
+	fields: number[];
+	checkbox?: boolean;
+	footer?: boolean;
+}) {
+	return (
+		<CardFrame>
+			<CardFrameHeader>
+				<Skeleton className="h-5 w-28" />
+				<Skeleton className="h-4 w-full max-w-sm" />
+			</CardFrameHeader>
+			<Card>
+				<CardPanel className="flex flex-col gap-4">
+					{fields.map((columns, rowIndex) => (
+						<div className={columns === 2 ? "grid gap-4 sm:grid-cols-2" : undefined} key={rowIndex}>
+							{Array.from({ length: columns }, (_, columnIndex) => (
+								<div className="flex flex-col gap-2" key={columnIndex}>
+									<Skeleton className="h-4 w-24" />
+									<Skeleton className="h-9 w-full rounded-md" />
+								</div>
+							))}
+						</div>
+					))}
+					{checkbox ? (
+						<div className="flex items-center gap-2.5">
+							<Skeleton className="size-4 rounded-sm" />
+							<Skeleton className="h-4 w-52" />
+						</div>
+					) : null}
+				</CardPanel>
+			</Card>
+			{footer ? (
+				<CardFrameFooter className="flex justify-end">
+					<Skeleton className="h-9 w-24 rounded-md" />
+				</CardFrameFooter>
+			) : null}
+		</CardFrame>
 	);
 }

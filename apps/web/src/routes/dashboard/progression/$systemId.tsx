@@ -165,8 +165,32 @@ function RouteComponent() {
   );
   const updateRankColor = useMutation(
     orpc.progression.updateRank.mutationOptions({
-      onSuccess: invalidateProgression,
-      onError: (error) => toast.error(parseError(error).message),
+      onMutate: async ({ rankId, color }) => {
+        const query = progressionSystemsQueryOptions();
+        await queryClient.cancelQueries({ queryKey: query.queryKey });
+
+        const previousSystems = queryClient.getQueryData(query.queryKey);
+        queryClient.setQueryData(query.queryKey, (systems) =>
+          systems?.map((item) => ({
+            ...item,
+            ranks: item.ranks.map((rank) =>
+              rank.id === rankId ? { ...rank, color: color ?? null } : rank,
+            ),
+          })),
+        );
+
+        return { previousSystems };
+      },
+      onError: (error, _variables, context) => {
+        if (context?.previousSystems) {
+          queryClient.setQueryData(
+            progressionSystemsQueryOptions().queryKey,
+            context.previousSystems,
+          );
+        }
+        toast.error(parseError(error).message);
+      },
+      onSettled: invalidateProgression,
     }),
   );
   const deleteSystem = useMutation(
