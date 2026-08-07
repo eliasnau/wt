@@ -16,21 +16,27 @@ const NON_RETRYABLE_CODES = new Set([
   "ratelimit.EXCEEDED",
 ]);
 
-export const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: (failureCount, error) => {
-        // Surface failures immediately in development.
-        if (import.meta.env.DEV) return false;
-        const { code, status } = parseError(error);
-        if (code && NON_RETRYABLE_CODES.has(code)) return false;
-        // Client errors (no active org, rate limit, auth, …) won't fix themselves.
-        if (status >= 400 && status < 500) return false;
-        return failureCount < 2;
+export function createQueryClient() {
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: (failureCount, error) => {
+          // Surface failures immediately in development.
+          if (import.meta.env.DEV) return false;
+          const { code, status } = parseError(error);
+          if (code && NON_RETRYABLE_CODES.has(code)) return false;
+          // Client errors (no active org, rate limit, auth, …) won't fix themselves.
+          if (status >= 400 && status < 500) return false;
+          return failureCount < 2;
+        },
       },
     },
-  },
-});
+  });
+}
+
+// Browser code needs one stable cache. Server requests must create their own
+// QueryClient in getRouter() so one user's dehydrated data cannot reach another.
+export const queryClient = createQueryClient();
 
 const getORPCClient = createIsomorphicFn()
   .server(() =>

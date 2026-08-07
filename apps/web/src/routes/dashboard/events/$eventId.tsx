@@ -31,7 +31,7 @@ import {
   TableHeader,
   TableRow,
 } from "@matdesk/ui/components/table";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { parseError } from "evlog";
 import {
@@ -58,9 +58,14 @@ import { toast } from "sonner";
 
 import { UserAvatar } from "@/components/auth/user-avatar";
 import { EventDialog, type EventRow } from "@/components/dashboard/events/event-dialog";
-import { client, orpc, queryClient } from "@/utils/orpc";
+import { eventDetailQueryOptions } from "@/queries/events";
+import { client, orpc } from "@/utils/orpc";
 
 export const Route = createFileRoute("/dashboard/events/$eventId")({
+  loader: ({ context, params }) => {
+    void context.queryClient.prefetchQuery(eventDetailQueryOptions(params.eventId));
+  },
+  pendingComponent: () => <Skeleton className="h-96 rounded-2xl" />,
   component: RouteComponent,
 });
 
@@ -93,10 +98,9 @@ type MemberSearchRow = Awaited<ReturnType<typeof client.members.list>>["data"][n
 
 function RouteComponent() {
   const { eventId } = Route.useParams();
-  const eventQuery = useQuery(orpc.events.get.queryOptions({ input: { eventId } }));
+  const eventQuery = useQuery(eventDetailQueryOptions(eventId));
   const [editorOpen, setEditorOpen] = useState(false);
 
-  if (eventQuery.isPending) return <EventPageSkeleton />;
   if (eventQuery.isError) {
     return (
       <CardFrame className="flex min-h-60 flex-col items-center justify-center gap-3 p-6 text-center">
@@ -123,57 +127,86 @@ function RouteComponent() {
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-semibold tracking-tight">{event.name}</h1>
-            <Badge variant="outline">
-              {event.participants.filter((p) => p.status !== "cancelled").length}
-              {event.capacity == null ? "" : ` / ${event.capacity}`} Plätze
-            </Badge>
-          </div>
-          {event.description ? (
-            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{event.description}</p>
-          ) : null}
+          {event ? (
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-semibold tracking-tight">{event.name}</h1>
+              <Badge variant="outline">
+                {event.participants.filter((p) => p.status !== "cancelled").length}
+                {event.capacity == null ? "" : ` / ${event.capacity}`} Plätze
+              </Badge>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <Skeleton className="h-8 w-64" />
+              <Skeleton className="h-5 w-20" />
+            </div>
+          )}
+          {event ? (
+            event.description ? (
+              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">{event.description}</p>
+            ) : null
+          ) : (
+            <Skeleton className="mt-2 h-4 w-80 max-w-full" />
+          )}
         </div>
-        <Button onClick={() => setEditorOpen(true)} variant="outline">
+        <Button disabled={!event} onClick={() => setEditorOpen(true)} variant="outline">
           <EditIcon />
           Bearbeiten
         </Button>
       </div>
 
       <EventSummary event={event} />
-      <ParticipantsSection event={event} />
-      <EventDialog event={event as EventRow} onOpenChange={setEditorOpen} open={editorOpen} />
+      <ParticipantsSection event={event} eventId={eventId} />
+      {event ? (
+        <EventDialog event={event as EventRow} onOpenChange={setEditorOpen} open={editorOpen} />
+      ) : null}
     </div>
   );
 }
 
-function EventSummary({ event }: { event: EventRow }) {
-  const date = new Date(`${event.date}T12:00:00`).toLocaleDateString("de-DE", {
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
+function EventSummary({ event }: { event: EventData | undefined }) {
   const items = [
-    { icon: CalendarDaysIcon, label: "Datum", value: date },
+    {
+      icon: CalendarDaysIcon,
+      label: "Datum",
+      skeletonWidth: "w-40",
+      value: event
+        ? new Date(`${event.date}T12:00:00`).toLocaleDateString("de-DE", {
+            weekday: "long",
+            day: "2-digit",
+            month: "long",
+            year: "numeric",
+          })
+        : null,
+    },
     {
       icon: ClockIcon,
       label: "Uhrzeit",
-      value: event.startTime
-        ? `${event.startTime.slice(0, 5)}–${event.endTime?.slice(0, 5)} Uhr`
-        : "Ganztägig",
+      skeletonWidth: "w-28",
+      value: event
+        ? event.startTime
+          ? `${event.startTime.slice(0, 5)}–${event.endTime?.slice(0, 5)} Uhr`
+          : "Ganztägig"
+        : null,
     },
-    { icon: MapPinIcon, label: "Ort", value: event.location || "Nicht angegeben" },
+    {
+      icon: MapPinIcon,
+      label: "Ort",
+      skeletonWidth: "w-32",
+      value: event ? event.location || "Nicht angegeben" : null,
+    },
     {
       icon: EuroIcon,
       label: "Preis",
-      value:
-        event.priceCents == null
+      skeletonWidth: "w-20",
+      value: event
+        ? event.priceCents == null
           ? "Kostenlos / offen"
           : (event.priceCents / 100).toLocaleString("de-DE", {
               style: "currency",
               currency: "EUR",
-            }),
+            })
+        : null,
     },
   ];
   return (
@@ -184,9 +217,15 @@ function EventSummary({ event }: { event: EventRow }) {
             <div className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-accent text-foreground">
               <item.icon className="size-4" />
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <p className="text-xs font-medium text-foreground/70">{item.label}</p>
-              <p className="mt-0.5 truncate text-sm font-semibold text-foreground">{item.value}</p>
+              {item.value == null ? (
+                <Skeleton className={`mt-1.5 h-4 max-w-full ${item.skeletonWidth}`} />
+              ) : (
+                <p className="mt-0.5 truncate text-sm font-semibold text-foreground">
+                  {item.value}
+                </p>
+              )}
             </div>
           </div>
         </Card>
@@ -195,14 +234,19 @@ function EventSummary({ event }: { event: EventRow }) {
   );
 }
 
-function ParticipantsSection({ event }: { event: EventData }) {
-  const eventId = event.id;
+function ParticipantsSection({
+  event,
+  eventId,
+}: {
+  event: EventData | undefined;
+  eventId: string;
+}) {
+  const queryClient = useQueryClient();
   const [participantSearch, setParticipantSearch] = useState("");
   const [addOpen, setAddOpen] = useState(false);
-  const activeCount = event.participants.filter(
-    (participant) => participant.status !== "cancelled",
-  ).length;
-  const full = event.capacity != null && activeCount >= event.capacity;
+  const activeCount =
+    event?.participants.filter((participant) => participant.status !== "cancelled").length ?? 0;
+  const full = event != null && event.capacity != null && activeCount >= event.capacity;
 
   function refresh() {
     queryClient.invalidateQueries({ queryKey: orpc.events.key() });
@@ -234,14 +278,15 @@ function ParticipantsSection({ event }: { event: EventData }) {
   );
 
   const search = participantSearch.trim().toLowerCase();
+  const allParticipants = event?.participants ?? [];
   const participants = search
-    ? event.participants.filter((participant) => {
+    ? allParticipants.filter((participant) => {
         const name = participant.member
           ? `${participant.member.firstName} ${participant.member.lastName}`
           : participant.guestName;
         return name?.toLowerCase().includes(search);
       })
-    : event.participants;
+    : allParticipants;
 
   return (
     <section className="flex flex-col gap-4">
@@ -252,7 +297,7 @@ function ParticipantsSection({ event }: { event: EventData }) {
             Mitglieder suchen, Gäste ergänzen und Anwesenheit festhalten.
           </p>
         </div>
-        <Button disabled={full} onClick={() => setAddOpen(true)}>
+        <Button disabled={!event || full} onClick={() => setAddOpen(true)}>
           <UserRoundPlusIcon />
           Teilnehmer hinzufügen
         </Button>
@@ -263,18 +308,23 @@ function ParticipantsSection({ event }: { event: EventData }) {
           <SearchIcon className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
             className="pl-9"
+            disabled={!event}
             onChange={(e) => setParticipantSearch(e.target.value)}
             placeholder="Teilnehmer suchen…"
             value={participantSearch}
           />
         </div>
-        <div className="flex gap-2 text-sm text-foreground/70">
-          <span>{activeCount} aktiv</span>
-          <span>·</span>
-          <span>
-            {event.participants.filter((p) => p.status === "attended").length} teilgenommen
-          </span>
-        </div>
+        {event ? (
+          <div className="flex gap-2 text-sm text-foreground/70">
+            <span>{activeCount} aktiv</span>
+            <span>·</span>
+            <span>
+              {allParticipants.filter((p) => p.status === "attended").length} teilgenommen
+            </span>
+          </div>
+        ) : (
+          <Skeleton className="h-4 w-40" />
+        )}
       </div>
 
       <CardFrame className="w-full min-w-0 overflow-hidden">
@@ -288,7 +338,9 @@ function ParticipantsSection({ event }: { event: EventData }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {participants.length ? (
+            {!event ? (
+              Array.from({ length: 5 }).map((_, index) => <ParticipantRowSkeleton key={index} />)
+            ) : participants.length ? (
               participants.map((participant) => {
                 const member = participant.member;
                 const name = member
@@ -413,7 +465,7 @@ function ParticipantsSection({ event }: { event: EventData }) {
         disabled={full}
         excludedIds={
           new Set(
-            event.participants
+            allParticipants
               .filter((participant) => participant.status !== "cancelled" && participant.memberId)
               .map((participant) => participant.memberId!),
           )
@@ -584,20 +636,27 @@ function MemberSearch({
   );
 }
 
-function EventPageSkeleton() {
+function ParticipantRowSkeleton() {
   return (
-    <div className="flex flex-col gap-6">
-      <Skeleton className="h-8 w-44" />
-      <div>
-        <Skeleton className="h-8 w-64" />
-        <Skeleton className="mt-2 h-4 w-96" />
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {Array.from({ length: 4 }).map((_, index) => (
-          <Skeleton className="h-20" key={index} />
-        ))}
-      </div>
-      <Skeleton className="h-96" />
-    </div>
+    <TableRow>
+      <TableCell>
+        <div className="flex items-center gap-3">
+          <Skeleton className="size-8 rounded-full" />
+          <div className="flex flex-col gap-1.5">
+            <Skeleton className="h-4 w-36" />
+            <Skeleton className="h-3 w-16" />
+          </div>
+        </div>
+      </TableCell>
+      <TableCell>
+        <Skeleton className="h-4 w-44" />
+      </TableCell>
+      <TableCell>
+        <Skeleton className="h-6 w-32" />
+      </TableCell>
+      <TableCell>
+        <Skeleton className="size-7" />
+      </TableCell>
+    </TableRow>
   );
 }

@@ -41,7 +41,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@matdesk/ui/components/table";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { parseError } from "evlog";
 import {
@@ -55,7 +55,8 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { client, orpc, queryClient } from "@/utils/orpc";
+import { inventoryListQueryOptions, inventoryProductQueryOptions } from "@/queries/inventory";
+import { client, orpc } from "@/utils/orpc";
 
 type ProductListItem = Awaited<ReturnType<typeof client.inventory.list>>["data"][number];
 
@@ -66,10 +67,9 @@ function totalStock(variants: { quantity: number }[]) {
 export function InventoryCard() {
 	const [searchInput, setSearchInput] = useState("");
 	const [deleting, setDeleting] = useState<ProductListItem | null>(null);
+	const queryClient = useQueryClient();
 
-	const productsQuery = useQuery(
-		orpc.inventory.list.queryOptions({ input: { page: 1, limit: 100 } }),
-	);
+	const productsQuery = useQuery(inventoryListQueryOptions());
 
 	const deleteMutation = useMutation(
 		orpc.inventory.delete.mutationOptions({
@@ -182,7 +182,12 @@ export function InventoryCard() {
 								</TableRow>
 							) : (
 								products.map((product) => (
-									<TableRow key={product.id}>
+									<TableRow
+										key={product.id}
+										onMouseEnter={() => {
+											void queryClient.prefetchQuery(inventoryProductQueryOptions(product.id));
+										}}
+									>
 										<TableCell>
 											<Link
 												className="font-medium text-foreground hover:underline"

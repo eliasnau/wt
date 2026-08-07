@@ -14,12 +14,12 @@ import {
   SheetPopup,
   SheetTitle,
 } from "@matdesk/ui/components/sheet";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { parseError } from "evlog";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { orpc, queryClient } from "@/utils/orpc";
+import { orpc } from "@/utils/orpc";
 
 export type DetailsMember = {
   id: string;
@@ -44,6 +44,7 @@ export function MemberDetailsSheet({
   onOpenChange: (open: boolean) => void;
   member: DetailsMember;
 }) {
+  const queryClient = useQueryClient();
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [birthdate, setBirthdate] = useState("");

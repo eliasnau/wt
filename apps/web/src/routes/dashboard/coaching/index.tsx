@@ -36,7 +36,7 @@ import {
   TableRow,
 } from "@matdesk/ui/components/table";
 import { Tabs, TabsList, TabsTab } from "@matdesk/ui/components/tabs";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute } from "@tanstack/react-router";
 import { parseError } from "evlog";
 import {
@@ -55,9 +55,16 @@ import { toast } from "sonner";
 
 import { UserAvatar } from "@/components/auth/user-avatar";
 import { CoachingDialog, type CoachingRow } from "@/components/dashboard/coaching/coaching-dialog";
-import { orpc, queryClient } from "@/utils/orpc";
+import { coachingListQueryOptions } from "@/queries/coaching";
+import { orpc } from "@/utils/orpc";
 
-export const Route = createFileRoute("/dashboard/coaching/")({ component: CoachingPage });
+export const Route = createFileRoute("/dashboard/coaching/")({
+  loader: ({ context }) => {
+    void context.queryClient.prefetchQuery(coachingListQueryOptions());
+  },
+  pendingComponent: () => <Skeleton className="h-96 rounded-2xl" />,
+  component: CoachingPage,
+});
 
 const statusLabels: Record<string, string> = {
   scheduled: "Geplant",
@@ -82,7 +89,7 @@ const day = (value: string) =>
   });
 
 function CoachingPage() {
-  const query = useQuery(orpc.coaching.list.queryOptions({}));
+  const query = useQuery(coachingListQueryOptions());
   const [tab, setTab] = useState("upcoming");
   const [search, setSearch] = useState("");
   const [paymentFilters, setPaymentFilters] = useState(new Set(["open", "paid", "waived"]));
@@ -202,7 +209,18 @@ function CoachingPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {query.isPending ? (
+            {query.isError ? (
+              <TableRow className="hover:bg-transparent">
+                <TableCell className="py-14 text-center" colSpan={6}>
+                  <p className="mb-3 text-muted-foreground text-sm">
+                    {parseError(query.error).message}
+                  </p>
+                  <Button onClick={() => query.refetch()} size="sm" variant="outline">
+                    Erneut versuchen
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ) : query.isPending ? (
               Array.from({ length: 4 }).map((_, index) => (
                 <TableRow key={index}>
                   {Array.from({ length: 6 }).map((__, cell) => (
@@ -319,6 +337,7 @@ function CoachingSheet({
   onOpenChange: (open: boolean) => void;
   onEdit: () => void;
 }) {
+  const queryClient = useQueryClient();
   const state = useMutation(
     orpc.coaching.setState.mutationOptions({
       onSuccess: () => {

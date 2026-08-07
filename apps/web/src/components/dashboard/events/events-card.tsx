@@ -28,7 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from "@matdesk/ui/components/table";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { parseError } from "evlog";
 import { CalendarDaysIcon, EditIcon, MapPinIcon, Trash2Icon, UsersIcon } from "lucide-react";
@@ -36,7 +36,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import type { EventRow } from "./event-dialog";
-import { orpc, queryClient } from "@/utils/orpc";
+import { eventDetailQueryOptions, eventsListQueryOptions } from "@/queries/events";
+import { orpc } from "@/utils/orpc";
 
 function formatPrice(cents: number | null) {
   return cents == null
@@ -44,8 +45,15 @@ function formatPrice(cents: number | null) {
     : (cents / 100).toLocaleString("de-DE", { style: "currency", currency: "EUR" });
 }
 
-export function EventsCard({ onEdit }: { onEdit: (event: EventRow) => void }) {
-  const eventsQuery = useQuery(orpc.events.list.queryOptions({}));
+export function EventsCard({
+  onEdit = () => {},
+  loading = false,
+}: {
+  onEdit?: (event: EventRow) => void;
+  loading?: boolean;
+}) {
+  const queryClient = useQueryClient();
+  const eventsQuery = useQuery({ ...eventsListQueryOptions(), enabled: !loading });
   const navigate = useNavigate();
   const [deleting, setDeleting] = useState<EventRow | null>(null);
   const deleteMutation = useMutation(
@@ -86,7 +94,7 @@ export function EventsCard({ onEdit }: { onEdit: (event: EventRow) => void }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {eventsQuery.isPending ? (
+            {loading || eventsQuery.isPending ? (
               Array.from({ length: 4 }).map((_, index) => (
                 <TableRow key={index}>
                   {Array.from({ length: 6 }).map((__, cell) => (
@@ -117,6 +125,9 @@ export function EventsCard({ onEdit }: { onEdit: (event: EventRow) => void }) {
                 <TableRow
                   className="cursor-pointer"
                   key={event.id}
+                  onMouseEnter={() => {
+                    void queryClient.prefetchQuery(eventDetailQueryOptions(event.id));
+                  }}
                   onClick={() =>
                     navigate({ to: "/dashboard/events/$eventId", params: { eventId: event.id } })
                   }

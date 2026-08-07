@@ -21,9 +21,13 @@ import {
 
 import { ChartCard } from "@/components/dashboard/statistics/charts/chart-card";
 import { MembersByGroupChart } from "@/components/dashboard/statistics/charts/members-by-group-chart";
-import { orpc } from "@/utils/orpc";
+import { statisticsSnapshotQueryOptions } from "@/queries/statistics";
 
 export const Route = createFileRoute("/dashboard/statistics/snapshot")({
+	loader: ({ context }) => {
+		void context.queryClient.prefetchQuery(statisticsSnapshotQueryOptions());
+	},
+	pendingComponent: () => <Skeleton className="h-80 rounded-2xl" />,
 	component: RouteComponent,
 });
 
@@ -71,7 +75,7 @@ function KpiCard({
 
 function RouteComponent() {
 	const { data, isPending, isError, error, refetch } = useQuery(
-		orpc.statistics.snapshot.queryOptions({}),
+		statisticsSnapshotQueryOptions(),
 	);
 
 	const activeMembers = data?.members.active ?? 0;

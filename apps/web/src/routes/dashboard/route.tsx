@@ -2,12 +2,12 @@ import { Outlet, createFileRoute, redirect } from "@tanstack/react-router";
 import { useEffect } from "react";
 
 import { AppShell } from "@/components/dashboard/app-shell/app-shell";
-import { getUser } from "@/functions/get-user";
+import { sessionQueryOptions } from "@/functions/get-user";
 
 export const Route = createFileRoute("/dashboard")({
   component: RouteComponent,
-  beforeLoad: async () => {
-    const session = await getUser();
+  beforeLoad: async ({ context }) => {
+    const session = await context.queryClient.ensureQueryData(sessionQueryOptions);
     return { session };
   },
   loader: async ({ context, location }) => {

@@ -29,7 +29,7 @@ import {
 	TableRow,
 } from "@matdesk/ui/components/table";
 import { cn } from "@matdesk/ui/lib/utils";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { parseError } from "evlog";
 import { ArrowLeftIcon, LayoutGridIcon, ListIcon, Trash2Icon } from "lucide-react";
@@ -37,12 +37,17 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { ProductSheet } from "@/components/dashboard/inventory/product-sheet";
-import { client, orpc, queryClient } from "@/utils/orpc";
+import { inventoryProductQueryOptions } from "@/queries/inventory";
+import { client, orpc } from "@/utils/orpc";
 
 type Product = Awaited<ReturnType<typeof client.inventory.get>>;
 type Variant = Product["variants"][number];
 
 export const Route = createFileRoute("/dashboard/inventory/$productId")({
+	loader: ({ context, params }) => {
+		void context.queryClient.prefetchQuery(inventoryProductQueryOptions(params.productId));
+	},
+	pendingComponent: () => <Skeleton className="h-72 rounded-2xl" />,
 	component: RouteComponent,
 });
 
@@ -66,7 +71,7 @@ function buildLookup(variants: Variant[]) {
 
 function RouteComponent() {
 	const { productId } = Route.useParams();
-	const productQuery = useQuery(orpc.inventory.get.queryOptions({ input: { productId } }));
+	const productQuery = useQuery(inventoryProductQueryOptions(productId));
 
 	return (
 		<div className="flex flex-col gap-6">
@@ -100,6 +105,7 @@ function RouteComponent() {
 }
 
 function ProductDetail({ product }: { product: Product }) {
+	const queryClient = useQueryClient();
 	const navigate = useNavigate();
 	const matrixAvailable = product.attributes.length >= 1 && product.attributes.length <= 2;
 	const [view, setView] = useState<"matrix" | "list">(matrixAvailable ? "matrix" : "list");

@@ -34,7 +34,7 @@ import {
 } from "@matdesk/ui/components/select";
 import { Tabs, TabsList, TabsPanel, TabsTab } from "@matdesk/ui/components/tabs";
 import { Textarea } from "@matdesk/ui/components/textarea";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 import { parseError } from "evlog";
@@ -44,7 +44,7 @@ import { toast } from "sonner";
 
 import { useAuth } from "@/components/auth/auth-provider";
 import { UserAvatar } from "@/components/auth/user-avatar";
-import { client, orpc, queryClient } from "@/utils/orpc";
+import { client, orpc } from "@/utils/orpc";
 
 type MemberRow = Awaited<ReturnType<typeof client.members.list>>["data"][number];
 export type CoachingRow = Awaited<ReturnType<typeof client.coaching.list>>[number];
@@ -71,6 +71,7 @@ export function CoachingDialog({
   initialMemberId?: string;
   initialMemberName?: string;
 }) {
+  const queryClient = useQueryClient();
   const { activeOrganization } = useAuth();
   const coaches = useMemo(
     () => activeOrganization?.members.map((item) => item.user) ?? [],

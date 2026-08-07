@@ -49,7 +49,7 @@ import {
   ToolbarSeparator,
 } from "@matdesk/ui/components/toolbar";
 import { cn } from "@matdesk/ui/lib/utils";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Link } from "@tanstack/react-router";
 import { parseError } from "evlog";
 import {
@@ -80,7 +80,8 @@ import {
   type FilterClause,
 } from "@/components/dashboard/members/advanced-filters";
 import { UserAvatar } from "@/components/auth/user-avatar";
-import { orpc } from "@/utils/orpc";
+import { groupsQueryOptions } from "@/queries/groups";
+import { memberDetailQueryOptions, membersListQueryOptions } from "@/queries/members";
 
 type MemberStatus = "active" | "cancelled_but_active" | "cancelled";
 
@@ -141,8 +142,9 @@ export function MembersCard() {
     new Set(["email", "phone", "groups", "status"]),
   );
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const queryClient = useQueryClient();
 
-  const groupsQuery = useQuery(orpc.groups.list.queryOptions({}));
+  const groupsQuery = useQuery(groupsQueryOptions());
   const groupOptions = (groupsQuery.data ?? []).map((g) => ({ id: g.id, name: g.name }));
 
   // Debounce the search box; reset to the first page on a new term.
@@ -155,8 +157,8 @@ export function MembersCard() {
   }, [searchInput]);
 
   const membersQuery = useQuery(
-    orpc.members.query.queryOptions({
-      input: {
+    {
+      ...membersListQueryOptions({
         page,
         limit,
         search: search || undefined,
@@ -168,9 +170,9 @@ export function MembersCard() {
         filterMode,
         filters: filters.length > 0 ? filters : undefined,
         sort: { field: sortField, direction: sortDirection },
-      },
+      }),
       placeholderData: keepPreviousData,
-    }),
+    },
   );
 
   const members = membersQuery.data?.data ?? [];
@@ -527,6 +529,9 @@ export function MembersCard() {
                     <TableRow
                       key={member.id}
                       className={isSelected ? "bg-primary/4 hover:bg-primary/6" : undefined}
+                      onMouseEnter={() => {
+                        void queryClient.prefetchQuery(memberDetailQueryOptions(member.id));
+                      }}
                     >
                       <TableCell className="w-px">
                         <Checkbox

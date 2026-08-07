@@ -21,12 +21,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@matdesk/ui/components/select";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { parseError } from "evlog";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { orpc, queryClient } from "@/utils/orpc";
+import { groupsQueryOptions } from "@/queries/groups";
+import { orpc } from "@/utils/orpc";
 
 export function AssignGroupDialog({
   open,
@@ -39,7 +40,8 @@ export function AssignGroupDialog({
   memberId: string;
   assignedGroupIds: string[];
 }) {
-  const groupsQuery = useQuery(orpc.groups.list.queryOptions({}));
+  const queryClient = useQueryClient();
+  const groupsQuery = useQuery({ ...groupsQueryOptions(), enabled: open });
   const assigned = new Set(assignedGroupIds);
   const available = (groupsQuery.data ?? []).filter((g) => !assigned.has(g.id));
 

@@ -15,13 +15,13 @@ import {
 	SheetTitle,
 } from "@matdesk/ui/components/sheet";
 import { Textarea } from "@matdesk/ui/components/textarea";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { parseError } from "evlog";
 import { PlusIcon, XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { orpc, queryClient } from "@/utils/orpc";
+import { orpc } from "@/utils/orpc";
 
 export type ProductForEdit = {
 	id: string;
@@ -43,6 +43,7 @@ export function ProductSheet({
 	onOpenChange: (open: boolean) => void;
 	product?: ProductForEdit | null;
 }) {
+	const queryClient = useQueryClient();
 	const isEdit = Boolean(product);
 	const [name, setName] = useState("");
 	const [description, setDescription] = useState("");
