@@ -54,8 +54,11 @@ import { Link } from "@tanstack/react-router";
 import { parseError } from "evlog";
 import {
   ArrowUpDownIcon,
+  AwardIcon,
   BoxesIcon,
+  ChevronDownIcon,
   ChevronsUpDownIcon,
+  CircleDollarSignIcon,
   Columns3Icon,
   DownloadIcon,
   EditIcon,
@@ -80,6 +83,7 @@ import {
   type FilterClause,
 } from "@/components/dashboard/members/advanced-filters";
 import { UserAvatar } from "@/components/auth/user-avatar";
+import { MemberPrintDialog } from "@/components/dashboard/members/member-print-dialog";
 import { groupsQueryOptions } from "@/queries/groups";
 import { memberDetailQueryOptions, membersListQueryOptions } from "@/queries/members";
 
@@ -142,6 +146,7 @@ export function MembersCard() {
     new Set(["email", "phone", "groups", "status"]),
   );
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [printDialogOpen, setPrintDialogOpen] = useState(false);
   const queryClient = useQueryClient();
 
   const groupsQuery = useQuery(groupsQueryOptions());
@@ -156,24 +161,22 @@ export function MembersCard() {
     return () => clearTimeout(timeout);
   }, [searchInput]);
 
-  const membersQuery = useQuery(
-    {
-      ...membersListQueryOptions({
-        page,
-        limit,
-        search: search || undefined,
-        statuses: statuses.size > 0 ? Array.from(statuses) : undefined,
-        groups:
-          selectedGroups.size > 0
-            ? { mode: "any" as const, ids: Array.from(selectedGroups) }
-            : undefined,
-        filterMode,
-        filters: filters.length > 0 ? filters : undefined,
-        sort: { field: sortField, direction: sortDirection },
-      }),
-      placeholderData: keepPreviousData,
-    },
-  );
+  const membersQuery = useQuery({
+    ...membersListQueryOptions({
+      page,
+      limit,
+      search: search || undefined,
+      statuses: statuses.size > 0 ? Array.from(statuses) : undefined,
+      groups:
+        selectedGroups.size > 0
+          ? { mode: "any" as const, ids: Array.from(selectedGroups) }
+          : undefined,
+      filterMode,
+      filters: filters.length > 0 ? filters : undefined,
+      sort: { field: sortField, direction: sortDirection },
+    }),
+    placeholderData: keepPreviousData,
+  });
 
   const members = membersQuery.data?.data ?? [];
   const pagination = membersQuery.data?.pagination;
@@ -397,7 +400,7 @@ export function MembersCard() {
               <MoreVerticalIcon />
             </MenuTrigger>
             <MenuPopup align="end" className="w-44">
-              <MenuItem>
+              <MenuItem onClick={() => setPrintDialogOpen(true)}>
                 <PrinterIcon />
                 Drucken
               </MenuItem>
@@ -753,10 +756,87 @@ export function MembersCard() {
           </ToolbarGroup>
           <ToolbarSeparator />
           <ToolbarGroup>
-            <ToolbarButton render={<Button size="sm" variant="outline" />}>
-              <DownloadIcon />
-              <span className="hidden sm:inline">CSV exportieren</span>
-            </ToolbarButton>
+            <Menu>
+              <MenuTrigger render={<Button size="sm" variant="outline" />}>
+                <EditIcon />
+                <span className="hidden sm:inline">Bearbeiten</span>
+                <ChevronDownIcon />
+              </MenuTrigger>
+              <MenuPopup align="center" className="min-w-64" side="top">
+                <MenuGroup>
+                  <MenuGroupLabel>Mitgliedschaften</MenuGroupLabel>
+                  <MenuItem disabled>
+                    <UsersIcon />
+                    Gruppe zuweisen
+                    <Badge className="ml-auto" variant="secondary">
+                      Bald
+                    </Badge>
+                  </MenuItem>
+                  <MenuItem disabled>
+                    <UserXIcon />
+                    Aus Gruppe entfernen
+                    <Badge className="ml-auto" variant="secondary">
+                      Bald
+                    </Badge>
+                  </MenuItem>
+                  <MenuItem disabled>
+                    <EditIcon />
+                    Status ändern
+                    <Badge className="ml-auto" variant="secondary">
+                      Bald
+                    </Badge>
+                  </MenuItem>
+                </MenuGroup>
+                <MenuSeparator />
+                <MenuGroup>
+                  <MenuGroupLabel>Entwicklung und Beiträge</MenuGroupLabel>
+                  <MenuItem disabled>
+                    <AwardIcon />
+                    Graduierung verleihen
+                    <Badge className="ml-auto" variant="secondary">
+                      Bald
+                    </Badge>
+                  </MenuItem>
+                  <MenuItem disabled>
+                    <CircleDollarSignIcon />
+                    Beiträge anpassen
+                    <Badge className="ml-auto" variant="secondary">
+                      Bald
+                    </Badge>
+                  </MenuItem>
+                  <MenuItem disabled>
+                    <CircleDollarSignIcon />
+                    Guthaben erstellen
+                    <Badge className="ml-auto" variant="secondary">
+                      Bald
+                    </Badge>
+                  </MenuItem>
+                </MenuGroup>
+              </MenuPopup>
+            </Menu>
+            <Menu>
+              <MenuTrigger render={<Button size="sm" variant="outline" />}>
+                <DownloadIcon />
+                <span className="hidden sm:inline">Ausgeben</span>
+                <ChevronDownIcon />
+              </MenuTrigger>
+              <MenuPopup align="center" className="min-w-56" side="top">
+                <MenuItem disabled>
+                  <DownloadIcon />
+                  CSV exportieren
+                  <Badge className="ml-auto" variant="secondary">
+                    Bald
+                  </Badge>
+                </MenuItem>
+                <MenuItem disabled>
+                  <PrinterIcon />
+                  Mitglieder drucken
+                  <Badge className="ml-auto" variant="secondary">
+                    Bald
+                  </Badge>
+                </MenuItem>
+              </MenuPopup>
+            </Menu>
           </ToolbarGroup>
           <ToolbarSeparator />
           <ToolbarGroup>
@@ -769,6 +849,18 @@ export function MembersCard() {
           </ToolbarGroup>
         </Toolbar>
       </div>
+
+      <MemberPrintDialog
+        filterMode={filterMode}
+        filters={filters}
+        groups={Array.from(selectedGroups)}
+        onOpenChange={setPrintDialogOpen}
+        open={printDialogOpen}
+        search={search || undefined}
+        sort={{ field: sortField, direction: sortDirection }}
+        statuses={Array.from(statuses)}
+        totalCount={pagination?.totalCount ?? 0}
+      />
     </div>
   );
 }

@@ -30,6 +30,7 @@ import {
 import { Input } from "@matdesk/ui/components/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@matdesk/ui/components/input-group";
 import { Skeleton } from "@matdesk/ui/components/skeleton";
+import { Tabs, TabsList, TabsTab } from "@matdesk/ui/components/tabs";
 import {
   Table,
   TableBody,
@@ -42,11 +43,21 @@ import { Textarea } from "@matdesk/ui/components/textarea";
 import { Map, MapControls, MapMarker, MarkerContent } from "@matdesk/ui/components/ui/map";
 import { cn } from "@matdesk/ui/lib/utils";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Link, createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { parseError } from "evlog";
-import { ArrowLeftIcon, MapPinIcon, PlusIcon, Trash2Icon } from "lucide-react";
+import {
+  ArrowLeftIcon,
+  AwardIcon,
+  CircleDollarSignIcon,
+  HistoryIcon,
+  MapPinIcon,
+  PlusIcon,
+  Trash2Icon,
+  UserRoundIcon,
+} from "lucide-react";
 import { type ReactNode, useState } from "react";
 import { toast } from "sonner";
+import { z } from "zod";
 
 import { AssignGroupDialog } from "@/components/dashboard/members/assign-group-dialog";
 import { MemberContractSheet } from "@/components/dashboard/members/member-contract-sheet";
@@ -54,9 +65,10 @@ import { MemberCoachingCard } from "@/components/dashboard/members/member-coachi
 import { MemberCreditsCard } from "@/components/dashboard/members/member-credits-card";
 import { MemberDetailsSheet } from "@/components/dashboard/members/member-details-sheet";
 import { MemberProgressionCard } from "@/components/dashboard/members/member-progression-card";
+import { MemberTimelineCard } from "@/components/dashboard/members/member-timeline-card";
 import { UserAvatar } from "@/components/auth/user-avatar";
 import { formatCents, formatDate } from "@/lib/format";
-import { memberDetailQueryOptions } from "@/queries/members";
+import { memberDetailQueryOptions, memberTimelineQueryOptions } from "@/queries/members";
 import { client, orpc } from "@/utils/orpc";
 
 type Member = Awaited<ReturnType<typeof client.members.get>>;
@@ -64,10 +76,16 @@ type Member = Awaited<ReturnType<typeof client.members.get>>;
 export const Route = createFileRoute("/dashboard/members/$memberId")({
   loader: ({ context, params }) => {
     void context.queryClient.prefetchQuery(memberDetailQueryOptions(params.memberId));
+    void context.queryClient.prefetchQuery(memberTimelineQueryOptions(params.memberId));
   },
   pendingComponent: HeaderSkeleton,
   component: RouteComponent,
+  validateSearch: z.object({
+    tab: z.enum(["overview", "development", "finance", "timeline"]).optional(),
+  }),
 });
+
+type MemberTab = "overview" | "development" | "finance" | "timeline";
 
 type MemberStatus = "active" | "cancelled_but_active" | "cancelled";
 
@@ -198,6 +216,9 @@ function HeaderSkeleton() {
 }
 
 function MemberDetail({ member }: { member: Member }) {
+  const { tab: requestedTab } = Route.useSearch();
+  const tab = requestedTab ?? "overview";
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
   const contract = member.contracts[0] ?? null;
 
@@ -218,6 +239,9 @@ function MemberDetail({ member }: { member: Member }) {
       queryKey: orpc.members.get.key({ input: { memberId: member.id } }),
     });
     void queryClient.invalidateQueries({ queryKey: orpc.members.query.key() });
+    void queryClient.invalidateQueries({
+      queryKey: memberTimelineQueryOptions(member.id).queryKey,
+    });
   }
 
   const status = STATUS_META[memberStatus(contract)];
@@ -310,259 +334,310 @@ function MemberDetail({ member }: { member: Member }) {
         </div>
       </div>
 
-      {/* 1) Personal & contact — most important */}
-      <CardFrame>
-        <CardFrameHeader>
-          <CardFrameTitle>Persönliche Daten</CardFrameTitle>
-          <CardFrameDescription>Kontaktangaben und Anschrift.</CardFrameDescription>
-          <CardFrameAction>
-            <Button onClick={() => setDetailsOpen(true)} size="sm" variant="outline">
-              Bearbeiten
-            </Button>
-          </CardFrameAction>
-        </CardFrameHeader>
-        <Card>
-          <CardPanel>
-            <dl className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-              <Detail label="Vorname" value={member.firstName} />
-              <Detail label="Nachname" value={member.lastName} />
-              <Detail label="Geburtsdatum" value={formatDate(member.birthdate)} />
-              <Detail label="E-Mail" value={member.email || "—"} />
-              <Detail label="Telefon" value={member.phone || "—"} />
-              <Detail
-                label="Adresse"
-                value={
-                  <div className="flex items-start gap-2">
-                    <span className="text-pretty">
-                      {member.street}
-                      <br />
-                      {member.postalCode} {member.city}
-                      <br />
-                      {member.state}, {member.country}
-                    </span>
-                    <Button
-                      aria-label="Adresse auf Karte anzeigen"
-                      disabled={member.latitude == null || member.longitude == null}
-                      onClick={() => setMapOpen(true)}
-                      size="icon-sm"
-                      variant="outline"
-                    >
-                      <MapPinIcon />
-                    </Button>
-                  </div>
-                }
-              />
-            </dl>
-          </CardPanel>
-        </Card>
-      </CardFrame>
+      <div className="overflow-x-auto border-b">
+        <Tabs
+          onValueChange={(value) =>
+            void navigate({
+              params: { memberId: member.id },
+              replace: true,
+              search: { tab: String(value) as MemberTab },
+              to: "/dashboard/members/$memberId",
+            })
+          }
+          value={tab}
+        >
+          <TabsList variant="underline">
+            <TabsTab value="overview">
+              <UserRoundIcon /> Überblick
+            </TabsTab>
+            <TabsTab value="development">
+              <AwardIcon /> Entwicklung
+            </TabsTab>
+            <TabsTab value="finance">
+              <CircleDollarSignIcon /> Finanzen
+            </TabsTab>
+            <TabsTab value="timeline">
+              <HistoryIcon /> Verlauf
+            </TabsTab>
+          </TabsList>
+        </Tabs>
+      </div>
 
-      {/* 2) Groups */}
-      <CardFrame>
-        <CardFrameHeader>
-          <CardFrameTitle>Gruppen</CardFrameTitle>
-          <CardFrameDescription>
-            {member.groupMembers.length} aktive Mitgliedschaften.
-          </CardFrameDescription>
-          <CardFrameAction>
-            <Button onClick={() => setAssignOpen(true)} size="sm" variant="outline">
-              <PlusIcon />
-              Gruppe zuweisen
-            </Button>
-          </CardFrameAction>
-        </CardFrameHeader>
-        <Table className="min-w-[480px]" variant="card">
-          <TableHeader>
-            <TableRow>
-              <TableHead>Gruppe</TableHead>
-              <TableHead className="w-48">Monatsbeitrag</TableHead>
-              <TableHead className="w-px" />
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {member.groupMembers.length === 0 ? (
-              <TableRow className="hover:bg-transparent">
-                <TableCell className="py-8 text-center text-muted-foreground" colSpan={3}>
-                  Keine Gruppen zugewiesen.
-                </TableCell>
-              </TableRow>
-            ) : (
-              member.groupMembers.map((membership) => {
-                const draft = priceDrafts[membership.groupId];
-                const value = draft ?? String(membership.membershipPriceCents / 100);
-                return (
-                  <TableRow key={membership.groupId}>
-                    <TableCell>
-                      <div className="flex items-center gap-2.5">
-                        <span
-                          aria-hidden="true"
-                          className="size-2.5 shrink-0 rounded-full"
-                          style={{ backgroundColor: membership.group.color }}
-                        />
-                        <span className="font-medium text-foreground">{membership.group.name}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="w-48">
-                      <InputGroup className="w-32">
-                        <InputGroupAddon>€</InputGroupAddon>
-                        <InputGroupInput
-                          min="0"
-                          onBlur={() =>
-                            savePrice(membership.groupId, membership.membershipPriceCents)
-                          }
-                          onChange={(e) =>
-                            setPriceDrafts((prev) => ({
-                              ...prev,
-                              [membership.groupId]: e.target.value,
-                            }))
-                          }
-                          step="0.01"
-                          type="number"
-                          value={value}
-                        />
-                      </InputGroup>
-                    </TableCell>
-                    <TableCell className="w-px">
-                      <Button
-                        aria-label="Aus Gruppe entfernen"
-                        onClick={() =>
-                          setRemoving({
-                            groupId: membership.groupId,
-                            name: membership.group.name,
-                          })
-                        }
-                        size="icon-sm"
-                        variant="ghost"
-                      >
-                        <Trash2Icon />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                );
-              })
-            )}
-          </TableBody>
-        </Table>
-      </CardFrame>
-
-      <MemberProgressionCard memberId={member.id} />
-
-      <MemberCoachingCard
-        memberId={member.id}
-        memberName={`${member.firstName} ${member.lastName}`}
-      />
-
-      {/* 3) Contract */}
-      <CardFrame>
-        <CardFrameHeader>
-          <CardFrameTitle>Vertrag</CardFrameTitle>
-          <CardFrameDescription>Laufzeit und Beiträge der Mitgliedschaft.</CardFrameDescription>
-          {contract ? (
-            <CardFrameAction>
-              <Button onClick={() => setContractOpen(true)} size="sm" variant="outline">
-                Beiträge bearbeiten
-              </Button>
-            </CardFrameAction>
-          ) : null}
-        </CardFrameHeader>
-        <Card>
-          <CardPanel>
-            {contract ? (
-              <dl className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-                <Detail
-                  label="Erstlaufzeit"
-                  value={INITIAL_PERIOD_LABELS[contract.initialPeriod] ?? contract.initialPeriod}
-                />
-                <Detail label="Beginn" value={formatDate(contract.startDate)} />
-                <Detail
-                  label="Erstlaufzeit-Ende"
-                  value={formatDate(contract.initialPeriodEndDate)}
-                />
-                <Detail label="Aufnahmegebühr" value={formatCents(contract.joiningFeeCents)} />
-                <Detail label="Jahresbeitrag" value={formatCents(contract.yearlyFeeCents)} />
-                <Detail
-                  label="Jahresbeitrag-Modus"
-                  value={YEARLY_FEE_MODE_LABELS[contract.yearlyFeeMode] ?? contract.yearlyFeeMode}
-                />
-                {contract.cancelledAt ? (
-                  <>
-                    <Detail label="Gekündigt am" value={formatDate(contract.cancelledAt)} />
-                    <Detail
-                      label="Wirksam zum"
-                      value={formatDate(contract.cancellationEffectiveDate)}
-                    />
-                    <Detail label="Grund" value={contract.cancellationReason || "—"} />
-                  </>
-                ) : null}
-              </dl>
-            ) : (
-              <p className="text-muted-foreground text-sm">Kein Vertrag vorhanden.</p>
-            )}
-          </CardPanel>
-        </Card>
-      </CardFrame>
-
-      {/* 4) Credits — contract-scoped, so only meaningful once a contract exists */}
-      {contract ? (
-        <MemberCreditsCard
-          contractId={contract.id}
-          memberId={member.id}
-          memberName={`${member.firstName} ${member.lastName}`}
-        />
-      ) : null}
-
-      {/* 5) Payment + guardian */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <CardFrame>
-          <CardFrameHeader>
-            <CardFrameTitle>SEPA-Lastschrift</CardFrameTitle>
-          </CardFrameHeader>
-          <Card>
-            <CardPanel>
-              <dl className="grid gap-5 sm:grid-cols-3">
-                <Detail label="Kontoinhaber" value={member.cardHolder} />
-                <Detail
-                  label="IBAN"
-                  value={<span className="break-all font-mono">{member.iban}</span>}
-                />
-                <Detail
-                  label="BIC"
-                  value={<span className="break-all font-mono">{member.bic}</span>}
-                />
-              </dl>
-            </CardPanel>
-          </Card>
-        </CardFrame>
-
-        {member.guardianName || member.guardianEmail || member.guardianPhone ? (
+      {tab === "overview" ? (
+        <>
+          {/* 1) Personal & contact — most important */}
           <CardFrame>
             <CardFrameHeader>
-              <CardFrameTitle>Erziehungsberechtigte/r</CardFrameTitle>
+              <CardFrameTitle>Persönliche Daten</CardFrameTitle>
+              <CardFrameDescription>Kontaktangaben und Anschrift.</CardFrameDescription>
+              <CardFrameAction>
+                <Button onClick={() => setDetailsOpen(true)} size="sm" variant="outline">
+                  Bearbeiten
+                </Button>
+              </CardFrameAction>
             </CardFrameHeader>
             <Card>
               <CardPanel>
-                <dl className="grid gap-5 sm:grid-cols-3">
-                  <Detail label="Name" value={member.guardianName || "—"} />
-                  <Detail label="E-Mail" value={member.guardianEmail || "—"} />
-                  <Detail label="Telefon" value={member.guardianPhone || "—"} />
+                <dl className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  <Detail label="Vorname" value={member.firstName} />
+                  <Detail label="Nachname" value={member.lastName} />
+                  <Detail label="Geburtsdatum" value={formatDate(member.birthdate)} />
+                  <Detail label="E-Mail" value={member.email || "—"} />
+                  <Detail label="Telefon" value={member.phone || "—"} />
+                  <Detail
+                    label="Adresse"
+                    value={
+                      <div className="flex items-start gap-2">
+                        <span className="text-pretty">
+                          {member.street}
+                          <br />
+                          {member.postalCode} {member.city}
+                          <br />
+                          {member.state}, {member.country}
+                        </span>
+                        <Button
+                          aria-label="Adresse auf Karte anzeigen"
+                          disabled={member.latitude == null || member.longitude == null}
+                          onClick={() => setMapOpen(true)}
+                          size="icon-sm"
+                          variant="outline"
+                        >
+                          <MapPinIcon />
+                        </Button>
+                      </div>
+                    }
+                  />
                 </dl>
               </CardPanel>
             </Card>
           </CardFrame>
-        ) : null}
-      </div>
 
-      {member.notes ? (
-        <CardFrame>
-          <CardFrameHeader>
-            <CardFrameTitle>Notiz</CardFrameTitle>
-          </CardFrameHeader>
-          <Card>
-            <CardPanel>
-              <p className="whitespace-pre-wrap text-foreground text-sm">{member.notes}</p>
-            </CardPanel>
-          </Card>
-        </CardFrame>
+          {/* 2) Groups */}
+          <CardFrame>
+            <CardFrameHeader>
+              <CardFrameTitle>Gruppen</CardFrameTitle>
+              <CardFrameDescription>
+                {member.groupMembers.length} aktive Mitgliedschaften.
+              </CardFrameDescription>
+              <CardFrameAction>
+                <Button onClick={() => setAssignOpen(true)} size="sm" variant="outline">
+                  <PlusIcon />
+                  Gruppe zuweisen
+                </Button>
+              </CardFrameAction>
+            </CardFrameHeader>
+            <Table className="min-w-[480px]" variant="card">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Gruppe</TableHead>
+                  <TableHead className="w-48">Monatsbeitrag</TableHead>
+                  <TableHead className="w-px" />
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {member.groupMembers.length === 0 ? (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell className="py-8 text-center text-muted-foreground" colSpan={3}>
+                      Keine Gruppen zugewiesen.
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  member.groupMembers.map((membership) => {
+                    const draft = priceDrafts[membership.groupId];
+                    const value = draft ?? String(membership.membershipPriceCents / 100);
+                    return (
+                      <TableRow key={membership.groupId}>
+                        <TableCell>
+                          <div className="flex items-center gap-2.5">
+                            <span
+                              aria-hidden="true"
+                              className="size-2.5 shrink-0 rounded-full"
+                              style={{ backgroundColor: membership.group.color }}
+                            />
+                            <span className="font-medium text-foreground">
+                              {membership.group.name}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell className="w-48">
+                          <InputGroup className="w-32">
+                            <InputGroupAddon>€</InputGroupAddon>
+                            <InputGroupInput
+                              min="0"
+                              onBlur={() =>
+                                savePrice(membership.groupId, membership.membershipPriceCents)
+                              }
+                              onChange={(e) =>
+                                setPriceDrafts((prev) => ({
+                                  ...prev,
+                                  [membership.groupId]: e.target.value,
+                                }))
+                              }
+                              step="0.01"
+                              type="number"
+                              value={value}
+                            />
+                          </InputGroup>
+                        </TableCell>
+                        <TableCell className="w-px">
+                          <Button
+                            aria-label="Aus Gruppe entfernen"
+                            onClick={() =>
+                              setRemoving({
+                                groupId: membership.groupId,
+                                name: membership.group.name,
+                              })
+                            }
+                            size="icon-sm"
+                            variant="ghost"
+                          >
+                            <Trash2Icon />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
+                )}
+              </TableBody>
+            </Table>
+          </CardFrame>
+        </>
+      ) : null}
+
+      {tab === "timeline" ? <MemberTimelineCard memberId={member.id} /> : null}
+
+      {tab === "development" ? (
+        <>
+          <MemberProgressionCard memberId={member.id} />
+
+          <MemberCoachingCard
+            memberId={member.id}
+            memberName={`${member.firstName} ${member.lastName}`}
+          />
+        </>
+      ) : null}
+
+      {tab === "finance" ? (
+        <>
+          {/* 3) Contract */}
+          <CardFrame>
+            <CardFrameHeader>
+              <CardFrameTitle>Vertrag</CardFrameTitle>
+              <CardFrameDescription>Laufzeit und Beiträge der Mitgliedschaft.</CardFrameDescription>
+              {contract ? (
+                <CardFrameAction>
+                  <Button onClick={() => setContractOpen(true)} size="sm" variant="outline">
+                    Beiträge bearbeiten
+                  </Button>
+                </CardFrameAction>
+              ) : null}
+            </CardFrameHeader>
+            <Card>
+              <CardPanel>
+                {contract ? (
+                  <dl className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                    <Detail
+                      label="Erstlaufzeit"
+                      value={
+                        INITIAL_PERIOD_LABELS[contract.initialPeriod] ?? contract.initialPeriod
+                      }
+                    />
+                    <Detail label="Beginn" value={formatDate(contract.startDate)} />
+                    <Detail
+                      label="Erstlaufzeit-Ende"
+                      value={formatDate(contract.initialPeriodEndDate)}
+                    />
+                    <Detail label="Aufnahmegebühr" value={formatCents(contract.joiningFeeCents)} />
+                    <Detail label="Jahresbeitrag" value={formatCents(contract.yearlyFeeCents)} />
+                    <Detail
+                      label="Jahresbeitrag-Modus"
+                      value={
+                        YEARLY_FEE_MODE_LABELS[contract.yearlyFeeMode] ?? contract.yearlyFeeMode
+                      }
+                    />
+                    {contract.cancelledAt ? (
+                      <>
+                        <Detail label="Gekündigt am" value={formatDate(contract.cancelledAt)} />
+                        <Detail
+                          label="Wirksam zum"
+                          value={formatDate(contract.cancellationEffectiveDate)}
+                        />
+                        <Detail label="Grund" value={contract.cancellationReason || "—"} />
+                      </>
+                    ) : null}
+                  </dl>
+                ) : (
+                  <p className="text-muted-foreground text-sm">Kein Vertrag vorhanden.</p>
+                )}
+              </CardPanel>
+            </Card>
+          </CardFrame>
+
+          {/* 4) Credits — contract-scoped, so only meaningful once a contract exists */}
+          {contract ? (
+            <MemberCreditsCard
+              contractId={contract.id}
+              memberId={member.id}
+              memberName={`${member.firstName} ${member.lastName}`}
+            />
+          ) : null}
+
+          {/* 5) Payment + guardian */}
+          <CardFrame>
+            <CardFrameHeader>
+              <CardFrameTitle>SEPA-Lastschrift</CardFrameTitle>
+            </CardFrameHeader>
+            <Card>
+              <CardPanel>
+                <dl className="grid gap-5 sm:grid-cols-3">
+                  <Detail label="Kontoinhaber" value={member.cardHolder} />
+                  <Detail
+                    label="IBAN"
+                    value={<span className="break-all font-mono">{member.iban}</span>}
+                  />
+                  <Detail
+                    label="BIC"
+                    value={<span className="break-all font-mono">{member.bic}</span>}
+                  />
+                </dl>
+              </CardPanel>
+            </Card>
+          </CardFrame>
+        </>
+      ) : null}
+
+      {tab === "overview" ? (
+        <>
+          {member.guardianName || member.guardianEmail || member.guardianPhone ? (
+            <CardFrame>
+              <CardFrameHeader>
+                <CardFrameTitle>Erziehungsberechtigte/r</CardFrameTitle>
+              </CardFrameHeader>
+              <Card>
+                <CardPanel>
+                  <dl className="grid gap-5 sm:grid-cols-3">
+                    <Detail label="Name" value={member.guardianName || "—"} />
+                    <Detail label="E-Mail" value={member.guardianEmail || "—"} />
+                    <Detail label="Telefon" value={member.guardianPhone || "—"} />
+                  </dl>
+                </CardPanel>
+              </Card>
+            </CardFrame>
+          ) : null}
+
+          {member.notes ? (
+            <CardFrame>
+              <CardFrameHeader>
+                <CardFrameTitle>Notiz</CardFrameTitle>
+              </CardFrameHeader>
+              <Card>
+                <CardPanel>
+                  <p className="whitespace-pre-wrap text-foreground text-sm">{member.notes}</p>
+                </CardPanel>
+              </Card>
+            </CardFrame>
+          ) : null}
+        </>
       ) : null}
 
       {/* Edit surfaces */}

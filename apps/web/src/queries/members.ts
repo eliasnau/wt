@@ -15,3 +15,9 @@ export const memberDetailQueryOptions = (memberId: string) =>
     ...orpc.members.get.queryOptions({ input: { memberId } }),
     staleTime: 30_000,
   });
+
+export const memberTimelineQueryOptions = (memberId: string) =>
+  queryOptions({
+    ...orpc.members.timeline.queryOptions({ input: { memberId, limit: 50 } }),
+    staleTime: 30_000,
+  });

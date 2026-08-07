@@ -2,6 +2,7 @@ import { assignGroup } from "./assign-group";
 import { cancelMemberContract } from "./cancel-contract";
 import { createMember } from "./create";
 import { getMember } from "./get";
+import { getMemberTimeline } from "./timeline";
 import { listMembers } from "./list";
 import { queryMembers } from "./query";
 import { removeGroupMembership } from "./remove-group-membership";
@@ -13,6 +14,7 @@ export const membersRouter = {
   list: listMembers,
   query: queryMembers,
   get: getMember,
+  timeline: getMemberTimeline,
   create: createMember,
   updateDetails: updateMemberDetails,
   updateContract: updateMemberContract,

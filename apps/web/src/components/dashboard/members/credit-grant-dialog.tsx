@@ -28,6 +28,7 @@ import { parseError } from "evlog";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { memberTimelineQueryOptions } from "@/queries/members";
 import { client, orpc, queryClient } from "@/utils/orpc";
 
 // Derived from the procedure's input rather than hand-written. The chain is
@@ -83,8 +84,11 @@ export function CreditGrantDialog({
     orpc.billing.createCreditGrant.mutationOptions({
       onSuccess: () => {
         toast.success("Guthaben erstellt");
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: orpc.billing.listCreditGrants.key({ input: { memberId } }),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: memberTimelineQueryOptions(memberId).queryKey,
         });
         onOpenChange(false);
       },

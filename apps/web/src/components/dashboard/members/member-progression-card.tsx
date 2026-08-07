@@ -12,7 +12,6 @@ import { Button } from "@matdesk/ui/components/button";
 import {
   Card,
   CardFrame,
-  CardFrameAction,
   CardFrameDescription,
   CardFrameHeader,
   CardFrameTitle,
@@ -58,19 +57,13 @@ import { Textarea } from "@matdesk/ui/components/textarea";
 import { cn } from "@matdesk/ui/lib/utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { parseError } from "evlog";
-import {
-  AwardIcon,
-  CheckIcon,
-  ChevronsUpDownIcon,
-  PlusIcon,
-  SparklesIcon,
-  Trash2Icon,
-} from "lucide-react";
+import { AwardIcon, CheckIcon, ListIcon, PlusIcon, SparklesIcon, Trash2Icon } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { type ReactNode, type Ref, useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { client, orpc, queryClient } from "@/utils/orpc";
+import { memberTimelineQueryOptions } from "@/queries/members";
 
 type Systems = Awaited<ReturnType<typeof client.progression.listSystems>>;
 type Awards = Awaited<ReturnType<typeof client.progression.listMemberRanks>>;
@@ -105,6 +98,7 @@ function refreshMemberRanks(memberId: string) {
   void queryClient.invalidateQueries({
     queryKey: orpc.progression.listMemberRanks.key({ input: { memberId } }),
   });
+  void queryClient.invalidateQueries({ queryKey: memberTimelineQueryOptions(memberId).queryKey });
 }
 
 export function MemberProgressionCard({ memberId }: { memberId: string }) {
@@ -139,16 +133,6 @@ export function MemberProgressionCard({ memberId }: { memberId: string }) {
         <CardFrameHeader>
           <CardFrameTitle>Graduierungen</CardFrameTitle>
           <CardFrameDescription>Fortschritt, Auszeichnungen und Verlauf.</CardFrameDescription>
-          <CardFrameAction>
-            <Button
-              disabled={!systems.some((system) => system.ranks.length > 0)}
-              onClick={() => openAwardDialog()}
-              size="sm"
-              variant="outline"
-            >
-              <PlusIcon /> Graduierung verleihen
-            </Button>
-          </CardFrameAction>
         </CardFrameHeader>
         <Card>
           <CardPanel className="p-0">
@@ -334,7 +318,7 @@ function SystemProgression({
           </span>
         </div>
         <Button onClick={() => setAllRanksOpen(true)} size="sm" variant="outline">
-          <ChevronsUpDownIcon /> Alle Stufen anzeigen
+          <ListIcon /> Alle Stufen
         </Button>
       </div>
 

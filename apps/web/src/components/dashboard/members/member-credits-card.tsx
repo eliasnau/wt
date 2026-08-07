@@ -38,6 +38,7 @@ import {
   CreditGrantDialog,
 } from "@/components/dashboard/members/credit-grant-dialog";
 import { formatCents, formatDate, todayYmd } from "@/lib/format";
+import { memberTimelineQueryOptions } from "@/queries/members";
 import { client, orpc, queryClient } from "@/utils/orpc";
 
 // Inferred from the procedure rather than hand-written, so a schema change on
@@ -135,8 +136,11 @@ export function MemberCreditsCard({
     orpc.billing.revokeCreditGrant.mutationOptions({
       onSuccess: () => {
         toast.success("Guthaben widerrufen");
-        queryClient.invalidateQueries({
+        void queryClient.invalidateQueries({
           queryKey: orpc.billing.listCreditGrants.key({ input: { memberId } }),
+        });
+        void queryClient.invalidateQueries({
+          queryKey: memberTimelineQueryOptions(memberId).queryKey,
         });
         setRevoking(null);
       },
