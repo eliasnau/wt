@@ -89,12 +89,12 @@ function RouteComponent() {
   const [removing, setRemoving] = useState<{ memberId: string; name: string } | null>(null);
 
   const members = [...(activeOrganization?.members ?? [])].sort(
-    (a, b) =>
-      roleRank(a.role) - roleRank(b.role) || a.user.name.localeCompare(b.user.name, "de"),
+    (a, b) => roleRank(a.role) - roleRank(b.role) || a.user.name.localeCompare(b.user.name, "de"),
   );
   const myRole = members.find((m) => m.userId === user?.id)?.role ?? null;
   const canManageTeam = roleCanManageTeam(myRole);
   const canInvite = roleHas(myRole, "invitation", "create");
+  const canCancelInvite = roleHas(myRole, "invitation", "cancel");
   const canRemove = roleHas(myRole, "member", "delete");
   const invitations = (activeOrganization?.invitations ?? []).filter((i) => i.status === "pending");
 
@@ -349,14 +349,16 @@ function RouteComponent() {
                     </TableCell>
                     <TableCell className="w-px">
                       <div className="flex justify-end">
-                        <Button
-                          loading={cancellingInvitationId === invitation.id}
-                          onClick={() => cancelMutation.mutate(invitation.id)}
-                          size="sm"
-                          variant="ghost"
-                        >
-                          Zurückziehen
-                        </Button>
+                        {canCancelInvite ? (
+                          <Button
+                            loading={cancellingInvitationId === invitation.id}
+                            onClick={() => cancelMutation.mutate(invitation.id)}
+                            size="sm"
+                            variant="ghost"
+                          >
+                            Zurückziehen
+                          </Button>
+                        ) : null}
                       </div>
                     </TableCell>
                   </TableRow>

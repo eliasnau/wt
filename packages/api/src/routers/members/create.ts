@@ -75,7 +75,7 @@ const input = addressSchema.extend({
 
 export const createMember = orgProcedure
   .meta({ cost: 10 })
-  .use(requirePermission({ member: ["create"] }))
+  .use(requirePermission({ members: ["create"] }))
   .input(input)
   .handler(async ({ input, context }) => {
     if (!(await validateIban(input.iban))) {

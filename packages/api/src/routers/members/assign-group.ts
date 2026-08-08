@@ -19,7 +19,7 @@ const input = z.object({
 
 export const assignGroup = orgProcedure
   .meta({ cost: 5 })
-  .use(requirePermission({ member: ["update"] }))
+  .use(requirePermission({ members: ["update"] }))
   .input(input)
   .handler(async ({ input, context }) => {
     const [member, group] = await Promise.all([

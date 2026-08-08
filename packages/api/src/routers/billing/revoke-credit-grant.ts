@@ -20,7 +20,7 @@ import { idInput } from "./schemas";
  */
 export const revokeCreditGrant = orgProcedure
   .meta({ cost: 5 })
-  .use(requirePermission({ member: ["update"] }))
+  .use(requirePermission({ members: ["update"] }))
   .input(idInput)
   .handler(async ({ input, context }) => {
     // Guarded UPDATE: `revoked_at IS NULL` makes this idempotency-safe under

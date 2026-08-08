@@ -6,13 +6,10 @@ import { memberIdInput } from "./schemas";
 
 export const getMember = orgProcedure
   .meta({ cost: 1 })
-  .use(requirePermission({ member: ["view"] }))
+  .use(requirePermission({ members: ["view"] }))
   .input(memberIdInput)
   .handler(async ({ input, context }) => {
-    const member = await getMemberWithDetails(
-      input.memberId,
-      context.organizationId,
-    );
+    const member = await getMemberWithDetails(input.memberId, context.organizationId);
     if (!member) {
       throw membersErrors.NOT_FOUND({
         internal: {

@@ -41,7 +41,7 @@ const input = z
 
 export const createCreditGrant = orgProcedure
   .meta({ cost: 5 })
-  .use(requirePermission({ member: ["update"] }))
+  .use(requirePermission({ members: ["update"] }))
   .input(input)
   .handler(async ({ input, context }) => {
     const owned = await ensureOwnedMemberContract(

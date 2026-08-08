@@ -332,7 +332,7 @@ const input = z.object({
 
 export const queryMembers = orgProcedure
   .meta({ cost: 2 })
-  .use(requirePermission({ member: ["view"] }))
+  .use(requirePermission({ members: ["view"] }))
   .input(input)
   .handler(async ({ input, context }) => {
     const { page, limit } = input;

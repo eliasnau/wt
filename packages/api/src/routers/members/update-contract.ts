@@ -20,7 +20,7 @@ const input = z.object({
 
 export const updateMemberContract = orgProcedure
   .meta({ cost: 5 })
-  .use(requirePermission({ member: ["update"] }))
+  .use(requirePermission({ members: ["update"] }))
   .input(input)
   .handler(async ({ input, context }) => {
     const today = ymdInBerlin(new Date());

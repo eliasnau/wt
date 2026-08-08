@@ -10,13 +10,10 @@ import { betterAuth, type Auth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { admin as adminPlugin } from "better-auth/plugins/admin";
 import { haveIBeenPwned } from "better-auth/plugins/haveibeenpwned";
-import {
-  organization,
-  type OrganizationOptions,
-} from "better-auth/plugins/organization";
+import { organization, type OrganizationOptions } from "better-auth/plugins/organization";
 import { twoFactor } from "better-auth/plugins/two-factor";
 import { tanstackStartCookies } from "better-auth/tanstack-start";
-import { ac, admin, member, owner } from "./permissions";
+import { ac, roles as organizationRoles } from "./permissions";
 
 const MAX_ORGS_PER_USER = 5;
 const MAX_MEMBERS_PER_ORGANIZATION = 10;
@@ -46,12 +43,7 @@ export function createAuth(): Auth<any> {
       provider: "pg",
       schema: authSchema,
     }),
-    trustedOrigins: [
-      env.CORS_ORIGIN,
-      "matdesk://",
-      "exp://",
-      "http://localhost:8081",
-    ],
+    trustedOrigins: [env.CORS_ORIGIN, "matdesk://", "exp://", "http://localhost:8081"],
     secret: env.BETTER_AUTH_SECRET,
     baseURL: env.BETTER_AUTH_URL,
 
@@ -80,11 +72,7 @@ export function createAuth(): Auth<any> {
 
     advanced: {
       ipAddress: {
-        ipAddressHeaders: [
-          "x-forwarded-for",
-          "x-real-ip",
-          "x-vercel-forwarded-for",
-        ],
+        ipAddressHeaders: ["x-forwarded-for", "x-real-ip", "x-vercel-forwarded-for"],
       },
       database: {
         generateId: (options) => {
@@ -110,7 +98,7 @@ export function createAuth(): Auth<any> {
 
       organization({
         ac,
-        roles: { owner, admin, member },
+        roles: organizationRoles,
 
         // Only platform admins can create new orgs. (`user.role` is set by
         // the admin plugin below.)
@@ -124,10 +112,7 @@ export function createAuth(): Auth<any> {
             .select({ count: count() })
             .from(organizationMember)
             .where(
-              and(
-                eq(organizationMember.userId, user.id),
-                eq(organizationMember.role, "owner"),
-              ),
+              and(eq(organizationMember.userId, user.id), eq(organizationMember.role, "owner")),
             );
           return (row?.count ?? 0) >= MAX_ORGS_PER_USER;
         },
@@ -194,14 +179,22 @@ export type User = Session["user"];
 
 export {
   ac,
+  accountant,
   admin,
+  assignableRoles,
   getActionLabel,
   getResourceLabel,
+  getRoleLabel,
   member,
   owner,
   permissionList,
   permissionMetadata,
+  roleCanManageTeam,
+  roleHas,
+  roleMetadata,
   roles,
+  staff,
+  trainer,
   type PermissionAction,
   type PermissionCheck,
   type PermissionResource,

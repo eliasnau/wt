@@ -42,7 +42,7 @@ const input = memberIdInput.extend({
 
 export const getMemberTimeline = orgProcedure
   .meta({ cost: 5 })
-  .use(requirePermission({ member: ["view"] }))
+  .use(requirePermission({ members: ["view"] }))
   .input(input)
   .handler(async ({ input, context }) => {
     const member = await db.query.clubMember.findFirst({

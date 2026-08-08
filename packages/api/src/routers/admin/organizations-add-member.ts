@@ -1,3 +1,4 @@
+import { roles as organizationRoles } from "@matdesk/auth/permissions";
 import { and, db, eq } from "@matdesk/db";
 import { member, user } from "@matdesk/db/schema";
 import { createError } from "evlog";
@@ -6,10 +7,12 @@ import { z } from "zod";
 
 import { adminProcedure } from "../../index";
 
+const ROLE_VALUES = Object.keys(organizationRoles) as [string, ...string[]];
+
 const input = z.object({
   organizationId: z.string().min(1),
   email: z.email(),
-  role: z.enum(["member", "admin", "owner"]).default("member"),
+  role: z.enum(ROLE_VALUES).default("staff"),
 });
 
 /**
@@ -33,9 +36,7 @@ export const addOrganizationMemberAdmin = adminProcedure
     const existing = await db
       .select({ id: member.id })
       .from(member)
-      .where(
-        and(eq(member.organizationId, input.organizationId), eq(member.userId, targetUser.id)),
-      )
+      .where(and(eq(member.organizationId, input.organizationId), eq(member.userId, targetUser.id)))
       .then((r) => r[0]);
 
     if (existing) {

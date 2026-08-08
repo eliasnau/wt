@@ -14,7 +14,13 @@ import {
  *
  */
 const PERMISSION_SPEC = {
-  member: {
+  /**
+   * Club members (the `clubMember` table) — deliberately *not* named `member`,
+   * which is Better Auth's own statement for managing users of the organization.
+   * Reusing that key would hand every role with club-member CRUD the right to
+   * add, remove and re-role teammates.
+   */
+  members: {
     label: "Mitglieder",
     actions: {
       view: { label: "Ansehen", description: "Mitglieder ansehen (Liste und Details)." },
@@ -181,19 +187,75 @@ const allCustomActions = Object.fromEntries(
   Object.entries(customStatement).map(([resource, actions]) => [resource, [...actions]]),
 ) as unknown as { [R in PermissionResource]: PermissionAction<R>[] };
 
+/**
+ * `ownerAc`/`adminAc`/`memberAc` carry Better Auth's *team* rights
+ * (`organization`, `member`, `invitation`, `team`, `ac`). Only owner and admin
+ * get the management set; the operative roles start from `memberAc`, which
+ * grants nothing but `ac: ["read"]`.
+ */
 export const owner = ac.newRole({
   ...ownerAc.statements,
   ...allCustomActions,
 });
 
+/** Operative management — everything except owner/bank-critical actions. */
 export const admin = ac.newRole({
   ...adminAc.statements,
   ...allCustomActions,
+  // SEPA mandates and the SEPA file export stay with the owner (and Buchhaltung).
+  billing: ["view", "generate", "update"],
+  sepa: ["view"],
 });
 
+/** Training operations: members, groups, attendance, gradings, coaching. */
+export const trainer = ac.newRole({
+  ...memberAc.statements,
+  members: ["view", "update"],
+  groups: ["view", "create", "update"],
+  events: ["view", "create", "update"],
+  progression: ["view", "award"],
+  coaching: ["view", "create", "update"],
+  inventory: ["view"],
+  statistics: ["view"],
+  ai: ["chat"],
+});
+
+/** Front desk: member upkeep, sign-ups, events, simple payments. */
+export const staff = ac.newRole({
+  ...memberAc.statements,
+  members: ["view", "create", "update", "view_payment"],
+  groups: ["view"],
+  events: ["view", "create", "update"],
+  progression: ["view"],
+  coaching: ["view", "create", "update"],
+  inventory: ["view", "update"],
+  billing: ["view"],
+  statistics: ["view"],
+  ai: ["chat"],
+});
+
+/** Finance: invoices, SEPA, financial figures. */
+export const accountant = ac.newRole({
+  ...memberAc.statements,
+  members: ["view", "export", "view_payment"],
+  groups: ["view"],
+  coaching: ["view"],
+  inventory: ["view"],
+  billing: ["view", "generate", "download", "update"],
+  sepa: ["view", "update"],
+  statistics: ["view"],
+  financeStatistics: ["view"],
+  ai: ["chat"],
+});
+
+/**
+ * Legacy read-only role from before the role set above existed. Kept registered
+ * so members still carrying it resolve to the exact rights they had; it is not
+ * offered when inviting or re-roling.
+ */
 export const member = ac.newRole({
   ...memberAc.statements,
-  member: ["view"],
+  members: ["view"],
   groups: ["view"],
   events: ["view"],
   progression: ["view"],
@@ -202,5 +264,79 @@ export const member = ac.newRole({
   ai: ["chat"],
 });
 
-export const roles = { owner, admin, member } as const;
+export const roles = { owner, admin, trainer, staff, accountant, member } as const;
 export type RoleName = keyof typeof roles;
+
+/** Purpose of each role, for role pickers and the permission matrix. */
+export const roleMetadata: Record<
+  RoleName,
+  { label: string; description: string; assignable: boolean }
+> = {
+  owner: {
+    label: "Inhaber",
+    description: "Vollzugriff auf die gesamte Organisation.",
+    assignable: false,
+  },
+  admin: {
+    label: "Administrator",
+    description: "Operative Verwaltung, aber keine kritischen Eigentümer- und Bankfunktionen.",
+    assignable: true,
+  },
+  trainer: {
+    label: "Trainer",
+    description: "Mitglieder, Gruppen, Anwesenheit, Graduierungen, Coachings.",
+    assignable: true,
+  },
+  staff: {
+    label: "Empfang / Mitarbeiter",
+    description: "Mitgliederpflege, Anmeldungen, Events, einfache Zahlungen.",
+    assignable: true,
+  },
+  accountant: {
+    label: "Buchhaltung",
+    description: "Rechnungen, SEPA, Finanzdaten.",
+    assignable: true,
+  },
+  member: {
+    label: "Mitglied (alt)",
+    description: "Frühere Rolle mit reinem Lesezugriff. Bitte auf eine neue Rolle umstellen.",
+    assignable: false,
+  },
+};
+
+/** Roles offered when inviting or changing someone's role. */
+export const assignableRoles = (Object.keys(roleMetadata) as RoleName[]).filter(
+  (role) => roleMetadata[role].assignable,
+);
+
+/** Human label for a role value from the database (may be a comma-separated list). */
+export function getRoleLabel(role: string): string {
+  return role
+    .split(",")
+    .map((part) => roleMetadata[part.trim() as RoleName]?.label ?? part.trim())
+    .join(", ");
+}
+
+/**
+ * Whether a stored role value grants `resource:action`. Covers Better Auth's own
+ * statements too, so callers can ask about e.g. `member:update` (team
+ * management) or `invitation:create`.
+ */
+export function roleHas(
+  role: string | null | undefined,
+  resource: string,
+  action: string,
+): boolean {
+  if (!role) return false;
+  return role.split(",").some((part) => {
+    const statements = roles[part.trim() as RoleName]?.statements as
+      | Record<string, readonly string[] | undefined>
+      | undefined;
+    return statements?.[resource]?.includes(action) ?? false;
+  });
+}
+
+/** Whether a role may invite, remove and re-role teammates. */
+export function roleCanManageTeam(role: string | null | undefined): boolean {
+  return roleHas(role, "member", "update");
+}

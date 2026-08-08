@@ -1,14 +1,4 @@
-import {
-  and,
-  count,
-  db,
-  eq,
-  ilike,
-  inArray,
-  or,
-  sql,
-  type SQL,
-} from "@matdesk/db";
+import { and, count, db, eq, ilike, inArray, or, sql, type SQL } from "@matdesk/db";
 import { clubMember, contract, groupMember } from "@matdesk/db/schema";
 import { z } from "zod";
 
@@ -58,7 +48,7 @@ function statusPredicate(status: MemberStatus, today: string): SQL {
 
 export const listMembers = orgProcedure
   .meta({ cost: 1 })
-  .use(requirePermission({ member: ["view"] }))
+  .use(requirePermission({ members: ["view"] }))
   .input(input)
   .handler(async ({ input, context }) => {
     const { page, limit } = input;
@@ -73,17 +63,12 @@ export const listMembers = orgProcedure
       .filter((v, i, a) => a.indexOf(v) === i);
 
     // Caller asked for a group filter but provided no usable ids → no results.
-    if (
-      (input.groupIds?.length ?? 0) > 0 &&
-      (!groupIds || groupIds.length === 0)
-    ) {
+    if ((input.groupIds?.length ?? 0) > 0 && (!groupIds || groupIds.length === 0)) {
       return emptyPage(page, limit);
     }
 
     // Empty / undefined statuses → no filter (show all three buckets).
-    const statuses = input.options?.statuses
-      ? [...new Set(input.options.statuses)]
-      : [];
+    const statuses = input.options?.statuses ? [...new Set(input.options.statuses)] : [];
     const statusFilter =
       statuses.length === 0 || statuses.length === STATUSES.length
         ? undefined
@@ -98,10 +83,7 @@ export const listMembers = orgProcedure
             ilike(sql`CAST(${clubMember.birthdate} AS TEXT)`, `%${search}%`),
             ilike(clubMember.email, `%${search}%`),
             ilike(clubMember.phone, `%${search}%`),
-            ilike(
-              sql`${clubMember.firstName} || ' ' || ${clubMember.lastName}`,
-              `%${search}%`,
-            ),
+            ilike(sql`${clubMember.firstName} || ' ' || ${clubMember.lastName}`, `%${search}%`),
           )
         : undefined,
       // Match members with a *currently active* membership in any of the
@@ -138,9 +120,7 @@ export const listMembers = orgProcedure
     ]);
 
     const totalCount = totalRow?.count ?? 0;
-    const groupsByMember = await loadGroupMembershipsByMember(
-      rows.map((r) => r.member.id),
-    );
+    const groupsByMember = await loadGroupMembershipsByMember(rows.map((r) => r.member.id));
 
     const totalPages = Math.ceil(totalCount / limit);
     context.log?.set({

@@ -28,7 +28,7 @@ const VIOLATION_TO_ERROR: Record<CancellationViolation, () => Error> = {
 
 export const cancelMemberContract = orgProcedure
   .meta({ cost: 10 })
-  .use(requirePermission({ member: ["update"] }))
+  .use(requirePermission({ members: ["update"] }))
   .input(input)
   .handler(async ({ input, context }) => {
     const [existing] = await db
