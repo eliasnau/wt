@@ -18,12 +18,14 @@ import {
   CommandSeparator,
 } from "@matdesk/ui/components/command";
 import { Kbd, KbdGroup } from "@matdesk/ui/components/kbd";
+import { Skeleton } from "@matdesk/ui/components/skeleton";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import {
   ArrowDownIcon,
   ArrowUpIcon,
   BoxesIcon,
+  ChevronRightIcon,
   CornerDownLeftIcon,
   SearchIcon,
 } from "lucide-react";
@@ -37,6 +39,7 @@ import {
   customCommandActions,
 } from "@/components/dashboard/app-shell/command-menu-actions";
 import { navGroups } from "@/components/dashboard/app-shell/app-shared";
+import { useAuth } from "@/components/auth/auth-provider";
 import { openOrgSwitcher } from "@/components/auth/org-switcher";
 import { UserAvatar } from "@/components/auth/user-avatar";
 import { CoachingDialog } from "@/components/dashboard/coaching/coaching-dialog";
@@ -50,6 +53,11 @@ import type { FileRouteTypes } from "@/routeTree.gen";
 import { client } from "@/utils/orpc";
 
 type MemberSearchResult = Awaited<ReturnType<typeof client.members.query>>["data"][number];
+
+const MEMBER_ACTION_LABELS: Record<MemberCommandAction, string> = {
+  credit: "Guthaben erstellen",
+  "assign-group": "Gruppe zuweisen",
+};
 
 type CommandOption = {
   value: string;
@@ -174,7 +182,13 @@ function createStaticCommandGroups(context: CommandActionContext): CommandGroupO
     {
       value: "quick-actions",
       label: "Schnellaktionen",
-      items: customCommandActions.map((command) => toCustomCommandOption(command, context)),
+      items: customCommandActions
+        .filter((command) =>
+          typeof command.visible === "function"
+            ? command.visible(context)
+            : command.visible !== false,
+        )
+        .map((command) => toCustomCommandOption(command, context)),
     },
     ...navGroups.map((group, groupIndex) => ({
       value: `navigation-${group.label ?? groupIndex}`,
@@ -193,6 +207,7 @@ function createStaticCommandGroups(context: CommandActionContext): CommandGroupO
 }
 
 export function GlobalCommandMenu() {
+  const { organizations, user } = useAuth();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -255,6 +270,12 @@ export function GlobalCommandMenu() {
     if (!result?.keepOpen) setOpen(false);
   };
 
+  const leaveMemberAction = () => {
+    setMemberAction(null);
+    setSearch("");
+    setDebouncedSearch("");
+  };
+
   const memberCommands: CommandOption[] = (membersQuery.data?.data ?? []).map((member) => ({
     value: `${member.firstName} ${member.lastName} ${member.email ?? ""}`,
     label: `${member.firstName} ${member.lastName}`,
@@ -304,6 +325,8 @@ export function GlobalCommandMenu() {
       },
     }));
   const staticCommandGroups = createStaticCommandGroups({
+    isPlatformAdmin: user?.role === "admin",
+    organizationCount: organizations.length,
     openCreateGroup: () => {
       setEditingGroup(null);
       setGroupDialogOpen(true);
@@ -369,6 +392,15 @@ export function GlobalCommandMenu() {
           <CommandDialogPrimitive.Title className="sr-only">
             Befehlsmenü
           </CommandDialogPrimitive.Title>
+          {memberAction ? (
+            <div className="absolute -top-7 left-1 flex items-center gap-1 text-muted-foreground text-xs">
+              <span>Befehle</span>
+              <ChevronRightIcon className="size-3" />
+              <span className="font-medium text-foreground">
+                {MEMBER_ACTION_LABELS[memberAction]}
+              </span>
+            </div>
+          ) : null}
           <Command
             filter={commandFilter}
             items={displayedCommandGroups}
@@ -377,6 +409,13 @@ export function GlobalCommandMenu() {
           >
             <CommandInput
               loading={remoteSearchPending}
+              onBack={memberAction ? leaveMemberAction : undefined}
+              onKeyDown={(event) => {
+                if (memberAction && event.key === "Backspace" && search.length === 0) {
+                  event.preventDefault();
+                  leaveMemberAction();
+                }
+              }}
               placeholder={
                 memberAction
                   ? "Mitglied suchen (mindestens 5 Zeichen)…"
@@ -384,47 +423,65 @@ export function GlobalCommandMenu() {
               }
             />
             <CommandPanel>
-              <CommandEmpty>
-                {!remoteSearchEnabled && memberAction
-                  ? "Gib mindestens 5 Zeichen ein, um Mitglieder zu suchen."
-                  : remoteSearchPending
-                    ? "Mitglieder und Gruppen werden durchsucht…"
-                    : remoteSearchError
-                      ? "Die Suche ist gerade nicht verfügbar."
-                      : "Keine passenden Befehle, Mitglieder oder Gruppen gefunden."}
-              </CommandEmpty>
-              <CommandList>
-                {(group: CommandGroupOption, index: number) => (
-                  <Fragment key={group.value}>
-                    <CommandGroup items={group.items}>
-                      <CommandGroupLabel>{group.label}</CommandGroupLabel>
-                      <CommandCollection>
-                        {(option: CommandOption) => (
-                          <CommandItem
-                            className="gap-3"
-                            key={option.value}
-                            onClick={() => void runCommand(option)}
-                            value={option.value}
-                          >
-                            <span className="shrink-0 text-muted-foreground [&_svg]:size-4">
-                              {option.icon}
-                            </span>
-                            <span className="min-w-0 flex-1 truncate font-medium">
-                              {option.label}
-                            </span>
-                            {option.description ? (
-                              <span className="text-muted-foreground text-xs">
-                                {option.description}
-                              </span>
-                            ) : null}
-                          </CommandItem>
-                        )}
-                      </CommandCollection>
-                    </CommandGroup>
-                    {index < displayedCommandGroups.length - 1 ? <CommandSeparator /> : null}
-                  </Fragment>
-                )}
-              </CommandList>
+              {remoteSearchPending && memberAction ? (
+                <CommandSearchSkeleton />
+              ) : (
+                <>
+                  <CommandEmpty>
+                    {remoteSearchError ? (
+                      <div className="flex flex-col items-center gap-3">
+                        <span>Die Suche ist gerade nicht verfügbar.</span>
+                        <Button
+                          onClick={() => {
+                            void membersQuery.refetch();
+                            if (!memberAction) void groupsQuery.refetch();
+                          }}
+                          size="sm"
+                          variant="outline"
+                        >
+                          Erneut versuchen
+                        </Button>
+                      </div>
+                    ) : !remoteSearchEnabled && memberAction ? (
+                      "Gib mindestens 5 Zeichen ein, um Mitglieder zu suchen."
+                    ) : (
+                      "Keine passenden Befehle, Mitglieder oder Gruppen gefunden."
+                    )}
+                  </CommandEmpty>
+                  <CommandList>
+                    {(group: CommandGroupOption, index: number) => (
+                      <Fragment key={group.value}>
+                        <CommandGroup items={group.items}>
+                          <CommandGroupLabel>{group.label}</CommandGroupLabel>
+                          <CommandCollection>
+                            {(option: CommandOption) => (
+                              <CommandItem
+                                className="gap-3"
+                                key={option.value}
+                                onClick={() => void runCommand(option)}
+                                value={option.value}
+                              >
+                                <span className="shrink-0 text-muted-foreground [&_svg]:size-4">
+                                  {option.icon}
+                                </span>
+                                <span className="min-w-0 flex-1 truncate font-medium">
+                                  {option.label}
+                                </span>
+                                {option.description ? (
+                                  <span className="text-muted-foreground text-xs">
+                                    {option.description}
+                                  </span>
+                                ) : null}
+                              </CommandItem>
+                            )}
+                          </CommandCollection>
+                        </CommandGroup>
+                        {index < displayedCommandGroups.length - 1 ? <CommandSeparator /> : null}
+                      </Fragment>
+                    )}
+                  </CommandList>
+                </>
+              )}
             </CommandPanel>
             <CommandFooter>
               <div className="flex items-center gap-4">
@@ -446,10 +503,17 @@ export function GlobalCommandMenu() {
                   Öffnen
                 </span>
               </div>
-              <span className="flex items-center gap-2">
-                <Kbd>Esc</Kbd>
-                Schließen
-              </span>
+              {memberAction ? (
+                <span className="flex items-center gap-2">
+                  <Kbd>⌫</Kbd>
+                  Zurück
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <Kbd>Esc</Kbd>
+                  Schließen
+                </span>
+              )}
             </CommandFooter>
           </Command>
         </CommandDialogPopup>
@@ -484,5 +548,25 @@ export function GlobalCommandMenu() {
         />
       ) : null}
     </>
+  );
+}
+
+function CommandSearchSkeleton() {
+  return (
+    <div
+      aria-busy="true"
+      aria-label="Mitglieder werden geladen"
+      className="flex flex-col gap-2 p-3"
+      role="status"
+    >
+      <Skeleton className="h-3 w-24" />
+      {Array.from({ length: 4 }, (_, index) => (
+        <div className="flex items-center gap-3 px-2 py-1.5" key={index}>
+          <Skeleton className="size-5 rounded-full" />
+          <Skeleton className="h-3.5 w-36" />
+          <Skeleton className="ml-auto h-3 w-28" />
+        </div>
+      ))}
+    </div>
   );
 }

@@ -4,6 +4,7 @@ import {
   DumbbellIcon,
   FolderPlusIcon,
   HandCoinsIcon,
+  ShieldCheckIcon,
   UserPlusIcon,
   UsersRoundIcon,
   type LucideIcon,
@@ -16,6 +17,7 @@ type CustomCommandBase = {
   description?: string;
   icon: LucideIcon;
   keywords?: string[];
+  visible?: boolean | ((context: CommandActionContext) => boolean);
 };
 
 type CustomCommandLink = CustomCommandBase & {
@@ -35,6 +37,8 @@ export type MemberCommandAction = "credit" | "assign-group";
 export type CommandActionResult = { keepOpen?: boolean } | void;
 
 export type CommandActionContext = {
+  isPlatformAdmin: boolean;
+  organizationCount: number;
   openCreateGroup: () => void;
   openCreateEvent: () => void;
   openCreateCoaching: () => void;
@@ -94,6 +98,15 @@ export const customCommandActions: CustomCommandAction[] = [
     description: "Arbeitsbereich",
     icon: Building2Icon,
     keywords: ["verein", "workspace"],
+    visible: ({ organizationCount }) => organizationCount > 1,
     action: ({ openOrganizationSwitcher }) => openOrganizationSwitcher(),
+  },
+  {
+    label: "Adminbereich öffnen",
+    description: "Plattformverwaltung",
+    icon: ShieldCheckIcon,
+    keywords: ["admin", "benutzer", "organisationen", "audit"],
+    visible: ({ isPlatformAdmin }) => isPlatformAdmin,
+    href: "/admin",
   },
 ];

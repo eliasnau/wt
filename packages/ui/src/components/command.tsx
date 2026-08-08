@@ -1,8 +1,9 @@
 "use client";
 
 import { Dialog as CommandDialogPrimitive } from "@base-ui/react/dialog";
-import { Loader2Icon, SearchIcon } from "lucide-react";
+import { ArrowLeftIcon, Loader2Icon, SearchIcon } from "lucide-react";
 import type * as React from "react";
+import { Button } from "@matdesk/ui/components/button";
 import { cn } from "@matdesk/ui/lib/utils";
 import {
   Autocomplete,
@@ -108,23 +109,39 @@ export function Command({
 export function CommandInput({
   className,
   loading = false,
+  onBack,
   placeholder = undefined,
   ...props
 }: React.ComponentProps<typeof AutocompleteInput> & {
   loading?: boolean;
+  onBack?: () => void;
 }): React.ReactElement {
   return (
-    <div className="px-2.5 py-1.5">
+    <div className="relative px-2.5 py-1.5">
+      {onBack ? (
+        <Button
+          aria-label="Zurück"
+          className="absolute top-1/2 left-3 z-10 -translate-y-1/2"
+          onClick={onBack}
+          size="icon-sm"
+          variant="ghost"
+        >
+          <ArrowLeftIcon />
+        </Button>
+      ) : null}
       <AutocompleteInput
         autoFocus
         className={cn(
           "border-transparent! bg-transparent! shadow-none before:hidden has-focus-visible:ring-0",
+          onBack && "*:data-[slot=autocomplete-input]:ps-10",
           className,
         )}
         placeholder={placeholder}
         size="lg"
         aria-busy={loading || undefined}
-        startAddon={loading ? <Loader2Icon className="animate-spin" /> : <SearchIcon />}
+        startAddon={
+          onBack ? undefined : loading ? <Loader2Icon className="animate-spin" /> : <SearchIcon />
+        }
         {...props}
       />
     </div>
