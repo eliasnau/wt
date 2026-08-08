@@ -15,13 +15,7 @@ import { Field, FieldDescription, FieldLabel } from "@matdesk/ui/components/fiel
 import { Form } from "@matdesk/ui/components/form";
 import { Input } from "@matdesk/ui/components/input";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "@matdesk/ui/components/input-group";
-import {
-  Select,
-  SelectItem,
-  SelectPopup,
-  SelectTrigger,
-  SelectValue,
-} from "@matdesk/ui/components/select";
+import { Tabs, TabsList, TabsTab } from "@matdesk/ui/components/tabs";
 import { Textarea } from "@matdesk/ui/components/textarea";
 import { useMutation } from "@tanstack/react-query";
 import { parseError } from "evlog";
@@ -41,11 +35,6 @@ export const CREDIT_GRANT_TYPE_LABELS: Record<CreditGrantType, string> = {
   billing_cycles: "Freie Monate",
   money: "Guthaben (Euro)",
 };
-
-const TYPE_ITEMS = [
-  { label: CREDIT_GRANT_TYPE_LABELS.money, value: "money" },
-  { label: CREDIT_GRANT_TYPE_LABELS.billing_cycles, value: "billing_cycles" },
-];
 
 export function CreditGrantDialog({
   open,
@@ -138,22 +127,18 @@ export function CreditGrantDialog({
           <DialogPanel className="grid gap-4">
             <Field>
               <FieldLabel>Typ</FieldLabel>
-              <Select
-                items={TYPE_ITEMS}
+              <Tabs
+                className="w-full"
                 onValueChange={(value) => setType(value as CreditGrantType)}
                 value={type}
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectPopup>
-                  {TYPE_ITEMS.map((item) => (
-                    <SelectItem key={item.value} value={item.value}>
-                      {item.label}
-                    </SelectItem>
-                  ))}
-                </SelectPopup>
-              </Select>
+                <TabsList className="w-full">
+                  <TabsTab value="money">{CREDIT_GRANT_TYPE_LABELS.money}</TabsTab>
+                  <TabsTab value="billing_cycles">
+                    {CREDIT_GRANT_TYPE_LABELS.billing_cycles}
+                  </TabsTab>
+                </TabsList>
+              </Tabs>
             </Field>
 
             {type === "money" ? (
