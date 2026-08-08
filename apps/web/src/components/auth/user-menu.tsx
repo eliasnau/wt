@@ -18,7 +18,7 @@ import { Link, useNavigate } from "@tanstack/react-router";
 import { LogOutIcon, MoonIcon, ShieldIcon, SunIcon, UserIcon } from "lucide-react";
 
 import { UserAvatar } from "@/components/auth/user-avatar";
-import { useAuth } from "@/components/auth/auth-provider";
+import { useAuth } from "@/components/auth/auth-context";
 import { useTheme } from "@/components/theme-provider";
 
 export default function UserMenu() {

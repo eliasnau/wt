@@ -1,47 +1,15 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { createContext, useCallback, useContext, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { AuthContext, type AuthContextValue } from "@/components/auth/auth-context";
 import { sessionQueryOptions } from "@/functions/get-user";
 import { authClient } from "@/lib/auth-client";
 import { queryClient } from "@/utils/orpc";
 
 type SessionQuery = ReturnType<typeof authClient.useSession>;
-type OrganizationsQuery = ReturnType<typeof authClient.useListOrganizations>;
-type ActiveOrganizationQuery = ReturnType<typeof authClient.useActiveOrganization>;
-
 type Session = NonNullable<SessionQuery["data"]>;
-type User = Session["user"];
-type Organization = NonNullable<OrganizationsQuery["data"]>[number];
-type ActiveOrganization = NonNullable<ActiveOrganizationQuery["data"]>;
-
-type AuthContextValue = {
-  /** Raw session object (user + session) or null when signed out. */
-  session: Session | null;
-  user: User | null;
-  isPending: boolean;
-  error: SessionQuery["error"];
-
-  organizations: Organization[];
-  activeOrganization: ActiveOrganization | null;
-  isOrganizationsPending: boolean;
-  organizationsError: OrganizationsQuery["error"];
-
-  /** Refetch everything (session + organizations). */
-  refetch: () => Promise<void>;
-  refetchSession: SessionQuery["refetch"];
-  refetchOrganizations: OrganizationsQuery["refetch"];
-
-  /** Switch the active organization, then refresh derived state. */
-  setActiveOrganization: (organizationId: string | null) => Promise<void>;
-  signOut: typeof authClient.signOut;
-
-  /** Escape hatch for anything not surfaced above. */
-  authClient: typeof authClient;
-};
-
-const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Hydrated from the server on first paint (no flash). Once better-auth's
@@ -66,6 +34,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await Promise.all([refetchSession(), refetchOrganizations(), refetchActiveOrganization()]);
   }, [refetchSession, refetchOrganizations, refetchActiveOrganization]);
 
+  // better-auth only re-signals its organization atoms on organization
+  // mutations (create/delete/update) — signing in does not touch them. Since
+  // this provider is mounted at the root, the list a user sees after signing in
+  // is still the one fetched while they were anonymous (a 401), which reads as
+  // "no organizations" until a hard reload. Refetch whenever the user changes.
+  const userId = session?.user?.id ?? null;
+  const loadedForUserRef = useRef(userId);
+  const [isOrganizationsStale, setIsOrganizationsStale] = useState(false);
+
+  useEffect(() => {
+    if (loadedForUserRef.current === userId) return;
+    loadedForUserRef.current = userId;
+    if (!userId) return;
+
+    setIsOrganizationsStale(true);
+    void Promise.all([refetchOrganizations(), refetchActiveOrganization()]).finally(() => {
+      // Only clear if no newer user has taken over in the meantime.
+      if (loadedForUserRef.current === userId) setIsOrganizationsStale(false);
+    });
+  }, [userId, refetchOrganizations, refetchActiveOrganization]);
+
   const setActiveOrganization = useCallback(
     async (organizationId: string | null) => {
       const result = await authClient.organization.setActive({ organizationId });
@@ -87,8 +76,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       organizations: organizationsQuery.data ?? [],
       activeOrganization: activeOrganizationQuery.data ?? null,
-      isOrganizationsPending: organizationsQuery.isPending,
-      organizationsError: organizationsQuery.error,
+      // While stale the list still describes the previous user, so keep callers
+      // on their loading state instead of flashing an empty/error result.
+      isOrganizationsPending: organizationsQuery.isPending || isOrganizationsStale,
+      organizationsError: isOrganizationsStale ? null : organizationsQuery.error,
 
       refetch,
       refetchSession,
@@ -105,6 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       organizationsQuery.data,
       organizationsQuery.isPending,
       organizationsQuery.error,
+      isOrganizationsStale,
       activeOrganizationQuery.data,
       refetch,
       refetchSession,
@@ -114,12 +106,4 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 
   return <AuthContext value={value}>{children}</AuthContext>;
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an <AuthProvider>");
-  }
-  return context;
 }

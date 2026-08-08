@@ -42,7 +42,7 @@ import { CalendarIcon, Loader2Icon, SearchIcon, XIcon } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
-import { useAuth } from "@/components/auth/auth-provider";
+import { useAuth } from "@/components/auth/auth-context";
 import { UserAvatar } from "@/components/auth/user-avatar";
 import { client, orpc } from "@/utils/orpc";
 

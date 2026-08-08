@@ -30,7 +30,7 @@ import { KeyRoundIcon, ShieldCheckIcon, Trash2Icon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { useAuth } from "@/components/auth/auth-provider";
+import { useAuth } from "@/components/auth/auth-context";
 import { authClient } from "@/lib/auth-client";
 
 export const Route = createFileRoute("/account/security")({ component: SecurityPage });

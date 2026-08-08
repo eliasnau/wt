@@ -46,7 +46,7 @@ import {
 } from "lucide-react";
 import { type ComponentType, useEffect, useState } from "react";
 
-import { useAuth } from "@/components/auth/auth-provider";
+import { useAuth } from "@/components/auth/auth-context";
 import { PaymentMethodSheet } from "@/components/dashboard/billing/payment-method-sheet";
 import { orpc } from "@/utils/orpc";
 

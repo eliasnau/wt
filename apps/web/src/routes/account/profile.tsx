@@ -16,7 +16,7 @@ import { parseError } from "evlog";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { useAuth } from "@/components/auth/auth-provider";
+import { useAuth } from "@/components/auth/auth-context";
 import { UserAvatar } from "@/components/auth/user-avatar";
 import { authClient } from "@/lib/auth-client";
 

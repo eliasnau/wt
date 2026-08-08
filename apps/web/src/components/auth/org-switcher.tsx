@@ -31,7 +31,7 @@ import {
 import * as React from "react";
 import { toast } from "sonner";
 
-import { useAuth } from "@/components/auth/auth-provider";
+import { useAuth } from "@/components/auth/auth-context";
 import { NoOrganization } from "@/components/auth/no-organization";
 import { OrganizationAvatar } from "@/components/auth/organization-avatar";
 import { queryClient } from "@/utils/orpc";

@@ -15,7 +15,7 @@ import { ArrowRightIcon, Building2Icon, PlusIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { useAuth } from "@/components/auth/auth-provider";
+import { useAuth } from "@/components/auth/auth-context";
 import { AuthSplitShell } from "@/components/auth/auth-split-shell";
 import { OrganizationAvatar } from "@/components/auth/organization-avatar";
 import UserMenu from "@/components/auth/user-menu";
